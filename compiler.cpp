@@ -397,7 +397,7 @@ expression_with_location* expwloc = NULL;
 
 	puts(" ====================== [RUNNING] ============================\n");
 
-	call_context_run_global(global_cc, envp);
+	call_context_compile_global(global_cc, envp);
 
 	//shutdown_memmanager();
 	printf("Finished\n");

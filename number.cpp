@@ -65,22 +65,6 @@ long* new_long = alloc_mem(long,1);
 }
 
 /**
- * Returns the int value of the given number
- */
-long number_get_int_value(const number*  val)
-{
-	return *(long*)val->location;
-}
-
-/**
- * Returns the double value of the given number
- */
-double number_get_real_value(const number*  val)
-{
-	return *(double*)val->location;
-}
-
-/**
  * Creates a new double
  */
 number* new_number_real(double src)

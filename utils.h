@@ -122,5 +122,10 @@ void* reallocate(void*, int);
 char other_par(char c);
 
 bool valid_variable_name(const char* nm);
+/**
+ * Returns the type of the operator as a struct number for faster access
+ */
+int get_comp_typeid(const char* op);
+
 
 #endif

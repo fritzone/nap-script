@@ -6,7 +6,6 @@
 #include "number.h"
 #include "consts.h"
 #include "operations.h"
-#include "comparison.h"
 #include "indexed.h"
 #include "operations.h"
 #include "bsd_indx.h"

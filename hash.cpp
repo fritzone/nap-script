@@ -13,7 +13,7 @@
  */
 variable* variable_list_add_variable(const char *var_name, const char* var_type, int var_size, variable_list** first,  method* the_method,  call_context* cc, const expression_with_location* expwloc)
 {
-	if(!valid_variable_name(var_name))
+    if(!valid_variable_name(var_name))
 	{
 		throw_error("Invalid variable name", var_name, var_type, (void*)expwloc);
 	}

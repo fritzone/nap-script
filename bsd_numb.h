@@ -2,7 +2,6 @@
 #define _BSD_NUMB_H_
 
 #include "type.h"
-#include "typedefs.h"
 
 /**
  * Represents a struct number.

@@ -12,8 +12,6 @@ call_ctx.h
 code_output.cpp
 code_output.h
 com_strings.h
-comparison.cpp
-comparison.h
 compiler.cpp
 consts.h
 envelope.cpp
@@ -58,7 +56,6 @@ tree.cpp
 tree.h
 type.cpp
 type.h
-typedefs.h
 utils.cpp
 utils.h
 variable.cpp

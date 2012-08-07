@@ -152,40 +152,12 @@ void rst(const expression_tree*node, int spaces=1)
 }
 
 /**
- * Returns the name of the environment variable
- */
-static char* get_variable_name_from_env_string(const char* env_str)
-{
-const char *pos_eq = strchr(env_str, C_EQ);
-	if(!pos_eq)
-	{
-		return NULL;
-	}
-char* var_name = new_string(pos_eq - env_str + 3);
-	var_name[0] = C_DOLLAR;
-	strncpy(var_name + 1, env_str, pos_eq - env_str);
-	return var_name;
-}
-
-/**
  * This runs the global context. Loads the environment variables (from OS), and starts executingthe commands
  * found outside the methods.
  * Run method main
  */
-void call_context_run_global(call_context* cc, char* envp[])
+void call_context_compile_global(call_context* cc, char* envp[])
 {
-	for (int n=0; envp[n]; n++)
-	{
-	char* v_name = get_variable_name_from_env_string(envp[n]);
-		if(v_name)
-		{
-		variable* var = call_context_add_variable(cc, v_name, STR_STRING, 1, NULL);
-		bt_string* strval = bt_string_create(envp[n] + strlen(v_name) );
-			variable_set_indexed_value(var, new_envelope(strval, BASIC_TYPE_STRING), 0);
-			var->environment_variable = 1;
-		}
-		
-	}
 expression_tree_list* q = cc->expressions;
     while(q)
 	{
@@ -194,11 +166,6 @@ expression_tree_list* q = cc->expressions;
 		q=q->next;
 	}
 
-//	main_method = call_context_get_method(cc, "main");
-//	if(main_method)
-//	{
-//			method_run_method(main_method, NULL);
-//	}
 }
 
 /**
