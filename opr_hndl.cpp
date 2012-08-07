@@ -1,6 +1,5 @@
 #include "opr_hndl.h"
 #include "consts.h"
-#include "typedefs.h"
 #include "type.h"
 #include "throw_error.h"
 #include "utils.h"

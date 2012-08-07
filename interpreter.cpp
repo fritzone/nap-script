@@ -94,20 +94,6 @@ listv* listv_prepare_list(const char* src,  method* the_method, const char* orig
 	return head;
 }
 
-static m_optype get_comp_typeid(const char* input)
-{
-        if(!strcmp(input, STR_EQUALEQUAL)) return COMP_EQUALEQUAL;
-        if(!strcmp(input, STR_LT)) return COMP_LT;
-        if(!strcmp(input, STR_GT)) return COMP_GT;
-        if(!strcmp(input, STR_LTE)) return COMP_LTE;
-        if(!strcmp(input, STR_GTE)) return COMP_GTE;
-        if(!strcmp(input, STR_NEQ)) return COMP_NEQ;
-
-        return NO_OPERATOR;
-}
-
-
-
 /*
  * Prioriy of operators (highest priority to lowest priority). Highest priority is executed first
  *  = (assignment)

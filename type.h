@@ -1,9 +1,6 @@
 #ifndef _TYPE_H_
 #define _TYPE_H_
 
-#include "typedefs.h"
-
-
 /* the typeid type, just a simple int, used to identify the types found in leaf nodes */
 typedef int m_typeid;
 
