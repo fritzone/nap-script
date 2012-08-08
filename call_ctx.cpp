@@ -1,6 +1,7 @@
 #include "call_ctx.h"
 #include "utils.h"
 #include "throw_error.h"
+#include "code_output.h"
 #include "sys_brkp.h"
 #include "type.h"
 #include "preverify.h"
@@ -165,11 +166,13 @@ void call_context_compile(call_context* cc, char* envp[])
         printf(".%s:\n", ccs_methods->the_method->name);
         // now pop off the variables from the stack
         variable_list* vlist = ccs_methods->the_method->variables;
+        int pctr = 0;
         while(vlist)
         {
-            printf("pop%s %s\n", vlist->var->c_type, vlist->var->name);
+            printf("peek%s(%i) %s\n", vlist->var->c_type, pctr++, vlist->var->name);
             vlist = vlist->next;
         }
+        push_cc_start_marker(MODE_ASM_OUTPUT);
         expression_tree_list* q1 = ccs_methods->the_method->main_cc->expressions;
             while(q1)
             {
