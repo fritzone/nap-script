@@ -511,10 +511,12 @@ int level = 1;
 	}
 	created_method = new_method(func_name, ret_type, cc);
 	method_feed_parameter_list(created_method, trim(parameters), expwloc);
+    if(!strcmp(ret_type, "int")) created_method->ret_type = BASIC_TYPE_INT;
+
 	call_context_add_method(cc, created_method);
 
 	node->op_type = FUNCTION_DEFINITION;
-	node->reference = new_envelope(created_method, FUNCTION_DEFINITION);
+    node->reference = new_envelope(created_method, FUNCTION_DEFINITION);
 	return created_method;
 }
 
@@ -1158,7 +1160,7 @@ char* keyword_for = is_some_statement(expr_trim, STR_FOR);
 	if(keyword_return)
 	{		
 		node->info = duplicate_string(STR_RETURN);
-	expression_tree* expt = new_expression_tree(expwloc);
+        expression_tree* expt = new_expression_tree(expwloc);
 		build_expr_tree(keyword_return, expt, the_method, orig_expr, cc, result, expwloc);
 		node->reference = new_envelope(expt, RETURN_STATEMENT);
 		*result = RETURN_STATEMENT;

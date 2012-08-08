@@ -249,7 +249,7 @@ int can_stop = 0;
 				}
 			}
 			
-			if(use_delim)
+            if(use_delim)
 			{
 				switch(delim) 
 				{
@@ -269,15 +269,18 @@ int can_stop = 0;
 					break;
 				case C_CLOSE_BLOCK:
 					{
+                    if(expwloc->expression[0] != '}') // put a new close block only if this is not a method def.
+                    {
                         call_context_add_new_expression(cc, STR_CLOSE_BLOCK, expwloc);
-						cc = cc->father;	/* stepping back */
-						current_level --;
-						//pf->position ++;	/* hack, to skip to the next character, to not to loop on the } 4ever */
-						if(current_level == orig_level)
-						{
-							can_stop = 1;
-						}
-					}
+                    }
+                    cc = cc->father;	/* stepping back */
+                    current_level --;
+                    pf->position ++;	/* hack, to skip to the next character, to not to loop on the } 4ever */
+                    if(current_level == orig_level)
+                    {
+                        can_stop = 1;
+                    }
+                    }
 					break;
 
 				case C_SEMC:
@@ -397,7 +400,7 @@ expression_with_location* expwloc = NULL;
 
 	puts(" ====================== [RUNNING] ============================\n");
 
-	call_context_compile_global(global_cc, envp);
+	call_context_compile(global_cc, envp);
 
 	//shutdown_memmanager();
 	printf("Finished\n");

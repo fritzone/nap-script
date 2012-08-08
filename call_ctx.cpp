@@ -143,28 +143,46 @@ int res;
 	return new_expression;
 }
 
-void rst(const expression_tree*node, int spaces=1)
-{
-	if(node->left)
-		rst(node->left, spaces + 1);
-	if(node->right)
-		rst(node->right, spaces + 1);
-}
-
 /**
  * This runs the global context. Loads the environment variables (from OS), and starts executingthe commands
  * found outside the methods.
  * Run method main
  */
-void call_context_compile_global(call_context* cc, char* envp[])
+void call_context_compile(call_context* cc, char* envp[])
 {
-expression_tree_list* q = cc->expressions;
+    {
+    expression_tree_list* q = cc->expressions;
     while(q)
 	{
-		rst(q->root);
 		compile(q->root, NULL, cc, 0, -1, 0, MODE_ASM_OUTPUT);
 		q=q->next;
 	}
+    }
+    // and now the functions
+    method_list* ccs_methods = cc->methods;
+    while(ccs_methods)
+    {
+        printf(".%s:\n", ccs_methods->the_method->name);
+        // now pop off the variables from the stack
+        variable_list* vlist = ccs_methods->the_method->variables;
+        while(vlist)
+        {
+            printf("pop%s %s\n", vlist->var->c_type, vlist->var->name);
+            vlist = vlist->next;
+        }
+        expression_tree_list* q1 = ccs_methods->the_method->main_cc->expressions;
+            while(q1)
+            {
+                compile(q1->root, ccs_methods->the_method,
+                        ccs_methods->the_method->main_cc,
+                        0, -1, 0, MODE_ASM_OUTPUT);
+                q1=q1->next;
+            }
+
+
+        ccs_methods = ccs_methods->next;
+        printf("ret\n");
+    }
 
 }
 
@@ -177,7 +195,6 @@ void call_context_run_inner(call_context* cc, int level, int reqd_type, int forc
 	expression_tree_list* q = cc->expressions;
 	while(q)
 	{
-		rst(q->root);
 		compile(q->root, cc->ccs_method, cc, level, reqd_type, forced_mov, mode);
 		q=q->next;
 	}

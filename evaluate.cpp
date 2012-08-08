@@ -1074,6 +1074,20 @@ void compile(const expression_tree* node, const method* the_method, call_context
 			printf("Calling a function\n");
 			break;
 
+        case RETURN_STATEMENT:
+            if(node->reference)
+            {
+                expression_tree* t = (expression_tree*)node->reference->to_interpret;
+                int ret_type = the_method->ret_type;
+                if(t->op_type == BASIC_TYPE_VARIABLE)
+                {
+                    printf("mov reg%c(%d),", get_reg_type(ret_type), level);
+                }
+                compile(t, the_method, cc, level, ret_type, forced_mov, mode);
+                printf ("\n%s reg%c(%d)\n", get_opcode(node->op_type, mode), get_reg_type(ret_type), level);
+            }
+            break;
+
 		default:
 			printf("Something funny:%d\n", node->op_type);
 			break;

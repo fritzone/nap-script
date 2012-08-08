@@ -1,10 +1,8 @@
 int my_function(int p1, int p2)
-
 {
-    return p1+p2;
+    int z = p1 + p2;
+    return z;
 }
-
-
 
 
 int x=my_function(1,2); 

@@ -95,6 +95,8 @@ const char* get_opcode(int opt, int mode)
 			return "lte";
 		case COMP_GTE:
 			return "gte";
+        case RETURN_STATEMENT:
+            return "return";
 		}
 	}
 
