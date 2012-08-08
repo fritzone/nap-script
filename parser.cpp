@@ -257,7 +257,8 @@ int lineIncd = 0;
 	phrase = trim(phrase);
 	if(phrase[strlen(phrase) - 1] == C_SEMC) phrase[strlen(phrase) - 1] = 0;
 	expwloc->expression = phrase;
-	f->current_line = expwloc->location->end_line_number - 1;
+    printf("###%s\n", phrase);
+    f->current_line = expwloc->location->end_line_number - 1;
 	return expwloc;
 }
 

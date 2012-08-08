@@ -164,7 +164,7 @@ struct expression_tree* call_context_add_new_expression(struct call_context* cc,
  * 2. create the global objects
  * 2. find the method int main(string[] parameters) and execute it
  */
-void call_context_compile_global(struct call_context* cc, char* envp[]);
+void call_context_compile(struct call_context* cc, char* envp[]);
 
 /**
  * Runs the given call context as being part of a full method run, or as a newly started call context.

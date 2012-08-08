@@ -48,6 +48,8 @@ struct method
 
 	/* the definition location 0 - normal, 1 - extern*/
 	int def_loc;
+
+    int ret_type;
 };
 
 /**
