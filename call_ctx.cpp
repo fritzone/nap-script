@@ -158,18 +158,19 @@ void call_context_compile(call_context* cc, char* envp[])
 		compile(q->root, NULL, cc, 0, -1, 0, MODE_ASM_OUTPUT);
 		q=q->next;
 	}
+    exit_app(MODE_ASM_OUTPUT);
     }
     // and now the functions
     method_list* ccs_methods = cc->methods;
     while(ccs_methods)
     {
-        printf(".%s:\n", ccs_methods->the_method->name);
+        printf("\n::%s:\n", ccs_methods->the_method->name);
         // now pop off the variables from the stack
         variable_list* vlist = ccs_methods->the_method->variables;
         int pctr = 0;
         while(vlist)
         {
-            printf("peek%s(%i) %s\n", vlist->var->c_type, pctr++, vlist->var->name);
+            peek(vlist->var->c_type, pctr++, vlist->var->name, MODE_ASM_OUTPUT);
             vlist = vlist->next;
         }
         push_cc_start_marker(MODE_ASM_OUTPUT);

@@ -221,6 +221,14 @@ parameter_list* flist = NULL, *q = NULL;
     func_par->value = new_envelope(nvar, BASIC_TYPE_VARIABLE);
     func_par->modifiable = modifiable;
     flist->param = func_par;
+
+    if(!strcmp(type, "int"))
+    {
+        func_par->type = BASIC_TYPE_INT;
+    }
+
+    func_par->name = duplicate_string(name);
+
     if(NULL == q)
     {
         the_method->parameters = flist;
@@ -228,7 +236,58 @@ parameter_list* flist = NULL, *q = NULL;
     }
     while(q->next) q=q->next;
     q->next = flist;
+
     return func_par;
+}
+
+struct parameter* method_get_parameter(struct method* the_method, int i)
+{
+    variable_list* location = NULL;
+
+    if(the_method)
+    {
+        location = variable_list_get_at(the_method->variables, i+1);
+        if(location && location->var)
+        {
+            return location->var->func_par;
+        }
+    }
+    return 0;
+}
+
+struct parameter* method_get_parameter(struct method* the_method, const char* varname)
+{
+    variable_list* location = NULL;
+
+    if(the_method)
+    {
+        location = variable_list_has_variable(varname, the_method->variables);
+        if(location)
+        {
+            if(!location->var->templ_parameters)	/* variable accessed as templated but in fact has no templates */
+            {
+                throw_error(E0020_ACCTNOTP, location->var->name, NULL);
+            }
+            return location->var->func_par;
+        }
+
+        /* parameter as a $sign? */
+        if(varname[0] == C_DOLLAR)
+        {
+            varname++;
+            int varc = atoi(varname);
+            location = variable_list_get_at(the_method->variables, varc);
+            if(location)
+            {
+                if(!location->var->templ_parameters)	/* variable accessed as templated but in fact has no templates */
+                {
+                    throw_error(E0020_ACCTNOTP, location->var->name, NULL);
+                }
+                return location->var->func_par;
+            }
+        }
+    }
+    return 0;
 }
 
 /**
@@ -236,7 +295,7 @@ parameter_list* flist = NULL, *q = NULL;
  */
 void method_feed_parameter_list( method* the_method, char* par_list, const expression_with_location* expwloc)
 {
-    //printf("\n\nFeeding parameter list for [%s] with [%s]\n\n", the_method->name, par_list);
+    printf("\n\nFeeding parameter list for [%s] with [%s]\n\n", the_method->name, par_list);
  string_list* entries = string_list_create_bsep(par_list, C_COMMA), *q ;
     q = entries;
     while(q)
@@ -246,6 +305,8 @@ void method_feed_parameter_list( method* the_method, char* par_list, const expre
     char* par_name = new_string(q->len);
         if(q->len > 0)
         {
+            printf("&&& %s\n", q->str);
+
         int j = 0;
         int modifiable = 0;
             while(i < q->len && (is_identifier_char(q->str[i]) || C_SQPAR_OP  == q->str[i]|| C_SQPAR_CL == q->str[i]) )
@@ -256,7 +317,10 @@ void method_feed_parameter_list( method* the_method, char* par_list, const expre
             while(i < q->len && is_whitespace(q->str[i])) i++;
             if((modifiable = (C_AND == q->str[i]))) i++;
             j = 0;
-            while(i < q->len)	par_name[j++] = q->str[i++];
+            while(i < q->len)
+            {
+                par_name[j++] = q->str[i++];
+            }
         parameter* new_par_decl = method_add_parameter(the_method, trim(par_name), trim(par_type), 1, modifiable, expwloc);
             /* here we should identify the dimension of the parameter */
             if(strchr(par_type, C_SQPAR_CL) && strchr(par_type, C_SQPAR_OP))

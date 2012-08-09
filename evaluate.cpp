@@ -1071,8 +1071,42 @@ void compile(const expression_tree* node, const method* the_method, call_context
 			}
 
 		case FUNCTION_CALL:
-			printf("Calling a function\n");
+        {
+            call_frame_entry* cfe = (call_frame_entry*)node->reference->to_interpret;
+            method* m = cfe->the_method;
+            parameter_list* ingoing_parameters = cfe->parameters;
+            int pc = 0;
+            push_cc_start_marker(MODE_ASM_OUTPUT);
+            while(ingoing_parameters)
+            {
+                parameter* p = ingoing_parameters->param;
+                parameter* fp = method_get_parameter(m, pc);
+                if(!fp)
+                {
+                    throw_error("parameter not found");
+                }
+                expression_tree* t = p->expr;
+                if(t->op_type <= BASIC_TYPE_VARIABLE)
+                {
+                    printf("mov reg%c(%d),", get_reg_type(fp->type), level);
+                }
+                compile(t, the_method, cc, level, fp->type, forced_mov, mode);
+                printf("\npush reg%c(%d)\n",  get_reg_type(fp->type), level);
+
+                ingoing_parameters = ingoing_parameters->next;
+                pc ++;
+            }
+            printf("call @%s\n", m->name);
+            if(m->ret_type) // pop something only if the method was defined to return something
+            {
+                printf("pop reg%c(%d)\n", get_reg_type(m->ret_type), level);
+                // this might also pop the stack marker. In that case leaves the stack intact
+                // this solves the problem when the function does not return anything
+                // but is required to. We might raise a runtime exception in this case
+            }
+            push_cc_end_marker(MODE_ASM_OUTPUT);
 			break;
+        }
 
         case RETURN_STATEMENT:
             if(node->reference)

@@ -511,6 +511,7 @@ int level = 1;
 	}
 	created_method = new_method(func_name, ret_type, cc);
 	method_feed_parameter_list(created_method, trim(parameters), expwloc);
+
     if(!strcmp(ret_type, "int")) created_method->ret_type = BASIC_TYPE_INT;
 
 	call_context_add_method(cc, created_method);
@@ -792,15 +793,15 @@ static call_frame_entry* handle_function_call(char *expr_trim, int expr_len, exp
 					const char* orig_expr, call_context* cc, int* result,
 					const expression_with_location* expwloc)
 {
-char *params_body = new_string(expr_len);
-string_list* parameters = NULL, *q;
-parameter_list* pars_list = NULL, *q1 = NULL;
-call_frame_entry* cfe = NULL;
+    char *params_body = new_string(expr_len);
+    string_list* parameters = NULL, *q;
+    parameter_list* pars_list = NULL, *q1 = NULL;
+    call_frame_entry* cfe = NULL;
 	strcpy(params_body, expr_trim + strlen(func_call->name) + 1); /* here this is supposed to copy the body of the parameters without the open/close paranthesis */
 	while(is_whitespace(*params_body)) params_body ++;
 	if(*params_body == C_PAR_OP) params_body ++;		/* now we've skipped the opening paranthesis */
 
-int pb_end = strlen(params_body);
+    int pb_end = strlen(params_body);
 	while(is_whitespace(params_body[pb_end]))
 	{
 		pb_end --;
@@ -820,17 +821,18 @@ int pb_end = strlen(params_body);
 	q=parameters;
 	while(q)
 	{
-	expression_tree* cur_par_expr = NULL;
+        expression_tree* cur_par_expr = NULL;
 		if(strlen(q->str) > 0)
 		{
 			cur_par_expr = new_expression_tree(expwloc);
 			build_expr_tree(q->str, cur_par_expr, the_method, orig_expr, cc, result, expwloc);
 		}
-	parameter* cur_par_obj = new_parameter();
+        parameter* cur_par_obj = new_parameter();
 		cur_par_obj->expr = cur_par_expr;
 		cur_par_obj->modifiable = -1;
+        printf("------ %s", q->str);
 
-	parameter_list* tmp = alloc_mem(parameter_list,1);
+        parameter_list* tmp = alloc_mem(parameter_list,1);
 		tmp->next = NULL;
 		tmp->param = cur_par_obj;
 

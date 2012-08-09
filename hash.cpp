@@ -79,7 +79,7 @@ int i, tcc = 0;	/* total count of variables in this list */
 	q = first;
 	for(i=tcc; i!=idx && q->next && i > 1; i--)
 	{
-		q=q->next;
+        if(i!=idx) q=q->next;
 	}
 	if(i < idx) return NULL;
 	return q;

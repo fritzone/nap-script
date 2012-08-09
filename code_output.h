@@ -147,5 +147,11 @@ void push_cc_start_marker(int output_type);
  */
 void push_cc_end_marker(int output_type);
 
+void exit_app(int mode);
+
+void peek(const char* type, int idx, const char* dest, int mode);
+
+
+
 
 #endif

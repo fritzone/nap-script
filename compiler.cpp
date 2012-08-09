@@ -360,7 +360,6 @@ char* first = expwloc->expression;
 
 		case FUNCTION_CALL:
 		default:
-			printf("func call\n");
 			call_context_add_compiled_expression(cur_cc, cnode, first);
 			break;
 		}
