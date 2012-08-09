@@ -91,9 +91,6 @@ struct call_frame_entry
 	/* this are the parameters passed to the method */
 	parameter_list* parameters;
 
-	/* the list of variables taken from the method */
-	variable_definition_list* local_variables;
-
 	/* holds the previous call frame of the method... just in case*/
 	call_frame_entry* previous_cf;
 };
@@ -166,6 +163,7 @@ void method_feed_parameter_list(struct method* the_method, char* par_list, const
  */
 struct variable* method_has_variable(struct method* the_method, struct call_context* cc, char* varname, int* templed, int* env_var);
 
-
+struct parameter* method_get_parameter(struct method* the_method, const char* varname);
+struct parameter* method_get_parameter(struct method* the_method, int i);
 
 #endif

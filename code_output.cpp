@@ -576,3 +576,27 @@ void push_variable(struct variable* var, int mode)
 		// TODO: Implement
 	}
 }
+
+void exit_app(int mode)
+{
+    if(mode == MODE_ASM_OUTPUT)
+    {
+        printf("exit");
+    }
+    else
+    {
+        // TODO: Implement
+    }
+}
+
+void peek(const char *type, int idx, const char *dest, int mode)
+{
+    if(mode == MODE_ASM_OUTPUT)
+    {
+        printf("peek%s(%i) %s\n", type, idx, dest);
+    }
+    else
+    {
+        // TODO: Implement
+    }
+}
