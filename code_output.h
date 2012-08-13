@@ -13,7 +13,7 @@ void op_reg_reg(int op_type, char reg1_ty, int reg1_level, char reg2_ty, int reg
 void operation_start_register_atomic( const expression_tree* node, int reqd_type, int level, int mode );
 void operation_register_level_register_next_level( const expression_tree* node, int reqd_type, int level, int mode );
 void move_register_level_register_next_level( int reqd_type, int level, int mode );
-void purge_till_marker(int output_type);
+
 void move_atomic_into_index_register( int& idxc, expression_tree_list* indxs, const method* the_method, call_context* cc, int level, int forced_mov, int mode );
 void move_int_register_into_index_register( int& idxc, int level, int mode );
 void move_start_register_atomic( variable* dest, int level, int mode );
@@ -33,7 +33,7 @@ void push_variable(struct variable* var, int mode);
 /**
  * Puts instructions into the output flow to move a variable into a register.
  * @param var_node - is a tree node containing a variable
- * @param reqd_type - the type required 
+ * @param reqd_type - the type required
  * @param the_method - the method in which all this is happening
  * @param cc - the call context
  */
@@ -52,12 +52,12 @@ void operation_on_variable(int opr, variable* var, int mode );
  * @param opr - the operation that will be made
  * @param var - the indexed variable
  * @param idxc - the number of idnexes that will be used
- * @param mode - the output mode 
+ * @param mode - the output mode
  */
 void operation_on_indexed( int opr, const variable* var, int idxc, int mode );
 
 /**
- * Inserts the bytecode/asm output for the operation between the variable and the register on the 
+ * Inserts the bytecode/asm output for the operation between the variable and the register on the
  * given level, where the target is the variable.
  * @param opr - the operation to be executed
  * @param var - the variable we're working on
@@ -86,7 +86,7 @@ void mov_var_into_reg(variable* var, int level, int mode);
 
 /**
  * Moves an indexed into a register
- * @param var - the indexed variable 
+ * @param var - the indexed variable
  * @param level - the level of the register
  * @param idxc - the total number of indexes to use
  * @param mode - the output mode
@@ -94,7 +94,7 @@ void mov_var_into_reg(variable* var, int level, int mode);
 void mov_indexed_into_reg( variable* var, int level, int idxc, int mode );
 
 /**
- * This based on the type of the dest node puts in the bytecode for initializing the 
+ * This based on the type of the dest node puts in the bytecode for initializing the
  * reg(level) with the dest_node. A different "mov" bytecode should be generated for different dest_nodes
  * @param updateable_node - this is the node which will be updated
  * @param dest_node - this is the node with which the updateable node will be updated
@@ -151,7 +151,9 @@ void exit_app(int mode);
 
 void peek(const char* type, int idx, const char* dest, int mode);
 
-
-
-
+void jmp(const char* label, int mode);
+void ujmp(const char* label, int mode);
+void jlbf(const char* label, int mode);
+void jnlbf(const char* label, int mode);
+void mov_number_into_reg()
 #endif
