@@ -5,7 +5,7 @@
 #include "evaluate.h"
 #include "tree.h"
 #include "variable.h"
-
+#include "code_stream.h"
 #include <stdio.h>
 
 void print_newline()
@@ -511,7 +511,7 @@ void move_reg_into_var( variable* dest, int level, int mode )
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("mov %s,reg%c(%d)\n", dest->name, get_reg_type(dest->i_type), level);
+        code_stream() << "mov" << SPACE << dest->name << ',' << "reg" << get_reg_type(dest->i_type) << '(' << level << ')' << NEWLINE;
     }
     else
     {
@@ -524,7 +524,7 @@ void output_mov_instruction(int mode)
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("mov ");
+        code_stream() << "mov" << SPACE;
     }
     else
     {
@@ -537,7 +537,7 @@ void second_operand_register_level( variable* dest, int level, int mode)
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf(", reg%c(%d)\n", get_reg_type(dest->i_type), level);
+        code_stream() <<',' <<"reg" <<get_reg_type(dest->i_type) << '(' << level << ')' << NEWLINE;
     }
     else
     {
@@ -548,14 +548,14 @@ void second_operand_register_level( variable* dest, int level, int mode)
 
 void move_register_level_into_indexe_variable( variable* dest, int idxc, int level )
 {
-    printf("mov @ccidx(%s,%d),reg%c(%d)\n", dest->name, idxc, get_reg_type(dest->i_type), level);
+    code_stream() << "mov" << SPACE << '@' << "ccidx" << '(' << dest->name << ',' << idxc << ')' << '<' << "reg" << get_reg_type(dest->i_type) <<'(' << level << ')' << NEWLINE ;
 }
 
 void push_variable(struct variable* var, int mode)
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("push%s %s\n", var->c_type, var->name);
+        code_stream() << "push" << var->c_type << SPACE << var->name << NEWLINE;
     }
     else
     {
@@ -567,7 +567,7 @@ void exit_app(int mode)
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("exit");
+        code_stream() <<"exit" << NEWLINE;
     }
     else
     {
@@ -579,7 +579,7 @@ void peek(const char *type, int idx, const char *dest, int mode)
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("peek%s(%i) %s\n", type, idx, dest);
+        code_stream() <<"peek" << type << "(" << idx << ")" << SPACE << dest<< NEWLINE;
     }
     else
     {
@@ -591,7 +591,7 @@ void jmp(const char *label, int mode)
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("jmp %s\n", label);
+        code_stream() << "jmp" << SPACE <<label << NEWLINE;
     }
     else
     {
@@ -603,7 +603,7 @@ void ujmp(const char *label, int mode)
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("ujmp %s\n", label);
+        code_stream() <<"ujmp" << SPACE << label << NEWLINE;
     }
     else
     {
@@ -615,7 +615,7 @@ void jlbf(const char *label, int mode)
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("jlbf %s\n", label);
+        code_stream() << "jlbf" << SPACE << label << NEWLINE;
     }
     else
     {
@@ -627,7 +627,7 @@ void jnlbf(const char *label, int mode)
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("jnlbf %s\n", label);
+        code_stream() << "jnlbf" << SPACE << label << NEWLINE;
     }
     else
     {

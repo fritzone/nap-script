@@ -37,4 +37,5 @@ HEADERS += bsd_enve.h     com_strings.h  is.h          opr_hndl.h     tree.h \
  bsd_numb.h     evaluate.h     notimpl.h     preverify.h    variable.h \
  bt_string.h    hash.h         number.h      res_wrds.h \
  call_ctx.h     indexed.h      operations.h  sys_brkp.h \
- code_output.h  interpreter.h  opr_func.h    throw_error.h
+ code_output.h  interpreter.h  opr_func.h    throw_error.h \
+    code_stream.h

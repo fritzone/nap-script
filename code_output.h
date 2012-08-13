@@ -155,5 +155,6 @@ void jmp(const char* label, int mode);
 void ujmp(const char* label, int mode);
 void jlbf(const char* label, int mode);
 void jnlbf(const char* label, int mode);
-void mov_number_into_reg()
+void mov_number_into_reg();
+
 #endif
