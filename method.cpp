@@ -133,7 +133,7 @@ call_frame_list* elem = alloc_mem(call_frame_list,1);
         *templed = 1;
         *strchr(varname, C_PAR_OP) = 0;
     }
-	
+
  variable_list* location = NULL;
 
     /* firstly: variable defined in the very cc we are working in */
@@ -295,7 +295,6 @@ struct parameter* method_get_parameter(struct method* the_method, const char* va
  */
 void method_feed_parameter_list( method* the_method, char* par_list, const expression_with_location* expwloc)
 {
-    printf("\n\nFeeding parameter list for [%s] with [%s]\n\n", the_method->name, par_list);
  string_list* entries = string_list_create_bsep(par_list, C_COMMA), *q ;
     q = entries;
     while(q)
@@ -305,8 +304,6 @@ void method_feed_parameter_list( method* the_method, char* par_list, const expre
     char* par_name = new_string(q->len);
         if(q->len > 0)
         {
-            printf("&&& %s\n", q->str);
-
         int j = 0;
         int modifiable = 0;
             while(i < q->len && (is_identifier_char(q->str[i]) || C_SQPAR_OP  == q->str[i]|| C_SQPAR_CL == q->str[i]) )
