@@ -215,7 +215,7 @@ void operation_target_var_source_reg( int opr, variable* var, int level, int mod
 {
     if(MODE_ASM_OUTPUT == mode)
     {
-        printf ("\n%s %s,reg%c(%d)\n", get_opcode(opr, mode), var->name, get_reg_type(var->i_type), level);
+        code_stream() << NEWLINE "%s %s,reg%c(%d)\n", get_opcode(opr, mode), var->name, get_reg_type(var->i_type), level);
     }
     else
     if(MODE_BYTECODE_OUTPUT == mode)
@@ -236,7 +236,7 @@ void operation_target_indexed_source_reg( int opr, variable* var, int index, int
 {
     if(MODE_ASM_OUTPUT == mode)
     {
-        printf("\n%s @ccidx(%s,%d),reg%c(%d)\n", get_opcode(opr, mode), var->name, index, get_reg_type(var->i_type), level);
+        code_stream() << NEWLINE << get_opcode(opr, mode) << SPACE << "@ccidx" << '('<< var->name << ',' << index << ')' << ',' << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << NEWLINE;
     }
     else
     if(MODE_BYTECODE_OUTPUT == mode)
@@ -249,7 +249,7 @@ void operation_start_register_atomic( const expression_tree* node, int reqd_type
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("%s reg%c(%d),", get_opcode(node->op_type, mode), get_reg_type(reqd_type), level);	/* in the cur.reg we already have left side*/
+        code_stream() << get_opcode(node->op_type, mode) << SPACE << "reg" << get_reg_type(reqd_type) << '(' << level << ')';
     }
     else
     {
@@ -261,7 +261,7 @@ void cmp_register_with_zero( int reqd_type, int level, int mode )
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("\ncmp reg%c(%d), 0\n", get_reg_type(reqd_type), level);
+        code_stream() << NEWLINE << "cmp" << SPACE << "reg" << get_reg_type(reqd_type) << '('<< level << ')' << ',' << '0' << NEWLINE;
     }
     else
     {
@@ -279,7 +279,7 @@ void mov_var_into_reg(variable* var, int level, int mode)
 {
     if(MODE_ASM_OUTPUT == mode)
     {
-        printf("mov reg%c(%d),%s\n", get_reg_type(var->i_type), level, var->name);
+        code_stream() << "mov" << SPACE << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << ',' << var->name << NEWLINE;
     }
     else
     if(MODE_BYTECODE_OUTPUT == mode)
@@ -299,7 +299,7 @@ void mov_indexed_into_reg( variable* var, int level, int idxc, int mode )
 {
     if(MODE_ASM_OUTPUT == mode)
     {
-        printf("mov reg%c(%d),@ccidx(%s,%d)\n", get_reg_type(var->i_type), level, var->name, idxc);
+        code_stream() << "mov" << SPACE << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << ',' << "@ccidx" << '(' << var->name << ',' << idxc << ')' << NEWLINE;
     }
     else
     if(MODE_BYTECODE_OUTPUT == mode)
@@ -347,7 +347,7 @@ void init_reg_with_atomic(expression_tree* updateable_node, expression_tree* des
 {
     if (MODE_ASM_OUTPUT == mode)
     {
-        printf("%s reg%c(%d),", get_mov_for_dest(dest_node->op_type), get_reg_type(reqd_type), level);
+        code_stream() <<  get_mov_for_dest(dest_node->op_type) << SPACE << "reg" << get_reg_type(reqd_type) << '(' << level << ')' << ',';
     }
     else
     if(MODE_BYTECODE_OUTPUT == mode)
@@ -368,7 +368,7 @@ void operation_target_reg_source_reg( int req_type_1, int level_1, int req_type_
 {
     if(MODE_ASM_OUTPUT == mode)
     {
-        printf("mov reg%c(%d), reg%c(%d)\n", get_reg_type(req_type_1), level_1, get_reg_type(req_type_2), level_2);
+        code_stream() << "mov" << SPACE << "reg" << get_reg_type(req_type_1) << '(' << level_1 << ')' << "reg" << get_reg_type(req_type_2) << '(' << level_2 << ')' << NEWLINE;
     }
     else
     if(MODE_BYTECODE_OUTPUT == mode)
@@ -385,7 +385,7 @@ void clear_indexes(call_context* cc, int mode)
 {
     if(MODE_ASM_OUTPUT == mode)
     {
-        printf("clidx\n");
+        code_stream() << "clidx" << NEWLINE;
     }
     else
     if(MODE_BYTECODE_OUTPUT == mode)
@@ -405,7 +405,7 @@ void resolve_variable_add_dimension_number(variable* var, long dimension, int mo
 {
     if(MODE_ASM_OUTPUT == mode)
     {
-        printf("call @grow(%s,%d)\n", var->name, (int)dimension);
+        code_stream() << "call" << SPACE << "@grow" << '(' << var->name << ',' << dimension << ')' << NEWLINE ;
     }
     else
     {
@@ -424,7 +424,7 @@ void resolve_variable_add_dimension_regis(variable* var, int level, int mode)
 {
     if(MODE_ASM_OUTPUT == mode)
     {
-        printf("call @grow(%s, regi(%d))\n", var->name, level);
+        code_stream() <<"call" << SPACE << "@grow" << '(' << var->name << ','  << "reg" << 'i' << '(' << level << ')' << ')' << NEWLINE;
     }
     else
     {
@@ -441,7 +441,7 @@ void push_cc_start_marker(int output_type)
 {
     if(MODE_ASM_OUTPUT == output_type)
     {
-        printf("marks\n");
+        code_stream() << "marks" << NEWLINE;
     }
     else
     {
@@ -456,7 +456,7 @@ void push_cc_end_marker(int output_type)
 {
     if(MODE_ASM_OUTPUT == output_type)
     {
-        printf("clrs\n");
+        code_stream() << "clrs" << NEWLINE ;
     }
     else
     {
@@ -468,9 +468,9 @@ void move_atomic_into_index_register( int& idxc, expression_tree_list* indxs, co
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("mov reg_idx(%d),", idxc);
+        code_stream() << "mov" << SPACE << "reg_idx" << '(' << idxc << ')' << ',';
         compile(indxs->root, the_method, cc, level, BASIC_TYPE_INT, forced_mov, mode);
-        print_newline();
+        code_stream() << NEWLINE;
     }
     else
     {
@@ -482,7 +482,7 @@ void move_int_register_into_index_register( int& idxc, int level, int mode )
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("mov reg_idxi(%d),reg%c(%d)\n", idxc, get_reg_type(BASIC_TYPE_INT), level + 1);
+        code_stream() << "mov" << SPACE << "reg_idx" << 'i' << '(' << idxc << ')' << ',' << "reg" << get_reg_type(BASIC_TYPE_INT) << '('<< level + 1 << ')' << NEWLINE;
     }
     else
     {
@@ -499,7 +499,7 @@ void move_start_register_atomic_with_type( int reqd_type, int level, int mode )
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("mov reg%c(%d),", get_reg_type(reqd_type), level);
+        code_stream() <<"mov" << SPACE << "reg" << get_reg_type(reqd_type) << '(' << level << ')' << ',';
     }
     else
     {
