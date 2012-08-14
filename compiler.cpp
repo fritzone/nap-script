@@ -315,7 +315,6 @@ char* first = expwloc->expression;
         switch(op_res)
         {
         case NT_VARIABLE_DEF_LST:
-            //printf("Adding a variable:[%s]\n", cnode->info);
             call_context_add_compiled_expression(cur_cc, cnode, first);
             break;
         case FUNCTION_DEFINITION:
