@@ -12,7 +12,7 @@
 #include "utils.h"
 #include "listv.h"
 #include "evaluate.h"
-
+#include "code_stream.h"
 #include "notimpl.h"
 
 #include <stdlib.h>
@@ -30,16 +30,17 @@ void do_list_assignment( envelope* rvalue, variable* var, int level, const metho
 
         if(((expression_tree*)lst->val->to_interpret)->op_type <= var->i_type)
         {
-            printf("mov reg%c(%d),", get_reg_type(var->i_type), level+1);
+            code_stream() << "mov" << SPACE << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << ',';
         }
         compile((expression_tree*)lst->val->to_interpret, the_method, cc, level + 1, reqd_type, 0, MODE_ASM_OUTPUT);
         if(((expression_tree*)lst->val->to_interpret)->op_type <= var->i_type)
         {
-            printf("\n");
+            code_stream() << NEWLINE;
         }
-        printf("mov regidx(0),%d\n",indxctr);
-        printf("mov @ccidx(%s,1),reg%c(%i)\n", var->name, get_reg_type(var->i_type), level + 1);
-        printf("clidx\n");
+        code_stream() << "mov" << SPACE << "reg" << "idx" << '(' << '0' << ')' << ',' << indxctr << NEWLINE;
+        code_stream() << "mov" << SPACE << '@' << "ccidx" << '(' << var->name << ',' << '1' << ')' << ',' << "reg"
+                      << get_reg_type(var->i_type) << '(' << level + 1 << ')' << NEWLINE ;
+        code_stream() << "clidx" << NEWLINE;
         lst = lst->next;
         indxctr ++;
     }

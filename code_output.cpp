@@ -108,7 +108,9 @@ void op_reg_reg(int op_type, char reg1_ty, int reg1_level, char reg2_ty, int reg
 {
     if(output_mode == MODE_ASM_OUTPUT)
     {
-        printf("%s reg%c(%d),reg%c(%d)\n", get_opcode(op_type, output_mode), get_reg_type(reg1_ty), reg1_level, get_reg_type(reg2_ty), reg2_level);
+        code_stream() << get_opcode(op_type, output_mode) << SPACE << "reg" <<
+                         get_reg_type(reg1_ty) << '(' << reg1_level << ')' << ',' << "reg" <<
+                         get_reg_type(reg2_ty) << '(' << reg2_level << ')' << NEWLINE;
     }
     else
     {
@@ -120,7 +122,8 @@ void move_register_level_register_next_level( int reqd_type, int level, int mode
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("mov reg%c(%d),reg%c(%d)\n", get_reg_type(reqd_type), level, get_reg_type(reqd_type), level + 1);
+        code_stream() << "mov" << SPACE << "reg" << get_reg_type(reqd_type) << '(' << level << ')' << ',' << "reg" <<
+                         get_reg_type(reqd_type) << '(' << level + 1 << ')' << NEWLINE;
     }
     else
     {
@@ -133,7 +136,9 @@ void operation_register_level_register_next_level( const expression_tree* node, 
 {
     if(mode == MODE_ASM_OUTPUT)
     {
-        printf("%s reg%c(%d),reg%c(%d)\n", get_opcode(node->op_type, mode), get_reg_type(reqd_type), level, get_reg_type(reqd_type), level + 1);
+        code_stream() << get_opcode(node->op_type, mode)
+                      << SPACE << "reg" << get_reg_type(reqd_type)
+                      << '(' << level << ')' << ',' << "reg" << get_reg_type(reqd_type) << '(' << level + 1 << ')' << NEWLINE;
     }
     else
     {
@@ -152,9 +157,9 @@ void mov_var_into_reg(expression_tree* var_node, int reqd_type, int level, const
 {
     if(MODE_ASM_OUTPUT == mode)
     {
-        printf("mov reg%c(%d),", get_reg_type(reqd_type), level);		/* initialize */
+        code_stream() << "mov" << SPACE << "reg" << get_reg_type(reqd_type) << '(' << level << ')';		/* initialize */
         compile(var_node, the_method, cc, level, reqd_type, forced_mov, mode);	/* put in the next register the variable*/
-        printf("\n");
+        code_stream() << NEWLINE;
     }
     else
     if(MODE_BYTECODE_OUTPUT == mode)
@@ -173,7 +178,7 @@ void operation_on_variable(int opr, variable* var, int mode )
 {
     if(MODE_ASM_OUTPUT == mode)
     {
-        printf ("%s %s\n", get_opcode(opr, mode), var->name);
+        code_stream() << get_opcode(opr, mode) << SPACE << var->name << NEWLINE;
     }
     else
     if(MODE_BYTECODE_OUTPUT == mode)
@@ -194,7 +199,7 @@ void operation_on_indexed( int opr, const variable* var, int idxc, int mode )
 {
     if(MODE_ASM_OUTPUT == mode)
     {
-        printf("%s @ccidx_dest(%s,%d)\n", get_opcode(opr, mode), var->name, idxc);
+        code_stream() << get_opcode(opr, mode) << SPACE << "@ccidx_dest" << '(' << var->name << ',' << idxc << ')' << NEWLINE;
     }
     else
     if(MODE_BYTECODE_OUTPUT == mode)
@@ -215,7 +220,7 @@ void operation_target_var_source_reg( int opr, variable* var, int level, int mod
 {
     if(MODE_ASM_OUTPUT == mode)
     {
-        code_stream() << NEWLINE "%s %s,reg%c(%d)\n", get_opcode(opr, mode), var->name, get_reg_type(var->i_type), level);
+        code_stream() << NEWLINE << get_opcode(opr, mode) << SPACE << var->name << ',' << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << NEWLINE;
     }
     else
     if(MODE_BYTECODE_OUTPUT == mode)
@@ -269,12 +274,6 @@ void cmp_register_with_zero( int reqd_type, int level, int mode )
     }
 }
 
-/**
- * Puts instructions to move a variable into a register into the main output flow
- * @param var - the variable that will be moved into the register
- * @param level - the level of the register
- * @param mode - whether the output is a simple printf or a bytecode stream
- */
 void mov_var_into_reg(variable* var, int level, int mode)
 {
     if(MODE_ASM_OUTPUT == mode)

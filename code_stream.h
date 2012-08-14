@@ -25,6 +25,18 @@ public:
         printf("%i", i);
         return *this;
     }
+
+    code_stream& operator << (double d)
+    {
+        printf("%f", d);
+        return *this;
+    }
+
+    code_stream& operator << (long l)
+    {
+        printf("%li", l);
+        return *this;
+    }
 };
 
 

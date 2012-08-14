@@ -11,7 +11,7 @@
 #include "bt_string.h"
 #include "method.h"
 #include "variable.h"
-
+#include "code_stream.h"
 #include <stdlib.h>
 #include <memory.h>
 #include <stdio.h>
@@ -164,7 +164,7 @@ void call_context_compile(call_context* cc, char* envp[])
     method_list* ccs_methods = cc->methods;
     while(ccs_methods)
     {
-        printf("\n::%s:\n", ccs_methods->the_method->name);
+        code_stream() << NEWLINE << ':' << ccs_methods->the_method->name << ':' << NEWLINE;
         // now pop off the variables from the stack
         variable_list* vlist = ccs_methods->the_method->variables;
         int pctr = 0;
@@ -185,7 +185,7 @@ void call_context_compile(call_context* cc, char* envp[])
 
 
         ccs_methods = ccs_methods->next;
-        printf("ret\n");
+        code_stream() << "ret" << NEWLINE;
     }
 
 }

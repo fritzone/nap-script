@@ -76,12 +76,6 @@ void operation_target_var_source_reg( int opr, variable* var, int level, int mod
  */
 void operation_target_indexed_source_reg( int opr, variable* var, int index, int level, int mode );
 
-/**
- * Puts instructions to move a variable into a register into the main output flow
- * @param var - the variable that will be moved into the register
- * @param level - the level of the register
- * @param mode - whether the output is a simple printf or a bytecode stream
- */
 void mov_var_into_reg(variable* var, int level, int mode);
 
 /**
