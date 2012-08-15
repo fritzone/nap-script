@@ -32,7 +32,7 @@ void do_list_assignment( envelope* rvalue, variable* var, int level, const metho
         {
             code_stream() << "mov" << SPACE << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << ',';
         }
-        compile((expression_tree*)lst->val->to_interpret, the_method, cc, level + 1, reqd_type, 0, MODE_ASM_OUTPUT);
+        compile((expression_tree*)lst->val->to_interpret, the_method, cc, level + 1, reqd_type, 0);
         if(((expression_tree*)lst->val->to_interpret)->op_type <= var->i_type)
         {
             code_stream() << NEWLINE;

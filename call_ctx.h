@@ -176,7 +176,7 @@ struct envelope* call_context_run_complete(struct call_context* cc);
 /**
  * Runs this call context, the call context is supposed to be an "inner" call cotnext (mostly nameless call cotnext)
  */
-void call_context_run_inner(struct call_context* cc, int level, int reqd_type, int forced_mov, int mode);
+void call_context_run_inner(struct call_context* cc, int level, int reqd_type, int forced_mov);
 
 /**
  * Runs the given call context (cc) when the given call context is an if/else/while etc... call context

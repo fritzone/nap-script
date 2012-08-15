@@ -27,7 +27,7 @@ variable* var = new_variable(var_size, itype);
 
     var->name = duplicate_string(var_name);
     var->c_type = duplicate_string(var_type);
-    var->i_type = itype;
+
     var->dimension = var_size;
     variable_reset(var);
 

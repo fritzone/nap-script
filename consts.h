@@ -139,9 +139,6 @@ const int DEF_EXTERN						= 1;
 const int MAX_NR_AS_STR_LEN				= 32;
 
 const int NO_INDEX						= -1;
-const int MODE_ASM_OUTPUT = 1;
-const int MODE_BYTECODE_OUTPUT = 2;
-
 
 /*
  * Error message strings
