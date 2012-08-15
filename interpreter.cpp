@@ -1470,6 +1470,12 @@ int ntype = NO_OPERATOR;					/* the type number of the node, firstly let's assum
             {
                 /* here maybe we should check for cases like: a[10]++ */
             }
+            if(strstr(t, "class") == t) /* class definition */
+            {
+                envl = new_envelope(0, CLASS_DECLARATION);
+                node->op_type = CLASS_DECLARATION;
+                puts(t);
+            }
             if(!envl)
             {
                 build_expr_tree(t, node, the_method, orig_expr, cc, result, expwloc);

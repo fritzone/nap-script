@@ -11,14 +11,14 @@ using namespace std;
  */
 struct bytecode_label
 {
-	/* the name of the label */
-	char* name;
+    /* the name of the label */
+    char* name;
 
-	/* the location of the label in the bytecode stream */
-	long bytecode_location;
+    /* the location of the label in the bytecode stream */
+    long bytecode_location;
 
-	/* the type of the location, can be 0 if this is just a plain label, 1 if this is a "break" location label, 2 if this is a "continue" location label */
-	int type;
+    /* the type of the location, can be 0 if this is just a plain label, 1 if this is a "break" location label, 2 if this is a "continue" location label */
+    int type;
 };
 
 /*
@@ -31,7 +31,7 @@ struct bytecode_label
  * int x;
  * int func()
  * {				// another call context, which can see the x from above
- * int a;			
+ * int a;
  *     {			// just a local nameless call context
  *     int b;		// b is a local variable, a still visible above
  *     }			// b is not visible anymore, it was destroyed at the end of the nameless call context
@@ -46,8 +46,8 @@ struct call_context;
  */
 struct call_context_list
 {
-	struct call_context_list* next;
-	struct call_context* ctx;
+    struct call_context_list* next;
+    struct call_context* ctx;
 };
 
 /**
@@ -57,34 +57,42 @@ struct call_context_list
  */
 struct call_context
 {
-	/* the type of the call context: 0 - global, 1 - named, 2 - class*/
-	char type;
+    /* the type of the call context: 0 - global, 1 - named*/
+    char type;
 
-	/* the name of the call context */
-	char* name;
+    /* the name of the call context */
+    char* name;
 
-	/* the methods of this call context */
-	struct method_list* methods;
+    /* the methods of this call context */
+    struct method_list* methods;
 
-	/* the list of variable that have been defined in this call context */
-	struct variable_list* variables;
+    /* the list of variable that have been defined in this call context */
+    struct variable_list* variables;
 
-	/* contains the list of expressions */
-	struct expression_tree_list* expressions;
+    /* contains the list of expressions */
+    struct expression_tree_list* expressions;
 
-	/* these are the child call contexts */
-	struct call_context_list* child_call_contexts;
+    /* these are the child call contexts */
+    struct call_context_list* child_call_contexts;
 
-	/* the father call context of this */
-	struct call_context* father;
+    /* the father call context of this */
+    struct call_context* father;
 
-	/* if the call context is from a method this is that method */
-	struct method* ccs_method;
+    /* if the call context is from a method this is that method */
+    struct method* ccs_method;
 
-	/* this is a vector of label locations for this*/
-	vector<struct bytecode_label*>* labels;
+    /* this is a vector of label locations for this*/
+    vector<struct bytecode_label*>* labels;
 
-	struct bytecode_label* break_label;
+    struct bytecode_label* break_label;
+};
+
+struct class_declaration;
+
+struct class_declaration : public call_context
+{
+    class_declaration* parent_class;
+    vector<class_declaration*> implemented_interfaces;
 };
 
 extern call_context* global_cc;

@@ -12,7 +12,7 @@ typedef int m_optype;
  */
 static const int BASIC_TYPE_DONTCARE		= 0;
 
-/*  be careful that BASIC_TYPE_REAL always should be bigger than BASIC_TYPE_INT  
+/*  be careful that BASIC_TYPE_REAL always should be bigger than BASIC_TYPE_INT
     BASIC_TYPE_CHAR should be bigger than BASIC_TYPE_BOOL and so on */
 
 static const int BASIC_TYPE_BOOL			= 1;
@@ -46,6 +46,7 @@ static const int STATEMENT_FOR_1L			= 28;
 static const int LIST_VALUE					= 29;
 static const int LIST_ELEMENT				= 30;
 static const int STATEMENT_DO				= 31;
+static const int CLASS_DECLARATION			= 31;
 
 static const int ENV_TYPE_CC				= 100;
 /*
@@ -58,52 +59,52 @@ extern m_optype NO_OPERATOR;
  */
 enum op_typeids
 {
-	/* Addition, Substraction */
-	OPERATOR_ADD = 100,
-	OPERATOR_MINUS,													// 101
+    /* Addition, Substraction */
+    OPERATOR_ADD = 100,
+    OPERATOR_MINUS,													// 101
 
-	/* unary + - */
-	OPERATOR_UNARY_PLUS,											// 102
-	OPERATOR_UNARY_MINUS,											// 103
+    /* unary + - */
+    OPERATOR_UNARY_PLUS,											// 102
+    OPERATOR_UNARY_MINUS,											// 103
 
-	/* Divide, Multiplication, Modulo */
-	OPERATOR_DIVIDE,											// 104
-	OPERATOR_MULTIPLY,											// 105
-	OPERATOR_MODULO,											// 106
+    /* Divide, Multiplication, Modulo */
+    OPERATOR_DIVIDE,											// 104
+    OPERATOR_MULTIPLY,											// 105
+    OPERATOR_MODULO,											// 106
 
-	/* Shift Left, Right */
-	OPERATOR_SHIFT_LEFT,											// 107
-	OPERATOR_SHIFT_RIGHT,											// 108
+    /* Shift Left, Right */
+    OPERATOR_SHIFT_LEFT,											// 107
+    OPERATOR_SHIFT_RIGHT,											// 108
 
-	/* And, Or, Xor, Comp */
-	OPERATOR_BITWISE_AND,											// 109
-	OPERATOR_BITWISE_OR,											// 110
-	OPERATOR_BITWISE_XOR,											// 111
-	OPERATOR_BITWISE_COMP,											// 112
-	OPERATOR_NOT,													// 113
+    /* And, Or, Xor, Comp */
+    OPERATOR_BITWISE_AND,											// 109
+    OPERATOR_BITWISE_OR,											// 110
+    OPERATOR_BITWISE_XOR,											// 111
+    OPERATOR_BITWISE_COMP,											// 112
+    OPERATOR_NOT,													// 113
 
-	/* Assignment */
-	OPERATOR_ASSIGN,											// 114
+    /* Assignment */
+    OPERATOR_ASSIGN,											// 114
 
-	/* Pre/Post-increment/Decrement */
-	OPERATOR_POSTINC,
-	OPERATOR_POSTDEC,
-	OPERATOR_PREINC,
-	OPERATOR_PREDEC,
+    /* Pre/Post-increment/Decrement */
+    OPERATOR_POSTINC,
+    OPERATOR_POSTDEC,
+    OPERATOR_PREINC,
+    OPERATOR_PREDEC,
 
-	/* +=, -=, etc...*/
-	OPERATOR_PLUS_EQUAL,
-	OPERATOR_MINUS_EQUAL,
-	OPERATOR_MUL_EQUAL,
-	OPERATOR_DIV_EQUAL,
-	OPERATOR_AND_EQUAL,
-	OPERATOR_OR_EQUAL,
-	OPERATOR_XOR_EQUAL,
-	OPERATOR_SHL_EQUAL,
-	OPERATOR_SHR_EQUAL,
+    /* +=, -=, etc...*/
+    OPERATOR_PLUS_EQUAL,
+    OPERATOR_MINUS_EQUAL,
+    OPERATOR_MUL_EQUAL,
+    OPERATOR_DIV_EQUAL,
+    OPERATOR_AND_EQUAL,
+    OPERATOR_OR_EQUAL,
+    OPERATOR_XOR_EQUAL,
+    OPERATOR_SHL_EQUAL,
+    OPERATOR_SHR_EQUAL,
 
-	/* the last operator is not used */
-	OPERATOR_LAST
+    /* the last operator is not used */
+    OPERATOR_LAST
 };
 
 /**
@@ -111,15 +112,15 @@ enum op_typeids
  */
 enum cmp_typeids
 {
-	COMP_START_IDX = 150,
-	COMP_EQUALEQUAL,
-	COMP_NEQ,
-	COMP_LT,
-	COMP_GT,
-	COMP_LTE,
-	COMP_GTE,
+    COMP_START_IDX = 150,
+    COMP_EQUALEQUAL,
+    COMP_NEQ,
+    COMP_LT,
+    COMP_GT,
+    COMP_LTE,
+    COMP_GTE,
 
-	COMP_LAST
+    COMP_LAST
 };
 
 /**
