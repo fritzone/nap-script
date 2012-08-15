@@ -155,10 +155,10 @@ void call_context_compile(call_context* cc, char* envp[])
     expression_tree_list* q = cc->expressions;
     while(q)
     {
-        compile(q->root, NULL, cc, 0, -1, 0, MODE_ASM_OUTPUT);
+        compile(q->root, NULL, cc, 0, -1, 0);
         q=q->next;
     }
-    exit_app(MODE_ASM_OUTPUT);
+    exit_app();
     }
     // and now the functions
     method_list* ccs_methods = cc->methods;
@@ -170,16 +170,16 @@ void call_context_compile(call_context* cc, char* envp[])
         int pctr = 0;
         while(vlist)
         {
-            peek(vlist->var->c_type, pctr++, vlist->var->name, MODE_ASM_OUTPUT);
+            peek(vlist->var->c_type, pctr++, vlist->var->name);
             vlist = vlist->next;
         }
-        push_cc_start_marker(MODE_ASM_OUTPUT);
+        push_cc_start_marker();
         expression_tree_list* q1 = ccs_methods->the_method->main_cc->expressions;
             while(q1)
             {
                 compile(q1->root, ccs_methods->the_method,
                         ccs_methods->the_method->main_cc,
-                        0, -1, 0, MODE_ASM_OUTPUT);
+                        0, -1, 0);
                 q1=q1->next;
             }
 
@@ -194,12 +194,12 @@ void call_context_compile(call_context* cc, char* envp[])
 * Runs the given call context. If it encounters a return statement it will return the envelope
 * holding the result of the function
 */
-void call_context_run_inner(call_context* cc, int level, int reqd_type, int forced_mov, int mode)
+void call_context_run_inner(call_context* cc, int level, int reqd_type, int forced_mov)
 {
     expression_tree_list* q = cc->expressions;
     while(q)
     {
-        compile(q->root, cc->ccs_method, cc, level, reqd_type, forced_mov, mode);
+        compile(q->root, cc->ccs_method, cc, level, reqd_type, forced_mov);
         q=q->next;
     }
 }
