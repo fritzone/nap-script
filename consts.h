@@ -130,12 +130,12 @@ const int CALL_CONTEXT_TYPE_METHOD_MAIN	= 1;
 const int CALL_CONTEXT_TYPE_CLASS		= 2;
 const int CALL_CONTEXT_TYPE_UNNAMED		= 3;
 const int CALL_CONTEXT_TYPE_IF			= 4;
-const int CALL_CONTEXT_TYPE_ELSE			= 5;
+const int CALL_CONTEXT_TYPE_ELSE		= 5;
 const int CALL_CONTEXT_TYPE_WHILE		= 6;
 const int CALL_CONTEXT_TYPE_FOR			= 7;
 
 
-const int DEF_EXTERN						= 1;
+const int DEF_EXTERN					= 1;
 const int MAX_NR_AS_STR_LEN				= 32;
 
 const int NO_INDEX						= -1;
