@@ -27,7 +27,7 @@ char location[1024];
 	prepare_location(location);
 char s[2048];
 	sprintf(s, "%s [%s] and [%s], %s\n", error, par1, par2, location);
-	fprintf(stderr, s);
+	fprintf(stderr, "%s", s);
 	exit(1);
 }
 
@@ -37,7 +37,7 @@ char location[1024];
 	prepare_location(location);
 char s[2048];
 	sprintf(s, "%s %s, %s\n", error, par, location);
-	fprintf(stderr, s);
+	fprintf(stderr, "%s", s);
 	exit(1);
 }
 
@@ -50,7 +50,7 @@ char s2[2048];
 
 	sprintf(s, "%s %s, %s\n", error, par, location);
 	sprintf(s2, s, id);
-	fprintf(stderr, s2);
+	fprintf(stderr, "%s", s2);
 	exit(1);
 }
 
@@ -60,7 +60,7 @@ char location[1024];
 	prepare_location(location);
 char s[2048];	
 	sprintf(s,"[Exception.IndexOutOfRange] Index [%d] out of range for [%s]. Max allowed [%d], %s\n", got, variable_name ,maximum_allowed, location);
-	fprintf(stderr, s);
+	fprintf(stderr, "%s", s);
 	exit(1);
 }
 

@@ -20,7 +20,7 @@
 struct call_context* global_cc = NULL;
 
 /**
- * Creates a new call cotnext object
+ * Creates a new call context object
  */
 struct call_context* call_context_create(int type, const char* name, struct method* the_method, struct call_context* father)
 {
@@ -30,8 +30,23 @@ struct call_context* cc = alloc_mem(call_context,1);
     cc->ccs_method = the_method;
     cc->father = father;
     cc->labels = new vector<bytecode_label*>();
+    cc->classes = new vector<struct class_declaration*>();
+    cc->interfaces = new vector<struct class_declaration*>();
     return cc;
 }
+
+struct class_declaration* class_declaration_create(const char* name, struct call_context* father)
+{
+  struct class_declaration* cc = alloc_mem(class_declaration, 1);
+    cc->type = CLASS_DECLARATION;
+    cc->name = duplicate_string(name);
+    cc->ccs_method = 0;
+    cc->father = father;
+    cc->labels = new vector<bytecode_label*>();
+    cc->parent_class = 0;
+    father->classes->push_back(cc);
+    return cc;
+};
 
 /**
  * Adds a method to the given call context

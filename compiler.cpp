@@ -72,6 +72,19 @@ resw_while* while_st = new_resw_while();
     new_node->reference = new_envelope(while_st, STATEMENT_WHILE);
 }
 
+static void deal_with_class_declaration(call_context* cc, expression_tree* new_node, method* the_method, char delim, int current_level, parsed_file* pf, expression_with_location* expwloc)
+{
+  
+  // TODO: duplicate out the block of the class declaration from the pf->content and run the following code on it:
+  // where cur_method = 0, cur_cc is the cc from the envelope of the tree node
+/*    expwloc = parser_next_phrase(pf, &delim);
+    while(expwloc)
+    {
+        load_next_single_phrase(expwloc, cur_method, cur_cc, &delim, level, pf);
+        expwloc = parser_next_phrase(pf, &delim);
+    }*/
+}
+
 /**
 * This method loads the for commands block
 */
@@ -356,22 +369,21 @@ char* first = expwloc->expression;
             deal_with_for_loading(cur_cc, cnode, cur_method, *delim, level, pf, expwloc);
             break;
 
+	case CLASS_DECLARATION:
+	    deal_with_class_declaration(cur_cc, cnode, 0, *delim, level, pf, expwloc);
+	    break;
         case FUNCTION_CALL:
         default:
             call_context_add_compiled_expression(cur_cc, cnode, first);
             break;
+	    
+	
         }
     }
 }
 
 int main(int argc, char* argv[], char* envp[])
 {
-float x = 3.1415927;
-float z = 6.78;
-
-int t = 5;
-
-    t = z - x++;
     // TODO: To solve the hierarchichal organization of the call contexts.
 call_context* cur_cc = call_context_create(0, "global", NULL, NULL) ;
     global_cc = cur_cc;

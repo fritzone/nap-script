@@ -25,10 +25,9 @@ void do_list_assignment( envelope* rvalue, variable* var, int level, const metho
     int indxctr = 0;
     while(lst->next)
     {
-
-        // now put the value of the list element to the next pointer
-
-        if(((expression_tree*)lst->val->to_interpret)->op_type <= var->i_type)
+        code_stream() << "mov" << SPACE << "reg" << "idx" << '(' << '0' << ')' << ',' << indxctr << NEWLINE;
+	
+	if(((expression_tree*)lst->val->to_interpret)->op_type <= var->i_type)
         {
             code_stream() << "mov" << SPACE << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << ',';
         }
@@ -37,9 +36,9 @@ void do_list_assignment( envelope* rvalue, variable* var, int level, const metho
         {
             code_stream() << NEWLINE;
         }
-        code_stream() << "mov" << SPACE << "reg" << "idx" << '(' << '0' << ')' << ',' << indxctr << NEWLINE;
+        
         code_stream() << "mov" << SPACE << '@' << "ccidx" << '(' << var->name << ',' << '1' << ')' << ',' << "reg"
-                      << get_reg_type(var->i_type) << '(' << level + 1 << ')' << NEWLINE ;
+                      << get_reg_type(var->i_type) << '(' << level << ')' << NEWLINE ;
         code_stream() << "clidx" << NEWLINE;
         lst = lst->next;
         indxctr ++;
