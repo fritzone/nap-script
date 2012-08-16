@@ -2,6 +2,7 @@
 #define _CALL_CTX_H_
 
 #include "method.h"
+#include "type.h"
 
 #include <vector>
 using namespace std;
@@ -40,6 +41,7 @@ struct bytecode_label
  */
 
 struct call_context;
+struct class_declaration;
 
 /**
  * This holds a list of call contexts.
@@ -85,9 +87,13 @@ struct call_context
     vector<struct bytecode_label*>* labels;
 
     struct bytecode_label* break_label;
+    
+    /* the classes that are defined in this call context */
+    vector<struct class_declaration*>* classes;
+    
+    /* the interfaces that are defined in this call context */
+    vector<struct class_declaration*>* interfaces;
 };
-
-struct class_declaration;
 
 struct class_declaration : public call_context
 {
@@ -107,6 +113,8 @@ extern call_context* global_cc;
  */
 struct call_context* call_context_create(int type, const char* name, struct method* the_method, struct call_context* father);
 
+
+struct class_declaration* class_declaration_create(const char* name, struct call_context* father);
 /**
  * Adds a new method to the call context
  * @param cc - the call context

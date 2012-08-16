@@ -533,7 +533,7 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
         {
             if(q)	/*to solve: if(1); else ...*/
             {
-                push_cc_start_marker;						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
+                push_cc_start_marker();						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
                 while(q->next)
                 {
                     compile(q->root, the_method, my_if->if_branch, level + 1, reqd_type, forced_mov);
@@ -555,7 +555,7 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
             }
             else
             {
-                push_cc_start_marker;						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
+                push_cc_start_marker();						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
                 while(q->next)
                 {
                     compile(q->root, the_method, my_if->if_branch, level + 1, reqd_type, forced_mov);
@@ -582,7 +582,7 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
             }
             else
             {
-                push_cc_start_marker;						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
+                push_cc_start_marker();						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
                 while(q->next)
                 {
                     compile(q->root, the_method, my_if->if_branch, level + 1, reqd_type, forced_mov);
@@ -674,7 +674,7 @@ static void resolve_while_keyword(const expression_tree* node, const method* the
         {
             if(q)	/*to resolve: while(1); trallala */
             {
-                push_cc_start_marker;						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
+                push_cc_start_marker();						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
                 while(q->next)
                 {
                     compile(q->root, the_method, my_while->operations, level + 1, reqd_type, forced_mov);
@@ -724,7 +724,7 @@ static void resolve_for_keyword(const expression_tree* node, const method* the_m
         }
         else
         {
-            push_cc_start_marker;						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
+            push_cc_start_marker();						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
             while(q->next)
             {
                 compile(q->root, the_method, my_for->operations, level + 1, reqd_type, forced_mov);
@@ -778,7 +778,6 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
 {
     {
     variable_definition_list* vdl = (variable_definition_list*)node->reference->to_interpret;
-    variable* last_var = NULL;
         while(vdl)
         {
             if(vdl->the_definition)
@@ -847,7 +846,7 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
                     //envelope* def = evaluate(vd->the_value, the_method, cc);
                     //do_assignment(new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE), def, -1, -1, -1, 0, the_method, cc, reqd_type, 0);
                 }
-                last_var = vd->the_variable;
+                
             }
             else
             {
@@ -880,7 +879,7 @@ static void resolve_break_keyword(const expression_tree* node, const method* the
 
     for(int i=0; i< ccsc; i++)
     {
-        push_cc_end_marker;
+        push_cc_end_marker();
     }
     ujmp(qcc->break_label->name);
 }
@@ -1057,14 +1056,14 @@ void compile(const expression_tree* node, const method* the_method, call_context
             return;
 
         case STATEMENT_CLOSE_CC:	/* in this case put a marker on the stack to show the interpreter till which point to purge the variables on the stack when closingthe CC*/
-            push_cc_end_marker;
+            push_cc_end_marker();
             break;
 
         case STATEMENT_NEW_CC:
             {
                 if(node->reference)
                 {
-                    push_cc_start_marker;
+                    push_cc_start_marker();
                 call_context* new_cc = (call_context*)node->reference->to_interpret;	// Here we don't get a reference ... :(
                     call_context_run_inner(new_cc, level, reqd_type, forced_mov);
                 }

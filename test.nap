@@ -1,14 +1,9 @@
-int my_function(int p1, int p2)
+
+class TestClass
 {
-    int z = p1 + p2;
-}
+    int a;
+};
 
-int d = 7;
-int x;
+int[] dd = {1,4,5,6,7 };
 
-if(d == 7) x = my_function(1+d, 2+2); 
-
-int y;
-
-y = 15 + x;
 
