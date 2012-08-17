@@ -41,13 +41,25 @@ int cloc = 0;
     }
 }
 
+parsed_file* new_parsed_file(const char* content)
+{
+    parsed_file* f = alloc_mem(parsed_file,1);
+    f->position = 0;
+    f->content = alloc_mem(char, strlen(content));
+    strcpy(f->content, content);
+    f->content_size = strlen(content);
+    f->current_line = 0;
+    return f;
+}
+
+
 /**
  * Opens the given file, creates a new prsed file structure
  */
 parsed_file* open_file(const char* name)
 {
-parsed_file* f = alloc_mem(parsed_file,1);
-long size = -1;
+    parsed_file* f = alloc_mem(parsed_file,1);
+    long size = -1;
     f->name = name;
     f->fp = fopen(f->name, "rb");
     if(!f->fp)

@@ -44,6 +44,8 @@ struct class_declaration* class_declaration_create(const char* name, struct call
     cc->father = father;
     cc->labels = new vector<bytecode_label*>();
     cc->parent_class = 0;
+    cc->classes = new vector<struct class_declaration*>();
+    cc->interfaces = new vector<struct class_declaration*>();
     father->classes->push_back(cc);
     return cc;
 };
