@@ -1472,20 +1472,21 @@ int ntype = NO_OPERATOR;					/* the type number of the node, firstly let's assum
             }
             if(strstr(t, "class") == t) /* class definition */
             {
-	        char* cname = t + 5;
-		while(isspace(*cname)) cname ++;
-		char* tcname = duplicate_string(cname);
-		char* the_class_name = tcname;
-		while(is_identifier_char(*cname))
-		{
-		  tcname ++;
-		  cname ++;
-		}
-		*tcname = 0;
-		puts(the_class_name);
-		class_declaration* cd = class_declaration_create(the_class_name, cc);
+                char* cname = t + 5;
+                while(isspace(*cname)) cname ++;
+                char* tcname = duplicate_string(cname);
+                char* the_class_name = tcname;
+                while(is_identifier_char(*cname))
+                {
+                    tcname ++;
+                    cname ++;
+                }
+                *tcname = 0;
+                puts(the_class_name);
+                class_declaration* cd = class_declaration_create(the_class_name, cc);
                 envl = new_envelope(cd, CLASS_DECLARATION);
                 node->op_type = CLASS_DECLARATION;
+                *result = CLASS_DECLARATION;
             }
             if(!envl)
             {

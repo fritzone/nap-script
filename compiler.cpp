@@ -74,15 +74,37 @@ resw_while* while_st = new_resw_while();
 
 static void deal_with_class_declaration(call_context* cc, expression_tree* new_node, method* the_method, char delim, int current_level, parsed_file* pf, expression_with_location* expwloc)
 {
-  
-  // TODO: duplicate out the block of the class declaration from the pf->content and run the following code on it:
-  // where cur_method = 0, cur_cc is the cc from the envelope of the tree node
-/*    expwloc = parser_next_phrase(pf, &delim);
+    char* new_block = alloc_mem(char, pf->content_size - pf->position); // should be enough ...
+    int lev = 1;
+    int pos = pf->position;
+    int nbpos = 0;
+    bool can_go = true;
+    
+    while(can_go && pos < pf->content_size)
+    {
+        new_block[nbpos] = pf->content[pos];
+        if(pf->content[pos] == '{') lev ++;
+        if(pf->content[pos] == '}') lev --;
+        if(lev == 0) can_go = false;
+        pos ++;
+        nbpos ++;
+    }
+    pf->position = pos + 1;     // skips the closing brace
+    new_block[nbpos - 1] = 0;   // remove the closing brace
+    parsed_file* npf = new_parsed_file(new_block);
+    expression_with_location* nexpwloc = NULL;
+    char ndelim;
+    method* nmethod = 0;
+    nexpwloc = parser_next_phrase(npf, &ndelim);
+    call_context* class_cc = (call_context*)((envelope*)new_node->reference)->to_interpret;
+    int nlevel  = -1;
     while(expwloc)
     {
-        load_next_single_phrase(expwloc, cur_method, cur_cc, &delim, level, pf);
-        expwloc = parser_next_phrase(pf, &delim);
-    }*/
+        load_next_single_phrase(nexpwloc, nmethod, class_cc, &ndelim, nlevel, npf);
+        expwloc = parser_next_phrase(npf, &delim);
+    }  
+    
+    free(new_block);
 }
 
 /**

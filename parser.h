@@ -38,6 +38,11 @@ struct parsed_file
 };
 
 /**
+ * Returns an empty parsed file
+ */
+parsed_file* new_parsed_file(const char* content);
+
+/**
  * Opens the given file, and in case of success returns a parsed_file structure
  */
 parsed_file* open_file(const char* name);
