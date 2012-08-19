@@ -177,6 +177,8 @@ void call_context_compile(call_context* cc, char* envp[])
     }
     exit_app();
     }
+
+    {
     // and now the functions
     method_list* ccs_methods = cc->methods;
     while(ccs_methods)
@@ -203,6 +205,42 @@ void call_context_compile(call_context* cc, char* envp[])
 
         ccs_methods = ccs_methods->next;
         code_stream() << "ret" << NEWLINE;
+    }
+    }
+
+    {
+    // and now all the functions from the classes
+    for(int i=0; i<cc->classes->size(); i++)
+    {
+        class_declaration* cd = cc->classes->at(i);
+        method_list* ccs_methods = cd->methods;
+        code_stream() << '@' << cd->name << NEWLINE;
+        while(ccs_methods)
+        {
+            code_stream() << ':' << cd->name << '.' << ccs_methods->the_method->name << ':' << NEWLINE;
+            // now pop off the variables from the stack
+            variable_list* vlist = ccs_methods->the_method->variables;
+            int pctr = 0;
+            while(vlist)
+            {
+                peek(vlist->var->c_type, pctr++, vlist->var->name);
+                vlist = vlist->next;
+            }
+            push_cc_start_marker();
+            expression_tree_list* q1 = ccs_methods->the_method->main_cc->expressions;
+                while(q1)
+                {
+                    compile(q1->root, ccs_methods->the_method,
+                            ccs_methods->the_method->main_cc,
+                            0, -1, 0);
+                    q1=q1->next;
+                }
+
+
+            ccs_methods = ccs_methods->next;
+            code_stream() << "ret" << NEWLINE;
+        }
+    }
     }
 
 }

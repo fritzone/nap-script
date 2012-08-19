@@ -93,15 +93,15 @@ static void deal_with_class_declaration(call_context* cc, expression_tree* new_n
     new_block[nbpos - 1] = 0;   // remove the closing brace
     parsed_file* npf = new_parsed_file(new_block);
     expression_with_location* nexpwloc = NULL;
-    char ndelim;
+    char ndelim = 0;
     method* nmethod = 0;
     nexpwloc = parser_next_phrase(npf, &ndelim);
     call_context* class_cc = (call_context*)((envelope*)new_node->reference)->to_interpret;
     int nlevel  = -1;
-    while(expwloc)
+    while(nexpwloc)
     {
         load_next_single_phrase(nexpwloc, nmethod, class_cc, &ndelim, nlevel, npf);
-        expwloc = parser_next_phrase(npf, &delim);
+        nexpwloc = parser_next_phrase(npf, &ndelim);
     }  
     
     free(new_block);
