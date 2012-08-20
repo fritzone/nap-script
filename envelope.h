@@ -3,24 +3,6 @@
 
 #include "bsd_enve.h"
 
-#define ENV_HOLDS_NUMBER(env) (BASIC_TYPE_INT == (env)->type || BASIC_TYPE_REAL == (env)->type)
-
-#define ENV_HOLDS_VARIABLE(env) (BASIC_TYPE_VARIABLE == (env)->type)
-
-#define ENV_HOLDS_INDEXED(env) (BASIC_TYPE_INDEXED == (env)->type)
-
-#define ENV_HOLDS_STRING(env) (BASIC_TYPE_STRING == (env)->type)
-
-#define ENV_GET_NUMBER(env) ((number*)(env)->to_interpret)
-
-#define ENV_GET_VARIABLE(env) ((variable*)(env)->to_interpret)
-
-#define ENV_GET_INDEXED(env) ((indexed*)(env)->to_interpret)
-
-#define ENV_GET_STRING(env) ((bt_string*)(env)->to_interpret)
-
-#define ENV_TYPE(env) (env->type)
-
 /**
  * Creates a new struct envelope for the given type with the given data
  */

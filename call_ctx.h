@@ -60,7 +60,7 @@ struct call_context_list
 struct call_context
 {
     /* the type of the call context: 0 - global, 1 - named*/
-    char type;
+    int type;
 
     /* the name of the call context */
     char* name;

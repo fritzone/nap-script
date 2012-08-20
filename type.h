@@ -15,40 +15,41 @@ static const int BASIC_TYPE_DONTCARE		= 0;
 /*  be careful that BASIC_TYPE_REAL always should be bigger than BASIC_TYPE_INT
     BASIC_TYPE_CHAR should be bigger than BASIC_TYPE_BOOL and so on */
 
-static const int BASIC_TYPE_BOOL			= 1;
-static const int BASIC_TYPE_CHAR			= 2;
-static const int BASIC_TYPE_INT				= 3;
-static const int BASIC_TYPE_REAL			= 4;
-static const int BASIC_TYPE_STRING			= 5;
-static const int BASIC_TYPE_VARIABLE		= 6;
-static const int BASIC_TYPE_INDEXED			= 7;
-static const int BASIC_TYPE_USERDEF			= 8;
-static const int MULTI_DIM_INDEX			= 9;
-static const int NT_VARIABLE_DEF_LST		= 10;
-static const int RESULT_STRING				= 11;
-static const int FUNCTION_DEFINITION		= 12;
-static const int FUNCTION_CALL				= 13;
-static const int STATEMENT_IF				= 14;
-static const int STATEMENT_IF_1L			= 15;
-static const int STATEMENT_CLOSE_CC			= 16;
-static const int STATEMENT_NEW_CC			= 17;
-static const int BASIC_TYPE_VOID			= 18;
-static const int BACKQUOTE_STRING			= 19;
-static const int TEMPLATED_VARIABLE			= 20;
-static const int RETURN_STATEMENT			= 21;
-static const int ENVIRONMENT_VARIABLE		= 22;
-static const int STATEMENT_WHILE			= 23;
-static const int STATEMENT_WHILE_1L			= 24;
-static const int STATEMENT_BREAK			= 25;
-static const int STATEMENT_CONTINUE			= 26;
-static const int STATEMENT_FOR				= 27;
-static const int STATEMENT_FOR_1L			= 28;
-static const int LIST_VALUE					= 29;
-static const int LIST_ELEMENT				= 30;
-static const int STATEMENT_DO				= 31;
-static const int CLASS_DECLARATION			= 31;
+static const int BASIC_TYPE_BOOL			= 10;
+static const int BASIC_TYPE_CHAR			= 20;
+static const int BASIC_TYPE_INT				= 30;
+static const int BASIC_TYPE_REAL			= 40;
+static const int BASIC_TYPE_STRING			= 50;
+static const int BASIC_TYPE_VARIABLE		= 60;
+static const int BASIC_TYPE_CLASS_VAR       = 65;
+static const int BASIC_TYPE_INDEXED			= 70;
+static const int BASIC_TYPE_USERDEF			= 80;
+static const int MULTI_DIM_INDEX			= 90;
+static const int NT_VARIABLE_DEF_LST		= 100;
+static const int RESULT_STRING				= 110;
+static const int FUNCTION_DEFINITION		= 120;
+static const int FUNCTION_CALL				= 130;
+static const int STATEMENT_IF				= 140;
+static const int STATEMENT_IF_1L			= 150;
+static const int STATEMENT_CLOSE_CC			= 160;
+static const int STATEMENT_NEW_CC			= 170;
+static const int BASIC_TYPE_VOID			= 180;
+static const int BACKQUOTE_STRING			= 190;
+static const int TEMPLATED_VARIABLE			= 200;
+static const int RETURN_STATEMENT			= 210;
+static const int ENVIRONMENT_VARIABLE		= 220;
+static const int STATEMENT_WHILE			= 230;
+static const int STATEMENT_WHILE_1L			= 240;
+static const int STATEMENT_BREAK			= 250;
+static const int STATEMENT_CONTINUE			= 260;
+static const int STATEMENT_FOR				= 270;
+static const int STATEMENT_FOR_1L			= 280;
+static const int LIST_VALUE					= 290;
+static const int LIST_ELEMENT				= 300;
+static const int STATEMENT_DO				= 310;
+static const int CLASS_DECLARATION			= 320;
 
-static const int ENV_TYPE_CC				= 100;
+static const int ENV_TYPE_CC				= 1000;
 /*
  * Operator types
  */
@@ -60,7 +61,7 @@ extern m_optype NO_OPERATOR;
 enum op_typeids
 {
     /* Addition, Substraction */
-    OPERATOR_ADD = 100,
+    OPERATOR_ADD = 10000,
     OPERATOR_MINUS,													// 101
 
     /* unary + - */
@@ -112,7 +113,7 @@ enum op_typeids
  */
 enum cmp_typeids
 {
-    COMP_START_IDX = 150,
+    COMP_START_IDX = 15000,
     COMP_EQUALEQUAL,
     COMP_NEQ,
     COMP_LT,

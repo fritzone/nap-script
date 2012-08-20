@@ -76,6 +76,7 @@ int parameter_list_get_named_parameters_type(const parameter_list* pl, const cha
 		case BASIC_TYPE_REAL:
 			return pl->param->value->type;
 		case BASIC_TYPE_VARIABLE:
+        case BASIC_TYPE_CLASS_VAR:
 			return variable_get_basic_type((variable*)pl->param->value->to_interpret);
 			break;
 		}

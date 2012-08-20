@@ -436,6 +436,7 @@ int tc = 0;
         first_word[flc++] = expr[tc++];
     }
     first_word = trim(first_word);
+    printf("XXX: firstWord:[%s]\n", first_word);
     if(get_typeid(first_word) != BASIC_TYPE_DONTCARE) /* starts with a type. maybe user defined type*/
     {
         /* now see if it continues with something like: first_word something( which means it's a method definition */
@@ -1437,6 +1438,7 @@ int ntype = NO_OPERATOR;					/* the type number of the node, firstly let's assum
                 }
                 else
                 {
+                    // TODO: Check if this is a class variable
                     envl = new_envelope(var, BASIC_TYPE_VARIABLE);
                     node->op_type = BASIC_TYPE_VARIABLE;
                 }
