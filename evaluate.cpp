@@ -30,6 +30,7 @@ bool is_atomic_type(int the_type)
     {
     case BASIC_TYPE_STRING:
     case BASIC_TYPE_VARIABLE:
+    case BASIC_TYPE_CLASS_VAR:
     case BASIC_TYPE_INT:
     case BASIC_TYPE_REAL:
     case BASIC_TYPE_CHAR:
@@ -41,9 +42,6 @@ bool is_atomic_type(int the_type)
     return false;
 }
 
-
-
-
 static bool is_post_pre_op(int opt)
 {
     return opt == OPERATOR_POSTINC || opt == OPERATOR_PREINC || opt == OPERATOR_POSTDEC || opt == OPERATOR_PREDEC;
@@ -54,7 +52,7 @@ static bool is_post_pre_op(int opt)
  */
 static bool is_assign_destination(expression_tree* node)
 {
-    return BASIC_TYPE_VARIABLE == node->op_type || BASIC_TYPE_INDEXED == node->op_type || MULTI_DIM_INDEX == node->op_type;
+    return BASIC_TYPE_CLASS_VAR == node->op_type || BASIC_TYPE_VARIABLE == node->op_type || BASIC_TYPE_INDEXED == node->op_type || MULTI_DIM_INDEX == node->op_type;
 }
 
 /**
@@ -64,7 +62,7 @@ static bool is_assign_destination(expression_tree* node)
  */
 static void deal_with_post_pre_node(const expression_tree* pp_node, int level, const method* the_method, call_context* cc, int forced_mov)
 {
-    if(pp_node->left->op_type == BASIC_TYPE_VARIABLE)	/* a normal variable is being post/pre'd */
+    if(pp_node->left->op_type == BASIC_TYPE_VARIABLE || pp_node->left->op_type == BASIC_TYPE_CLASS_VAR)	/* a normal variable is being post/pre'd */
     {
     variable* var = (variable*)pp_node->left->reference->to_interpret;	/* this is the variable */
         if(pp_node->op_type == OPERATOR_POSTDEC || pp_node->op_type == OPERATOR_POSTINC)
@@ -103,8 +101,6 @@ static void deal_with_post_pre_node(const expression_tree* pp_node, int level, c
     }
 }
 
-
-
 /**
  * Deals with the += -= /= *= etc= operations.
  */
@@ -112,7 +108,7 @@ static void resolve_op_equal(const expression_tree* node, const method* the_meth
 {
     if(node->left)
     {
-        if(node->left->op_type == BASIC_TYPE_VARIABLE)
+        if(node->left->op_type == BASIC_TYPE_VARIABLE || node->left->op_type == BASIC_TYPE_CLASS_VAR)
         {
         variable* var = (variable*)node->left->reference->to_interpret;
             if(is_atomic_type(node->right->op_type))
@@ -315,7 +311,7 @@ void resolve_assignment( const expression_tree* node, int level, const method* t
         if(is_assign_destination(node->left))	/* can assign only into a variable */
         {
         variable* dest = NULL;
-            if(BASIC_TYPE_VARIABLE == node->left->op_type)	/* assignment goes into a variable */
+            if(BASIC_TYPE_VARIABLE == node->left->op_type || node->left->op_type == BASIC_TYPE_CLASS_VAR)	/* assignment goes into a variable */
             {
                 dest = (variable*)(((envelope*)node->left->reference)->to_interpret);
                 if(node->right)
@@ -401,13 +397,14 @@ static void populate_maximal_type(const expression_tree* node, int& foundreq)
             if((int)node->op_type > foundreq) foundreq = node->op_type;
             break;
         case BASIC_TYPE_VARIABLE:
+        case BASIC_TYPE_CLASS_VAR:
             {
             variable* var = (variable*)node->reference->to_interpret;
                 if(var->i_type > foundreq) foundreq = var->i_type;
             }
             break;
         case MULTI_DIM_INDEX:	/* left: contains a variable that will be indexed. right->reference = env with multi_dimension_index:*/
-            if(node->left && node->right && node->left->reference && BASIC_TYPE_VARIABLE == node->left->reference->type)
+            if(node->left && node->right && node->left->reference && (BASIC_TYPE_VARIABLE == node->left->reference->type || BASIC_TYPE_CLASS_VAR == node->left->reference->type) )
             {
             variable* var = (variable*)node->left->reference->to_interpret;
                 if(var->i_type > foundreq) foundreq = var->i_type;
@@ -788,7 +785,9 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
                     throw_error("Internal: A variable declaration is not having an associated variable object", NULL);
                 }
 
-                /* warning!!! Only NON static variables are being pushed*/
+                /* warning!!! Only :
+                 *  1. NON static variables are being pushed.
+                 *  2. class variables are NOT pushed   */
                 if(!vd->the_variable->static_var)
                 {
                     push_variable(vd->the_variable);
@@ -894,7 +893,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
         populate_maximal_type(node, reqd_type);
     }
     set_location(node->expwloc);
-    if( node && (node->info || node->op_type == STATEMENT_NEW_CC || node->op_type == STATEMENT_CLOSE_CC || node->op_type == BASIC_TYPE_VARIABLE) )// added here to solve: int a; if(a&1) { int x = a++; } was not printing the x in the mov ...
+    if( node && (node->info || node->op_type == STATEMENT_NEW_CC || node->op_type == STATEMENT_CLOSE_CC || node->op_type == BASIC_TYPE_VARIABLE || node->op_type == BASIC_TYPE_CLASS_VAR) )// added here to solve: int a; if(a&1) { int x = a++; } was not printing the x in the mov ...
     {
         switch(node->op_type)
         {
@@ -928,6 +927,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
             break;
 
         case BASIC_TYPE_VARIABLE:
+        case BASIC_TYPE_CLASS_VAR:
             if(node->reference)
             {
             variable* var = (variable*)node->reference->to_interpret;
@@ -943,7 +943,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
             break;
 
         case MULTI_DIM_INDEX:	/* left: contains a variable that will be indexed. right->reference = env with multi_dimension_index:*/
-            if(node->left && node->right && node->left->reference && BASIC_TYPE_VARIABLE == node->left->reference->type)
+            if(node->left && node->right && node->left->reference && (BASIC_TYPE_VARIABLE == node->left->reference->type || BASIC_TYPE_CLASS_VAR == node->left->reference->type) )
             {
             int idxc = 0;
             variable* var = (variable*)node->left->reference->to_interpret;
@@ -1024,7 +1024,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
         case OPERATOR_PREDEC:
             if(node->left)
             {
-                if(node->left->op_type == BASIC_TYPE_VARIABLE)
+                if(node->left->op_type == BASIC_TYPE_VARIABLE || node->left->op_type == BASIC_TYPE_CLASS_VAR)
                 {
                     deal_with_post_pre_node(node, level, the_method, cc, forced_mov);
                 }
@@ -1086,7 +1086,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
                     throw_error("parameter not found");
                 }
                 expression_tree* t = p->expr;
-                if(t->op_type <= BASIC_TYPE_VARIABLE)
+                if(t->op_type <= BASIC_TYPE_CLASS_VAR)
                 {
                     code_stream() << "mov" << SPACE << "reg" << get_reg_type(fp->type) << '(' << level << ')' << ',';
                 }
@@ -1113,7 +1113,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
             {
                 expression_tree* t = (expression_tree*)node->reference->to_interpret;
                 int ret_type = the_method->ret_type;
-                if(t->op_type == BASIC_TYPE_VARIABLE)
+                if(t->op_type <= BASIC_TYPE_INDEXED)
                 {
                     code_stream() << "mov" << SPACE << "reg" << get_reg_type(ret_type) << '(' << level << ')' << ',';
                 }

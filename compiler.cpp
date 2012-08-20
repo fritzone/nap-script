@@ -92,6 +92,7 @@ static void deal_with_class_declaration(call_context* cc, expression_tree* new_n
     pf->position = pos + 1;     // skips the closing brace
     new_block[nbpos - 1] = 0;   // remove the closing brace
     parsed_file* npf = new_parsed_file(new_block);
+    npf->name = duplicate_string(pf->name);
     expression_with_location* nexpwloc = NULL;
     char ndelim = 0;
     method* nmethod = 0;

@@ -274,6 +274,7 @@ void variable_set_indexed_value(variable* var, envelope* new_value, int index)
             }
             return;
         case BASIC_TYPE_VARIABLE:
+        case BASIC_TYPE_CLASS_VAR:
             {
             variable* v2 = (variable*)new_value->to_interpret;
                 if(v2->i_type == var->i_type)
