@@ -25,6 +25,7 @@ void move_start_register_atomic_with_type( int reqd_type, int level );
 void move_register_level_register_next_level( int reqd_type, int level );
 void cmp_register_with_zero( int reqd_type, int level );
 void push_variable(struct variable* var);
+void push_usertype_variable(struct variable* var);
 void mov_var_into_reg(expression_tree* var_node, int reqd_type, int level, const method* the_method, call_context* cc, int forced_mov);
 void operation_on_variable(int opr, variable* var );
 void operation_on_indexed( int opr, const variable* var, int idxc );

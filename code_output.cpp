@@ -258,6 +258,12 @@ void push_variable(struct variable* var)
     code_stream() << "push" << var->c_type << SPACE << var->name << NEWLINE;
 }
 
+void push_usertype_variable(variable* var)
+{
+    code_stream() << "call" << SPACE << "@crea" << '(' << var->c_type << ',' << var->name << ')'<< NEWLINE;
+    code_stream() << "pushref" << SPACE << var->name << NEWLINE;
+}
+
 void exit_app()
 {
     code_stream() <<"exit" << NEWLINE;
