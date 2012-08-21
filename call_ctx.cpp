@@ -306,3 +306,14 @@ struct bytecode_label* call_context_provide_label(struct call_context* cc, int b
     long idx = call_context_add_label(cc, -1, label_name);
     return cc->labels->at(idx - 1);
 }
+
+class_declaration* call_context_get_class_declaration(const call_context* cc, const char* required_name)
+{
+    for(int i=0; i<cc->classes->size(); i++)
+    {
+        if(!strcmp(cc->classes->at(i)->name, required_name))
+        {
+            return cc->classes->at(i);
+        }
+    }
+}

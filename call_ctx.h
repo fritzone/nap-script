@@ -103,77 +103,16 @@ struct class_declaration : public call_context
 
 extern call_context* global_cc;
 
-/**
- * Creates a new call context
- * @param int - the type of the call context
- * @param name - the name of the call context
- * @param the_method - the method in which the call context can be found. NULL if global
- * @param father - the father call context of this. NULL if this is the global CC
- * @return the newly created and initialized call context
- */
-struct call_context* call_context_create(int type, const char* name, struct method* the_method, struct call_context* father);
-
-
-struct class_declaration* class_declaration_create(const char* name, struct call_context* father);
-/**
- * Adds a new method to the call context
- * @param cc - the call context
- * @param the_method - the method to add
- * @return the position of the new method
- */
-struct method_list* call_context_add_method(struct call_context* cc, method* the_method);
-
-/**
- * Returns the method from the given call context if any, NULL if nothing was found
- * @param cc - the call context
- * @param name - the name of the method we're looking fo
- * @return the method if found, NULL if nothing was found
- */
-struct method* call_context_get_method(struct call_context* cc, const char* name);
-
-/**
- * Adds a new variable to the call context
- * @param cc - the call context to update
- * @param name - the name of the variable
- * @param type - the type
- * @param dimension - the dimension of the variable
- */
-struct variable* call_context_add_variable(struct call_context* cc, const char* name, const char* type, int dimension, const struct expression_with_location* expwloc);
-
-/**
- * Adds a new compiled expression to the given call context
- * @param cc - the call cotnext to update
- * @param co_expr - the compiled expression
- * @param expr - the expression as string
- */
-void call_context_add_compiled_expression(struct call_context* cc, const struct expression_tree* co_expr, const char* expr);
-
-/**
- * Adds a label into the bytecode compilation of this call context
- * This method creates a new bytecode_label structure, with the default label type (0)
- * @param cc - the call context
- * @param position - the position of the label. Initially this is -1, the bytecode generator will generate the correct position
- * @param name - the name of the label (mostly used when generating assembly output)
- */
-long call_context_add_label(struct call_context* cc, long position, const char* name);
-
-/**
- * Adds a label into the bytecode compilation of this call context
- * This method creates a new bytecode_label structure, with the label type set to 1, ie. a location where the BREAK of a while or a for will jump
- * @param cc - the call context
- * @param position - the position of the label. Initially this is -1, the bytecode generator will generate the correct position
- * @param name - the name of the label (mostly used when generating assembly output)
- * @returns the bytecode label object of the location where the break will jump
- */
-struct bytecode_label* call_context_add_break_label(struct call_context* cc, long position, const char* name);
-
-/**
- * Adds a new expression to the given call context
- */
-struct expression_tree* call_context_add_new_expression(struct call_context* cc,
-                const char* expr,
-                const struct expression_with_location* expwloc);
-
+call_context*       call_context_create                     (int type, const char* name, method* the_method, call_context* father);
+class_declaration*  class_declaration_create                (const char* name, call_context* father);
+method_list*        call_context_add_method                 (call_context* cc, method* the_method);
+method*             call_context_get_method                 (call_context* cc, const char* name);
+variable*           call_context_add_variable               (call_context* cc, const char* name, const char* type, int dimension, const struct expression_with_location* expwloc);
+void                call_context_add_compiled_expression    (call_context* cc, const struct expression_tree* co_expr, const char* expr);
+long                call_context_add_label                  (call_context* cc, long position, const char* name);
+bytecode_label*     call_context_add_break_label            (call_context* cc, long position, const char* name);
+expression_tree*    call_context_add_new_expression         (call_context* cc, const char* expr, const expression_with_location* expwloc);
+class_declaration*  call_context_get_class_declaration      (const call_context* cc, const char* required_name);
 /**
  * Runs the global call context. This is equivalent to:
  * 1. create the static objects as defined in the call context, in the order they are found (if possible)

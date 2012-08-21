@@ -787,10 +787,19 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
 
                 /* warning!!! Only :
                  *  1. NON static variables are being pushed.
-                 *  2. class variables are NOT pushed   */
+                 *  2. class variables are NOT pushed   
+                 *  3. UserDef variables (ie. classes) are being pushed specially
+                 */
                 if(!vd->the_variable->static_var)
                 {
-                    push_variable(vd->the_variable);
+                    if(vd->the_variable->i_type  == BASIC_TYPE_USERDEF)
+                    {
+                        push_usertype_variable(vd->the_variable);
+                    }
+                    else
+                    {
+                        push_variable(vd->the_variable);
+                    }
 
                     if(vd->the_value)
                     {

@@ -7,6 +7,7 @@
 #include "throw_error.h"
 #include "utils.h"
 #include "variable.h"
+#include "call_ctx.h"
 
 /**
  * This function adds a new  variable to the hashlist in first. Always adds the new  variable to the head of the list
@@ -23,6 +24,18 @@ variable_list* tmp = alloc_mem(variable_list,1);
     {
         throw_error("Memory eror");
     }
+    if(itype == BASIC_TYPE_DONTCARE)
+    {
+        if(call_context_get_class_declaration(cc, var_type))
+        {
+            itype = BASIC_TYPE_USERDEF;
+        }
+    }
+    if(itype == BASIC_TYPE_DONTCARE)
+    {
+        return 0;
+    }
+    
 variable* var = new_variable(var_size, itype);
 
     var->name = duplicate_string(var_name);

@@ -423,9 +423,10 @@ bool is_list_value(const char* what)
 }
 
 /**
- * Returns the type if this expression looks like a variable definition. Return NULL if not
+ * Returns the type if this expression looks like a variable definition. Return NULL if not.
+ * Also checks if the variable defined is a class instance. (ie: TestClass a;)
  */
-static char* looks_like_var_def(const char* expr, int expr_len, const  expression_tree* node)
+static char* looks_like_var_def(const call_context* cc, char* expr, int expr_len, const  expression_tree* node)
 {
 char* first_word = new_string(expr_len);
 int flc = 0;
@@ -436,12 +437,15 @@ int tc = 0;
         first_word[flc++] = expr[tc++];
     }
     first_word = trim(first_word);
-    printf("XXX: firstWord:[%s]\n", first_word);
+
     if(get_typeid(first_word) != BASIC_TYPE_DONTCARE) /* starts with a type. maybe user defined type*/
     {
         /* now see if it continues with something like: first_word something( which means it's a method definition */
         while ( tc < expr_len && expr[tc] != C_PAR_OP && expr[tc] != C_EQ ) tc ++;
-        if(tc == expr_len || expr[tc] == C_EQ) return first_word;
+        if(tc == expr_len || expr[tc] == C_EQ)
+        {
+            return first_word;
+        }
         if(expr[tc] == C_PAR_OP)
         {
         int tclev = 1;
@@ -457,8 +461,16 @@ int tc = 0;
             /* now tc points to the closing ')' on the zeroth level */
             tc ++;
             while(tc < expr_len && is_whitespace(expr[tc])) tc ++;
-            if(tc < expr_len && expr[tc] == '=') return first_word;	/* this is a templated variable definition */
+            if(tc < expr_len && expr[tc] == '=')
+            {
+                return first_word;	/* this is a templated variable definition */
+            }
         }
+    }
+    
+    if(call_context_get_class_declaration(cc, first_word))
+    {
+        return first_word;
     }
     return NULL;
 }
@@ -1084,7 +1096,7 @@ char* expr_trim = trim(expr);
 int expr_len = strlen(expr_trim);
 const char* foundOperator;	/* the operator which will be identified*/
 int zlop;					/* the index of the identified zero level operation */
-char* var_def_type = looks_like_var_def(expr_trim, expr_len, node);
+char* var_def_type = looks_like_var_def(cc, expr_trim, expr_len, node);
 int func_def = looks_like_function_def(expr_trim, expr_len, node);
 method* func_call = NULL; /* if this entry is a function call or or not ... */
 char* index = new_string(expr_len);
