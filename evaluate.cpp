@@ -1131,7 +1131,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
             }
             code_stream() << "pushref" << SPACE << "this" << NEWLINE;
             code_stream() << "call" << SPACE << "@crea" << '(' << m->the_class->name << ',' << "this" << ')'<< NEWLINE;
-            code_stream() << "call" << SPACE << '@' << m->the_class->name << "." << m->name << NEWLINE;
+            code_stream() << "call" << SPACE << '$' << "this" << '@' << m->the_class->name << "." << m->name << NEWLINE;
             code_stream() << "pop" << SPACE << "reg" << 'g' << '(' << level << ')' << NEWLINE;
 
             break;

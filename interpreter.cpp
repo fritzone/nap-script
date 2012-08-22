@@ -1181,7 +1181,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
     }
 
     /* second check: variable definition? */
-    if(var_def_type)
+    if(var_def_type && strcmp(var_def_type, "new"))
     {
         variable_definition_list* vdl = define_variables(var_def_type, expr_trim, expr_len, node, the_method, cc, orig_expr, result, expwloc);
         *result = NT_VARIABLE_DEF_LST;
@@ -1195,8 +1195,16 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
         node->op_type = STATEMENT_NEW;
         char* constructor_name = duplicate_string(keyword_new);
         *strchr(constructor_name, '(') = 0;
-        constructor_call* called_constructor = new_constructor_call(constructor_name, cc);
-        call_frame_entry* cfe = handle_function_call(keyword_new, expr_len, node, called_constructor, the_method, orig_expr, cc, result, expwloc, METHOD_CALL_CONSTRUCTOR);
+		class_declaration* cd = call_context_get_class_declaration(cc, constructor_name);
+		if(!cd)
+		{
+			throw_error("Invalid constructor: ", constructor_name);
+		}
+        method* called_constructor = call_context_get_method(cd, constructor_name);
+		realloc(called_constructor, sizeof(constructor_call));
+		constructor_call* ccf = (constructor_call*)called_constructor;
+		ccf->the_class = cd;
+        call_frame_entry* cfe = handle_function_call(keyword_new, expr_len, node, called_constructor, the_method, orig_expr, cd, result, expwloc, METHOD_CALL_CONSTRUCTOR);
         *result = STATEMENT_NEW;
         return cfe;
     }
