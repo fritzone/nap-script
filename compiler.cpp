@@ -32,19 +32,18 @@ void load_next_single_phrase(expression_with_location* expwloc, method* cur_meth
 static void deal_with_while_loading(call_context* cc, expression_tree* new_node, method* the_method, char delim, int current_level, parsed_file* pf, expression_with_location* expwloc)
 {
     /* firstly create a call context for it */
-char* while_cc_name = new_string(strlen(cc->name) + 10);
+    char* while_cc_name = new_string(strlen(cc->name) + 10);
     sprintf(while_cc_name, "%s%s%s", cc->name, STR_CALL_CONTEXT_SEPARATOR, STR_WHILE);
-call_context* while_cc = call_context_create(CALL_CONTEXT_TYPE_WHILE, while_cc_name, the_method, cc);
+    call_context* while_cc = call_context_create(CALL_CONTEXT_TYPE_WHILE, while_cc_name, the_method, cc);
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_WHILE)	/* normal WHILE with { }*/
     {
         load_next_block(pf, the_method, while_cc, current_level + 1, current_level);	/* loading the function*/
     }
-    else
-    if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_WHILE_1L) /* while (a) if (b) if (c) { blabla; }*/
+    else if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_WHILE_1L) /* while (a) if (b) if (c) { blabla; }*/
     {
         /* load the next statements into the while's call context */
-    char d = delim;
-    expression_with_location* next_exp = alloc_mem(expression_with_location,1);
+        char d = delim;
+        expression_with_location* next_exp = alloc_mem(expression_with_location,1);
         next_exp->location = expwloc->location;
         next_exp->expression = duplicate_string(new_node->info);
         //pf->position += strlen(new_node->info);
@@ -52,21 +51,19 @@ call_context* while_cc = call_context_create(CALL_CONTEXT_TYPE_WHILE, while_cc_n
         new_node->op_type = STATEMENT_WHILE;
         new_node->info = duplicate_string(STR_WHILE);
     }
-    else
-    if(C_SEMC == delim && new_node->op_type == STATEMENT_WHILE_1L)			/* one lined while, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
+    else if(C_SEMC == delim && new_node->op_type == STATEMENT_WHILE_1L)			/* one lined while, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
         call_context_add_new_expression(while_cc, new_node->info, expwloc);
         new_node->op_type = STATEMENT_WHILE;
         new_node->info = duplicate_string(STR_WHILE);
     }
-    else
-    if(C_SEMC == delim && new_node->op_type == STATEMENT_WHILE)			/* one lined while, with empty command, skip pf to the first position after the ; */
+    else if(C_SEMC == delim && new_node->op_type == STATEMENT_WHILE)			/* one lined while, with empty command, skip pf to the first position after the ; */
     {
         while(is_whitespace(pf->content[pf->position])) pf->position++;	/* skip the whitespace */
         if(pf->content[pf->position] == C_SEMC) pf->position ++;		/* skip the ';'*/
     }
 
-resw_while* while_st = new_resw_while();
+    resw_while* while_st = new_resw_while();
     while_st->logical_expr = (expression_tree*)new_node->reference->to_interpret;
     while_st->operations = while_cc;
     new_node->reference = new_envelope(while_st, STATEMENT_WHILE);
@@ -79,7 +76,7 @@ static void deal_with_class_declaration(call_context* cc, expression_tree* new_n
     int pos = pf->position;
     int nbpos = 0;
     bool can_go = true;
-    
+
     while(can_go && pos < pf->content_size)
     {
         new_block[nbpos] = pf->content[pos];
@@ -103,8 +100,8 @@ static void deal_with_class_declaration(call_context* cc, expression_tree* new_n
     {
         load_next_single_phrase(nexpwloc, nmethod, class_cc, &ndelim, nlevel, npf);
         nexpwloc = parser_next_phrase(npf, &ndelim);
-    }  
-    
+    }
+
     free(new_block);
 }
 
@@ -114,19 +111,18 @@ static void deal_with_class_declaration(call_context* cc, expression_tree* new_n
 static void deal_with_for_loading(call_context* cc, expression_tree* new_node, method* the_method, char delim, int current_level, parsed_file* pf, expression_with_location* expwloc)
 {
     /* firstly create a call context for it */
-char* for_cc_name = new_string(strlen(cc->name) + 10);
+    char* for_cc_name = new_string(strlen(cc->name) + 10);
     sprintf(for_cc_name, "%s%s%s", cc->name, STR_CALL_CONTEXT_SEPARATOR, STR_FOR);
-call_context* for_cc = call_context_create(CALL_CONTEXT_TYPE_FOR, for_cc_name, the_method, cc);
+    call_context* for_cc = call_context_create(CALL_CONTEXT_TYPE_FOR, for_cc_name, the_method, cc);
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR)	/* normal FOR with { }*/
     {
         load_next_block(pf, the_method, for_cc, current_level + 1, current_level);	/* loading the function*/
     }
-    else
-    if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR_1L) /* for (a) if (b) if (c) { blabla; }*/
+    else if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR_1L) /* for (a) if (b) if (c) { blabla; }*/
     {
         /* load the next statements into the for's call context */
-    char d = delim;
-    expression_with_location* next_exp = alloc_mem(expression_with_location,1);
+        char d = delim;
+        expression_with_location* next_exp = alloc_mem(expression_with_location,1);
         next_exp->location = expwloc->location;
         next_exp->expression = duplicate_string(new_node->info);
         //pf->position += strlen(new_node->info);
@@ -134,20 +130,18 @@ call_context* for_cc = call_context_create(CALL_CONTEXT_TYPE_FOR, for_cc_name, t
         new_node->op_type = STATEMENT_FOR;
         new_node->info = duplicate_string(STR_FOR);
     }
-    else
-    if(C_SEMC == delim && new_node->op_type == STATEMENT_FOR_1L)			/* one lined for, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
+    else if(C_SEMC == delim && new_node->op_type == STATEMENT_FOR_1L)			/* one lined for, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
         call_context_add_new_expression(for_cc, new_node->info, expwloc);
         new_node->op_type = STATEMENT_FOR;
         new_node->info = duplicate_string(STR_FOR);
     }
-    else
-    if(C_SEMC == delim && new_node->op_type == STATEMENT_FOR)			/* one lined for, with empty command, skip pf to the first position after the ; */
+    else if(C_SEMC == delim && new_node->op_type == STATEMENT_FOR)			/* one lined for, with empty command, skip pf to the first position after the ; */
     {
         while(is_whitespace(pf->content[pf->position])) pf->position++;	/* skip the whitespace */
         if(pf->content[pf->position] == C_SEMC) pf->position ++;		/* skip the ';'*/
     }
-resw_for* rsfor = (resw_for*)new_node->reference->to_interpret;
+    resw_for* rsfor = (resw_for*)new_node->reference->to_interpret;
     rsfor->operations = for_cc;
 }
 
@@ -158,19 +152,18 @@ resw_for* rsfor = (resw_for*)new_node->reference->to_interpret;
 static void deal_with_ifs_loading(call_context* cc, expression_tree* new_node, method* the_method, char delim, int current_level, parsed_file* pf, expression_with_location* expwloc)
 {
     /* firstly create a call context for it */
-char* if_cc_name = new_string(strlen(cc->name) + 6);
+    char* if_cc_name = new_string(strlen(cc->name) + 6);
     sprintf(if_cc_name, "%s%s%s", cc->name, STR_CALL_CONTEXT_SEPARATOR, STR_IF);
-call_context* if_cc = call_context_create(CALL_CONTEXT_TYPE_IF, if_cc_name, the_method, cc);
+    call_context* if_cc = call_context_create(CALL_CONTEXT_TYPE_IF, if_cc_name, the_method, cc);
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF)	/* normal IF with { }*/
     {
         load_next_block(pf, the_method, if_cc, current_level + 1, current_level);	/* loading the function*/
     }
-    else
-    if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF_1L) /* if (a) if (b) if (c) { blabla; }*/
+    else if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF_1L) /* if (a) if (b) if (c) { blabla; }*/
     {
         /* load the next statements into the if's call context */
-    char d = delim;
-    expression_with_location* next_exp = alloc_mem(expression_with_location,1);
+        char d = delim;
+        expression_with_location* next_exp = alloc_mem(expression_with_location,1);
         next_exp->location = expwloc->location;
         next_exp->expression = duplicate_string(new_node->info);
         //pf->position += strlen(new_node->info);
@@ -178,49 +171,46 @@ call_context* if_cc = call_context_create(CALL_CONTEXT_TYPE_IF, if_cc_name, the_
         new_node->op_type = STATEMENT_IF;
         new_node->info = duplicate_string(STR_IF);
     }
-    else
-    if(C_SEMC == delim && new_node->op_type == STATEMENT_IF_1L)			/* one lined if, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
+    else if(C_SEMC == delim && new_node->op_type == STATEMENT_IF_1L)			/* one lined if, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
         call_context_add_new_expression(if_cc, new_node->info, expwloc);
         new_node->op_type = STATEMENT_IF;
         new_node->info = duplicate_string(STR_IF);
     }
-    else
-    if(C_SEMC == delim && new_node->op_type == STATEMENT_IF)			/* one lined if, with empty command, skip pf to the first position after the ; */
+    else if(C_SEMC == delim && new_node->op_type == STATEMENT_IF)			/* one lined if, with empty command, skip pf to the first position after the ; */
     {
         while(is_whitespace(pf->content[pf->position])) pf->position++;	/* skip the whitespace */
         if(pf->content[pf->position] == C_SEMC) pf->position ++;		/* skip the ';'*/
     }
 
     /* here read the next word check if it's a plain 'else' */
-char delim2;
-char* nextw = parser_preview_next_word(pf, &delim2);
-call_context* else_cc = NULL;
+    char delim2;
+    char* nextw = parser_preview_next_word(pf, &delim2);
+    call_context* else_cc = NULL;
     if(nextw && !strcmp(nextw, STR_ELSE))
     {
-    char* else_cc_name = new_string(strlen(cc->name) + 16);
+        char* else_cc_name = new_string(strlen(cc->name) + 16);
         sprintf(else_cc_name, "%s%s%s:%s", cc->name, STR_CALL_CONTEXT_SEPARATOR, STR_IF, STR_ELSE);
         else_cc = call_context_create(CALL_CONTEXT_TYPE_ELSE, else_cc_name, the_method, cc);
         if(delim2 == C_SEMC)
         {
-        expression_with_location* expwloc2 = parser_next_phrase(pf, &delim);
-        char* else_expression = trim(expwloc2->expression + strlen(STR_ELSE));
+            expression_with_location* expwloc2 = parser_next_phrase(pf, &delim);
+            char* else_expression = trim(expwloc2->expression + strlen(STR_ELSE));
             if(strlen(else_expression) > 1)
             {
                 call_context_add_new_expression(else_cc, else_expression, expwloc2);
             }
         }
-        else
-        if(C_OPEN_BLOCK == delim2)
+        else if(C_OPEN_BLOCK == delim2)
         {
             /* here we should skip: the whitespace before the else, the else, the whitespace and the opening '{' */
             parser_skip_next_word(pf);
             if(pf->content[pf->position] != C_OPEN_BLOCK)
             {
                 if(is_identifier_char(pf->content[pf->position]))
-                {	/* else followed by another statement. Load it with the single phrase loader int the else_cc */
-                char delim3 = 0;
-                expression_with_location* expwloc3 = parser_next_phrase(pf, &delim3);
+                {   /* else followed by another statement. Load it with the single phrase loader int the else_cc */
+                    char delim3 = 0;
+                    expression_with_location* expwloc3 = parser_next_phrase(pf, &delim3);
                     load_next_single_phrase(expwloc3, the_method, else_cc, &delim3, current_level, pf);
                 }
                 else
@@ -236,7 +226,7 @@ call_context* else_cc = NULL;
         }
     }
 
-resw_if* if_st = new_resw_if();
+    resw_if* if_st = new_resw_if();
     if_st->logical_expr = (expression_tree*)new_node->reference->to_interpret;
     if_st->if_branch = if_cc;
     if_st->else_branch = else_cc;
@@ -250,34 +240,32 @@ resw_if* if_st = new_resw_if();
 void load_next_block(parsed_file* pf, method* the_method, call_context* par_cc, int current_level, int orig_level)
 {
     /* at this stage the pf points to the first statement in the file ...*/
-call_context* cc = par_cc;
-int can_stop = 0;
+    call_context* cc = par_cc;
+    int can_stop = 0;
     while(!can_stop)
     {
-    char delim = 0;
-    int use_delim = 1;	/* the scope ofthis var is to check whether we need to open new unnamed code blocks. keywords which need blocks (if, while, etc) will make this zero, they are managing their own code blocks */
-    expression_with_location* expwloc = parser_next_phrase(pf, &delim);
+        char delim = 0;
+        int use_delim = 1;	/* the scope ofthis var is to check whether we need to open new unnamed code blocks. keywords which need blocks (if, while, etc) will make this zero, they are managing their own code blocks */
+        expression_with_location* expwloc = parser_next_phrase(pf, &delim);
         if(expwloc || (!expwloc && delim == C_OPEN_BLOCK) )
         {
             if(expwloc)
             {
                 if( strlen(expwloc->expression) > 0 )
                 {
-                expression_tree* new_node = call_context_add_new_expression(cc, expwloc->expression, expwloc);
+                    expression_tree* new_node = call_context_add_new_expression(cc, expwloc->expression, expwloc);
                     /* now check whether this node was an If, a for, a while, a do or anything else that might need loading more rows and creating more contexts */
                     if(new_node->op_type == STATEMENT_IF || new_node->op_type == STATEMENT_IF_1L)
                     {
                         use_delim = 0;
                         deal_with_ifs_loading(cc, new_node, the_method, delim, current_level, pf, expwloc);
                     }
-                    else
-                    if(new_node->op_type == STATEMENT_WHILE || new_node->op_type == STATEMENT_WHILE_1L)
+                    else if(new_node->op_type == STATEMENT_WHILE || new_node->op_type == STATEMENT_WHILE_1L)
                     {
                         use_delim = 0;
                         deal_with_while_loading(cc, new_node, the_method, delim, current_level, pf, expwloc);
                     }
-                    else
-                    if(new_node->op_type == STATEMENT_FOR || new_node->op_type == STATEMENT_FOR_1L)
+                    else if(new_node->op_type == STATEMENT_FOR || new_node->op_type == STATEMENT_FOR_1L)
                     {
                         use_delim = 0;
                         deal_with_for_loading(cc, new_node, the_method, delim, current_level, pf, expwloc);
@@ -290,21 +278,21 @@ int can_stop = 0;
                 switch(delim)
                 {
                 case C_OPEN_BLOCK:
-                    {
+                {
                     char* new_cc_name = new_string(strlen(cc->name) + 10);
-                        sprintf(new_cc_name, "%s%s%s", cc->name, STR_CALL_CONTEXT_SEPARATOR, STR_UNNAMED_CC);
+                    sprintf(new_cc_name, "%s%s%s", cc->name, STR_CALL_CONTEXT_SEPARATOR, STR_UNNAMED_CC);
                     call_context* child_cc = call_context_create(CALL_CONTEXT_TYPE_UNNAMED, new_cc_name, the_method, cc);
-                        call_context_add_child_call_context(cc, child_cc);
+                    call_context_add_child_call_context(cc, child_cc);
                     expression_tree* new_node = call_context_add_new_expression(cc, STR_OPEN_BLOCK, expwloc);
-                        //todo: add a new expression in the current call CONTEXT to start executing the next call context.
-                        new_node->reference = new_envelope(child_cc, ENV_TYPE_CC);
-                        cc = child_cc;
-                        current_level ++;
-                        pf->position ++;	/* hack again, to skip to the next character, to not to loop on the { 4ever */
-                    }
-                    break;
+                    //todo: add a new expression in the current call CONTEXT to start executing the next call context.
+                    new_node->reference = new_envelope(child_cc, ENV_TYPE_CC);
+                    cc = child_cc;
+                    current_level ++;
+                    pf->position ++;	/* hack again, to skip to the next character, to not to loop on the { 4ever */
+                }
+                break;
                 case C_CLOSE_BLOCK:
-                    {
+                {
                     if(expwloc->expression[0] != '}') // put a new close block only if this is not a method def.
                     {
                         call_context_add_new_expression(cc, STR_CLOSE_BLOCK, expwloc);
@@ -316,8 +304,8 @@ int can_stop = 0;
                     {
                         can_stop = 1;
                     }
-                    }
-                    break;
+                }
+                break;
 
                 case C_SEMC:
                     break;
@@ -342,12 +330,12 @@ int can_stop = 0;
 
 void load_next_single_phrase(expression_with_location* expwloc, method* cur_method, call_context* cur_cc, char* delim, int level, parsed_file* pf)
 {
-char* first = expwloc->expression;
+    char* first = expwloc->expression;
     if(first && strlen(first) > 0)
     {
-    int op_res = -1;
-    expression_tree* cnode = new_expression_tree(expwloc);
-    void* gen_res = build_expr_tree(first, cnode, cur_method, first, cur_cc, &op_res, expwloc);
+        int op_res = -1;
+        expression_tree* cnode = new_expression_tree(expwloc);
+        void* gen_res = build_expr_tree(first, cnode, cur_method, first, cur_cc, &op_res, expwloc);
         switch(op_res)
         {
         case NT_VARIABLE_DEF_LST:
@@ -363,9 +351,9 @@ char* first = expwloc->expression;
                 }
                 else				/* normal declaration of method */
                 {
-                int saved_level = level;
+                    int saved_level = level;
                     level ++;	/* stepping into a method, increase the current level */
-                call_context* saved_cc = cur_cc; /* saving the current cc*/
+                    call_context* saved_cc = cur_cc; /* saving the current cc*/
                     cur_cc = cur_method->main_cc;
                     load_next_block(pf, cur_method, cur_cc, level, saved_level);	/* loading the function*/
                     cur_cc = saved_cc; /* restoring the current cc */
@@ -392,15 +380,19 @@ char* first = expwloc->expression;
             deal_with_for_loading(cur_cc, cnode, cur_method, *delim, level, pf, expwloc);
             break;
 
-	case CLASS_DECLARATION:
-	    deal_with_class_declaration(cur_cc, cnode, 0, *delim, level, pf, expwloc);
-	    break;
+        case CLASS_DECLARATION:
+            deal_with_class_declaration(cur_cc, cnode, 0, *delim, level, pf, expwloc);
+            break;
+
         case FUNCTION_CALL:
+        case FUNCTION_CALL_CONSTRUCTOR:
+        case FUNCTION_CALL_OF_OBJECT:
+        case FUNCTION_CALL_STATIC:
         default:
             call_context_add_compiled_expression(cur_cc, cnode, first);
             break;
-	    
-	
+
+
         }
     }
 }
@@ -408,15 +400,15 @@ char* first = expwloc->expression;
 int main(int argc, char* argv[], char* envp[])
 {
     // TODO: To solve the hierarchichal organization of the call contexts.
-call_context* cur_cc = call_context_create(0, "global", NULL, NULL) ;
+    call_context* cur_cc = call_context_create(0, "global", NULL, NULL) ;
     global_cc = cur_cc;
 
-parsed_file* pf = NULL;
-method* cur_method = NULL;
-char delim;
+    parsed_file* pf = NULL;
+    method* cur_method = NULL;
+    char delim;
 
-int level = -1;	/* currently we are in a global context */
-expression_with_location* expwloc = NULL;
+    int level = -1;	/* currently we are in a global context */
+    expression_with_location* expwloc = NULL;
     pf = open_file("test.nap");
     if(!pf)
     {

@@ -14,6 +14,7 @@ struct call_frame_entry;
 struct variable_definition_list;
 struct variable_definition;
 struct variable;
+struct class_declaration;
 
 /**
  * Contains the definition of a method
@@ -50,6 +51,14 @@ struct method
 	int def_loc;
 
     int ret_type;
+};
+
+/**
+ * A constructor call structure for the "new" keyword
+ **/
+struct constructor_call : public method
+{
+    class_declaration* the_class;
 };
 
 /**
@@ -123,6 +132,7 @@ struct call_frame_list* new_call_frame_list(struct call_frame_entry* entry);
  * @param name the name of the new struct method
  */
 struct method* new_method(char* name, char* return_type, struct call_context* cc);
+constructor_call* new_constructor_call(char* name, call_context* cc);
 
 /**
  * Frees the memory allocated by the given struct method

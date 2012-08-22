@@ -60,16 +60,16 @@ const char* STR_XOR_EQUAL	= "^=";
 
 const char* STR_RETURN		= "return";
 const char* STR_IF			= "if";
-const char* STR_ELSE			= "else";
+const char* STR_ELSE		= "else";
 const char* STR_WHILE		= "while";
 const char* STR_BREAK		= "break";
-const char* STR_CONTINUE		= "continue";
+const char* STR_CONTINUE	= "continue";
 const char* STR_FOR			= "for";
 const char* STR_EXTERN		= "extern";
 const char* STR_USE			= "use";
+const char* STR_NEW         = "new";
 
 const char* STR_GLOBAL		= "global";
-
 
 /*
  * Error message strings

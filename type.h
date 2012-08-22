@@ -29,6 +29,9 @@ static const int NT_VARIABLE_DEF_LST		= 100;
 static const int RESULT_STRING				= 110;
 static const int FUNCTION_DEFINITION		= 120;
 static const int FUNCTION_CALL				= 130;
+static const int FUNCTION_CALL_CONSTRUCTOR  = 131;
+static const int FUNCTION_CALL_OF_OBJECT    = 132;
+static const int FUNCTION_CALL_STATIC       = 133;
 static const int STATEMENT_IF				= 140;
 static const int STATEMENT_IF_1L			= 150;
 static const int STATEMENT_CLOSE_CC			= 160;
@@ -48,6 +51,7 @@ static const int LIST_VALUE					= 290;
 static const int LIST_ELEMENT				= 300;
 static const int STATEMENT_DO				= 310;
 static const int CLASS_DECLARATION			= 320;
+static const int STATEMENT_NEW              = 330;
 
 static const int ENV_TYPE_CC				= 1000;
 /*
