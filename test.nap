@@ -2,9 +2,9 @@ class TestClass
 {
     int a;
 
-    TestClass()
+    TestClass(int g)
     {
-        a = 0;
+        a = g;
     }
     
     
@@ -18,5 +18,5 @@ class TestClass
 
 };
 
-TestClass t = new TestClass();
+TestClass t = new TestClass(7);
 
