@@ -45,6 +45,24 @@ method_list *tmp, *q;
     return tmp;
 }
 
+constructor_call* new_constructor_call(char* name, call_context* cc)
+{
+    constructor_call* tmp = alloc_mem(constructor_call, 1);
+    call_context* method_main_cc = NULL;
+    char* constructor_cc_name = new_string(2 * strlen(name)  + 3); /* will contain: parent_name::function_name*/
+    strcpy(constructor_cc_name, name);
+    strcat(constructor_cc_name, "::");
+    strcat(constructor_cc_name, name);
+    memset(tmp, 0, sizeof( method));
+    tmp->name = duplicate_string(name);
+    tmp->return_type = new_string(0);
+    method_main_cc = call_context_create(CALL_CONTEXT_TYPE_METHOD_MAIN, constructor_cc_name, tmp, cc);
+    tmp->main_cc = method_main_cc;
+    tmp->the_class = call_context_get_class_declaration(cc, name);
+
+    return tmp;
+}
+
 /**
  * Creates a new method
  */
@@ -201,6 +219,7 @@ call_frame_list* elem = alloc_mem(call_frame_list,1);
  */
 parameter* method_add_parameter(method* the_method, char* name, char* type, int dimension, int modifiable, const expression_with_location* expwloc)
 {
+    printf("for: %p (%s) this: %s\n", the_method, the_method->name, name);
 parameter* func_par = new_parameter();
 char* indexOfEq = strchr(name, C_EQ);
 variable* nvar = NULL;

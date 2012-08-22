@@ -69,9 +69,9 @@ listv* listv_prepare_list(const char* src,  method* the_method, const char* orig
             if(src[i] == ',')
             {
                 tmp[j] = 0;	// cause we added the ',' too :(
-            expression_tree* new_expression = new_expression_tree(expwloc);
+                expression_tree* new_expression = new_expression_tree(expwloc);
                 build_expr_tree(tmp, new_expression, the_method, orig_expr, cc, result, expwloc);
-            envelope* expr_holder = new_envelope(new_expression, LIST_ELEMENT);
+                envelope* expr_holder = new_envelope(new_expression, LIST_ELEMENT);
                 lst->val = expr_holder;
                 lst->next = alloc_mem(listv, 1);
                 lst = lst->next;
@@ -111,21 +111,21 @@ listv* listv_prepare_list(const char* src,  method* the_method, const char* orig
  */
 static int get_operator(const char* expr, const char** foundOperator, int* ntype)
 {
-int zladd = level_0_add_operator(expr);					/* the position of a +- sign on the first level */
-int zlbit = level_0_bitwise_operator(expr);				/* if any bitwise (&|~_ operators can be found on level 0 */
-int zllogic = level_0_logical_operator(expr);			/* && or || or ! on the zeroth level */
-int zlmlt=level_0_multiply_operator(expr);				/* the position of a * / sign on the first level */
-int zlev_assignment = level_0_assignment_operator(expr);		/* the position of an equal operator on the first level */
-int zlev_shift = level_0_shift(expr);					/* Shift operator << >> */
+    int zladd = level_0_add_operator(expr);					/* the position of a +- sign on the first level */
+    int zlbit = level_0_bitwise_operator(expr);				/* if any bitwise (&|~_ operators can be found on level 0 */
+    int zllogic = level_0_logical_operator(expr);			/* && or || or ! on the zeroth level */
+    int zlmlt=level_0_multiply_operator(expr);				/* the position of a * / sign on the first level */
+    int zlev_assignment = level_0_assignment_operator(expr);		/* the position of an equal operator on the first level */
+    int zlev_shift = level_0_shift(expr);					/* Shift operator << >> */
 
-const char* found_comp_operator = NULL;						/* the comparison operator that was found */
-int zlev_comparison = level_0_comparison_operator(expr, &found_comp_operator);
+    const char* found_comp_operator = NULL;						/* the comparison operator that was found */
+    int zlev_comparison = level_0_comparison_operator(expr, &found_comp_operator);
 
-int sgeq_type = -1;										/* the type of the sg_eq operator*/
-const char* found_sq_eq_operator = NULL;						/* the found sg_eq operator*/
-int zlev_sg_eq_operator = level_0_sg_eq_operator(expr, &found_sq_eq_operator, &sgeq_type);
+    int sgeq_type = -1;										/* the type of the sg_eq operator*/
+    const char* found_sq_eq_operator = NULL;						/* the found sg_eq operator*/
+    int zlev_sg_eq_operator = level_0_sg_eq_operator(expr, &found_sq_eq_operator, &sgeq_type);
 
-int zlop = -1;
+    int zlop = -1;
 
 
     /* lowest priority between the numeric operators */
@@ -137,8 +137,7 @@ int zlop = -1;
             *ntype = OPERATOR_SHIFT_LEFT;
             *foundOperator = duplicate_string(STR_SHLEFT);
         }
-        else
-        if(expr[zlop] == C_GT)
+        else if(expr[zlop] == C_GT)
         {
             *ntype = OPERATOR_SHIFT_RIGHT;
             *foundOperator = duplicate_string(STR_SHRIGHT);
@@ -178,13 +177,11 @@ int zlop = -1;
         {
             *ntype = OPERATOR_MULTIPLY;
         }
-        else
-        if(C_DIV == expr[zlop])
+        else if(C_DIV == expr[zlop])
         {
             *ntype = OPERATOR_DIVIDE;
         }
-        else
-        if(C_MOD == expr[zlop])
+        else if(C_MOD == expr[zlop])
         {
             *ntype = OPERATOR_MODULO;
         }
@@ -198,8 +195,7 @@ int zlop = -1;
         {
             *ntype = OPERATOR_ADD;
         }
-        else
-        if(C_SUB == expr[zlop])
+        else if(C_SUB == expr[zlop])
         {
             *ntype = OPERATOR_MINUS;
         }
@@ -286,15 +282,15 @@ int zlop = -1;
  * <return_type> <function_name,[function_parameters])
  * Where return type can be any type defined or <type func_name ( pars ) > meaning this method returns a method
  */
-static int looks_like_function_def(const char* expr, int expr_len, const expression_tree* node)
+static int looks_like_function_def(const char* expr, int expr_len, const expression_tree* node, call_context* cc)
 {
     if(node && node->father && node->father->op_type == OPERATOR_ASSIGN) return 0;	/* this is part of a templated variable definition */
     if(expr[expr_len - 1] != C_PAR_CL) return 0; /* not ending with ), return false*/
-int i=expr_len - 2; /* the first one: to skip the paranthesys, the second one is the last character inside the parantheses*/
-char* tmp = new_string(expr_len);	/* will hold the parameters in the first run*/
-int can_stop = 0;
-int tmpc = 0;
-int level = 1;
+    int i=expr_len - 2; /* the first one: to skip the paranthesys, the second one is the last character inside the parantheses*/
+    char* tmp = new_string(expr_len);	/* will hold the parameters in the first run*/
+    int can_stop = 0;
+    int tmpc = 0;
+    int level = 1;
     while(i && !can_stop)			/* this is reading backwards */
     {
         if(expr[i] == C_PAR_CL) level ++;
@@ -318,13 +314,13 @@ int level = 1;
     while(i>-1 && is_identifier_char(expr[i]))	i--;	/* fetch the name */
 
     if(i == -1) /* meaning, either we have defined a function with no return type or this is a function call */
-    {/* we need to analyze the parameters, if they look like definition, then it's fine, give back 1 */
-    string_list* pars = string_list_create_bsep(tmp, ',');
-    string_list* q = pars;
+    {   /* we need to analyze the parameters, if they look like definition, then it's fine, give back 1 */
+        string_list* pars = string_list_create_bsep(tmp, ',');
+        string_list* q = pars;
         while(q)
         {
-        int j=0;	/* will go through the parameters value and see if the first word from it is a type or not*/
-        char* firstw = new_string(q->len);
+            int j=0;	/* will go through the parameters value and see if the first word from it is a type or not*/
+            char* firstw = new_string(q->len);
             while(j < q->len && q->str[j] != ' ')
             {
                 firstw[j] = q->str[j];
@@ -340,6 +336,26 @@ int level = 1;
             }
             else
             {
+                /* TODO: check if this is a constructor definition */
+                if(strstr(expr, cc->name) == expr)
+                {
+                    // this might be a constructor definition
+                    const char* pfinder = expr + strlen(cc->name);
+                    while(*pfinder && is_whitespace(*pfinder)) pfinder ++;
+                    if(*pfinder == '(')
+                    {
+                        // now let's find the closing parentheses
+                        while(*pfinder && *pfinder != ')') pfinder ++;
+                        if(*pfinder)
+                        {
+                            return 1;
+                        }
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
                 return 0;	/* function call*/
             }
         }
@@ -352,8 +368,8 @@ int level = 1;
 
     if(is_identifier_char(expr[i]))
     {
-    char* ret_type=new_string(expr_len);
-    int rtc = 0;
+        char* ret_type=new_string(expr_len);
+        int rtc = 0;
         /* fetching the return type of the function */
         while(i>-1 && is_identifier_char(expr[i]))
         {
@@ -428,9 +444,9 @@ bool is_list_value(const char* what)
  */
 static char* looks_like_var_def(const call_context* cc, char* expr, int expr_len, const  expression_tree* node)
 {
-char* first_word = new_string(expr_len);
-int flc = 0;
-int tc = 0;
+    char* first_word = new_string(expr_len);
+    int flc = 0;
+    int tc = 0;
     /* try to determine whether this is a variable definition or not */
     while(tc < expr_len && is_identifier_char(expr[tc]))
     {
@@ -448,8 +464,8 @@ int tc = 0;
         }
         if(expr[tc] == C_PAR_OP)
         {
-        int tclev = 1;
-        int can_stop = 0;
+            int tclev = 1;
+            int can_stop = 0;
             tc ++;	/* to skip the parenthesys */
             while(tc < expr_len && !can_stop)
             {
@@ -467,7 +483,7 @@ int tc = 0;
             }
         }
     }
-    
+
     if(call_context_get_class_declaration(cc, first_word))
     {
         return first_word;
@@ -480,16 +496,16 @@ int tc = 0;
  */
 static method* define_method(const char* expr, int expr_len, expression_tree* node, call_context* cc, const expression_with_location* expwloc)
 {
-int i=expr_len - 2; /* the first one: to skip the paranthesys, the second one is the last character inside the parantheses*/
-int par_counter = 0;
-int name_counter = 0;
-int type_counter = 0;
-method* created_method = NULL;
-char* parameters = new_string(expr_len);	/* will hold the parameters */
-char* func_name = new_string(expr_len);		/* will hold the name of the function .. maybe optimize it a bit*/
-char* ret_type = new_string(expr_len);		/* will hold the return type definition */
-int can_stop = 0;
-int level = 1;
+    int i=expr_len - 2; /* the first one: to skip the paranthesys, the second one is the last character inside the parantheses*/
+    int par_counter = 0;
+    int name_counter = 0;
+    int type_counter = 0;
+    method* created_method = NULL;
+    char* parameters = new_string(expr_len);	/* will hold the parameters */
+    char* func_name = new_string(expr_len);		/* will hold the name of the function .. maybe optimize it a bit*/
+    char* ret_type = new_string(expr_len);		/* will hold the return type definition */
+    int can_stop = 0;
+    int level = 1;
     while(i && !can_stop)					/* this reads backwards */
     {
         if(expr[i] == C_PAR_CL) level ++;
@@ -542,7 +558,7 @@ int level = 1;
  */
 static int var_declaration_followed_by_initialization(const char* expr, int expr_len)
 {
-int i = 0;
+    int i = 0;
     // here we can get [10] c = a; so let's skip them if any
     skip_whitespace(expr, expr_len, &i);	// skip the leading whitespace if any
     if(expr[i] == C_SQPAR_OP)	// square parenthesis?
@@ -587,52 +603,52 @@ static int accepted_variable_name(const char* name)
  */
 static variable_definition_list* define_variables(char* var_def_type, char* expr_trim, int expr_len, expression_tree* node, method* the_method, call_context* cc, const char* orig_expr, int* result, const expression_with_location* expwloc)
 {
-string_list* var_names = string_list_create_bsep(expr_trim + strlen(var_def_type), ',');
-string_list* q = var_names;
-variable_definition_list* var_def_list = NULL, *q1 = NULL; /* will contain the variable definitions if any*/
+    string_list* var_names = string_list_create_bsep(expr_trim + strlen(var_def_type), ',');
+    string_list* q = var_names;
+    variable_definition_list* var_def_list = NULL, *q1 = NULL; /* will contain the variable definitions if any*/
     var_def_type = trim(var_def_type);
     while(q)
     {
-    multi_dimension_def* mdd = NULL, *qm;	/* will contain the dimension definitions if any */
-    char* name = q->str;
+        multi_dimension_def* mdd = NULL, *qm;	/* will contain the dimension definitions if any */
+        char* name = q->str;
         if(!accepted_variable_name(name))
         {
             throw_error(E0037_INV_IDENTF, name);
         }
-    variable* added_var = NULL;	/* will be used if we'll need to implement the definition */
-    char* idx_def_start = strchr(name, C_SQPAR_OP);
-    char* pos_eq = strchr(name, C_EQ);
+        variable* added_var = NULL;	/* will be used if we'll need to implement the definition */
+        char* idx_def_start = strchr(name, C_SQPAR_OP);
+        char* pos_eq = strchr(name, C_EQ);
         if(pos_eq && idx_def_start > pos_eq) idx_def_start = NULL; /* no index definition if the first index is after an equation sign*/
-    variable_definition* var_def = NULL; /* the variable definition for this variable. might contain
+        variable_definition* var_def = NULL; /* the variable definition for this variable. might contain
                                                 multi-dimension index defintion and/or value initialization
                                                 or neither of these two */
-    variable_definition_list* tmp_vdl = NULL;
+        variable_definition_list* tmp_vdl = NULL;
         if(idx_def_start) /* index defined? */
         {
-        int can_stop = 0;
-        char* index = new_string(strlen(name));
-        char* index_save = index;
+            int can_stop = 0;
+            char* index = new_string(strlen(name));
+            char* index_save = index;
             if(!strchr(name, C_SQPAR_CL)) /* definitely an error */
             {
                 throw_error(E0011_IDDEFERR, name, NULL);
             }
             /* now read the index definition */
             idx_def_start ++;
-        int level = 0;
+            int level = 0;
             while(*idx_def_start && !can_stop)
             {
                 if(*idx_def_start == C_SQPAR_OP) level ++;
                 if(*idx_def_start == C_SQPAR_CL && --level == -1) can_stop = 1;
                 if(!can_stop) *index ++ = *idx_def_start ++;
             }
-        string_list* dimensions = string_list_create_bsep(index_save, C_COMMA);
-        string_list* qDimensionStrings = dimensions;	/* to walk through the dimensions */
-        int countedDimensions = 0;
+            string_list* dimensions = string_list_create_bsep(index_save, C_COMMA);
+            string_list* qDimensionStrings = dimensions;	/* to walk through the dimensions */
+            int countedDimensions = 0;
             mdd = alloc_mem(multi_dimension_def,1);
             qm = mdd;
             while(qDimensionStrings)
             {
-            expression_tree* dim_def_node = new_expression_tree(expwloc);
+                expression_tree* dim_def_node = new_expression_tree(expwloc);
                 if(strlen(qDimensionStrings->str) > 0)
                 {
                     build_expr_tree(qDimensionStrings->str, dim_def_node, the_method, orig_expr, cc, result, expwloc);
@@ -656,8 +672,8 @@ variable_definition_list* var_def_list = NULL, *q1 = NULL; /* will contain the v
         }
 
         /* check whether we have direct initialization */
-    int eqp = var_declaration_followed_by_initialization(name, strlen(name));
-    char* deflist = NULL;				/* the definition list for this variable */
+        int eqp = var_declaration_followed_by_initialization(name, strlen(name));
+        char* deflist = NULL;				/* the definition list for this variable */
         if(eqp)
         {
             char* name_val = duplicate_string(name);
@@ -670,9 +686,9 @@ variable_definition_list* var_def_list = NULL, *q1 = NULL; /* will contain the v
 
         if(idx_def_start)
         {
-        char* tmpname = strrchr(name, C_SQPAR_CL) + 1;
+            char* tmpname = strrchr(name, C_SQPAR_CL) + 1;
             /* TODO: ez meghal: int x=a[1]; re */
-        char* tmp1name = trim(tmpname);
+            char* tmp1name = trim(tmpname);
             if(strlen(tmp1name) == 0)	/* in this case the index definition was after the name: int name[12];*/
             {
                 tmpname = strchr(name, C_SQPAR_OP);
@@ -702,7 +718,7 @@ variable_definition_list* var_def_list = NULL, *q1 = NULL; /* will contain the v
 
         if(deflist)	/* whether we have a definition for this variable. if yes, we need to populate a definition_list */
         {
-        expression_tree* var_def_node = new_expression_tree(expwloc);
+            expression_tree* var_def_node = new_expression_tree(expwloc);
             build_expr_tree(deflist, var_def_node, the_method, orig_expr, cc, result, expwloc);
             var_def->the_value = var_def_node;
         }
@@ -741,10 +757,10 @@ variable_definition_list* var_def_list = NULL, *q1 = NULL; /* will contain the v
  * @param expwloc - this is the physical file location
  */
 static variable_template_reference* handle_variable_template_call(char *expr_trim, int expr_len, method* the_method, const char* orig_expr,
-                                                                  call_context* cc, int* result, variable* the_variable,
-                                                                  const expression_with_location* expwloc)
+        call_context* cc, int* result, variable* the_variable,
+        const expression_with_location* expwloc)
 {
-char* pos_op_pas = strchr(expr_trim, C_PAR_OP);
+    char* pos_op_pas = strchr(expr_trim, C_PAR_OP);
     if(!pos_op_pas) throw_error("Internal error: got into a variable template call without templates", NULL);
     while(is_whitespace(*pos_op_pas)) pos_op_pas++;
     if(*pos_op_pas == C_PAR_OP)
@@ -756,22 +772,22 @@ char* pos_op_pas = strchr(expr_trim, C_PAR_OP);
         throw_error(E0012_SYNTAXERR, expr_trim, NULL);
     }
     *strchr(pos_op_pas, C_PAR_CL) = 0;
-string_list* pars = string_list_create_bsep(pos_op_pas, C_COMMA), *q;
+    string_list* pars = string_list_create_bsep(pos_op_pas, C_COMMA), *q;
     q = pars;
- parameter_list* templ_pars = NULL, *q1 = NULL;	/* this will hold the lis of template parameters thatwill be returned*/
+    parameter_list* templ_pars = NULL, *q1 = NULL;	/* this will hold the lis of template parameters thatwill be returned*/
     while(q)
     {
-     expression_tree* cur_par_expr = NULL;
+        expression_tree* cur_par_expr = NULL;
         if(strlen(q->str) > 0)
         {
             cur_par_expr = new_expression_tree(expwloc);
             build_expr_tree(q->str, cur_par_expr, the_method, orig_expr, cc, result, expwloc);
         }
-     parameter* cur_par_obj = new_parameter();
+        parameter* cur_par_obj = new_parameter();
         cur_par_obj->expr = cur_par_expr;
         cur_par_obj->modifiable = -1;
 
-     parameter_list* tmp = alloc_mem(parameter_list,1);
+        parameter_list* tmp = alloc_mem(parameter_list,1);
         tmp->next = NULL;
         tmp->param = cur_par_obj;
 
@@ -800,11 +816,13 @@ string_list* pars = string_list_create_bsep(pos_op_pas, C_COMMA), *q;
  * @param orig_expr - this is the expression in which method call was found
  * @param cc - the call cotnext we are in
  * @param result - will hold the result value. Used in subsequent calls to build_expr_tree
+ * @param type_of_call - whether this is a normal function call (0) a constructor call (1) or 
+ *                       a method call from an object (2) or a static methid of a class (3)
  */
 static call_frame_entry* handle_function_call(char *expr_trim, int expr_len, expression_tree* node,
-                    method* func_call, method* the_method,
-                    const char* orig_expr, call_context* cc, int* result,
-                    const expression_with_location* expwloc)
+        method* func_call, method* the_method,
+        const char* orig_expr, call_context* cc, int* result,
+        const expression_with_location* expwloc, int type_of_call)
 {
     char *params_body = new_string(expr_len);
     string_list* parameters = NULL, *q;
@@ -839,31 +857,34 @@ static call_frame_entry* handle_function_call(char *expr_trim, int expr_len, exp
         {
             cur_par_expr = new_expression_tree(expwloc);
             build_expr_tree(q->str, cur_par_expr, the_method, orig_expr, cc, result, expwloc);
-        }
-        parameter* cur_par_obj = new_parameter();
-        cur_par_obj->expr = cur_par_expr;
-        cur_par_obj->modifiable = -1;
+            
+            parameter* cur_par_obj = new_parameter();
+            cur_par_obj->expr = cur_par_expr;
+            cur_par_obj->modifiable = -1;
 
-        parameter_list* tmp = alloc_mem(parameter_list,1);
-        tmp->next = NULL;
-        tmp->param = cur_par_obj;
+            parameter_list* tmp = alloc_mem(parameter_list,1);
+            tmp->next = NULL;
+            tmp->param = cur_par_obj;
 
-        if(pars_list == NULL)
-        {
-            pars_list = tmp;
-            q1 = pars_list;
+            if(pars_list == NULL)
+            {
+                pars_list = tmp;
+                q1 = pars_list;
+            }
+            else
+            {
+                q1->next = tmp;
+                q1=q1->next;
+            }
+                
         }
-        else
-        {
-            q1->next = tmp;
-            q1=q1->next;
-        }
+
         q=q->next;
     }
     cfe = new_call_frame_entry(func_call, pars_list);
     node->info = duplicate_string(func_call->name);
-    node->op_type = FUNCTION_CALL;
-    node->reference = new_envelope(cfe, FUNCTION_CALL);
+    node->op_type = FUNCTION_CALL + type_of_call;
+    node->reference = new_envelope(cfe, FUNCTION_CALL + type_of_call);
     return cfe;
 }
 
@@ -874,17 +895,17 @@ static call_frame_entry* handle_function_call(char *expr_trim, int expr_len, exp
  */
 static char* is_indexed(const char* expr_trim, int expr_len, char** index)
 {
-const char* p = expr_trim;
-char* the_indexed_part = new_string(expr_len);
-char* q = the_indexed_part;
-int level = 0;
+    const char* p = expr_trim;
+    char* the_indexed_part = new_string(expr_len);
+    char* q = the_indexed_part;
+    int level = 0;
     while(*p)
     {
         if(*p == C_PAR_OP)
         {
             level ++;
             p ++;
-        int can_stop = 0;
+            int can_stop = 0;
             while(*p && !can_stop)
             {
                 if(*p == C_PAR_OP) level ++;
@@ -893,21 +914,19 @@ int level = 0;
             }
             *q ++ = *p ++;	/* fetched the closing parantheses */
         } /* here p points to the first character after the closing ')'*/
-        else
-        if(*p =='"')
+        else if(*p =='"')
         {
             p++;
-        int can_stop = 0;
+            int can_stop = 0;
             while(*p && !can_stop) p++;
             if(*p == C_QUOTE && *(p-1) != C_BACKSLASH) can_stop = 1;
         }
-        else
-        if(*p == C_SQPAR_OP) /*now try to copy the index*/
+        else if(*p == C_SQPAR_OP) /*now try to copy the index*/
         {
             p++;
-        char* idx = *index;
-        int can_stop = 0;
-        int level_idx = 1;
+            char* idx = *index;
+            int can_stop = 0;
+            int level_idx = 1;
             while(!can_stop)
             {
                 if(*p == C_SQPAR_OP) level_idx ++;
@@ -924,8 +943,8 @@ int level = 0;
                     strcat(the_indexed_part, "[");
                     strcat(the_indexed_part, *index);	/* update the first part*/
                     strcat(the_indexed_part, "]");
-                int canstop2 = 0;
-                int level2 = 1;
+                    int canstop2 = 0;
+                    int level2 = 1;
                     p++;							/* skip the second opening square bracket*/
                     memset(*index, 0, strlen(*index));	/* reset the index*/
                     idx = *index;
@@ -973,7 +992,7 @@ static char* is_some_statement(const char* expr_trim, const char* keyword)
 {
     if(strstr(expr_trim, keyword) == expr_trim)
     {
-    char* retv = trim(duplicate_string(expr_trim + strlen(keyword)));
+        char* retv = trim(duplicate_string(expr_trim + strlen(keyword)));
         return retv;
     }
     return NULL;
@@ -986,8 +1005,8 @@ static void* deal_with_one_word_keyword( call_context* cc, expression_tree* node
 {
     if(cc->type != CALL_CONTEXT_TYPE_WHILE && cc->type != CALL_CONTEXT_TYPE_FOR)
     {
-    int in_iterative_cc = 0;
-    call_context* tmpcc = cc->father;
+        int in_iterative_cc = 0;
+        call_context* tmpcc = cc->father;
         while(tmpcc)
         {
             if(tmpcc->type == CALL_CONTEXT_TYPE_WHILE || tmpcc->type == CALL_CONTEXT_TYPE_FOR)
@@ -1014,9 +1033,9 @@ static void* deal_with_one_word_keyword( call_context* cc, expression_tree* node
  */
 static void* deal_with_conditional_keywords( char* keyword_if, char* keyword_while, expression_tree* node, const expression_with_location* expwloc, char* expr_trim, int expr_len, method* the_method, const char* orig_expr, call_context* cc, int* &result )
 {
-int one_line_stmt = -1;
-int stmt = -1;
-const char* keyw = NULL;
+    int one_line_stmt = -1;
+    int stmt = -1;
+    const char* keyw = NULL;
     /* Check if this is an IF or a WHILE statement, since these two are handled the same way mostly */
     if(keyword_if || keyword_while)
     {
@@ -1026,8 +1045,7 @@ const char* keyw = NULL;
             stmt = STATEMENT_IF;
             keyw = STR_IF;
         }
-        else
-        if(keyword_while)
+        else if(keyword_while)
         {
             one_line_stmt = STATEMENT_WHILE_1L;
             stmt = STATEMENT_WHILE;
@@ -1038,16 +1056,16 @@ const char* keyw = NULL;
     if(keyw)
     {
         node->info = duplicate_string(keyw);
-    expression_tree* expt = new_expression_tree(expwloc);
+        expression_tree* expt = new_expression_tree(expwloc);
         /* here fetch the part which is in the parentheses after the keyword and build the tree based on that*/
-    char *condition = duplicate_string(expr_trim + strlen(keyw));
+        char *condition = duplicate_string(expr_trim + strlen(keyw));
         while(is_whitespace(*condition)) condition ++;	/* skip the whitespace */
         if(*condition != C_PAR_OP)						/* next char should be '(' */
         {
             throw_error(E0012_SYNTAXERR, NULL);
         }
-    char* p = ++condition;								/* skip the parenthesis */
-    char* m_cond = new_string(expr_len);
+        char* p = ++condition;								/* skip the parenthesis */
+        char* m_cond = new_string(expr_len);
         p = trim(extract_next_enclosed_phrase(p, C_PAR_OP, C_PAR_CL, m_cond));
         build_expr_tree(m_cond, expt, the_method, orig_expr, cc, result, expwloc);
         if(strlen(p) > 1)	/* means: there is a one lined statement after the condition*/
@@ -1091,21 +1109,23 @@ const char* keyw = NULL;
 void* build_expr_tree(const char *expr, expression_tree* node, method* the_method, const char* orig_expr, call_context* cc, int* result, const expression_with_location* expwloc)
 {
     set_location(expwloc);
-    /* some variables that will be used at a later stage too */
-char* expr_trim = trim(expr);
-int expr_len = strlen(expr_trim);
-const char* foundOperator;	/* the operator which will be identified*/
-int zlop;					/* the index of the identified zero level operation */
-char* var_def_type = looks_like_var_def(cc, expr_trim, expr_len, node);
-int func_def = looks_like_function_def(expr_trim, expr_len, node);
-method* func_call = NULL; /* if this entry is a function call or or not ... */
-char* index = new_string(expr_len);
-char* indexed_elem = strchr(expr_trim,C_SQPAR_CL) && strchr(expr_trim, C_SQPAR_OP) ? is_indexed(expr_trim, expr_len, &index): NULL;
 
-char* keyword_return = is_some_statement(expr_trim, STR_RETURN);
-char* keyword_if = is_some_statement(expr_trim, STR_IF);
-char* keyword_while = is_some_statement(expr_trim, STR_WHILE);
-char* keyword_for = is_some_statement(expr_trim, STR_FOR);
+    /* some variables that will be used at a later stage too */
+    char* expr_trim = trim(expr);
+    int expr_len = strlen(expr_trim);
+    const char* foundOperator;	/* the operator which will be identified*/
+    int zlop;					/* the index of the identified zero level operation */
+    char* var_def_type = looks_like_var_def(cc, expr_trim, expr_len, node);
+    int func_def = looks_like_function_def(expr_trim, expr_len, node, cc);
+    method* func_call = NULL; /* if this entry is a function call or or not ... */
+    char* index = new_string(expr_len);
+    char* indexed_elem = strchr(expr_trim,C_SQPAR_CL) && strchr(expr_trim, C_SQPAR_OP) ? is_indexed(expr_trim, expr_len, &index): NULL;
+
+    char* keyword_return = is_some_statement(expr_trim, STR_RETURN);
+    char* keyword_if = is_some_statement(expr_trim, STR_IF);
+    char* keyword_while = is_some_statement(expr_trim, STR_WHILE);
+    char* keyword_for = is_some_statement(expr_trim, STR_FOR);
+    char* keyword_new = is_some_statement(expr_trim, STR_NEW);
 
     if(!strcmp(expr, STR_CLOSE_BLOCK)) /* destroy the call context*/
     {
@@ -1133,7 +1153,7 @@ char* keyword_for = is_some_statement(expr_trim, STR_FOR);
     {
         expr_trim[expr_len-1] = 0;	// removing the double quotes
         expr_trim++;
-    bt_string* the_str = bt_string_create(expr_trim);
+        bt_string* the_str = bt_string_create(expr_trim);
         node->reference = new_envelope(the_str, BASIC_TYPE_STRING);
         node->info = duplicate_string(the_str->the_string);
         *result = RESULT_STRING;
@@ -1155,7 +1175,7 @@ char* keyword_for = is_some_statement(expr_trim, STR_FOR);
     /* check if this is a function definition */
     if(func_def)
     {
-    method* mth = define_method(expr_trim, expr_len, node, cc, expwloc);
+        method* mth = define_method(expr_trim, expr_len, node, cc, expwloc);
         *result = FUNCTION_DEFINITION;
         return mth;
     }
@@ -1163,12 +1183,23 @@ char* keyword_for = is_some_statement(expr_trim, STR_FOR);
     /* second check: variable definition? */
     if(var_def_type)
     {
-    variable_definition_list* vdl = define_variables(var_def_type, expr_trim, expr_len, node, the_method, cc, orig_expr, result, expwloc);
+        variable_definition_list* vdl = define_variables(var_def_type, expr_trim, expr_len, node, the_method, cc, orig_expr, result, expwloc);
         *result = NT_VARIABLE_DEF_LST;
         return vdl;
     }
 
     /* now check if any keyword is used here, and deal with that */
+
+    if(keyword_new)
+    {
+        node->op_type = STATEMENT_NEW;
+        char* constructor_name = duplicate_string(keyword_new);
+        *strchr(constructor_name, '(') = 0;
+        constructor_call* called_constructor = new_constructor_call(constructor_name, cc);
+        call_frame_entry* cfe = handle_function_call(keyword_new, expr_len, node, called_constructor, the_method, orig_expr, cc, result, expwloc, METHOD_CALL_CONSTRUCTOR);
+        *result = STATEMENT_NEW;
+        return cfe;
+    }
 
     /* check if this is a 'return' statement */
     if(keyword_return)
@@ -1197,15 +1228,15 @@ char* keyword_for = is_some_statement(expr_trim, STR_FOR);
     /* the for keyword? */
     if(keyword_for)
     {
-    char* fors_trm = trim(keyword_for);
-    int fors_len = strlen(fors_trm);
+        char* fors_trm = trim(keyword_for);
+        int fors_len = strlen(fors_trm);
         if(fors_trm[0] != C_PAR_OP && fors_trm[fors_len - 1] != C_PAR_CL)
         {
             throw_error(E0012_SYNTAXERR);
         }
-    char* for_par = new_string(fors_len);
-    int i = 0, j = 1, level = 1;
-    int done = 0;
+        char* for_par = new_string(fors_len);
+        int i = 0, j = 1, level = 1;
+        int done = 0;
         while(!done && j < fors_len)
         {
             if(fors_trm[j] == C_PAR_OP) level ++;
@@ -1218,25 +1249,25 @@ char* keyword_for = is_some_statement(expr_trim, STR_FOR);
         {
             throw_error(E0012_SYNTAXERR);
         }
-    string_list* content = string_list_create_bsep(for_par, C_SEMC);
+        string_list* content = string_list_create_bsep(for_par, C_SEMC);
         if(!content)
         {
             throw_error(E0012_SYNTAXERR);
         }
-    char* init_stmt = content->str;				/* the init statement */
+        char* init_stmt = content->str;				/* the init statement */
         if(! content->next)
         {
             throw_error(E0012_SYNTAXERR);
         }
-    string_list *q = content->next;
-    char* cond_stmt = q->str;					/* the condition */
+        string_list *q = content->next;
+        char* cond_stmt = q->str;					/* the condition */
         if(!q->next)
         {
             throw_error(E0012_SYNTAXERR);
         }
         q = q->next;
-    char* expr_stmt = q->str;
-    resw_for* rswfor = alloc_mem(resw_for,1);
+        char* expr_stmt = q->str;
+        resw_for* rswfor = alloc_mem(resw_for,1);
 
         rswfor->init_stmt = init_stmt;
         rswfor->tree_init_stmt = new_expression_tree(expwloc);
@@ -1252,14 +1283,14 @@ char* keyword_for = is_some_statement(expr_trim, STR_FOR);
 
         node->info = duplicate_string(STR_FOR);
 
-    char *condition = duplicate_string(expr_trim + strlen(STR_FOR));	/* not actually condition, but the for's three statements: init, cond, expr*/
+        char *condition = duplicate_string(expr_trim + strlen(STR_FOR));	/* not actually condition, but the for's three statements: init, cond, expr*/
         while(is_whitespace(*condition)) condition ++;	/* skip the whitespace */
         if(*condition != C_PAR_OP)						/* next char should be '(' */
         {
             throw_error(E0012_SYNTAXERR, NULL);
         }
-    char* p = ++condition;								/* skip the parenthesis */
-    char* m_cond = new_string(expr_len);
+        char* p = ++condition;								/* skip the parenthesis */
+        char* m_cond = new_string(expr_len);
         p = trim(extract_next_enclosed_phrase(p, C_PAR_OP, C_PAR_CL, m_cond));
         if(strlen(p) > 1)	/* means: there is a one lined statement after the condition*/
         {
@@ -1279,13 +1310,13 @@ char* keyword_for = is_some_statement(expr_trim, STR_FOR);
 
     /* now: find the operators and just play with them */
     foundOperator = NULL;
-int ntype = NO_OPERATOR;					/* the type number of the node, firstly let's assume the node contains nothing like an operator */
+    int ntype = NO_OPERATOR;					/* the type number of the node, firstly let's assume the node contains nothing like an operator */
     zlop = get_operator(expr_trim, &foundOperator, &ntype);	/* zlop will contain the index of the zeroth level operator */
     /* ok, here start checking what we have gathered till now */
 
     if(zlop!=-1)	/* we have found an operator on the zero.th level */
     {
-    char *beforer = trim(before(zlop, expr_trim));
+        char *beforer = trim(before(zlop, expr_trim));
         if(strlen(beforer) == 0)
         {
             /* now we should check for the 'unary' +- operators */
@@ -1296,8 +1327,7 @@ int ntype = NO_OPERATOR;					/* the type number of the node, firstly let's assum
                 {
                     ntype = OPERATOR_UNARY_PLUS;
                 }
-                else
-                if(ntype == OPERATOR_MINUS)
+                else if(ntype == OPERATOR_MINUS)
                 {
                     ntype = OPERATOR_UNARY_MINUS;
                 }
@@ -1314,7 +1344,7 @@ int ntype = NO_OPERATOR;					/* the type number of the node, firstly let's assum
 
         /* finding the part which is after the operator */
 
-    char* afterer = trim(after(zlop + (foundOperator ? strlen(foundOperator) -1 : 0), expr_trim));
+        char* afterer = trim(after(zlop + (foundOperator ? strlen(foundOperator) -1 : 0), expr_trim));
         if(strlen(afterer)==0)
         {
             throw_error(E0012_SYNTAXERR, expr, NULL);
@@ -1331,7 +1361,7 @@ int ntype = NO_OPERATOR;					/* the type number of the node, firstly let's assum
         /* Is this is a function call?*/
         if((func_call = is_function_call(expr_trim, cc)))
         {
-        call_frame_entry* cfe = handle_function_call(expr_trim, expr_len, node, func_call, the_method, orig_expr, cc, result, expwloc);
+            call_frame_entry* cfe = handle_function_call(expr_trim, expr_len, node, func_call, the_method, orig_expr, cc, result, expwloc, METHOD_CALL_NORMAL);
             *result = FUNCTION_CALL;
             return cfe;
         }
@@ -1339,7 +1369,7 @@ int ntype = NO_OPERATOR;					/* the type number of the node, firstly let's assum
         /* check: pre-increment */
         if(expr_len > 2 && expr_trim[0] == expr_trim[1] && (expr_trim[0] == C_SUB || expr_trim[0] == C_ADD) )
         {
-         const char* p = STR_PLUSPLUS;
+            const char* p = STR_PLUSPLUS;
             ntype = OPERATOR_PREINC;
             if(expr_trim[0] == C_SUB)
             {
@@ -1352,163 +1382,161 @@ int ntype = NO_OPERATOR;					/* the type number of the node, firstly let's assum
             build_expr_tree(expr_trim + 2, node->left, the_method, orig_expr, cc, result, expwloc);
         }
         else
-        /* check if it's post increment/decrement */
-        if(expr_len > 2 && expr_trim[expr_len - 1] == expr_trim[expr_len - 2] && (expr_trim[expr_len - 1] == C_SUB || expr_trim[expr_len - 1] == C_ADD ) )
-        {
-         const char* p = STR_PLUSPLUS;
-            ntype = OPERATOR_POSTINC;
-            if(C_SUB == expr_trim[expr_len - 1])
+            /* check if it's post increment/decrement */
+            if(expr_len > 2 && expr_trim[expr_len - 1] == expr_trim[expr_len - 2] && (expr_trim[expr_len - 1] == C_SUB || expr_trim[expr_len - 1] == C_ADD ) )
             {
-                p = STR_MINMIN;
-                ntype = OPERATOR_POSTDEC;
-            }
-            node->info = duplicate_string(p);
-            node->op_type = ntype;
-
-            /* now add the  variable to the tree... */
-            node->left = new_expression_tree_with_father(node, expwloc);
-            expr_trim[expr_len - 2] = 0;	/* this is to cut down the two ++ or -- signs ... */
-            build_expr_tree(expr_trim, node->left, the_method, orig_expr, cc, result, expwloc);
-        }
-        else
-        if( C_PAR_OP == expr_trim[0] ) /* if this is enclosed in a paranthesis */
-        {
-            if(expr_len > 1 && C_PAR_CL == expr_trim[expr_len - 1])
-            {
-                expr_trim[expr_len-1]=0;		/* here we have removed the trailing parantheses */
-                expr_trim ++;
-                expr_trim = trim(expr_trim);
-                if(strlen(expr_trim)==0)
+                const char* p = STR_PLUSPLUS;
+                ntype = OPERATOR_POSTINC;
+                if(C_SUB == expr_trim[expr_len - 1])
                 {
-                    throw_error(E0012_SYNTAXERR, expr, NULL);
+                    p = STR_MINMIN;
+                    ntype = OPERATOR_POSTDEC;
+                }
+                node->info = duplicate_string(p);
+                node->op_type = ntype;
+
+                /* now add the  variable to the tree... */
+                node->left = new_expression_tree_with_father(node, expwloc);
+                expr_trim[expr_len - 2] = 0;	/* this is to cut down the two ++ or -- signs ... */
+                build_expr_tree(expr_trim, node->left, the_method, orig_expr, cc, result, expwloc);
+            }
+            else if( C_PAR_OP == expr_trim[0] ) /* if this is enclosed in a paranthesis */
+            {
+                if(expr_len > 1 && C_PAR_CL == expr_trim[expr_len - 1])
+                {
+                    expr_trim[expr_len-1]=0;		/* here we have removed the trailing parantheses */
+                    expr_trim ++;
+                    expr_trim = trim(expr_trim);
+                    if(strlen(expr_trim)==0)
+                    {
+                        throw_error(E0012_SYNTAXERR, expr, NULL);
+                    }
+                    else
+                    {
+                        build_expr_tree(expr_trim, node, the_method, orig_expr, cc, result, expwloc);
+                    }
                 }
                 else
                 {
-                    build_expr_tree(expr_trim, node, the_method, orig_expr, cc, result, expwloc);
+                    throw_error(E0009_PARAMISM, expr_trim, NULL);
                 }
+            }
+            else if(indexed_elem)	/* if this is something indexed */
+            {   /* here we should grab from the end the first set of square parantheses and pass the stuff before it to the indexed, the stuff in it to the index...*/
+                string_list* entries = string_list_create_bsep(index, C_COMMA);
+                string_list* q = entries;
+                expression_tree_list* index_list = NULL;
+                multi_dimension_index* dim = new_multi_dimension_index(expr_trim);
+
+                node->info = duplicate_string(STR_IDXID);
+                node->left = new_expression_tree_with_father(node, expwloc);
+                node->right = new_expression_tree_with_father(node, expwloc);
+                build_expr_tree(indexed_elem, node->left, the_method, orig_expr, cc, result, expwloc);	/* to discover the indexed element */
+
+                /* and now identify the indexes and work on them*/
+
+                int indx_cnt = 0;
+                while(q)
+                {
+                    expression_tree* cur_indx = new_expression_tree(expwloc);
+                    build_expr_tree(q->str, cur_indx, the_method, orig_expr, cc, result, expwloc);
+                    expression_tree_list* tmp = expression_tree_list_add_new_expression(cur_indx, &index_list, q->str);
+                    if(NULL == index_list)
+                    {
+                        index_list = tmp;
+                    }
+                    q = q->next;
+                    indx_cnt ++;
+                }
+                dim->dimension_values = index_list;
+                node->right->reference = new_envelope(dim, MULTI_DIM_INDEX); /*((variable*)node->father->left->reference->to_interpret)->mult_dim_def*/
+                node->right->info = duplicate_string(expr_trim);
+                node->op_type = MULTI_DIM_INDEX;
             }
             else
             {
-                throw_error(E0009_PARAMISM, expr_trim, NULL);
-            }
-        }
-        else
-        if(indexed_elem)	/* if this is something indexed */
-        { /* here we should grab from the end the first set of square parantheses and pass the stuff before it to the indexed, the stuff in it to the index...*/
-        string_list* entries = string_list_create_bsep(index, C_COMMA);
-        string_list* q = entries;
-        expression_tree_list* index_list = NULL;
-        multi_dimension_index* dim = new_multi_dimension_index(expr_trim);
-
-            node->info = duplicate_string(STR_IDXID);
-            node->left = new_expression_tree_with_father(node, expwloc);
-            node->right = new_expression_tree_with_father(node, expwloc);
-            build_expr_tree(indexed_elem, node->left, the_method, orig_expr, cc, result, expwloc);	/* to discover the indexed element */
-
-            /* and now identify the indexes and work on them*/
-
-        int indx_cnt = 0;
-            while(q)
-            {
-            expression_tree* cur_indx = new_expression_tree(expwloc);
-                build_expr_tree(q->str, cur_indx, the_method, orig_expr, cc, result, expwloc);
-            expression_tree_list* tmp = expression_tree_list_add_new_expression(cur_indx, &index_list, q->str);
-                if(NULL == index_list)
+                /* here determine what can be this
+                    here we are supposed to add only  variables/attributes, or the post increment stuff */
+                envelope* envl = NULL;
+                char* t = duplicate_string(expr_trim);
+                int tlen = strlen(t);
+                int templated = 0;
+                int env_var = 0;
+                variable* var = method_has_variable(the_method, cc, t, &templated, &env_var);
+                if(env_var)
                 {
-                    index_list = tmp;
+                    node->op_type = ENVIRONMENT_VARIABLE;
+                    envl = new_envelope(t, ENVIRONMENT_VARIABLE);
                 }
-                q = q->next;
-                indx_cnt ++;
-            }
-            dim->dimension_values = index_list;
-            node->right->reference = new_envelope(dim, MULTI_DIM_INDEX); /*((variable*)node->father->left->reference->to_interpret)->mult_dim_def*/
-            node->right->info = duplicate_string(expr_trim);
-            node->op_type = MULTI_DIM_INDEX;
-        }
-        else
-        {
-            /* here determine what can be this
-                here we are supposed to add only  variables/attributes, or the post increment stuff */
-        envelope* envl = NULL;
-        char* t = duplicate_string(expr_trim);
-        int tlen = strlen(t);
-        int templated = 0;
-        int env_var = 0;
-        variable* var = method_has_variable(the_method, cc, t, &templated, &env_var);
-            if(env_var)
-            {
-                node->op_type = ENVIRONMENT_VARIABLE;
-                envl = new_envelope(t, ENVIRONMENT_VARIABLE);
-            }
-            if(var)	/* if this is a variable */
-            {
-                if(templated)
+                if(var)	/* if this is a variable */
                 {
-                variable_template_reference* vtr = handle_variable_template_call(expr_trim, expr_len, the_method, orig_expr, cc, result, var, expwloc);
-                    envl = new_envelope(vtr, TEMPLATED_VARIABLE);
-                    node->op_type = TEMPLATED_VARIABLE;
+                    if(templated)
+                    {
+                        variable_template_reference* vtr = handle_variable_template_call(expr_trim, expr_len, the_method, orig_expr, cc, result, var, expwloc);
+                        envl = new_envelope(vtr, TEMPLATED_VARIABLE);
+                        node->op_type = TEMPLATED_VARIABLE;
+                    }
+                    else
+                    {
+                        // TODO: Check if this is a class variable
+                        envl = new_envelope(var, BASIC_TYPE_VARIABLE);
+                        node->op_type = BASIC_TYPE_VARIABLE;
+                    }
+                }
+                if(node->info && !strcmp(node->info, expr))
+                {
+                    {
+                        throw_error(E0012_SYNTAXERR, expr, NULL);
+                    }
+                }
+                node->info=duplicate_string(expr_trim);
+                while(tlen > 0 && !isalnum( t[tlen - 1]) && t[tlen -1] != '\"' && t[tlen - 1] != '(' && t[tlen - 1] != ')' )
+                {
+                    t[tlen - 1] = 0 ;
+                    t = trim(t);
+                    tlen = strlen(t);
+                }
+
+                if(strlen(t) == 0)
+                {
+                    throw_error(E0012_SYNTAXERR, orig_expr, NULL);
+                }
+
+                if(isnumber(t))
+                {
+                    number* nr = new_number_str(t);
+                    envl = new_envelope(nr, nr->type);
+                    node->op_type = nr->type;
                 }
                 else
                 {
-                    // TODO: Check if this is a class variable
-                    envl = new_envelope(var, BASIC_TYPE_VARIABLE);
-                    node->op_type = BASIC_TYPE_VARIABLE;
+                    /* here maybe we should check for cases like: a[10]++ */
                 }
-            }
-            if(node->info && !strcmp(node->info, expr))
-            {
+
+                if(strstr(t, "class") == t) /* class definition */
                 {
-                    throw_error(E0012_SYNTAXERR, expr, NULL);
+                    char* cname = t + 5;
+                    while(isspace(*cname)) cname ++;
+                    char* tcname = duplicate_string(cname);
+                    char* the_class_name = tcname;
+                    while(is_identifier_char(*cname))
+                    {
+                        tcname ++;
+                        cname ++;
+                    }
+                    *tcname = 0;
+                    class_declaration* cd = class_declaration_create(the_class_name, cc);
+
+                    envl = new_envelope(cd, CLASS_DECLARATION);
+                    node->op_type = CLASS_DECLARATION;
+                    *result = CLASS_DECLARATION;
                 }
-            }
-            node->info=duplicate_string(expr_trim);
-            while(tlen > 0 && !isalnum( t[tlen - 1]) && t[tlen -1] != '\"' && t[tlen - 1] != '(' && t[tlen - 1] != ')' )
-            {
-                t[tlen - 1] = 0 ;
-                t = trim(t);
-                tlen = strlen(t);
-            }
-
-            if(strlen(t) == 0)
-            {
-                throw_error(E0012_SYNTAXERR, orig_expr, NULL);
-            }
-
-            if(isnumber(t))
-            {
-            number* nr = new_number_str(t);
-                envl = new_envelope(nr, nr->type);
-                node->op_type = nr->type;
-            }
-            else
-            {
-                /* here maybe we should check for cases like: a[10]++ */
-            }
-            if(strstr(t, "class") == t) /* class definition */
-            {
-                char* cname = t + 5;
-                while(isspace(*cname)) cname ++;
-                char* tcname = duplicate_string(cname);
-                char* the_class_name = tcname;
-                while(is_identifier_char(*cname))
+                if(!envl)
                 {
-                    tcname ++;
-                    cname ++;
+                    build_expr_tree(t, node, the_method, orig_expr, cc, result, expwloc);
                 }
-                *tcname = 0;
-                puts(the_class_name);
-                class_declaration* cd = class_declaration_create(the_class_name, cc);
-
-                envl = new_envelope(cd, CLASS_DECLARATION);
-                node->op_type = CLASS_DECLARATION;
-                *result = CLASS_DECLARATION;
+                node->reference = envl;
             }
-            if(!envl)
-            {
-                build_expr_tree(t, node, the_method, orig_expr, cc, result, expwloc);
-            }
-            node->reference = envl;
-        }
     }
     return NULL;
 }

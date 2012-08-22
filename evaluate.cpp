@@ -794,25 +794,49 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
                 {
                     if(vd->the_variable->i_type  == BASIC_TYPE_USERDEF)
                     {
-                        push_usertype_variable(vd->the_variable);
+                        /* search if we have a definition for it too, such as: Base t = new Derived()*/
+                        if(vd->the_value)
+                        {
+                            code_stream() << "pushref" << SPACE << vd->the_variable->name << NEWLINE;
+                            
+                            expression_tree* tempassign = alloc_mem(expression_tree, 1);
+                            expression_tree* tempvar = alloc_mem(expression_tree, 1);
+                            tempvar->left = tempvar->right = 0;
+                            tempvar->op_type = BASIC_TYPE_VARIABLE;
+                            tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE);
+
+                            tempassign->left = tempvar;
+                            tempassign->right = vd->the_value;
+                            resolve_assignment(tempassign, level, the_method, cc, reqd_type, forced_mov);
+                            
+                            // the constructor call is NOT pushing this
+                            push_cc_end_marker();
+
+                            
+                        }
+                        else
+                        {
+                            push_usertype_variable(vd->the_variable);
+                        }
                     }
                     else
                     {
                         push_variable(vd->the_variable);
+                        
+                        if(vd->the_value)
+                        {
+                            expression_tree* tempassign = alloc_mem(expression_tree, 1);
+                            expression_tree* tempvar = alloc_mem(expression_tree, 1);
+                            tempvar->left = tempvar->right = 0;
+                            tempvar->op_type = BASIC_TYPE_VARIABLE;
+                            tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE);
+
+                            tempassign->left = tempvar;
+                            tempassign->right = vd->the_value;
+                            resolve_assignment(tempassign, level, the_method, cc, reqd_type, forced_mov);
+                        }
                     }
 
-                    if(vd->the_value)
-                    {
-                        expression_tree* tempassign = alloc_mem(expression_tree, 1);
-                        expression_tree* tempvar = alloc_mem(expression_tree, 1);
-                        tempvar->left = tempvar->right = 0;
-                        tempvar->op_type = BASIC_TYPE_VARIABLE;
-                        tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE);
-
-                        tempassign->left = tempvar;
-                        tempassign->right = vd->the_value;
-                        resolve_assignment(tempassign, level, the_method, cc, reqd_type, forced_mov);
-                    }
                 }
                 else
                 {
@@ -1078,6 +1102,40 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 }
                 break;
             }
+
+        case FUNCTION_CALL_CONSTRUCTOR:
+        {
+            call_frame_entry* cfe = (call_frame_entry*)node->reference->to_interpret;
+            constructor_call* m = (constructor_call*)cfe->the_method;
+            parameter_list* ingoing_parameters = cfe->parameters;
+            int pc = 0;
+            push_cc_start_marker();
+            while(ingoing_parameters)
+            {
+                parameter* p = ingoing_parameters->param;
+                parameter* fp = method_get_parameter(m, pc);
+                if(!fp)
+                {
+                    throw_error("parameter not found");
+                }
+                expression_tree* t = p->expr;
+                if(t->op_type <= BASIC_TYPE_CLASS_VAR)
+                {
+                    code_stream() << "mov" << SPACE << "reg" << get_reg_type(fp->type) << '(' << level << ')' << ',';
+                }
+                compile(t, the_method, cc, level, fp->type, forced_mov);
+                code_stream() << NEWLINE << "push" << SPACE << "reg" << get_reg_type(fp->type) << '(' << level << ')' << NEWLINE;
+
+                ingoing_parameters = ingoing_parameters->next;
+                pc ++;
+            }
+            code_stream() << "pushref" << SPACE << "this" << NEWLINE;
+            code_stream() << "call" << SPACE << "@crea" << '(' << m->the_class->name << ',' << "this" << ')'<< NEWLINE;
+            code_stream() << "call" << SPACE << '@' << m->the_class->name << "." << m->name << NEWLINE;
+            code_stream() << "pop" << SPACE << "reg" << 'g' << '(' << level << ')' << NEWLINE;
+
+            break;
+        }
 
         case FUNCTION_CALL:
         {

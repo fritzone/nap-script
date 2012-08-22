@@ -77,7 +77,7 @@ variable_list *variable_list_has_variable(const char *s, variable_list* first)
  */
 variable_list *variable_list_get_at(variable_list* first, int idx)
 {
-    if(idx <= 0)
+    if(idx <= 0 || first == 0)
     {
         return NULL;
     }

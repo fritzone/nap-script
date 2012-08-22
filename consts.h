@@ -116,6 +116,7 @@ extern const char* STR_CONTINUE;
 extern const char* STR_FOR;
 extern const char* STR_EXTERN;
 extern const char* STR_USE;
+extern const char* STR_NEW;
 
 extern const char* STR_GLOBAL;
 
@@ -139,6 +140,14 @@ const int DEF_EXTERN					= 1;
 const int MAX_NR_AS_STR_LEN				= 32;
 
 const int NO_INDEX						= -1;
+
+/*
+ * Differrent method calls
+ */
+const int METHOD_CALL_NORMAL            = 0;
+const int METHOD_CALL_CONSTRUCTOR       = 1;
+const int METHOD_CALL_OF_OBJECT         = 2;
+const int METHOD_CALL_STATIC_OF_CLASS   = 3;
 
 /*
  * Error message strings
