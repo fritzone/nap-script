@@ -245,13 +245,29 @@ char other_par(char c)
 
 bool valid_variable_name(const char* nm)
 {
-int l = strlen(nm);
-	if(l < 1 || l > 255) return false;
-	if(!isalpha(nm[0]) && nm[0] !='$') return false;
-	if(nm[0] == '$') return true;
+    int l = strlen(nm);
+	if(l < 1 || l > 255)
+    {
+        printf("variable name too long: %s [%d]\n", nm, l);
+        return false;
+    }
+	if(!isalpha(nm[0]) && nm[0] !='$') 
+    {
+        printf("variable name does not start with allowed symbol %s [%c]\n", nm, nm[0]);
+        return false;
+    }
+	if(nm[0] == '$')
+    {
+        return true;
+    }
+    
 	for(int i=(nm[0]=='$'?1:0); i<l ;i++)
 	{
-		if(!isalnum(nm[i])) return false;
+		if(!isalnum(nm[i]) && nm[i] !='_')
+        {
+            printf("variable contains invalid character: %s [%c] at position [%d]\n", nm, nm[i], i);
+            return false;
+        }
 	}
 	return true;
 }

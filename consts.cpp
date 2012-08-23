@@ -128,8 +128,10 @@ const char* STR_REAL_FORMAT	=	"%.8G";
 
 /* the string representatives of the basic types */
 const char* STR_INT					= "int";
-const char* STR_REAL					= "real";
-const char* STR_STRING					= "string";
+const char* STR_REAL				= "real";
+const char* STR_STRING				= "string";
+const char* STR_CHAR                = "char";
+const char* STR_BOOL                = "bool";
 
 const char* STR_UNKNOWN				= "unknown";
 
