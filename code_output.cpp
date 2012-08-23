@@ -261,7 +261,7 @@ void push_variable(struct variable* var)
 void push_usertype_variable(variable* var)
 {
     code_stream() << "call" << SPACE << "@crea" << '(' << var->c_type << ',' << var->name << ')'<< NEWLINE;
-    code_stream() << "pushref" << SPACE << var->name << NEWLINE;
+    code_stream() << "push" << "ref" << SPACE << var->name << NEWLINE;
 }
 
 void exit_app()
@@ -271,7 +271,7 @@ void exit_app()
 
 void peek(const char *type, int idx, const char *dest)
 {
-    code_stream() <<"peek" << type << "(" << idx << ")" << SPACE << dest<< NEWLINE;
+    code_stream() <<"peek" << type << '(' << idx << ')' << ',' << SPACE << dest<< NEWLINE;
 }
 
 void jmp(const char *label)

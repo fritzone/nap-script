@@ -1201,10 +1201,10 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
 			throw_error("Invalid constructor: ", constructor_name);
 		}
         method* called_constructor = call_context_get_method(cd, constructor_name);
-		realloc(called_constructor, sizeof(constructor_call));
+		called_constructor = (constructor_call*)realloc(called_constructor, sizeof(constructor_call));
 		constructor_call* ccf = (constructor_call*)called_constructor;
 		ccf->the_class = cd;
-        call_frame_entry* cfe = handle_function_call(keyword_new, expr_len, node, called_constructor, the_method, orig_expr, cd, result, expwloc, METHOD_CALL_CONSTRUCTOR);
+        call_frame_entry* cfe = handle_function_call(keyword_new, expr_len, node, ccf, the_method, orig_expr, cd, result, expwloc, METHOD_CALL_CONSTRUCTOR);
         *result = STATEMENT_NEW;
         return cfe;
     }
