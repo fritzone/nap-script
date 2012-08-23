@@ -409,7 +409,15 @@ int main(int argc, char* argv[], char* envp[])
 
     int level = -1;	/* currently we are in a global context */
     expression_with_location* expwloc = NULL;
-    pf = open_file("test.nap");
+    
+    if(argc > 1) 
+    {
+        pf = open_file(argv[1]);
+    }
+    else
+    {
+        pf = open_file("test.nap");
+    }
     if(!pf)
     {
         return 1;

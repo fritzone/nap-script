@@ -208,6 +208,8 @@ extern const char* STR_REAL_FORMAT;
 extern const char* STR_INT;
 extern const char* STR_REAL;
 extern const char* STR_STRING;
+extern const char* STR_CHAR;
+extern const char* STR_BOOL;
 
 extern const char* STR_UNKNOWN;
 
