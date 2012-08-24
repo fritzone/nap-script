@@ -51,7 +51,7 @@ constructor_call* new_constructor_call(char* name, call_context* cc)
     call_context* method_main_cc = NULL;
     char* constructor_cc_name = new_string(2 * strlen(name)  + 3); /* will contain: parent_name::function_name*/
     strcpy(constructor_cc_name, name);
-    strcat(constructor_cc_name, "::");
+    strcat(constructor_cc_name, STR_CALL_CONTEXT_SEPARATOR );
     strcat(constructor_cc_name, name);
     memset(tmp, 0, sizeof( method));
     tmp->name = duplicate_string(name);
@@ -72,7 +72,7 @@ method* tmp = alloc_mem(method,1);
 call_context* method_main_cc = NULL;
 char* method_main_cc_name = new_string(strlen(name) + strlen(cc->name) + 3); /* will contain: parent_name::function_name*/
     strcpy(method_main_cc_name, cc->name);
-    strcat(method_main_cc_name, "::");
+    strcat(method_main_cc_name, STR_CALL_CONTEXT_SEPARATOR);
     strcat(method_main_cc_name, name);
     memset(tmp, 0, sizeof( method));
     tmp->name = duplicate_string(name);

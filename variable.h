@@ -170,28 +170,12 @@ struct variable_template_reference* new_variable_template_reference(variable* va
 struct variable* new_variable(int dimension, int type);
 
 /**
- * Resets the value of this struct variable
- * @param var - the variable to reset
- */
-void variable_reset(struct variable* var);
-
-/**
  * Adds a new dimension to the variable. Also updates the content of the inner structures,
  * moves the values and resizes them.
  * @param var - the variable
  * @param dimension - the dimension to add
  */
 void variable_add_dimension(struct variable* var, int dimension);
-
-/**
- * sets the value of the given struct variable to the given double value
- */
-void var_set_double_value(struct variable* var, double value);
-
-/**
- * sets the value of the given struct variable to the given double value
- */
-void var_set_int_value(struct variable* var, long value);
 
 /**
  * Sets the struct indexed int value

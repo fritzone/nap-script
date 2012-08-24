@@ -37,6 +37,8 @@ bool is_atomic_type(int the_type)
     case BASIC_TYPE_BOOL:
     case ENVIRONMENT_VARIABLE:
     case TEMPLATED_VARIABLE:
+    case KEYWORD_FALSE:
+    case KEYWORD_TRUE:
         return true;
     }
     return false;
@@ -67,13 +69,13 @@ static void deal_with_post_pre_node(const expression_tree* pp_node, int level, c
     variable* var = (variable*)pp_node->left->reference->to_interpret;	/* this is the variable */
         if(pp_node->op_type == OPERATOR_POSTDEC || pp_node->op_type == OPERATOR_POSTINC)
         {
-            mov_var_into_reg(var, level);			/* post operation: firstly "use" the original value*/
-            operation_on_variable(pp_node->op_type, var);		/* then update it*/
+            mov_var_into_reg(cc, var, level);			/* post operation: firstly "use" the original value*/
+            operation_on_variable(cc, pp_node->op_type, var);		/* then update it*/
         }
         else
         {
-            operation_on_variable(pp_node->op_type, var);		/* firstly update the variable*/
-            mov_var_into_reg(var, level);			/* then "use" it*/
+            operation_on_variable(cc, pp_node->op_type, var);		/* firstly update the variable*/
+            mov_var_into_reg(cc, var, level);			/* then "use" it*/
         }
     }
     else
@@ -84,13 +86,13 @@ static void deal_with_post_pre_node(const expression_tree* pp_node, int level, c
         deliver_ccidx_dest(pp_node->left, level + 1, the_method, cc, var->i_type, idxc, var, forced_mov);			/* firstly initialize the "return" value */
         if(pp_node->op_type == OPERATOR_POSTDEC || pp_node->op_type == OPERATOR_POSTINC)
         {
-            mov_indexed_into_reg(var, level, idxc);			/* reg(level) goes out to the caller*/
-            operation_on_indexed(pp_node->op_type, var, idxc);		/* then increment it */
+            mov_indexed_into_reg(cc, var, level, idxc);			/* reg(level) goes out to the caller*/
+            operation_on_indexed(cc, pp_node->op_type, var, idxc);		/* then increment it */
         }
         else
         {
-            operation_on_indexed(pp_node->op_type, var, idxc);		/* update it */
-            mov_indexed_into_reg(var, level, idxc);			/* then initialize the return value (use it) in the caller*/
+            operation_on_indexed(cc, pp_node->op_type, var, idxc);		/* update it */
+            mov_indexed_into_reg(cc, var, level, idxc);			/* then initialize the return value (use it) in the caller*/
         }
 
         clear_indexes(cc);											/* and finally liberate the indexes for the next operation*/
@@ -116,19 +118,19 @@ static void resolve_op_equal(const expression_tree* node, const method* the_meth
                 init_reg_with_atomic(node->left, node->right, var->i_type, level);
                 compile(node->right, the_method, cc, level, var->i_type, forced_mov);	/* filled up the 'incby' */
 
-                operation_target_var_source_reg(node->op_type, var, level);
+                operation_target_var_source_reg(cc, node->op_type, var, level);
             }
             else
             {
                 if(is_post_pre_op(node->right->op_type))	/* we post/pre inc/dec with "something++" */
                 {
                     deal_with_post_pre_node(node->right, level, the_method, cc, forced_mov);
-                    operation_target_var_source_reg(node->op_type, var, level);
+                    operation_target_var_source_reg(cc, node->op_type, var, level);
                 }
                 else	/* the value with which we incr/decr is a normal "complex" operation, compile it for the current level and add (sub...) it to the variable */
                 {
                     compile(node->right, the_method, cc, level, var->i_type, forced_mov);
-                    operation_target_var_source_reg(node->op_type, var, level);
+                    operation_target_var_source_reg(cc, node->op_type, var, level);
                 }
             }
         }
@@ -143,7 +145,7 @@ static void resolve_op_equal(const expression_tree* node, const method* the_meth
                 deliver_ccidx_dest(node->left, level, the_method, cc, reqd_type, index, var, forced_mov);	/* fisrtly calculating the index since this might mess up the registers*/
                 init_reg_with_atomic(node->left, node->right, var->i_type, level);
                 compile(node->right, the_method, cc, level, var->i_type, forced_mov);			/* printing right's content*/
-                operation_target_indexed_source_reg(node->op_type, var, index, level);		/* and finally updating the indexed value*/
+                operation_target_indexed_source_reg(cc, node->op_type, var, index, level);		/* and finally updating the indexed value*/
                 clear_indexes(cc);
             }
             else
@@ -152,7 +154,7 @@ static void resolve_op_equal(const expression_tree* node, const method* the_meth
                 {
                     deliver_ccidx_dest(node->left, level, the_method, cc, reqd_type, index, var, forced_mov);	/* firstly calculating the index since this might mess up the registers*/
                     deal_with_post_pre_node(node->right, level, the_method, cc, forced_mov);	/* then initializing the result of the post/pre operation */
-                    operation_target_indexed_source_reg(node->op_type, var, index, level);	 /* and finally updating the indexed value*/
+                    operation_target_indexed_source_reg(cc, node->op_type, var, index, level);	 /* and finally updating the indexed value*/
                     clear_indexes(cc);				/* and clearing the indexes*/
                 }
                 else	/* the value with which we incr/decr is a normal "complex" operation, compile it for the current level and add (sub...) it to the variable */
@@ -161,7 +163,7 @@ static void resolve_op_equal(const expression_tree* node, const method* the_meth
                     operation_target_reg_source_reg(var->i_type, level, var->i_type, level + 1);
 
                     deliver_ccidx_dest(node->left, level, the_method, cc, reqd_type, index, var, forced_mov);	/* fisrtly calculating the index since this might mess up the registers*/
-                    operation_target_indexed_source_reg(node->op_type, var, index, level);	 /* and finally updating the indexed value*/
+                    operation_target_indexed_source_reg(cc, node->op_type, var, index, level);	 /* and finally updating the indexed value*/
                     clear_indexes(cc);
                 }
             }
@@ -333,7 +335,7 @@ void resolve_assignment( const expression_tree* node, int level, const method* t
                             {
                                 print_newline();
                             }
-                            move_reg_into_var(dest, level);
+                            move_reg_into_var(cc, dest, level);
                         }
                     }
                     else	/* postinc/dec / preinc/dec*/
@@ -797,7 +799,7 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
                         /* search if we have a definition for it too, such as: Base t = new Derived()*/
                         if(vd->the_value)
                         {
-                            code_stream() << "pushref" << SPACE << vd->the_variable->name << NEWLINE;
+                            code_stream() << "push" << "ref" << SPACE << cc->name << '.' << vd->the_variable->name << NEWLINE;
                             
                             expression_tree* tempassign = alloc_mem(expression_tree, 1);
                             expression_tree* tempvar = alloc_mem(expression_tree, 1);
@@ -816,12 +818,12 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
                         }
                         else
                         {
-                            push_usertype_variable(vd->the_variable);
+                            push_usertype_variable(cc, vd->the_variable);
                         }
                     }
                     else
                     {
-                        push_variable(vd->the_variable);
+                        push_variable(cc, vd->the_variable);
                         
                         if(vd->the_value)
                         {
@@ -850,7 +852,7 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
                 {
                     if(q->dimension > 0)	/* this dimension definition is a simple number */
                     {
-                        resolve_variable_add_dimension_number(vd->the_variable, q->dimension);
+                        resolve_variable_add_dimension_number(cc, vd->the_variable, q->dimension);
                     }
                     else
                     {
@@ -865,7 +867,7 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
                                 throw_error("Internal: Multi-dim initialization is not having an associated expression", NULL);
                             }
                             compile(q->expr_def, the_method, cc, level + 1, reqd_type, 1);
-                            resolve_variable_add_dimension_regis(vd->the_variable, level + 1);
+                            resolve_variable_add_dimension_regis(cc, vd->the_variable, level + 1);
 
                         }
                     }
@@ -947,7 +949,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 }
                 else
                 {
-                    code_stream() << "mov" << SPACE << "regi" << '(' << level << ')' << ',' << *(long*)nr->location << NEWLINE;
+                    code_stream() << "mov" << SPACE << "reg" << 'i' << '(' << level << ')' << ',' << *(long*)nr->location << NEWLINE;
                 }
             }
             break;
@@ -966,11 +968,11 @@ void compile(const expression_tree* node, const method* the_method, call_context
             variable* var = (variable*)node->reference->to_interpret;
                 if(var->i_type != reqd_type && reqd_type != -2)
                 {
-                    code_stream() << "@c" << get_reg_type(var->i_type) << get_reg_type(reqd_type) << '(' << var->name << ')';
+                    code_stream() << "@c" << get_reg_type(var->i_type) << get_reg_type(reqd_type) << '(' << cc->name << '.' << var->name << ')';
                 }
                 else
                 {
-                    code_stream() << var->name;
+                    code_stream() << cc->name << '.' << var->name;
                 }
             }
             break;
@@ -982,7 +984,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
             variable* var = (variable*)node->left->reference->to_interpret;
                 deliver_ccidx_dest(node, level, the_method, cc, reqd_type, idxc, var, forced_mov);
                 code_stream() << "mov" << SPACE << "reg" << get_reg_type(reqd_type) << '(' << level << ')' << ',' <<
-                                 "@ccidx" << '(' << var->name << ',' << idxc << ')' << NEWLINE;
+                                 "@ccidx" << '(' << cc->name << '.'  << var->name << ',' << idxc << ')' << NEWLINE;
                 clear_indexes(cc);
             }
             break;
@@ -1129,9 +1131,9 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 ingoing_parameters = ingoing_parameters->next;
                 pc ++;
             }
-            code_stream() << "push" << "ref" << SPACE << "this" << NEWLINE;
-            code_stream() << "call" << SPACE << "@crea" << '(' << m->the_class->name << ',' << "this" << ')'<< NEWLINE;
-            code_stream() << "call" << SPACE << '$' << "this" << '@' << m->the_class->name << "." << m->name << NEWLINE;
+            code_stream() << "push" << "ref" << SPACE << cc->name << '.' << "this" << NEWLINE;
+            code_stream() << "call" << SPACE << "@crea" << '(' << m->the_class->name << ',' << cc->name << '.' << "this" << ')'<< NEWLINE;
+            code_stream() << "call" << SPACE << '$' << cc->name << '.' << "this" << '@' << m->the_class->name << "." << m->name << NEWLINE;
             code_stream() << "pop" << SPACE << "reg" << 'g' << '(' << level << ')' << NEWLINE;
 
             break;
@@ -1188,6 +1190,14 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 code_stream() << NEWLINE << get_opcode(node->op_type) << SPACE << "reg"
                               << get_reg_type(ret_type) << '(' << level << ')' << NEWLINE;
             }
+            break;
+            
+        case KEYWORD_TRUE:
+            code_stream() << "true";
+            break;
+            
+        case KEYWORD_FALSE:
+            code_stream() << "false";
             break;
 
         default:

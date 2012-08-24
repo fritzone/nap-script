@@ -22,22 +22,6 @@
 #include <stdio.h>
 
 /*
- * As double
- */
-void var_set_double_value(variable* var, double value)
-{
-    var->value[0] = new_envelope(new_number_real(value), BASIC_TYPE_REAL);
-}
-
-/*
- * As int
- */
-void var_set_int_value(variable* var, long value)
-{
-    var->value[0] = new_envelope(new_number_int(value), BASIC_TYPE_INT);
-}
-
-/*
  * Sets the  indexed value as string
  */
 void var_set_indexed_string_value(variable* var,  char* src, int index)
@@ -318,28 +302,6 @@ void variable_set_indexed_value(variable* var, envelope* new_value, int index)
     }
 }
 
-void variable_reset(variable* var)
-{
-    int tid = get_typeid(var->c_type);
-    for (int i=0; i<var->dimension; i++)
-    {
-        if(BASIC_TYPE_INT == tid)
-        {
-            var_set_indexed_int_value(var, 0, i);
-        }
-        else
-        if(BASIC_TYPE_REAL == tid)
-        {
-            var_set_indexed_double_value(var, 0.0, i);
-        }
-        else
-        if(BASIC_TYPE_STRING == tid)
-        {
-            var_set_indexed_string_value(var, EMPTY, i);
-        }
-    }
-}
-
 /**
  * Creates a new multi-dimension index object
  * @return a new object, inited to 0
@@ -538,7 +500,6 @@ variable* tmp = new_variable(src->dimension, src->i_type);
     tmp->static_var = src->static_var;
     tmp->templ_parameters = src->templ_parameters;
     tmp->templ_variables = src->templ_variables;
-    variable_reset(tmp);
     return tmp;
 }
 
