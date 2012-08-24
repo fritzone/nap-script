@@ -1517,6 +1517,20 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                     node->op_type = nr->type;
                 }
                 else
+                if(!strcmp(t, "true"))
+                {
+                    envl = new_envelope(0, KEYWORD_TRUE);
+                    node->op_type = KEYWORD_TRUE;
+                    *result = KEYWORD_TRUE;
+                }
+                else
+                if(!strcmp(t, "false"))
+                {
+                    envl = new_envelope(0, KEYWORD_FALSE);
+                    node->op_type = KEYWORD_FALSE;
+                    *result = KEYWORD_FALSE;
+                }
+                else
                 {
                     /* here maybe we should check for cases like: a[10]++ */
                 }

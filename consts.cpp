@@ -115,7 +115,7 @@ const char* const E0037_INV_IDENTF	= "[E0037] Invalid identifier name";
 const char* const E0038_DYNDIMNALL	= "[E0038] Dynamic dimensions are not allowed for multidimension arrays";
 
 
-const char* const STR_CALL_CONTEXT_SEPARATOR = "::";
+const char* const STR_CALL_CONTEXT_SEPARATOR = ".";
 const char* const STR_UNNAMED_CC = "unnamed";
 
 const char* STR_INVALID_DIMENSION	= "Invalid dimension for a struct variable being created";

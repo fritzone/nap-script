@@ -189,7 +189,7 @@ void call_context_compile(call_context* cc, char* envp[])
         int pctr = 0;
         while(vlist)
         {
-            peek(vlist->var->c_type, pctr++, vlist->var->name);
+            peek(cc, vlist->var->c_type, pctr++, vlist->var->name);
             vlist = vlist->next;
         }
         push_cc_start_marker();
@@ -223,7 +223,7 @@ void call_context_compile(call_context* cc, char* envp[])
             int pctr = 0;
             while(vlist)
             {
-                peek(vlist->var->c_type, pctr++, vlist->var->name);
+                peek(cc, vlist->var->c_type, pctr++, vlist->var->name);
                 vlist = vlist->next;
             }
             push_cc_start_marker();

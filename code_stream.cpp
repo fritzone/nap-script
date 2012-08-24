@@ -30,5 +30,18 @@ void code_stream::output_bytecode(const char* s)
     }
     else
     {
+        // this is possibly a variable name (plaintext)... or a function call (starts with @) or a class method call (starts with $)
+        if(s[0] == '@') // function call
+        {
+        }
+        else
+        if(s[0] == '$') // method call
+        {
+        }
+        else            // variable
+        {
+        }
+            
+        
     }
 }

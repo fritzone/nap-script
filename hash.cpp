@@ -42,7 +42,6 @@ variable* var = new_variable(var_size, itype);
     var->c_type = duplicate_string(var_type);
 
     var->dimension = var_size;
-    variable_reset(var);
 
     /* now fix the stuff to include template parameters if any */
 
