@@ -397,38 +397,43 @@ void load_next_single_phrase(expression_with_location* expwloc, method* cur_meth
     }
 }
 
+static void load_file(call_context* cc, const char* file_name, method* cur_method)
+{
+    int level = -1; /* currently we are in a global context */
+    expression_with_location* expwloc = NULL;
+    char delim;
+    parsed_file* pf = open_file(file_name);
+    if(!pf)
+    {
+        return;
+    }
+    expwloc = parser_next_phrase(pf, &delim);
+    while(expwloc)
+    {
+        char* exp_trim = trim(duplicate(expwloc->expression));
+        if(strstr(exp_trim, "import") == exp_trim)
+        {
+            expr_trim += 6;
+        }
+        else
+        {
+            load_next_single_phrase(expwloc, cur_method, cc, &delim, level, pf);
+            expwloc = parser_next_phrase(pf, &delim);
+        }
+    }
+
+}
+
 int main(int argc, char* argv[], char* envp[])
 {
     // TODO: To solve the hierarchichal organization of the call contexts.
     call_context* cur_cc = call_context_create(0, "global", NULL, NULL) ;
     global_cc = cur_cc;
 
-    parsed_file* pf = NULL;
     method* cur_method = NULL;
-    char delim;
+    const char* file_name = argc > 1?argv[1]:"test.nap";
 
-    int level = -1;	/* currently we are in a global context */
-    expression_with_location* expwloc = NULL;
-    
-    if(argc > 1) 
-    {
-        pf = open_file(argv[1]);
-    }
-    else
-    {
-        pf = open_file("test.nap");
-    }
-    if(!pf)
-    {
-        return 1;
-    }
-    expwloc = parser_next_phrase(pf, &delim);
-    while(expwloc)
-    {
-        load_next_single_phrase(expwloc, cur_method, cur_cc, &delim, level, pf);
-        expwloc = parser_next_phrase(pf, &delim);
-    }
-
+    load_file(cur_cc, file_name, cur_method);
     call_context_compile(global_cc, envp);
     return 1;
 }
