@@ -64,6 +64,14 @@ int level_0_shift(const char* expr);
 int level_0_assignment_operator(const char *expr);
 
 /**
+ * Looks for a level 0 dot (.) operator in the given expression
+ * Returns the index, if any found.
+ * Returns -1 if nothing is found
+ * @param expr - the expression we are working on
+ */
+int level_0_dot_operator(const char *expr);
+
+/**
  * Looks for a level 0 comparison operator.
  * Returns the index, if any found.
  * Returns -1 if nothing is found

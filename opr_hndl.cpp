@@ -318,11 +318,19 @@ int modDiv = level_0_longer_operator(expr, STR_MOD, 1);
 }
 
 /**
- * Looks for a level 0 multiplicative operator
+ * Looks for a level 0 assignment operator
  */
 int level_0_assignment_operator(const char *expr)
 {
 	return level_0_longer_operator(expr, STR_EQUAL, 0);
+}
+
+/**
+ * Looks for a level 0 dot operator
+ */
+int level_0_dot_operator(const char *expr)
+{
+    return level_0_longer_operator(expr, STR_DOT, 0);
 }
 
 /**

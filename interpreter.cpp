@@ -115,7 +115,8 @@ static int get_operator(const char* expr, const char** foundOperator, int* ntype
     int zlbit = level_0_bitwise_operator(expr);				/* if any bitwise (&|~_ operators can be found on level 0 */
     int zllogic = level_0_logical_operator(expr);			/* && or || or ! on the zeroth level */
     int zlmlt=level_0_multiply_operator(expr);				/* the position of a * / sign on the first level */
-    int zlev_assignment = level_0_assignment_operator(expr);		/* the position of an equal operator on the first level */
+    int zlev_assignment = level_0_assignment_operator(expr);/* the position of an equal operator on the first level */
+    int zlev_dot = level_0_dot_operator(expr);              /* the position of a dot operator on the first level */
     int zlev_shift = level_0_shift(expr);					/* Shift operator << >> */
 
     const char* found_comp_operator = NULL;						/* the comparison operator that was found */
@@ -126,7 +127,6 @@ static int get_operator(const char* expr, const char** foundOperator, int* ntype
     int zlev_sg_eq_operator = level_0_sg_eq_operator(expr, &found_sq_eq_operator, &sgeq_type);
 
     int zlop = -1;
-
 
     /* lowest priority between the numeric operators */
     if(zlev_shift != -1)
@@ -271,6 +271,14 @@ static int get_operator(const char* expr, const char** foundOperator, int* ntype
         zlop = zlev_sg_eq_operator;
         *foundOperator = duplicate_string(found_sq_eq_operator);
         *ntype = sgeq_type;
+    }
+
+    /* this is not even an operator, it is an expression, but let's treat it as an operator */
+    if(zlev_dot != -1)
+    {
+        *ntype = OPERATOR_DOT;
+        *foundOperator = duplicate_string(STR_DOT);
+        zlop = zlev_dot;
     }
 
     return zlop;
@@ -601,7 +609,15 @@ static int accepted_variable_name(const char* name)
 /**
  * Defines the variables that can be found below ...
  */
-static variable_definition_list* define_variables(char* var_def_type, char* expr_trim, int expr_len, expression_tree* node, method* the_method, call_context* cc, const char* orig_expr, int* result, const expression_with_location* expwloc)
+static variable_definition_list* define_variables(char* var_def_type, 
+                                                  char* expr_trim, 
+                                                  int expr_len, 
+                                                  expression_tree* node, 
+                                                  method* the_method, 
+                                                  call_context* cc, 
+                                                  const char* orig_expr, 
+                                                  int* result, 
+                                                  const expression_with_location* expwloc)
 {
     string_list* var_names = string_list_create_bsep(expr_trim + strlen(var_def_type), ',');
     string_list* q = var_names;
@@ -1361,8 +1377,9 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
         node->op_type = ntype;
         node->left=new_expression_tree_with_father(node, expwloc);
         node->right=new_expression_tree_with_father(node, expwloc);
-        build_expr_tree(afterer, node->right, the_method, orig_expr, cc, result, expwloc);
+        /* the order here is important for the "." operator ... it needs to know the parent in order to identify the object to find its call_context*/
         build_expr_tree(beforer, node->left, the_method, orig_expr, cc, result, expwloc);
+        build_expr_tree(afterer, node->right, the_method, orig_expr, cc, result, expwloc);
     }
     else /* no operator on the zeroth level ... */
     {
@@ -1372,6 +1389,28 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
             call_frame_entry* cfe = handle_function_call(expr_trim, expr_len, node, func_call, the_method, orig_expr, cc, result, expwloc, METHOD_CALL_NORMAL);
             *result = FUNCTION_CALL;
             return cfe;
+        }
+        
+        /* Check if this is a function call of an object*/
+        if(node->father && node->father->op_type == OPERATOR_DOT)
+        {
+            /* let's search for the type in the left of the father.. */
+            if(node->father->left && node->father->left != node)
+            {
+                if(node->father->left->op_type == BASIC_TYPE_VARIABLE)  // to solve: a.func()
+                {
+                    variable* v = (variable*)(node->father->left->reference->to_interpret);
+                    class_declaration* cd = call_context_get_class_declaration(v->cc, v->c_type);
+                    if(!cd)
+                    {
+                        
+                    }
+                }
+                else
+                if(node->father->left->op_type == FUNCTION_CALL)    // to solve func().anotherOne()
+                {
+                }
+            }
         }
 
         /* check: pre-increment */

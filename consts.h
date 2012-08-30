@@ -19,7 +19,7 @@ extern const char* STR_DIV;
 extern const char* STR_MOD;
 extern const char* STR_OPEN_BLOCK;
 extern const char* STR_CLOSE_BLOCK;
-
+extern const char* STR_DOT;
 
 /*
  * Comparison operators

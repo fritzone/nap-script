@@ -4,6 +4,7 @@
 #include "envelope.h"
 #include "parser.h"
 
+struct call_context;
 /*
  * Variables and methods associated with them
  */
@@ -107,6 +108,9 @@ struct variable
 
 	/* 1 if this variable has dynamic dimensions, 0 if not*/
 	char dynamic_dimension;
+    
+    /* the call context in which this variable is to be found */
+    call_context* cc;
 };
 
 /** 

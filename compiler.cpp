@@ -4,6 +4,10 @@
 #include <ctype.h>
 #include <math.h>
 
+#include <vector>
+#include <string>
+#include <algorithm>
+
 #include "hash.h"
 #include "tree.h"
 #include "consts.h"
@@ -21,6 +25,8 @@
 #include "throw_error.h"
 #include "parser.h"
 #include "res_wrds.h"
+
+static std::vector<std::string> loaded_files;
 
 
 void load_next_block(parsed_file* pf, method* the_method, call_context* par_cc, int current_level, int orig_level);
@@ -391,8 +397,6 @@ void load_next_single_phrase(expression_with_location* expwloc, method* cur_meth
         default:
             call_context_add_compiled_expression(cur_cc, cnode, first);
             break;
-
-
         }
     }
 }
@@ -410,10 +414,17 @@ static void load_file(call_context* cc, const char* file_name, method* cur_metho
     expwloc = parser_next_phrase(pf, &delim);
     while(expwloc)
     {
-        char* exp_trim = trim(duplicate(expwloc->expression));
+        char* exp_trim = trim(duplicate_string(expwloc->expression));
         if(strstr(exp_trim, "import") == exp_trim)
         {
-            expr_trim += 6;
+            exp_trim += 6;
+            char* file_to_load = trim(exp_trim);
+            if(std::find(loaded_files.begin(), loaded_files.end(), file_to_load) == loaded_files.end())
+            {
+                loaded_files.push_back(file_to_load);
+                load_file(cc, file_to_load, cur_method);
+                expwloc = parser_next_phrase(pf, &delim);
+            }
         }
         else
         {
@@ -421,7 +432,6 @@ static void load_file(call_context* cc, const char* file_name, method* cur_metho
             expwloc = parser_next_phrase(pf, &delim);
         }
     }
-
 }
 
 int main(int argc, char* argv[], char* envp[])
