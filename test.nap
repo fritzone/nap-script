@@ -1,26 +1,12 @@
-int a;
-
-import tests/test_bool.nap;
-
 class TestClass
 {
-    int a;
-
-    TestClass(int g)
+    int func(int a)
     {
-        a = g;
+      int x = a;
     }
-    
-    
-
-
-    int func()
-    {
-    int x[10];
-        return x[5] + 6 + a;
-    }
-
 };
 
-TestClass t = new TestClass(7);
+TestClass t;
+t.func(3);
+
 

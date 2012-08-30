@@ -109,6 +109,8 @@ enum op_typeids
     OPERATOR_XOR_EQUAL,
     OPERATOR_SHL_EQUAL,
     OPERATOR_SHR_EQUAL,
+    
+    OPERATOR_DOT,
 
     /* the last operator is not used */
     OPERATOR_LAST

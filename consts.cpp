@@ -4,18 +4,18 @@
 
 const char* STR_MINMIN		= "--";
 const char* STR_MINUS		= "-";
-const char* STR_PLUSPLUS		= "++";
-const char* STR_PLUS			= "+";
+const char* STR_PLUSPLUS	= "++";
+const char* STR_PLUS		= "+";
 const char* STR_IDXID		= "[]";
 const char* STR_EQUAL		= "=";
-const char* STR_SQPAR_OP		= "[";
-const char* STR_SQPAR_CL		= "]";
+const char* STR_SQPAR_OP	= "[";
+const char* STR_SQPAR_CL	= "]";
 const char* STR_MUL			= "*";
 const char* STR_DIV			= "/";
 const char* STR_MOD			= "%";
 const char* STR_OPEN_BLOCK	= "{";
 const char* STR_CLOSE_BLOCK	= "}";
-
+const char* STR_DOT        = ".";
 
 /*
  * Comparison operators
@@ -31,7 +31,7 @@ const char* STR_NEQ			= "!=";
  * Logical operators
  */
 const char* STR_LOGIC_AND	= "&&";
-const char* STR_LOGIC_OR		= "||";
+const char* STR_LOGIC_OR	= "||";
 const char* STR_LOGIC_NOT	= "!";
 
 /*
@@ -40,7 +40,7 @@ const char* STR_LOGIC_NOT	= "!";
 const char* STR_BIT_AND		= "&";
 const char* STR_BIT_OR		= "|";
 const char* STR_BIT_XOR		= "^";
-const char* STR_BIT_COMP		= "~";
+const char* STR_BIT_COMP	= "~";
 const char* STR_SHLEFT		= "<<";
 const char* STR_SHRIGHT		= ">>";
 
@@ -52,7 +52,7 @@ const char* STR_MINUS_EQUAL	= "-=";
 const char* STR_MUL_EQUAL	= "*=";
 const char* STR_DIV_EQUAL	= "/=";
 const char* STR_AND_EQUAL	= "&=";
-const char* STR_OR_EQUAL		= "|=";
+const char* STR_OR_EQUAL	= "|=";
 const char* STR_SHL_EQUAL	= "<<=";
 const char* STR_SHR_EQUAL	= ">>=";
 const char* STR_COMP_EQUAL	= "~=";

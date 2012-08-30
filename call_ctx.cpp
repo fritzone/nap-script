@@ -86,7 +86,8 @@ variable* call_context_add_variable(call_context* cc, const char* name, const ch
     {
         throw_error(E0034_SYMBOLDEFD, NULL);
     }
-    return variable_list_add_variable(name, type, dimension, &cc->variables, cc->ccs_method, cc, expwloc);
+    variable* v = variable_list_add_variable(name, type, dimension, &cc->variables, cc->ccs_method, cc, expwloc);
+    v->cc = cc;
 }
 
 /**
