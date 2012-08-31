@@ -1104,6 +1104,13 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 }
                 break;
             }
+            
+        case OPERATOR_DOT:
+            /* do something like the constructor call but with the specific thing that is on the left side and the other specific thing on the right side */
+            
+        case FUNCTION_CALL_OF_OBJECT:
+            puts("AAAAAAAAAAAAAAa");
+            break;
 
         case FUNCTION_CALL_CONSTRUCTOR:
         {

@@ -1403,8 +1403,15 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                     class_declaration* cd = call_context_get_class_declaration(v->cc, v->c_type);
                     if(!cd)
                     {
-                        
+                        throw_error("Only class type variables can call methods on themselves", v->name);
                     }
+                    if((func_call = is_function_call(expr_trim, cd)))
+                    {    
+                        call_frame_entry* cfe = handle_function_call(expr_trim, expr_len, node, func_call, the_method, orig_expr, cd, result, expwloc, METHOD_CALL_OF_OBJECT);
+                        *result = FUNCTION_CALL;
+                        return cfe;
+                    }
+                    // now see if this is a class variable: a.b = 4
                 }
                 else
                 if(node->father->left->op_type == FUNCTION_CALL)    // to solve func().anotherOne()
