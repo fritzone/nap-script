@@ -299,6 +299,31 @@ void resolve_operation( const expression_tree* node, int reqd_type, int level, c
 }
 
 
+static void resolve_class_member(const expression_tree* node, int level, const method* the_method, call_context* cc, int reqd_type , int forced_mov)
+{
+    variable* dest = (variable*)(((envelope*)node->left->reference)->to_interpret);
+    if(node->father->right)
+    {
+        if(! is_post_pre_op(node->father->right->op_type))
+        {
+            if(is_atomic_type(node->father->right->op_type))
+            {
+                move_start_register_atomic(dest, level);
+            }
+            compile(node->father->right, the_method, cc, level, dest->i_type, forced_mov);
+            if(is_atomic_type(node->father->right->op_type))
+            {
+                print_newline();
+            }
+        }
+        else        /* indexed = postinc/dec / preinc/dec*/
+        {
+            deal_with_post_pre_node(node->right, level, the_method, cc, forced_mov);
+            /* when the above ended, reg(level) contains the variable I need to assign */
+        }
+    }
+
+}
 
 
 
@@ -346,6 +371,11 @@ void resolve_assignment( const expression_tree* node, int level, const method* t
                         second_operand_register_level(dest, level);
                     }
                 }
+            }
+            else
+            if(OPERATOR_DOT == node->left->op_type)      // class member access
+            {
+                resolve_class_member(node->left, level, the_method, cc, reqd_type, forced_mov);
             }
             else	/* this is indexed*/
             {
@@ -1108,8 +1138,52 @@ void compile(const expression_tree* node, const method* the_method, call_context
         case OPERATOR_DOT:
             /* do something like the constructor call but with the specific thing that is on the left side and the other specific thing on the right side */
             
+            if(node->right->op_type == FUNCTION_CALL_OF_OBJECT)
+            {
+                if(node->left->op_type == BASIC_TYPE_VARIABLE)
+                {
+                    variable* vd = (variable* )node->left->reference->to_interpret;
+                    
+                    call_frame_entry* cfe = (call_frame_entry*)node->right->reference->to_interpret;
+                    method* m = cfe->the_method;
+                    parameter_list* ingoing_parameters = cfe->parameters;
+                    int pc = 0;
+                    push_cc_start_marker();
+                    while(ingoing_parameters)
+                    {
+                        parameter* p = ingoing_parameters->param;
+                        parameter* fp = method_get_parameter(m, pc);
+                        if(!fp)
+                        {
+                            throw_error("parameter not found");
+                        }
+                        expression_tree* t = p->expr;
+                        if(t->op_type <= BASIC_TYPE_CLASS_VAR)
+                        {
+                            code_stream() << "mov" << SPACE << "reg" << get_reg_type(fp->type) << '(' << level << ')' << ',';
+                        }
+                        compile(t, the_method, cc, level, fp->type, forced_mov);
+                        code_stream() << NEWLINE << "push" << SPACE << "reg" << get_reg_type(fp->type) << '(' << level << ')' << NEWLINE;
+
+                        ingoing_parameters = ingoing_parameters->next;
+                        pc ++;
+                    }
+                    code_stream() << "call" << SPACE << '$' << cc->name << '.' << vd->name << '@' << m->name << NEWLINE;
+                    if(m->ret_type) // pop something only if the method was defined to return something
+                    {
+                        code_stream() << "pop" << SPACE << "reg" << get_reg_type(m->ret_type) << '(' << level << ')' << NEWLINE;
+                        // this might also pop the stack marker. In that case leaves the stack intact
+                        // this solves the problem when the function does not return anything
+                        // but is required to. We might raise a runtime exception in this case
+                    }
+                    push_cc_end_marker();
+                    break;
+
+                }
+            }
+            break;
         case FUNCTION_CALL_OF_OBJECT:
-            puts("AAAAAAAAAAAAAAa");
+
             break;
 
         case FUNCTION_CALL_CONSTRUCTOR:
