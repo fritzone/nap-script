@@ -128,6 +128,16 @@ static int get_operator(const char* expr, const char** foundOperator, int* ntype
 
     int zlop = -1;
 
+    /* this is not even an operator, it is an expression, but let's treat 
+     * it as an operator, and all the other found operators will simply
+     * override it */
+    if(zlev_dot != -1)
+    {
+        *ntype = OPERATOR_DOT;
+        *foundOperator = duplicate_string(STR_DOT);
+        zlop = zlev_dot;
+    }
+
     /* lowest priority between the numeric operators */
     if(zlev_shift != -1)
     {
@@ -273,15 +283,31 @@ static int get_operator(const char* expr, const char** foundOperator, int* ntype
         *ntype = sgeq_type;
     }
 
-    /* this is not even an operator, it is an expression, but let's treat it as an operator */
-    if(zlev_dot != -1)
-    {
-        *ntype = OPERATOR_DOT;
-        *foundOperator = duplicate_string(STR_DOT);
-        zlop = zlev_dot;
-    }
-
     return zlop;
+}
+
+
+/*
+ * this checks if an expression is a function or not (ex: sin(x) is s function)
+ */
+method* is_function_call(char *s,  call_context* cc)
+{
+    unsigned int i=0;
+    int sc2=0;
+    char *s2=new_string(strlen(s));
+    method* get_method = NULL;
+
+    while(i<strlen(s) && s[i]!='(')
+    {
+        s2[sc2++]=s[i++];
+    }
+    s2[sc2]=0;
+
+    s2 = trim(s2);
+    get_method = call_context_get_method(cc, s2);
+    if(get_method) return get_method;
+
+    return NULL;
 }
 
 /**
@@ -1411,7 +1437,18 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                         *result = FUNCTION_CALL;
                         return cfe;
                     }
+                    
                     // now see if this is a class variable: a.b = 4
+                    int templated = 0;
+                    int env_var = 0;
+                    if(variable* var = method_has_variable(0, cd, expr_trim, &templated, &env_var))
+		    {
+			*result = MEMBER_ACCESS_OF_OBJECT;
+                        envelope* envl = new_envelope(var, BASIC_TYPE_VARIABLE);
+                        node->op_type = MEMBER_ACCESS_OF_OBJECT;
+                        node->reference = envl;
+                        return envl;
+		    }
                 }
                 else
                 if(node->father->left->op_type == FUNCTION_CALL)    // to solve func().anotherOne()
