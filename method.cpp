@@ -158,10 +158,10 @@ call_frame_list* elem = alloc_mem(call_frame_list,1);
     location = variable_list_has_variable(varname, cc->variables);
     if(location)
     {
-        if(!location->var->templ_parameters && *templed)	/* variable accessed as templated but in fact has no templates */
-        {
-            throw_error(E0020_ACCTNOTP, location->var->name, NULL);
-        }
+        //if(!location->var->templ_parameters && *templed)	/* variable accessed as templated but in fact has no templates */
+        //{
+        //    throw_error(E0020_ACCTNOTP, location->var->name, NULL);
+        //}
         return location->var;
     }
 
