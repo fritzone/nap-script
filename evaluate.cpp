@@ -1137,7 +1137,6 @@ void compile(const expression_tree* node, const method* the_method, call_context
             
         case OPERATOR_DOT:
             /* do something like the constructor call but with the specific thing that is on the left side and the other specific thing on the right side */
-            
             if(node->right->op_type == FUNCTION_CALL_OF_OBJECT)
             {
                 if(node->left->op_type == BASIC_TYPE_VARIABLE)
@@ -1179,6 +1178,13 @@ void compile(const expression_tree* node, const method* the_method, call_context
                     push_cc_end_marker();
                     break;
 
+                }
+            }
+            else
+            {
+                if(node->right->op_type == MEMBER_ACCESS_OF_OBJECT)
+                {
+                    printf("AAAAAAAAAAAA");
                 }
             }
             break;
