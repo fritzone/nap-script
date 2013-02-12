@@ -10,7 +10,7 @@ typedef int m_optype;
 /*
  * TypeIDs
  */
-static const int BASIC_TYPE_DONTCARE		= 0;
+static const int BASIC_TYPE_DONTCARE		        = 0;
 
 /*  be careful that BASIC_TYPE_REAL always should be bigger than BASIC_TYPE_INT
     BASIC_TYPE_CHAR should be bigger than BASIC_TYPE_BOOL and so on */
@@ -55,6 +55,7 @@ static const int CLASS_DECLARATION			= 320;
 static const int STATEMENT_NEW                          = 330;
 static const int KEYWORD_TRUE                           = 340;
 static const int KEYWORD_FALSE                          = 350;
+static const int KEYWORD_NULL                           = 360;
 
 static const int ENV_TYPE_CC				= 1000;
 /*

@@ -1184,7 +1184,18 @@ void compile(const expression_tree* node, const method* the_method, call_context
             {
                 if(node->right->op_type == MEMBER_ACCESS_OF_OBJECT)
                 {
-                    printf("AAAAAAAAAAAA");
+                    variable* var_of_class = (variable*)node->right->reference->to_interpret;
+                    variable* the_class_var = (variable* )node->left->reference->to_interpret;
+                    code_stream() << "mov" << SPACE << "reg" << get_reg_type(var_of_class->i_type) << '(' << level << ')' << ',' ;
+                    bool cnv = false;
+                    if(var_of_class->i_type != reqd_type && reqd_type != -2)
+                    {
+                        code_stream() << "@c" << get_reg_type(var_of_class->i_type) << get_reg_type(reqd_type) << '(' ;
+                        cnv = true;
+                    }
+                    code_stream() << '&' << cc->name << '.' << the_class_var->name << '@' << var_of_class->name;
+                    if(cnv) code_stream() << ')';
+                    code_stream() << NEWLINE;
                 }
             }
             break;

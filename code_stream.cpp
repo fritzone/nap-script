@@ -9,7 +9,7 @@ char code_stream::last_opcode = 0;
     
 void code_stream::output_bytecode(const char* s)
 {
-    printf("%s", s);
+    printf("%s\n", s);
     std::string expr = s;
     
     std::ofstream f("test.ncb", std::ios::out | std::ios::binary | std::fstream::app);
@@ -22,6 +22,7 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "int")  opcode = 0x01;
     if(expr == "float")  opcode = 0x02;
     if(expr == "string")  opcode = 0x03;
+    if(expr == "call") opcode = 0xCA;
     
     if(opcode)
     {
@@ -31,14 +32,15 @@ void code_stream::output_bytecode(const char* s)
     else
     {
         // this is possibly a variable name (plaintext)... or a function call (starts with @) or a class method call (starts with $)
-        if(s[0] == '@') // function call
+        if(s[ 0 ] == '@') // function call
         {
         }
         else
-        if(s[0] == '$') // method call
+        if(s[ 0 ] == '$') // method call
         {
         }
-        else            // variable
+        else
+        if(s[ 0 ] == '&')  // variable access of a class
         {
         }
             

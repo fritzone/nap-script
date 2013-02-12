@@ -88,6 +88,7 @@ variable* call_context_add_variable(call_context* cc, const char* name, const ch
     }
     variable* v = variable_list_add_variable(name, type, dimension, &cc->variables, cc->ccs_method, cc, expwloc);
     v->cc = cc;
+    return v;
 }
 
 /**
@@ -211,7 +212,7 @@ void call_context_compile(call_context* cc, char* envp[])
 
     {
     // and now all the functions from the classes
-    for(int i=0; i<cc->classes->size(); i++)
+    for(unsigned int i=0; i<cc->classes->size(); i++)
     {
         class_declaration* cd = cc->classes->at(i);
         method_list* ccs_methods = cd->methods;
@@ -310,11 +311,13 @@ struct bytecode_label* call_context_provide_label(struct call_context* cc, int b
 
 class_declaration* call_context_get_class_declaration(const call_context* cc, const char* required_name)
 {
-    for(int i=0; i<cc->classes->size(); i++)
+    if(cc == NULL) return NULL;
+    for(unsigned int i=0; i<cc->classes->size(); i++)
     {
         if(!strcmp(cc->classes->at(i)->name, required_name))
         {
             return cc->classes->at(i);
         }
     }
+    return call_context_get_class_declaration(cc->father, required_name);
 }

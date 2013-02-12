@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 static const char SPACE = ' ';
-static const char NEWLINE = '\n';
+static const char* NEWLINE = "NEWLINE";
 
 class code_stream
 {

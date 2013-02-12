@@ -127,11 +127,12 @@ const char* STR_UNDEFINED_VARIABLE	= "Undefined variable";
 const char* STR_REAL_FORMAT	=	"%.8G";
 
 /* the string representatives of the basic types */
-const char* STR_INT					= "int";
+const char* STR_INT				= "int";
 const char* STR_REAL				= "real";
 const char* STR_STRING				= "string";
-const char* STR_CHAR                = "char";
-const char* STR_BOOL                = "bool";
+const char* STR_CHAR                            = "char";
+const char* STR_BOOL                            = "bool";
+const char* STR_NULL                            = "null";
 
 const char* STR_UNKNOWN				= "unknown";
 
@@ -151,7 +152,8 @@ const char* keywords[] =
     STR_GLOBAL,
     STR_INT,
     STR_REAL,
-    STR_STRING
+    STR_STRING,
+    STR_NULL
 };
 
 char* EMPTY = (char*)"";
