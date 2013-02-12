@@ -210,10 +210,11 @@ extern const char* STR_REAL;
 extern const char* STR_STRING;
 extern const char* STR_CHAR;
 extern const char* STR_BOOL;
+extern const char* STR_NULL;
 
 extern const char* STR_UNKNOWN;
 
-extern const char* keywords[13];
+extern const char* keywords[14];
 extern char* EMPTY;
 
 #endif

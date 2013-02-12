@@ -2,9 +2,15 @@ class TestClass
 {
 
 int b;
+TestClass next;
+
     int func(int a)
     {
       b = a;
+    }
+    TestClass(int ccc)
+    {
+     b = ccc;
     }
 
 };
@@ -16,8 +22,10 @@ int func2(int sa)
 }
 
 TestClass t;
-t.func(3);
+int y = t.func(3);
 
 func2(9);
 
-int z = t.b();
+int z = t.b;
+TestClass x=new TestClass(99);
+
