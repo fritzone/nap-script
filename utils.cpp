@@ -16,6 +16,7 @@
 #include "is.h"
 #include "consts.h"
 #include "throw_error.h"
+#include "call_ctx.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -288,3 +289,17 @@ int get_comp_typeid(const char* input)
     return NO_OPERATOR;
 }
 
+
+std::string fully_qualified_varname(call_context* cc, variable* v)
+{
+    return std::string(cc->name) + STR_DOT + v->name;
+}
+std::string fully_qualified_varname(call_context* cc, const char* v)
+{
+    return std::string(cc->name) + STR_DOT + v;
+}
+
+std::string fully_qualified_label(const char* l)
+{
+    return std::string(STR_COLON) + l + STR_COLON;
+}

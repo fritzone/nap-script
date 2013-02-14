@@ -39,6 +39,7 @@ int isnumber(const char *s)
 			return 0;
 		}
 	}
+	if(!isdigit(s[0])) return 0;
 	return 1;
 }
 

@@ -2,9 +2,10 @@
 #define CODE_STREAM_H
 
 #include <stdio.h>
+#include <string>
 
 static const char SPACE = ' ';
-static const char* NEWLINE = "NEWLINE";
+static const char* NEWLINE = "\n";
 
 class code_stream
 {
@@ -13,6 +14,12 @@ public:
     code_stream& operator << (const char* s)
     {
         output_bytecode(s);;
+        return *this;
+    }
+    
+    code_stream& operator << (const std::string s)
+    {
+        output_bytecode(s.c_str());
         return *this;
     }
 
@@ -52,7 +59,7 @@ private:
     
     void output_bytecode(const char* s);
     
-    static char last_opcode;
+    static unsigned char last_opcode;
         
 };
 

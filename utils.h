@@ -3,6 +3,10 @@
 
 #include <malloc.h>
 #include <memory.h>
+#include <string>
+
+struct call_context;
+struct variable;
 
 /*
  * Utility functions
@@ -127,5 +131,10 @@ bool valid_variable_name(const char* nm);
  */
 int get_comp_typeid(const char* op);
 
+std::string fully_qualified_varname(call_context* cc, variable* v);
+
+std::string fully_qualified_varname(call_context* cc, const char* v);
+
+std::string fully_qualified_label(const char*);
 
 #endif

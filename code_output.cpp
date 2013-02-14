@@ -6,7 +6,10 @@
 #include "tree.h"
 #include "variable.h"
 #include "code_stream.h"
+#include "utils.h"
+
 #include <stdio.h>
+#include <string>
 
 void print_newline()
 {
@@ -131,22 +134,25 @@ void mov_var_into_reg(expression_tree* var_node, int reqd_type, int level, const
 
 void operation_on_variable(call_context* cc, int opr, variable* var )
 {
-    code_stream() << get_opcode(opr) << SPACE << cc->name << '.'  << var->name << NEWLINE;
+    code_stream() << get_opcode(opr) << SPACE << (std::string(cc->name) + STR_DOT  + var->name).c_str() << NEWLINE;
 }
 
 void operation_on_indexed(call_context* cc, int opr, const variable* var, int idxc )
 {
-    code_stream() << get_opcode(opr) << SPACE << "@ccidx_dest" << '(' << cc->name << '.' << var->name << ',' << idxc << ')' << NEWLINE;
+    code_stream() << get_opcode(opr) << SPACE << "@ccidx_dest" << '(' << (std::string(cc->name) +STR_DOT + var->name).c_str() 
+    << ',' << idxc << ')' << NEWLINE;
 }
 
 void operation_target_var_source_reg(call_context* cc, int opr, variable* var, int level )
 {
-    code_stream() << NEWLINE << get_opcode(opr) << SPACE << cc->name << '.'  << var->name << ',' << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << NEWLINE;
+    code_stream() << NEWLINE << get_opcode(opr) << SPACE << (std::string(cc->name) + STR_DOT  + var->name).c_str() 
+    << ',' << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << NEWLINE;
 }
 
 void operation_target_indexed_source_reg(call_context* cc, int opr, variable* var, int index, int level )
 {
-    code_stream() << NEWLINE << get_opcode(opr) << SPACE << "@ccidx" << '('<< cc->name << '.'  << var->name << ',' << index << ')' << ',' << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << NEWLINE;
+    code_stream() << NEWLINE << get_opcode(opr) << SPACE << "@ccidx" << '('<< (std::string(cc->name) + STR_DOT  + var->name).c_str() 
+    << ',' << index << ')' << ',' << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << NEWLINE;
 }
 
 void operation_start_register_atomic( const expression_tree* node, int reqd_type, int level )
@@ -161,12 +167,12 @@ void cmp_register_with_zero( int reqd_type, int level )
 
 void mov_var_into_reg(call_context* cc, variable* var, int level)
 {
-    code_stream() << "mov" << SPACE << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << ',' << cc->name << '.'  << var->name << NEWLINE;
+    code_stream() << "mov" << SPACE << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << ',' << (std::string(cc->name) + STR_DOT  + var->name).c_str() << NEWLINE;
 }
 
 void mov_indexed_into_reg(call_context* cc, variable* var, int level, int idxc )
 {
-    code_stream() << "mov" << SPACE << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << ',' << "@ccidx" << '(' << cc->name << '.'  << var->name << ',' << idxc << ')' << NEWLINE;
+    code_stream() << "mov" << SPACE << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << ',' << "@ccidx" << '(' << (std::string(cc->name) + STR_DOT + var->name).c_str() << ',' << idxc << ')' << NEWLINE;
 }
 
 static const char* get_mov_for_dest(int dest_type)
@@ -191,12 +197,12 @@ void clear_indexes(call_context* cc)
 
 void resolve_variable_add_dimension_number(call_context* cc, variable* var, long dimension)
 {
-    code_stream() << "call" << SPACE << "@grow" << '(' << cc->name << '.'  << var->name << ',' << dimension << ')' << NEWLINE ;
+    code_stream() << "call" << SPACE << "@grow" << '(' << fully_qualified_varname(cc, var) << ',' << dimension << ')' << NEWLINE ;
 }
 
 void resolve_variable_add_dimension_regis(call_context* cc, variable* var, int level)
 {
-    code_stream() <<"call" << SPACE << "@grow" << '(' << cc->name << '.'  << var->name << ','  << "reg" << 'i' << '(' << level << ')' << ')' << NEWLINE;
+    code_stream() <<"call" << SPACE << "@grow" << '(' << fully_qualified_varname(cc, var)<< ','  << "reg" << 'i' << '(' << level << ')' << ')' << NEWLINE;
 }
 
 void push_cc_start_marker()
@@ -233,7 +239,7 @@ void move_start_register_atomic_with_type( int reqd_type, int level )
 
 void move_reg_into_var(call_context* cc,  variable* dest, int level )
 {
-    code_stream() << "mov" << SPACE << cc->name << '.' << dest->name << ',' << "reg" << get_reg_type(dest->i_type) << '(' << level << ')' << NEWLINE;
+    code_stream() << "mov" << SPACE << fully_qualified_varname(cc, dest) << ',' << "reg" << get_reg_type(dest->i_type) << '(' << level << ')' << NEWLINE;
 }
 
 
@@ -255,13 +261,13 @@ void move_register_level_into_indexe_variable( variable* dest, int idxc, int lev
 
 void push_variable(call_context* cc, variable* var)
 {
-    code_stream() << "push" << var->c_type << SPACE << cc->name << '.' << var->name << NEWLINE;
+    code_stream() << "push" << var->c_type << SPACE << fully_qualified_varname(cc, var) << NEWLINE;
 }
 
 void push_usertype_variable(call_context* cc, variable* var)
 {
-    code_stream() << "call" << SPACE << "@crea" << '(' << var->c_type << ',' << cc->name << '.' << var->name << ')'<< NEWLINE;
-    code_stream() << "push" << "ref" << SPACE << cc->name << '.' << var->name << NEWLINE;
+    code_stream() << "call" << SPACE << "@crea" << '(' << var->c_type << ',' << fully_qualified_varname(cc, var) << ')'<< NEWLINE;
+    code_stream() << "push" << "ref" << SPACE << fully_qualified_varname(cc, var) << NEWLINE;
 }
 
 void exit_app()
@@ -271,7 +277,7 @@ void exit_app()
 
 void peek(call_context* cc, const char *type, int idx, const char *dest)
 {
-    code_stream() <<"peek" << type << '(' << idx << ')' << ',' << SPACE << cc->name << '.'  << dest<< NEWLINE;
+    code_stream() <<"peek" << type << '(' << idx << ')' << ',' << SPACE << fully_qualified_varname(cc, dest) << NEWLINE;
 }
 
 void jmp(const char *label)

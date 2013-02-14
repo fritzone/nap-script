@@ -1,31 +1,5 @@
-class TestClass
+real x = 190;
+if(x == 14)
 {
-
-int b;
-TestClass next;
-
-    int func(int a)
-    {
-      b = a;
-    }
-    TestClass(int ccc)
-    {
-     b = ccc;
-    }
-
-};
-
-
-int func2(int sa)
-{
-  return sa;
+  int y = 23;
 }
-
-TestClass t;
-int y = t.func(3);
-
-func2(9);
-
-int z = t.b;
-TestClass x=new TestClass(99);
-

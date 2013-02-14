@@ -17,6 +17,7 @@
 #include "code_stream.h"
 
 #include <string.h>
+#include <string>
 
 /* forward declarations */
 void deliver_ccidx_dest(const expression_tree* node, int level, const method* the_method, call_context* cc, int reqd_type, int& idxc, const variable* var, int forced_mov);
@@ -551,7 +552,7 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
             jmp(end_label_name);	/* if there's no else branch jump to the first operation after this is*/
         }
 
-        code_stream() << ':' << if_label_name << ':' << NEWLINE;			/* the label for the if branch */
+        code_stream() << fully_qualified_label(if_label_name) << NEWLINE;			/* the label for the if branch */
         call_context_add_label(cc, -1, if_label_name);	/* for now added with dummy data to the CC*/
     expression_tree_list* q = my_if->if_branch->expressions;	/* and here compile the instructions in the 'if' branch*/
         if(q && !q->next)			/* one line if, no parantheses*/
@@ -575,7 +576,7 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
         if(my_if->else_branch)		/* if we have an else branch */
         {
             jmp(end_label_name);	/* make sure, that after executing the 'if' branch we don't end up here */
-            code_stream() << ':' << else_label_name << ':' << NEWLINE;	/* here place the label so the bytecode will know where to jump */
+            code_stream() << fully_qualified_label(else_label_name) << NEWLINE;	/* here place the label so the bytecode will know where to jump */
             call_context_add_label(cc, -1, else_label_name);	/* for now added with dummy data to the CC*/
         expression_tree_list* q = my_if->else_branch->expressions;			/* and compile the instructions in the else branch too */
             if(q && !q->next)			/* one line if, no parantheses*/
@@ -593,7 +594,7 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
             }
 
         }
-        code_stream() << ':' << end_label_name << ':' << NEWLINE ;		/* finally, in this case this would be the last label regarding this if */
+        code_stream() << fully_qualified_label(end_label_name) << NEWLINE ;		/* finally, in this case this would be the last label regarding this if */
         call_context_add_label(cc, -1, end_label_name);	/* adding it to the call context */
     }
     else	/* if we don't have an if branch */
@@ -619,7 +620,7 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
                 }
             }
             /* label after else */
-            code_stream() << ':' << end_label_name << ':' << NEWLINE;
+            code_stream() << fully_qualified_label(end_label_name) << NEWLINE;
             call_context_add_label(cc, -1, end_label_name);
 
         }
@@ -651,7 +652,7 @@ static void resolve_while_keyword(const expression_tree* node, const method* the
     sprintf(while_label_name, "%s_%d", my_while->operations->name, (int)cc->labels->size());	/* generating a name for the content */
 
     /* print the while start label */
-    code_stream() << ':' << while_label_name << ':' << NEWLINE ;
+    code_stream() << fully_qualified_label(while_label_name) << NEWLINE ;
     call_context_add_label(cc, -1, while_label_name);
 
     /*check if the info is a logical operation or not.
@@ -714,7 +715,7 @@ static void resolve_while_keyword(const expression_tree* node, const method* the
         jmp( while_label_name);
     }
 
-    code_stream() << ':' << end_label_name << ':' << NEWLINE ;		/* finally, in this case this would be the last label regarding this while */
+    code_stream() << fully_qualified_label(end_label_name) << NEWLINE ;		/* finally, in this case this would be the last label regarding this while */
     call_context_add_label(cc, -1, end_label_name);	/* adding it to the call context */
 }
 
@@ -739,7 +740,7 @@ static void resolve_for_keyword(const expression_tree* node, const method* the_m
     struct bytecode_label* start_label = call_context_provide_label(cc, 0);
     struct bytecode_label* end_label = call_context_provide_label(cc, 1);
 
-    code_stream() << ':' << start_label->name << ':' << NEWLINE;
+    code_stream() << fully_qualified_label(start_label->name) << NEWLINE;
 
     /* Now, the statements */
     if(my_for->operations)	/* if we have operations in the body */
@@ -789,7 +790,7 @@ static void resolve_for_keyword(const expression_tree* node, const method* the_m
     }
 
     jlbf(start_label->name);
-    code_stream() << ':' << end_label->name << ':' << NEWLINE ;
+    code_stream() << fully_qualified_label(end_label->name) << NEWLINE ;
 }
 
 
@@ -829,7 +830,7 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
                         /* search if we have a definition for it too, such as: Base t = new Derived()*/
                         if(vd->the_value)
                         {
-                            code_stream() << "push" << "ref" << SPACE << cc->name << '.' << vd->the_variable->name << NEWLINE;
+                            code_stream() << "push" << "ref" << SPACE << (std::string(cc->name) + STR_DOT + vd->the_variable->name) << NEWLINE;
                             
                             expression_tree* tempassign = alloc_mem(expression_tree, 1);
                             expression_tree* tempvar = alloc_mem(expression_tree, 1);
@@ -998,11 +999,11 @@ void compile(const expression_tree* node, const method* the_method, call_context
             variable* var = (variable*)node->reference->to_interpret;
                 if(var->i_type != reqd_type && reqd_type != -2)
                 {
-                    code_stream() << "@c" << get_reg_type(var->i_type) << get_reg_type(reqd_type) << '(' << cc->name << '.' << var->name << ')';
+                    code_stream() << "@c" << get_reg_type(var->i_type) << get_reg_type(reqd_type) << '(' << fully_qualified_varname(cc, var) << ')';
                 }
                 else
                 {
-                    code_stream() << cc->name << '.' << var->name;
+                    code_stream() << fully_qualified_varname(cc, var);
                 }
             }
             break;
@@ -1014,7 +1015,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
             variable* var = (variable*)node->left->reference->to_interpret;
                 deliver_ccidx_dest(node, level, the_method, cc, reqd_type, idxc, var, forced_mov);
                 code_stream() << "mov" << SPACE << "reg" << get_reg_type(reqd_type) << '(' << level << ')' << ',' <<
-                                 "@ccidx" << '(' << cc->name << '.'  << var->name << ',' << idxc << ')' << NEWLINE;
+                                 "@ccidx" << '(' << fully_qualified_varname(cc, var)<< ',' << idxc << ')' << NEWLINE;
                 clear_indexes(cc);
             }
             break;
@@ -1167,7 +1168,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
                         ingoing_parameters = ingoing_parameters->next;
                         pc ++;
                     }
-                    code_stream() << "call" << SPACE << '$' << cc->name << '.' << vd->name << '@' << m->name << NEWLINE;
+                    code_stream() << "call" << SPACE << '$' << (std::string(cc->name) + STR_DOT + vd->name) << '@' << m->name << NEWLINE;
                     if(m->ret_type) // pop something only if the method was defined to return something
                     {
                         code_stream() << "pop" << SPACE << "reg" << get_reg_type(m->ret_type) << '(' << level << ')' << NEWLINE;
@@ -1193,7 +1194,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
                         code_stream() << "@c" << get_reg_type(var_of_class->i_type) << get_reg_type(reqd_type) << '(' ;
                         cnv = true;
                     }
-                    code_stream() << '&' << cc->name << '.' << the_class_var->name << '@' << var_of_class->name;
+                    code_stream() << '&' << fully_qualified_varname(cc, the_class_var) << '@' << var_of_class->name;
                     if(cnv) code_stream() << ')';
                     code_stream() << NEWLINE;
                 }
@@ -1229,9 +1230,9 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 ingoing_parameters = ingoing_parameters->next;
                 pc ++;
             }
-            code_stream() << "push" << "ref" << SPACE << cc->name << '.' << "this" << NEWLINE;
-            code_stream() << "call" << SPACE << "@crea" << '(' << m->the_class->name << ',' << cc->name << '.' << "this" << ')'<< NEWLINE;
-            code_stream() << "call" << SPACE << '$' << cc->name << '.' << "this" << '@' << m->the_class->name << "." << m->name << NEWLINE;
+            code_stream() << "push" << "ref" << SPACE << (std::string(cc->name) + STR_DOT + "this") << NEWLINE;
+            code_stream() << "call" << SPACE << "@crea" << '(' << m->the_class->name << ',' << (std::string(cc->name) + '.' + "this").c_str() << ')'<< NEWLINE;
+            code_stream() << "call" << SPACE << '$' << (std::string(cc->name) + STR_DOT + "this") << '@' << (std::string(m->the_class->name) +  "." + m->name).c_str() << NEWLINE;
             code_stream() << "pop" << SPACE << "reg" << 'g' << '(' << level << ')' << NEWLINE;
 
             break;
