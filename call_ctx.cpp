@@ -16,6 +16,8 @@
 #include <memory.h>
 #include <stdio.h>
 #include <string.h>
+#include <string>
+#include "utils.h"
 
 struct call_context* global_cc = NULL;
 
@@ -185,7 +187,7 @@ void call_context_compile(call_context* cc, char* envp[])
     method_list* ccs_methods = cc->methods;
     while(ccs_methods)
     {
-        code_stream() << NEWLINE << ':' << ccs_methods->the_method->name << ':' << NEWLINE;
+        code_stream() << NEWLINE << fully_qualified_label(ccs_methods->the_method->name) << NEWLINE;
         // now pop off the variables from the stack
         variable_list* vlist = ccs_methods->the_method->variables;
         int pctr = 0;
@@ -219,7 +221,7 @@ void call_context_compile(call_context* cc, char* envp[])
         code_stream() << '@' << cd->name << NEWLINE;
         while(ccs_methods)
         {
-            code_stream() << ':' << cd->name << '.' << ccs_methods->the_method->name << ':' << NEWLINE;
+            code_stream() <<  fully_qualified_label( (std::string(cd->name) + STR_DOT + ccs_methods->the_method->name).c_str() ) << NEWLINE;
             // now pop off the variables from the stack
             variable_list* vlist = ccs_methods->the_method->variables;
             int pctr = 0;

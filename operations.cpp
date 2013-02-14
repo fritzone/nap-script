@@ -37,7 +37,7 @@ void do_list_assignment( envelope* rvalue, variable* var, int level, const metho
             code_stream() << NEWLINE;
         }
         
-        code_stream() << "mov" << SPACE << '@' << "ccidx" << '(' << cc->name << '.'  << var->name << ',' << '1' << ')' << ',' << "reg"
+        code_stream() << "mov" << SPACE << '@' << "ccidx" << '(' << (std::string(cc->name) + STR_DOT + var->name) << ',' << '1' << ')' << ',' << "reg"
                       << get_reg_type(var->i_type) << '(' << level << ')' << NEWLINE ;
         code_stream() << "clidx" << NEWLINE;
         lst = lst->next;
