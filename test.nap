@@ -1,5 +1,7 @@
-real x = 190;
-if(x == 14)
+int x = 4;
+if(x == 4)
 {
-  int y = 23;
+  int y = 7;
 }
+
+int z = 3;

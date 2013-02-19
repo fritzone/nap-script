@@ -12,10 +12,12 @@ OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=nap-script
 
 all: $(SOURCES) $(EXECUTABLE)
+	gcc -ggdb -o napi nbci.c
 
 clean:
 	rm $(OBJECTS)
 	rm $(EXECUTABLE)
+	rm napi
 	
 	
 $(EXECUTABLE): $(OBJECTS) 

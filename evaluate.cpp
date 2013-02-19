@@ -569,6 +569,7 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
                     compile(q->root, the_method, my_if->if_branch, level + 1, reqd_type, forced_mov);
                     q=q->next;
                 }
+                push_cc_end_marker();
             }
         }
 
@@ -967,7 +968,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
             if(node->reference)
             {
                 bt_string* bts = (bt_string*)node->reference->to_interpret;
-                code_stream() <<'\"' << bts->the_string << '\"' ;
+                code_stream() <<std::string("\"") + bts->the_string + "\"" ;
             }
             break;
         case BASIC_TYPE_INT:
