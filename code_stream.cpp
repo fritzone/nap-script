@@ -12,6 +12,8 @@
 
 #define NUMBER_TYPE uint32_t
 
+const char* NEWLINE = "\n";
+
 /**
  * the description of a method from the binary opcode file
  */
@@ -245,6 +247,8 @@ void code_stream::output_bytecode(const char* s)
                 
                 // if the value is signed or not
                 uint8_t sign = 0;
+                
+                sign = sign; // TODO: work this
                 
                 // if yes, switch on the first bit in the type
                 if(expr[0] == '-') type |= 0x80;

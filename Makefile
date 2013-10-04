@@ -1,8 +1,8 @@
 CC=g++
 CFLAGS=-c -ggdb -g3 -Wall -I../gc/include
 LDFLAGS= -L. 
-SOURCES= bt_string.cpp call_ctx.cpp compiler.cpp consts.cpp envelope.cpp \
-        hash.cpp indexed.cpp interpreter.cpp is.cpp method.cpp number.cpp operations.cpp \
+SOURCES= bt_string.cpp call_ctx.cpp compiler.cpp consts.cpp  \
+        hash.cpp indexed.cpp interpreter.cpp is.cpp method.cpp number.cpp \
         opr_func.cpp opr_hndl.cpp parser.cpp preverify.cpp throw_error.cpp notimpl.cpp \
         tree.cpp type.cpp utils.cpp variable.cpp parametr.cpp evaluate.cpp res_wrds.cpp code_output.cpp \
         code_stream.cpp

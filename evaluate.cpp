@@ -5,16 +5,14 @@
 #include "parametr.h"
 #include "number.h"
 #include "consts.h"
-#include "operations.h"
 #include "indexed.h"
-#include "operations.h"
-#include "bsd_indx.h"
 #include "notimpl.h"
 #include "utils.h"
 #include "res_wrds.h"
 #include "code_output.h"
 #include "variable.h"
 #include "code_stream.h"
+#include "envelope.h"
 
 #include <string.h>
 #include <string>
@@ -326,7 +324,31 @@ static void resolve_class_member(const expression_tree* node, int level, const m
 
 }
 
-
+static void do_list_assignment( envelope* rvalue, variable* var, int level, const method* the_method, call_context* cc, int reqd_type )
+{
+    struct listv* lst = (struct listv*)rvalue->to_interpret;
+    int indxctr = 0;
+    while(lst->next)
+    {
+        code_stream() << "mov" << SPACE << "reg" << "idx" << '(' << '0' << ')' << ',' << indxctr << NEWLINE;
+        
+        if(((expression_tree*)lst->val->to_interpret)->op_type <= var->i_type)
+        {
+            code_stream() << "mov" << SPACE << "reg" << get_reg_type(var->i_type) << '(' << level << ')' << ',';
+        }
+        compile((expression_tree*)lst->val->to_interpret, the_method, cc, level + 1, reqd_type, 0);
+        if(((expression_tree*)lst->val->to_interpret)->op_type <= var->i_type)
+        {
+            code_stream() << NEWLINE;
+        }
+        
+        code_stream() << "mov" << SPACE << '@' << "ccidx" << '(' << (std::string(cc->name) + STR_DOT + var->name) << ',' << '1' << ')' << ',' << "reg"
+                      << get_reg_type(var->i_type) << '(' << level << ')' << NEWLINE ;
+        code_stream() << "clidx" << NEWLINE;
+        lst = lst->next;
+        indxctr ++;
+    }
+}
 
 /**
  * Deals with code generation for the assignment

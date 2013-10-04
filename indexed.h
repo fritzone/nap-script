@@ -1,7 +1,7 @@
 #ifndef _INDEXED_H_
 #define _INDEXED_H_
 
-#include "bsd_indx.h"
+#include "common_structs.h"
 
 #define INDEXED_GET_INDEX(idxd) (idxd->idx)
 

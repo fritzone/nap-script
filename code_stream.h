@@ -5,7 +5,7 @@
 #include <string>
 
 static const char SPACE = ' ';
-static const char* NEWLINE = "\n";
+extern const char* NEWLINE;
 
 class code_stream
 {

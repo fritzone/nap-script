@@ -10,7 +10,6 @@
 #include "throw_error.h"
 #include "is.h"
 #include "bt_string.h"
-#include "operations.h"
 #include "parametr.h"
 #include "type.h"
 #include "sys_brkp.h"

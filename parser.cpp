@@ -92,12 +92,14 @@ parsed_file* open_file(const char* name)
 expression_with_location* parser_next_phrase(parsed_file* f, char* delim)
 {
     f->previous_position = f->position;
-expression_with_location* expwloc = alloc_mem(expression_with_location,1);
+    expression_with_location* expwloc = alloc_mem(expression_with_location,1);
     expwloc->location = alloc_mem(file_location,1);
+    
     expwloc->location->location = f->position;
     expwloc->location->start_line_number = f->current_line + 1;
     expwloc->location->end_line_number = f->current_line + 1;
     expwloc->location->file_name = f->name;
+    
 long cur_save = f->position;
 long size = -1;
 char* phrase = NULL;

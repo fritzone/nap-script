@@ -45,7 +45,10 @@ struct string_list
  * @param cc - and/or in this call context
  * @param expwloc - at this location in the script file
  */
-variable* variable_list_add_variable(const char *var_name, const char* var_type, int var_size, variable_list** first, method* the_method, call_context* cc, const expression_with_location* expwloc);
+variable* variable_list_add_variable(const char *var_name, const char* var_type,
+                                     int var_size, variable_list** first,
+                                     method* the_method, call_context* cc, 
+                                     const expression_with_location* expwloc);
 
 /**
  * Checks if the variable named 's' is in the hash list 'first'
