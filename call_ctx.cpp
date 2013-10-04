@@ -1,5 +1,4 @@
 #include "call_ctx.h"
-#include "utils.h"
 #include "throw_error.h"
 #include "code_output.h"
 #include "sys_brkp.h"
@@ -8,16 +7,12 @@
 #include "consts.h"
 #include "interpreter.h"
 #include "evaluate.h"
-#include "bt_string.h"
-#include "method.h"
 #include "variable.h"
+#include "utils.h"
 #include "code_stream.h"
-#include <stdlib.h>
-#include <memory.h>
 #include <stdio.h>
 #include <string.h>
 #include <string>
-#include "utils.h"
 
 struct call_context* global_cc = NULL;
 
