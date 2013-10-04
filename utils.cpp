@@ -1,7 +1,6 @@
 #include "consts.h"
 #include "number.h"
 #include "variable.h"
-#include "indexed.h"
 #include "type.h"
 #include "utils.h"
 #include "notimpl.h"

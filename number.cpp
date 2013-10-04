@@ -14,8 +14,8 @@
  */
 int number_get_type(const char* src)
 {
-int i = 0;
-int len = strlen(src);
+        int i = 0;
+        int len = strlen(src);
 	if(!isnumber(src))
 	{
 		return 0;
@@ -76,24 +76,3 @@ double* new_double = alloc_mem(double,1);
 	nr->location = new_double;
 	return nr;
 }
-
-/**
- * Renders this number to a string
- */
-char* number_render_to_string(const number* val)
-{
-char* res = new_string(MAX_NR_AS_STR_LEN);
-	if(BASIC_TYPE_INT == val->type)
-	{
-	long lv = *(long*)val->location;
-        sprintf(res, "%ld", lv);
-	}
-	else
-	if(BASIC_TYPE_REAL == val->type)
-	{
-	double rv = *(double*)val->location;
-		sprintf(res, STR_REAL_FORMAT, rv);
-	}
-	return res;
-}
-

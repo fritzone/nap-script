@@ -26,7 +26,7 @@ struct call_context* global_cc = NULL;
  */
 struct call_context* call_context_create(int type, const char* name, struct method* the_method, struct call_context* father)
 {
-struct call_context* cc = alloc_mem(call_context,1);
+    struct call_context* cc = alloc_mem(call_context,1);
     cc->type = type;
     cc->name = duplicate_string(name);
     cc->ccs_method = the_method;
@@ -39,7 +39,7 @@ struct call_context* cc = alloc_mem(call_context,1);
 
 struct class_declaration* class_declaration_create(const char* name, struct call_context* father)
 {
-  struct class_declaration* cc = alloc_mem(class_declaration, 1);
+    struct class_declaration* cc = alloc_mem(class_declaration, 1);
     cc->type = CLASS_DECLARATION;
     cc->name = duplicate_string(name);
     cc->ccs_method = 0;
@@ -76,8 +76,6 @@ variable_list* vl = variable_list_has_variable(v_name, cc->variables);
         return NULL;
     }
 }
-
-//bool is_valid_variable_name
 
 /**
  * Adds a variable to the call context
@@ -135,7 +133,6 @@ bytecode_label* bl = alloc_mem(bytecode_label, 1);
     cc->labels->push_back(bl);
     return bl;
 }
-
 
 /**
  * Adds a new compiled expression to the given call context
@@ -198,15 +195,13 @@ void call_context_compile(call_context* cc, char* envp[])
         }
         push_cc_start_marker();
         expression_tree_list* q1 = ccs_methods->the_method->main_cc->expressions;
-            while(q1)
-            {
-                compile(q1->root, ccs_methods->the_method,
-                        ccs_methods->the_method->main_cc,
-                        0, -1, 0);
-                q1=q1->next;
-            }
-
-
+        while(q1)
+        {
+            compile(q1->root, ccs_methods->the_method,
+                    ccs_methods->the_method->main_cc,
+                    0, -1, 0);
+            q1=q1->next;
+        }
         ccs_methods = ccs_methods->next;
         code_stream() << "ret" << NEWLINE;
     }

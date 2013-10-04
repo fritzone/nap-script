@@ -15,6 +15,7 @@
 #include "sys_brkp.h"
 #include "evaluate.h"
 #include "variable.h"
+#include "parametr.h"
 
 #include <string.h>
 #include <stdlib.h>

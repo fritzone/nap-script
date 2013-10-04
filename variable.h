@@ -36,11 +36,6 @@ struct variable* new_variable(int dimension, int type);
 int variable_get_basic_type(const variable* const var);
 
 /**
- * Returns the index in the variable's long list of envelope values for the given multi dimension
- */
-long variable_get_index_for_multidim(struct variable* var, struct multi_dimension_def* indexes, int on1);
-
-/**
  * Resolves the templates of the given variable
  */
 void variable_resolve_templates(struct variable* the_variable, struct method* the_method, struct call_context* cc, const expression_with_location* expwloc);
