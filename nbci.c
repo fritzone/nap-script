@@ -31,7 +31,7 @@ struct variable_entry
     unsigned char* name;
 };
 
-static struct stack_entry* stack = NULL;    /* in this stack */
+static struct stack_entry** stack = NULL;    /* in this stack */
 static uint64_t stack_size = STACK_INIT;         /* initial stack size */
 static uint64_t stack_pointer = 0;                /* the stack pointer */
 static uint8_t * content = 0;                    /* the content of the file */         
@@ -95,8 +95,8 @@ int main()
     uint32_t jumptable_location = 0;
     
     /* create the stack */
-    stack = (struct stack_entry*) calloc( 
-                                        sizeof(struct stack_entry), stack_size
+    stack = (struct stack_entry**) calloc( 
+                                        sizeof(struct stack_entry*), stack_size
                                       );
     
     /* read in the important addresses from the bytecode file*/

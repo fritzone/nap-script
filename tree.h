@@ -2,24 +2,7 @@
 #define _TREE_H_
 
 #include "hash.h"
-
-#include "bsd_enve.h"
-#include "bsd_extr.h"
-
-/**
- * This contains the list of expressions that can be found in a struct method
- */
-struct expression_tree_list
-{
-	/* the link to the next */
-	struct expression_tree_list* next;
-
-	/* the root of the tree */
-	const expression_tree* root;
-
-	/* the text representation of this expression that is interpreted in the root */
-	char* text_expression;
-};
+#include "common_structs.h"
 
 /**
  * Checks if the expression is valid for the given node

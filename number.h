@@ -1,7 +1,7 @@
 #ifndef _NUMBER_H_
 #define _NUMBER_H_
 
-#include "bsd_numb.h"
+#include "common_structs.h"
 
 /**
  * Returns the type of the struct number represented as string

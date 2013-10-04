@@ -1,7 +1,7 @@
 #ifndef _RES_WRDS_H_
 #define _RES_WRDS_H_
 
-#include "bsd_extr.h"
+#include "common_structs.h"
 #include "call_ctx.h"
 
 /* 

@@ -263,27 +263,6 @@ void call_context_run_inner(call_context* cc, int level, int reqd_type, int forc
     }
 }
 
-/**
- * Runs the given call context. If it encounters a return statement it will return the envelope
- * holding the result of the function
- */
-/*
-envelope* call_context_run_complete(call_context* cc)
-{
-expression_tree_list* q = cc->expressions;
-    while(q)
-    {
-        rst(q->root);
-     envelope* result_env = compile(q->root, cc->ccs_method, cc );
-        if(result_env && RETURN_STATEMENT == result_env->type)
-        {
-            return (envelope*)result_env->to_interpret;
-        }
-        q=q->next;
-    }
-    return NULL;
-}
-*/
 
 /**
  * Adds a child call context to this

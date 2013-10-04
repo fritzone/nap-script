@@ -1,14 +1,8 @@
 #ifndef _EVALUATE_H_
 #define _EVALUATE_H_
 
-#include "bsd_enve.h"
-//#include "method.h"
+#include "common_structs.h"
 #include "call_ctx.h"
-
-/**
- * This calculates the value of the expression, for defined values, and also numbers
- */ 
-//envelope* evaluate(const expression_tree* node, const method* the_method, call_context* cc);
 
 void compile(const expression_tree* node,
              const method* the_method,
@@ -17,7 +11,10 @@ void compile(const expression_tree* node,
              int reqd_type,
              int forced_mov);
 
-void deliver_ccidx_dest(const expression_tree* node, int level, const method* the_method, call_context* cc, int reqd_type, int& idxc, const variable* var, int forced_mov);
+void deliver_ccidx_dest(const expression_tree* node, int level, 
+                        const method* the_method, call_context* cc, 
+                        int reqd_type, int& idxc, const variable* var, 
+                        int forced_mov);
 
 char get_reg_type(int req_type);
 

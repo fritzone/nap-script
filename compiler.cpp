@@ -25,6 +25,7 @@
 #include "throw_error.h"
 #include "parser.h"
 #include "res_wrds.h"
+#include "envelope.h"
 
 static std::vector<std::string> loaded_files;
 
@@ -436,7 +437,6 @@ static void load_file(call_context* cc, const char* file_name, method* cur_metho
 
 int main(int argc, char* argv[], char* envp[])
 {
-    // TODO: To solve the hierarchichal organization of the call contexts.
     call_context* cur_cc = call_context_create(0, "global", NULL, NULL) ;
     global_cc = cur_cc;
 

@@ -12,7 +12,13 @@
 /**
  * This function adds a new  variable to the hashlist in first. Always adds the new  variable to the head of the list
  */
-variable* variable_list_add_variable(const char *var_name, const char* var_type, int var_size, variable_list** first,  method* the_method,  call_context* cc, const expression_with_location* expwloc)
+variable* variable_list_add_variable(const char *var_name, 
+                                     const char* var_type, 
+                                     int var_size, 
+                                     variable_list** first,  
+                                     method* the_method,  
+                                     call_context* cc, 
+                                     const expression_with_location* expwloc)
 {
     if(!valid_variable_name(var_name))
     {

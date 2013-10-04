@@ -1,41 +1,7 @@
 #ifndef _PARSER_H_
 #define _PARSER_H_
 
-#include "bsd_extr.h"
-
-#include <stdio.h>
-
-/*
- * Header file containing the declarations for the methods that do the parsing of a file
- */
-
-
-/**
- * The structure of a parsed file
- */
-struct parsed_file
-{
-	/* name of the file */
-	const char* name;
-
-	/* the file pointer*/
-	FILE* fp;
-
-	/* this is the content of the file*/
-	char* content;
-
-	/* the current position of the reader */
-	long position;
-
-	/* the size of the file ... */
-	long content_size;
-
-	/* the current line number */
-	long current_line;
-
-	/* the previous position where the parser was before reading the current expression */
-	long previous_position;
-};
+#include "common_structs.h"
 
 /**
  * Returns an empty parsed file

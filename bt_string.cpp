@@ -36,14 +36,6 @@ int len2 = strlen(tmp);
 
 
 /**
- * Creates a new empty string
- */
-bt_string* bt_string_create_empty()
-{
-	return bt_string_create("");
-}
-
-/**
  * Returns 1 if the string is enclosed in encls and encle
  */
 static int is_enclosed_string(const char* expr_trim, int expr_len, char encls, char encle)
@@ -80,22 +72,4 @@ int is_string(const char* expr_trim, int expr_len)
 int is_statement_string(const char* expr_trim, int expr_len)
 {
 	return is_enclosed_string(expr_trim, expr_len, C_BACKQUOTE, C_BACKQUOTE);
-}
-
-/**
- * Inserts in the given bt_string object from the given idx position the string in what.
- * Reallocates the mmeory if necessarry. Overwrites the content.
- */
-void bt_string_insert( bt_string* str, int idx, char* what)
-{
-int whlen = strlen(what);
-int new_length = idx + whlen;
-	if(new_length > str->len)
-	{
-	char* new_str = new_string(new_length);
-		strncpy(new_str, str->the_string, str->len);
-		/* MEM: Here don't forget to sentence the current value of str->the_string */
-		str->the_string = new_str;
-	}
-	strncpy(str->the_string + idx, what, whlen);
 }

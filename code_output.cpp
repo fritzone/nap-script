@@ -1,6 +1,5 @@
 #include "code_output.h"
 #include "consts.h"
-#include "bsd_extr.h"
 #include "type.h"
 #include "evaluate.h"
 #include "tree.h"

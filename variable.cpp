@@ -11,8 +11,7 @@
 #include "notimpl.h"
 #include "sys_brkp.h"
 #include "indexed.h"
-#include "bsd_indx.h"
-
+#include "envelope.h"
 #include "consts.h"
 #include "throw_error.h"
 
@@ -20,73 +19,6 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
-
-/*
- * Sets the  indexed value as string
- */
-void var_set_indexed_string_value(variable* var,  char* src, int index)
-{
-    if(var->environment_variable)
-    {
-    char* new_env_value = new_string(strlen(var->name) + strlen(src) + 2);
-        sprintf(new_env_value, "%s=%s", var->name + 1, src);
-        putenv(new_env_value);
-    }
-
-    /* special case of string handling when the following conditions are met:
-      1. we have a string
-      2. with 1 dimension
-      3. and the element's length at 0 is bigger than the current index
-       then we can assume that this is an indexing operation
-       this might not work when setting a newly created string's [0]th. character (since it would be senseless) */
-    if(var->value[0] && var->value[0]->type == BASIC_TYPE_STRING && var->dimension == 1 && ((bt_string*)var->value[0]->to_interpret)->len > index)
-    {
-        ((bt_string*)var->value[0]->to_interpret)->the_string[index] = src[0];
-        return;
-    }
-
-    if(index < var->dimension && index >= 0)
-    {
-        if(var->value[index] != NULL)
-        {
-        }
-        var->value[index] = new_envelope(bt_string_create(src), BASIC_TYPE_STRING);
-        return;
-    }
-    throw_index_out_of_range(var->name, var->dimension, index, NULL);
-}
-
-/*
- * Sets the  indexed value as int
- */
-void var_set_indexed_int_value(variable* var, long value, int index)
-{
-    if(index < var->dimension && index >= 0)
-    {
-        if(var->value[index] != NULL)
-        {
-        }
-        var->value[index] = new_envelope(new_number_int(value), BASIC_TYPE_INT);
-        return;
-    }
-    throw_error(STR_INDEX_OUT_OF_RANGE, index, var->name, NULL);
-}
-
-/*
- * Sets the  indexed value as double
- */
-void var_set_indexed_double_value(variable* var, double value, int index)
-{
-    if(index < var->dimension && index >= 0)
-    {
-        if(var->value[index] != NULL)
-        {
-        }
-        var->value[index] = new_envelope(new_number_real(value), BASIC_TYPE_REAL);
-        return;
-    }
-    throw_error(STR_INDEX_OUT_OF_RANGE, index, var->name, NULL);
-}
 
 /**
  * Creates a new  variable
@@ -134,29 +66,6 @@ static void variable_resize_dimed_values(variable* var, int new_size)
         }
     }*/
 }
-
-/**
- * Adds a new dimenison to the variable
- */
-void variable_add_dimension(variable* var, int dimension)
-{
- multi_dimension_def* tmp, *q;
-    if(NULL == var->mult_dim_def)
-    {
-        var->mult_dim_def = alloc_mem(multi_dimension_def,1);
-        var->mult_dim_def->dimension = dimension;
-        variable_resize_dimed_values(var, var->dimension * dimension);
-        return;
-    }
-    tmp = alloc_mem(multi_dimension_def,1);
-    tmp->dimension= dimension;
-    variable_resize_dimed_values(var, var->dimension * dimension);
-    var->multi_dim_count ++;
-    q = var->mult_dim_def;
-    while(q->next) q=q->next;
-    q->next = tmp;
-}
-
 
 /**
  * Returns the index in the variable's long list of envelope values for the given multi dimension
@@ -237,70 +146,6 @@ int variable_get_basic_type(const variable* const var)
     return var->i_type;
 }
 
-void variable_set_indexed_value(variable* var, envelope* new_value, int index)
-{
-    //if(var->environment_variable)
-    //{
-    //	set_env_var(var->name, new_value);
-    //}
-
-    if(index == -1) // index = 0; 	/* now this means, that we want to set the content of the full variable to the new_value ...*/
-    {
-        switch(new_value->type)
-        {
-        case BASIC_TYPE_INT:
-        case BASIC_TYPE_REAL:
-        case BASIC_TYPE_STRING:
-        case BASIC_TYPE_INDEXED:
-            for(int i=0; i<var->dimension; i++)
-            {
-                var->value[i] = new_value;
-            }
-            return;
-        case BASIC_TYPE_VARIABLE:
-        case BASIC_TYPE_CLASS_VAR:
-            {
-            variable* v2 = (variable*)new_value->to_interpret;
-                if(v2->i_type == var->i_type)
-                {
-                    if(v2->dimension == var->dimension)
-                    {
-                        for(int i=0; i<var->dimension; i++)
-                        {
-                            var->value[i] = v2->value[i];
-                        }
-                    }
-                    if(v2->dimension == 1)
-                    {
-                        for(int i=0; i<var->dimension; i++)
-                        {
-                            var->value[i] = v2->value[0];
-                        }
-                    }
-                    else
-                    {
-                        throw_error(E0028_CANNOTASSIGN, var->name, v2->name, NULL);
-                    }
-                }
-                else
-                {
-                    throw_error(E0028_CANNOTASSIGN, var->name, v2->name, NULL);
-                }
-                return;
-            }
-        }
-    }
-
-    if(index < var->dimension && index >= 0)
-    {
-        var->value[index] = new_value;
-    }
-    else
-    {
-
-        throw_error(STR_INDEX_OUT_OF_RANGE, index, var->name, NULL);
-    }
-}
 
 /**
  * Creates a new multi-dimension index object
@@ -460,46 +305,3 @@ variable_template_reference* tmp = alloc_mem(variable_template_reference,1);
     tmp->the_variable = var;
     return tmp;
 }
-
-
-int variable_get_max_index(struct variable* var)
-{
-    if(var->dimension == 1 && var->value[0]->type == BASIC_TYPE_STRING)
-    {
-        return ((bt_string*)(var->value[0]->to_interpret))->len;
-    }
-    else
-    {
-        return var->dimension;
-    }
-}
-
-int variable_is_static(variable* var)
-{
-    return var->static_var;
-}
-
-variable_definition* variable_definition_duplicate(variable_definition* source)
-{
-variable_definition* retv = alloc_mem(variable_definition,1);
-    retv->md_def = source->md_def;
-    retv->the_value = source->the_value;
-    retv->the_variable = variable_copy(source->the_variable);
-    return retv;
-}
-
-variable* variable_copy(const variable* src)
-{
-variable* tmp = new_variable(src->dimension, src->i_type);
-    tmp->c_type = duplicate_string(src->c_type);
-    tmp->func_par = src->func_par;
-    tmp->i_type = src->i_type;
-    tmp->mult_dim_def = src->mult_dim_def;
-    tmp->multi_dim_count = src->multi_dim_count;
-    tmp->name = duplicate_string(src->name);
-    tmp->static_var = src->static_var;
-    tmp->templ_parameters = src->templ_parameters;
-    tmp->templ_variables = src->templ_variables;
-    return tmp;
-}
-

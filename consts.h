@@ -1,8 +1,6 @@
 #ifndef _S_H_
 #define _S_H_
 
-#include "com_strings.h"
-
 /*
  * increment/decrement, index, equal operators.
  */
