@@ -70,30 +70,30 @@ enum op_typeids
 {
     /* Addition, Substraction */
     OPERATOR_ADD = 10000,
-    OPERATOR_MINUS,													// 101
+    OPERATOR_MINUS,                                     // 101
 
     /* unary + - */
-    OPERATOR_UNARY_PLUS,											// 102
-    OPERATOR_UNARY_MINUS,											// 103
+    OPERATOR_UNARY_PLUS,                                // 102
+    OPERATOR_UNARY_MINUS,                               // 103
 
     /* Divide, Multiplication, Modulo */
-    OPERATOR_DIVIDE,											// 104
-    OPERATOR_MULTIPLY,											// 105
-    OPERATOR_MODULO,											// 106
+    OPERATOR_DIVIDE,					// 104
+    OPERATOR_MULTIPLY,					// 105
+    OPERATOR_MODULO,					// 106
 
     /* Shift Left, Right */
-    OPERATOR_SHIFT_LEFT,											// 107
-    OPERATOR_SHIFT_RIGHT,											// 108
+    OPERATOR_SHIFT_LEFT,				// 107
+    OPERATOR_SHIFT_RIGHT,				// 108
 
     /* And, Or, Xor, Comp */
-    OPERATOR_BITWISE_AND,											// 109
-    OPERATOR_BITWISE_OR,											// 110
-    OPERATOR_BITWISE_XOR,											// 111
-    OPERATOR_BITWISE_COMP,											// 112
-    OPERATOR_NOT,													// 113
+    OPERATOR_BITWISE_AND,				// 109
+    OPERATOR_BITWISE_OR,				// 110
+    OPERATOR_BITWISE_XOR,				// 111
+    OPERATOR_BITWISE_COMP,				// 112
+    OPERATOR_NOT,					// 113
 
     /* Assignment */
-    OPERATOR_ASSIGN,											// 114
+    OPERATOR_ASSIGN,					// 114
 
     /* Pre/Post-increment/Decrement */
     OPERATOR_POSTINC,
@@ -135,18 +135,8 @@ enum cmp_typeids
 };
 
 /**
- * Returns the size of the default types, later it will include the sizes of different user objects
- */
-int get_size(const char* type);
-
-/**
  * Returns the type identifier for the given type
  */
 int get_typeid(const char* type);
-
-/**
- * Returns the description of the given type_id'd element
- */
-const char* get_desc(int type_id);
 
 #endif

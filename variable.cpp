@@ -10,10 +10,10 @@
 #include "parametr.h"
 #include "notimpl.h"
 #include "sys_brkp.h"
-#include "indexed.h"
 #include "envelope.h"
 #include "consts.h"
 #include "throw_error.h"
+#include "parametr.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -35,110 +35,6 @@ variable* tmp = alloc_mem(variable, 1);
     tmp->multi_dim_count = 1;
     tmp->i_type = type;
     return tmp;
-}
-
-
-/**
- * Resizes the 'values' vector of the variable to have a different list.
- * SUX: There is a huge leak in this method.
- */
-static void variable_resize_dimed_values(variable* var, int new_size)
-{
-    if(new_size < var->dimension) return;
-    var->value = (envelope**)realloc_mem(var->value, new_size * sizeof(envelope*));
-    memset(var->value + var->dimension , 0, (new_size - var->dimension) * sizeof(envelope*));
-    var->dimension = new_size;
-    /*for(int i=old_dim; i<new_size; i++)
-    {
-        if(BASIC_TYPE_INT == tid)
-        {
-            var_set_indexed_int_value(var, 0, i);
-        }
-        else
-        if(BASIC_TYPE_REAL == tid)
-        {
-            var_set_indexed_double_value(var, 0.0, i);
-        }
-        else
-        if(BASIC_TYPE_STRING == tid)
-        {
-            var_set_indexed_string_value(var, "", i);
-        }
-    }*/
-}
-
-/**
- * Returns the index in the variable's long list of envelope values for the given multi dimension
- * The formula is: for array: (n1,n2,n3,...) indexed[i1,i2,i3,...] = values[ i1 +n1*(i2-1) +n1*n2*(i3-1) + ... ]
- * (For ex: row of x[i,j,k] = (k-1) *iD * jD + (j-1) * iD + i)
- */
-long variable_get_index_for_multidim(variable* var, multi_dimension_def* indexes, int on1)
-{
-    //printf("[VGIFM] entering\n");
-long index = indexes->dimension;
-    if(var->dynamic_dimension)	/* in this fortunate case initialize the variable to have at least the required dimensions
-                                   if it hasn't got any... */
-    {
-        if(indexes->next)
-        {
-            throw_error(E0038_DYNDIMNALL);
-        }
-        if(index >= var->dimension)
-        {
-            variable_resize_dimed_values(var, index + 1); /* +1 since we start from 0 so a[5] is actually the sixth element*/
-        }
-        return index;
-    }
-long cn = 1;
-int multi_dim_count = 1;
-multi_dimension_def* q1 = NULL;
-    q1 = var->mult_dim_def;
-    if(NULL == q1 && var->i_type == BASIC_TYPE_STRING)
-    {
-        return index;
-    }
-    //printf("\t[VGIFM] %s[called:%d (out of:%d),", var->name, index, q1->dimension);
-    indexes = indexes->next; /* counts */
-    if(q1 && index > q1->dimension)
-    {
-        throw_index_out_of_range(var->name, q1->dimension, index, NULL);
-    }
-    while(indexes && q1)
-    {
-
-        cn *= q1->dimension;
-        index += cn * ( indexes->dimension );
-        q1 = q1->next;
-        if(indexes->dimension > q1->dimension)
-        {
-            throw_index_out_of_range(var->name, q1->dimension, indexes->dimension, NULL);
-        }
-        //printf("called: %d (out of:%d),", indexes?indexes->dimension:-1, q1?q1->dimension:-1);
-        indexes = indexes->next;
-
-        multi_dim_count ++;
-    }
-    //printf("] gave:%d\n", index);
-
-    if(index < 0)
-    {
-        throw_index_out_of_range(var->name, var->dimension, index, NULL);
-    }
-
-    if(multi_dim_count > var->multi_dim_count)
-    {
-        throw_error(E0026_TOOMANYIDX, var->name, NULL);
-    }
-    if(q1 && q1->next)
-    {
-        if(on1)
-        {
-            return index;
-        }
-        throw_error(E0027_NOTENOUGHIDX, var->name, NULL);
-    }
-    //printf("{VGIFM return}\n");
-    return index;
 }
 
 int variable_get_basic_type(const variable* const var)

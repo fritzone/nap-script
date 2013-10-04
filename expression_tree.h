@@ -4,11 +4,6 @@
 #include <string>
 
 /**
- * Checks if the expression is valid for the given node
- */
-int expression_is_valid( char* expr);
-
-/**
  * Adds a new expression to the list
  */
 expression_tree_list* expression_tree_list_add_new_expression(const struct expression_tree* expression, struct expression_tree_list** first, const char* text_expr);

@@ -6,17 +6,16 @@
 #include "number.h"
 #include "envelope.h"
 #include "throw_error.h"
-#include "indexed.h"
 #include "bt_string.h"
 #include "type.h"
 #include "opr_hndl.h"
-#include "opr_func.h"
 #include "notimpl.h"
 #include "variable.h"
 #include "tree.h"
 #include "method.h"
 #include "sys_brkp.h"
 #include "res_wrds.h"
+#include "parametr.h"
 
 #include <string.h>
 #include <stdio.h>

@@ -10,16 +10,6 @@
 #include <stdio.h>
 
 /**
- * Checks if this expression can be added to the tree as an expression for a  variable.
- */
-int expression_is_valid( char* expr)
-{
-	if(strstr(expr, "(")) return 0;
-	if(strstr(expr, ")")) return 0;
-	return 1;
-}
-
-/**
  * Creates a new node
  */
 expression_tree* new_expression_tree(const expression_with_location* expwloc)

@@ -23,9 +23,4 @@ struct number* new_number_int(long src);
  */
 struct number* new_number_real(double src);
 
-/**
- * Renders the given number to a string
- */
-char* number_render_to_string(const number* val);
-
 #endif
