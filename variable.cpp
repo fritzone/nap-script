@@ -60,7 +60,6 @@ multi_dimension_index* tmp = alloc_mem(multi_dimension_index,1);
 static variable* variable_add_new_template_variable(variable* the_variable, const char* name, const char* type, method* the_method, call_context* cc, const expression_with_location* expwloc)
 {
 char* new_name = trim(name);
-    //printf("[VarAdddTemplateVar] Adding:[%s]\n", new_name);
     if(strchr(new_name, C_PAR_CL) || strchr(new_name, C_PAR_OP)) /* not allowed to have parantheses in the variable name */
     {
         throw_error(E0029_PARANOTALL, new_name, NULL);
@@ -84,22 +83,20 @@ static parameter* variable_add_template_parameter(variable* the_variable, const 
     {
         throw_error(E0030_PARMNOTALL, the_variable->name, NULL);
     }
-parameter* func_par = new_parameter();
-char *name_dup = duplicate_string(name);
-char* indexOfEq = strchr(name_dup, C_EQ);
-variable* nvar = NULL;
-parameter_list* flist = NULL, *q = NULL;
-    //printf("[VATP] Add new variable template parameter: [%s]:[%s] for [%s]", name, type, the_variable->name);
+    parameter* func_par = new_parameter();
+    char *name_dup = duplicate_string(name);
+    char* indexOfEq = strchr(name_dup, C_EQ);
+    variable* nvar = NULL;
+    parameter_list* flist = NULL, *q = NULL;
+
     if(indexOfEq)
     {
     const char* afterEq = indexOfEq + 1;
     int res = -1;
-        //printf(" with value:[%s]", afterEq);
         func_par->initial_value = new_expression_tree(expwloc);
         build_expr_tree(afterEq, func_par->initial_value, the_method, afterEq, cc, &res, expwloc);
         *indexOfEq = 0;
     }
-    //printf("\n");
 
     name = trim(name);
 

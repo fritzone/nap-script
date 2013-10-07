@@ -1,6 +1,8 @@
 #ifndef _CODE_OUTPUT_H_
 #define _CODE_OUTPUT_H_
 
+#include <string>
+
 struct expression_tree;
 struct method;
 struct variable;
@@ -40,9 +42,9 @@ void push_cc_start_marker();
 void push_cc_end_marker();
 void exit_app();
 void peek(call_context* cc, const char* type, int idx, const char* dest);
-void jmp(const char* label);
-void ujmp(const char* label);
-void jlbf(const char* label);
+void jmp(const std::string &label);
+void ujmp(const std::string &label);
+void jlbf(const std::string &label);
 void jnlbf(const char* label);
 void mov_number_into_reg();
 

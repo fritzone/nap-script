@@ -79,7 +79,7 @@ void call_context_add_compiled_expression(call_context *cc,
  * @param name - the name of the label
  * @return how many labels are there in this call context
  */
-long call_context_add_label(call_context *cc, long position, const char *name);
+long call_context_add_label(call_context *cc, long position, const std::string &name);
 
 /**
  * @brief call_context_add_break_label add a "break" label to this call context
@@ -90,7 +90,7 @@ long call_context_add_label(call_context *cc, long position, const char *name);
  */
 bytecode_label *call_context_add_break_label(call_context *cc,
                                              long position,
-                                             const char *name);
+                                             const std::string &name);
 
 /**
  * @brief call_context_add_new_expression add a new expression to this call context

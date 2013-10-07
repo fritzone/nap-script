@@ -36,7 +36,7 @@ struct bc_method_entry
  */
 struct bc_variable_entry
 {
-    NUMBER_INTEGER_TYPE stack_location;
+    NUMBER_INTEGER_TYPE meta_location;
     std::string name;    
 };
 
@@ -96,19 +96,22 @@ public:
     {
         FILE* f = fopen(fname.c_str(), "ab+");
         fseek(f, 0, SEEK_END);
-        NUMBER_INTEGER_TYPE meta_location = ftell(f);
+
+        long meta_location = ftell(f);
         // write out the variables
         static const char FINALIZER[] = ".meta";
+
         fwrite(FINALIZER, 5, 1, f);
         for(unsigned int i=0; i<variables.size(); i++)
         {
-            fwrite(&variables[i]->stack_location, sizeof(NUMBER_INTEGER_TYPE), 1, f);
+            fwrite(&variables[i]->meta_location, sizeof(NUMBER_INTEGER_TYPE), 1, f);
             uint16_t var_name_length = variables[i]->name.length();
             fwrite(&var_name_length, sizeof(uint16_t), 1, f);
             const char* vname = variables[i]->name.c_str();
             fwrite(vname, sizeof(uint8_t), var_name_length, f);
         }
-        NUMBER_INTEGER_TYPE strtable_location = ftell(f);
+
+        long strtable_location = ftell(f);
         // write out the stringtable
         static const char STRINGTABLE[] = ".str";
         fwrite(STRINGTABLE, 4, 1, f);
@@ -120,7 +123,7 @@ public:
             fwrite(str, sizeof(uint8_t), stringtable[i]->length, f);
         }
         
-        NUMBER_INTEGER_TYPE jumptable_location = ftell(f);
+        long jumptable_location = ftell(f);
         // write out the jumptable
         static const char JUMPTABLE[] = ".jmp";
         fwrite(JUMPTABLE, 4, 1, f);
@@ -207,6 +210,7 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "jlbf") opcode = OPCODE_JLBF;
     if(expr == "jmp") opcode = OPCODE_JMP;
     if(expr == "marks") opcode = OPCODE_MARKS;
+    if(expr == "clrs") opcode = OPCODE_CLRS;
     
     if(isnumber((expr.c_str())))
     {
@@ -286,7 +290,6 @@ void code_stream::output_bytecode(const char* s)
             int idx = -1;
             for(unsigned int i=0; i<jumptable.size(); i++)
             {
-                printf("[%s] [%s] \n", jumptable[i]->name.c_str(), lblName.c_str());
                 if(!strcmp(jumptable[i]->name.c_str(), lblName.c_str()))
                 {
                     idx = i;
@@ -336,12 +339,12 @@ void code_stream::output_bytecode(const char* s)
                 if(idx > -1)
                 {
                     write_stuff_to_file(f, OPCODE_VAR, 1);
-                    write_stuff_to_file(f, variables[idx]->stack_location, 1);
+                    write_stuff_to_file(f, variables[idx]->meta_location, 1);
                 }
                 else
                 {
                     bc_variable_entry* new_var = new bc_variable_entry;
-                    new_var->stack_location = var_counter;
+                    new_var->meta_location = var_counter;
                     new_var->name = expr;
                     variables.push_back(new_var);
                     write_stuff_to_file(f, OPCODE_VAR, 1);

@@ -109,21 +109,21 @@ method* call_context_get_method(call_context* cc, const char* name)
     return NULL;
 }
 
-long call_context_add_label(struct call_context* cc, long position, const char* name)
+long call_context_add_label(struct call_context* cc, long position, const std::string& name)
 {
     bytecode_label* bl = alloc_mem(bytecode_label, 1);
     bl->bytecode_location = position;
-    bl->name = duplicate_string(name);
+    bl->name = duplicate_string(name.c_str());
     bl->type = bytecode_label::LABEL_PLAIN;
     cc->labels->push_back(bl);
     return cc->labels->size();
 }
 
-struct bytecode_label* call_context_add_break_label(struct call_context* cc, long position, const char* name)
+struct bytecode_label* call_context_add_break_label(struct call_context* cc, long position, const std::string& name)
 {
     bytecode_label* bl = alloc_mem(bytecode_label, 1);
     bl->bytecode_location = position;
-    bl->name = duplicate_string(name);
+    bl->name = duplicate_string(name.c_str());
     bl->type = bytecode_label::LABEL_BREAK;
     cc->break_label = bl;
     cc->labels->push_back(bl);

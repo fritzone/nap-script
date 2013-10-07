@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
+#include <sstream>
 
 /**
  * Transforms a character to a string
@@ -224,7 +224,7 @@ long liberc = 0;
 
 void* create(int obj_size, int count)
 {
-void* tmp = calloc(count , obj_size);
+    void* tmp = calloc(count , obj_size);
 	return tmp;
 }
 
@@ -300,5 +300,16 @@ std::string fully_qualified_varname(call_context* cc, const char* v)
 
 std::string fully_qualified_label(const char* l)
 {
-    return std::string(STR_COLON) + l + STR_COLON;
+    std::stringstream ss;
+    ss << STR_COLON << l << STR_COLON;
+    std::string s = ss.str();
+    return s;
+}
+
+std::string fully_qualified_label(std::string& l)
+{
+    std::stringstream ss;
+    ss << STR_COLON << l << STR_COLON;
+    std::string s = ss.str();
+    return s;
 }

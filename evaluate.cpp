@@ -14,6 +14,7 @@
 
 #include <string.h>
 #include <string>
+#include <sstream>
 
 /* forward declarations */
 void deliver_ccidx_dest(const expression_tree* node, int level, const method* the_method, call_context* cc, int reqd_type, int& idxc, const variable* var, int forced_mov);
@@ -244,6 +245,7 @@ void resolve_operation( const expression_tree* node, int reqd_type, int level, c
 
                 if(is_atomic_type(node->right->op_type))	/* number / variable */
                 {
+                    code_stream() << NEWLINE;
                     operation_start_register_atomic(node, reqd_type, level);
                     compile(node->right, the_method, cc, level, reqd_type, forced_mov);	/* make the operations with the right side*/
 
@@ -336,21 +338,36 @@ static void do_list_assignment( envelope* rvalue, variable* var, int level, cons
     int indxctr = 0;
     while(lst->next)
     {
-        code_stream() << "mov" << SPACE << "reg" << "idx" << C_PAR_OP << '0' << C_PAR_CL << C_COMMA << indxctr << NEWLINE;
+        code_stream() << mov()
+                      << SPACE
+                      << reg() << "idx" << C_PAR_OP << '0' << C_PAR_CL
+                      << C_COMMA
+                      << indxctr
+                      << NEWLINE;
         
         if(((expression_tree*)lst->val->to_interpret)->op_type <= var->i_type)
         {
-            code_stream() << "mov" << SPACE << "reg" << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
+            code_stream() << mov()
+                          << SPACE
+                          << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL
+                          << C_COMMA;
         }
         compile((expression_tree*)lst->val->to_interpret, the_method, cc, level + 1, reqd_type, 0);
+
         if(((expression_tree*)lst->val->to_interpret)->op_type <= var->i_type)
         {
             code_stream() << NEWLINE;
         }
         
-        code_stream() << "mov" << SPACE << '@' << "ccidx" << C_PAR_OP << (std::string(cc->name) + STR_DOT + var->name) << C_COMMA << '1' << C_PAR_CL << C_COMMA << "reg"
-                      << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE ;
-        code_stream() << "clidx" << NEWLINE;
+        code_stream() << mov()
+                      << SPACE
+                      << ccidx() << C_PAR_OP << (std::string(cc->name) + STR_DOT + var->name) << C_COMMA << '1' << C_PAR_CL
+                      << C_COMMA
+                      << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL
+                      << NEWLINE ;
+
+        clidx();
+
         lst = lst->next;
         indxctr ++;
     }
@@ -556,17 +573,26 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
 
     if(my_if->if_branch)	/* if we have an if branch*/
     {
-    char* if_label_name = alloc_mem(char, strlen(my_if->if_branch->name) + 32);
-        sprintf(if_label_name, "%s_%d", my_if->if_branch->name, (int)cc->labels->size());	/* generating a name for the 'if' branch */
-    char* else_label_name = NULL;
-    char* end_label_name = alloc_mem(char, strlen(cc->name) + 32);
-        sprintf(end_label_name, "%s_%d", cc->name, (int)cc->labels->size());	/* generating a name for the end of the 'if' */
+
+        std::stringstream ss;
+        ss << my_if->if_branch->name << C_UNDERLINE << cc->labels->size();
+        std::string if_label_name = ss.str();
+        ss.str(std::string());
+
+        std::string else_label_name;
+
+        ss << cc->name << C_UNDERLINE << cc->labels->size();
+        std::string end_label_name = ss.str();
+        ss.str(std::string());
+
+        code_stream() << NEWLINE;
         jlbf(if_label_name);					/* jump to the 'if' call context if the logical expression evaluated to true */
 
         if(my_if->else_branch) /* if there's an else branch */
         {
-            else_label_name = alloc_mem(char, strlen(my_if->else_branch->name) + 32);
-            sprintf(else_label_name, "%s_%d", my_if->else_branch->name, (int)cc->labels->size()); /* generating a name for the 'else' branch, will be placed in this variable */
+            ss << my_if->else_branch->name << C_UNDERLINE << cc->labels->size();
+            else_label_name = ss.str();
+            ss.str(std::string());
             jmp(else_label_name);	/* jump to the else branch if the logical operation did no evaluate to true*/
         }
         else
@@ -576,7 +602,7 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
 
         code_stream() << fully_qualified_label(if_label_name) << NEWLINE;			/* the label for the if branch */
         call_context_add_label(cc, -1, if_label_name);	/* for now added with dummy data to the CC*/
-    expression_tree_list* q = my_if->if_branch->expressions;	/* and here compile the instructions in the 'if' branch*/
+        expression_tree_list* q = my_if->if_branch->expressions;	/* and here compile the instructions in the 'if' branch*/
         if(q && !q->next)			/* one line if, no parantheses*/
         {
             compile(q->root, the_method, my_if->if_branch, level + 1, reqd_type, forced_mov);
@@ -900,7 +926,7 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
                 }
 
                 /* now check if there are multiple dimensions to this variable */
-            multi_dimension_def* q = NULL;
+                multi_dimension_def* q = NULL;
                 q = vd->md_def;
                 while(q && q->next)
                 {
@@ -982,7 +1008,11 @@ void compile(const expression_tree* node, const method* the_method, call_context
         populate_maximal_type(node, reqd_type);
     }
     set_location(node->expwloc);
-    if( node && (node->info || node->op_type == STATEMENT_NEW_CC || node->op_type == STATEMENT_CLOSE_CC || node->op_type == BASIC_TYPE_VARIABLE || node->op_type == BASIC_TYPE_CLASS_VAR) )// added here to solve: int a; if(a&1) { int x = a++; } was not printing the x in the mov ...
+    if( node && (node->info || node->op_type == STATEMENT_NEW_CC
+                 || node->op_type == STATEMENT_CLOSE_CC
+                 || node->op_type == BASIC_TYPE_VARIABLE
+                 || node->op_type == BASIC_TYPE_CLASS_VAR)
+            )// added here to solve: int a; if(a&1) { int x = a++; } was not printing the x in the mov ...
     {
         switch(node->op_type)
         {
@@ -1289,8 +1319,11 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 pc ++;
             }
             code_stream() << push() << SPACE << ref() << SPACE << (std::string(cc->name) + STR_DOT + "this") << NEWLINE;
-            code_stream() << call() << SPACE << "@crea" << C_PAR_OP << m->the_class->name << C_COMMA << (std::string(cc->name) + '.' + "this").c_str() << C_PAR_CL<< NEWLINE;
-            code_stream() << call() << SPACE << '$' << (std::string(cc->name) + STR_DOT + "this") << '@' << (std::string(m->the_class->name) +  "." + m->name).c_str() << NEWLINE;
+            code_stream() << call() << SPACE << "@crea" << C_PAR_OP << m->the_class->name << C_COMMA << (std::string(cc->name) + STR_DOT + "this").c_str() << C_PAR_CL<< NEWLINE;
+            code_stream() << call()
+                          << SPACE
+                          << '$' << (std::string(cc->name) + STR_DOT + "this") << '@' << (std::string(m->the_class->name) +  STR_DOT + m->name).c_str()
+                          << NEWLINE;
             code_stream() << pop() << SPACE << reg() << 'g' << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 
             break;
@@ -1359,7 +1392,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
 
         default:
             printf("Something funny:%d\n", node->op_type);
-            break;
+            exit(2);
         }
     }
 }
