@@ -22,10 +22,10 @@ variable* variable_list_add_variable(const char *var_name,
 {
     if(!valid_variable_name(var_name))
     {
-        throw_error("Invalid variable name", var_name, var_type, (void*)expwloc);
+        throw_error("Invalid variable name", var_name, var_type);
     }
-int itype = get_typeid(var_type);
-variable_list* tmp = alloc_mem(variable_list,1);
+    int itype = get_typeid(var_type);
+    variable_list* tmp = alloc_mem(variable_list,1);
     if(!tmp)
     {
         throw_error("Memory eror");

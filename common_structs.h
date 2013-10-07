@@ -4,12 +4,12 @@
 #include "type.h"
 
 #include <stdio.h>
+#include <vector>
 
 struct call_context;
 struct call_context_list;
 struct method;
 struct class_declaration;
-
 
 /**
  * The String Basic Type
@@ -460,6 +460,141 @@ struct call_frame_list
         struct call_frame_list* next;
         struct call_frame_list* prev;
         struct call_frame_entry* entry;
+};
+
+/*
+ * List for holding the variables of some method
+ */
+struct variable_list
+{
+        /* link to the next element */
+        variable_list *next;
+
+        /* the actual variable */
+        variable *var;
+};
+
+/*
+ * List for holding a list of strings
+ */
+struct string_list
+{
+        /* connection to the next element*/
+        string_list* next;
+
+        /* the actual string */
+        char* str;
+
+        /* the length of the string, populated at run time*/
+        int len;
+};
+
+
+/**
+ * Class, describing a label, a jump location.
+ */
+struct bytecode_label
+{
+    enum label_type
+    {
+        LABEL_PLAIN = 0,
+        LABEL_BREAK = 1,
+        LABEL_CONTINUE = 2
+    };
+
+    /* the name of the label */
+    char* name;
+
+    /* the location of the label in the bytecode stream */
+    long bytecode_location;
+
+    /* the type of the location, can be 0 if this is just a plain label,
+     *1 if this is a "break" location label,
+     *2 if this is a "continue" location label */
+    label_type type;
+};
+
+/*
+ * The call context is something like a namespace and/or code-block ... See the code
+ * below, to understand:
+ *
+ * // by default a 'global' namespace starts here, with name 'global'.
+ * int myGlobalWarming;         // global variable, will be visible everywhere in the program
+ * namespace my_precious { // new call context starts here with name 'my_precious'
+ * int x;
+ * int func()
+ * {                            // another call context, which can see the x from above
+ * int a;
+ *     {                        // just a local nameless call context
+ *     int b;           // b is a local variable, a still visible above
+ *     }                        // b is not visible anymore, it was destroyed at the end of the nameless call context
+ * }
+ * }                            // x is destroyed here by default
+ */
+
+struct call_context;
+struct class_declaration;
+
+/**
+ * This holds a list of call contexts.
+ */
+struct call_context_list
+{
+    struct call_context_list* next;
+    struct call_context* ctx;
+};
+
+/**
+ * The call context is something like a namespace, or a class... basically its role is to group the methods
+ * that belong to the same call context, and makes visible to each other. There is always a 'global' call context.
+ * Variables by default belong to a call cotnext and they are destroyed when the call context ends
+ */
+struct call_context
+{
+    /* the type of the call context: 0 - global, 1 - named*/
+    int type;
+
+    /* the name of the call context */
+    char* name;
+
+    /* the methods of this call context */
+    struct method_list* methods;
+
+    /* the list of variable that have been defined in this call context */
+    struct variable_list* variables;
+
+    /* contains the list of expressions */
+    struct expression_tree_list* expressions;
+
+    /* these are the child call contexts */
+    struct call_context_list* child_call_contexts;
+
+    /* the father call context of this */
+    struct call_context* father;
+
+    /* if the call context is from a method this is that method */
+    struct method* ccs_method;
+
+    /* this is a vector of label locations for this*/
+    std::vector<struct bytecode_label*>* labels;
+
+    struct bytecode_label* break_label;
+    
+    /* the classes that are defined in this call context */
+    std::vector<struct class_declaration*>* classes;
+    
+    /* the interfaces that are defined in this call context */
+    std::vector<struct class_declaration*>* interfaces;
+};
+
+/**
+ * Class representing a class declaration with relationships to a parent class
+ * and a list of implemented interfaces
+ **/
+struct class_declaration : public call_context
+{
+    class_declaration* parent_class;
+    std::vector<class_declaration*> implemented_interfaces;
 };
 
 

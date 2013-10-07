@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string>
+#include <stdint.h>
 
 static const char SPACE = ' ';
 extern const char* NEWLINE;
@@ -32,6 +33,14 @@ public:
     }
 
     code_stream& operator << (int i)
+    {
+        char s[32];
+        sprintf(s, "%i", i);
+        output_bytecode(s);
+        return *this;
+    }
+
+    code_stream& operator << (uint32_t i)
     {
         char s[32];
         sprintf(s, "%i", i);

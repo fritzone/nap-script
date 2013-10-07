@@ -1,6 +1,11 @@
 #ifndef _TYPE_H_
 #define _TYPE_H_
 
+#include <stdint.h>
+
+#define NUMBER_INTEGER_TYPE uint32_t
+#define NUMBER_REAL_TYPE double
+
 /* the typeid type, just a simple int, used to identify the types found in leaf nodes */
 typedef int m_typeid;
 
@@ -10,7 +15,7 @@ typedef int m_optype;
 /*
  * TypeIDs
  */
-static const int BASIC_TYPE_DONTCARE		        = 0;
+static const int BASIC_TYPE_DONTCARE		= 0;
 
 /*  be careful that BASIC_TYPE_REAL always should be bigger than BASIC_TYPE_INT
     BASIC_TYPE_CHAR should be bigger than BASIC_TYPE_BOOL and so on */
@@ -20,19 +25,19 @@ static const int BASIC_TYPE_CHAR			= 20;
 static const int BASIC_TYPE_INT				= 30;
 static const int BASIC_TYPE_REAL			= 40;
 static const int BASIC_TYPE_STRING			= 50;
-static const int BASIC_TYPE_VARIABLE		        = 60;
-static const int BASIC_TYPE_CLASS_VAR                   = 65;
+static const int BASIC_TYPE_VARIABLE		= 60;
+static const int BASIC_TYPE_CLASS_VAR       = 65;
 static const int BASIC_TYPE_INDEXED			= 70;
 static const int BASIC_TYPE_USERDEF			= 80;
 static const int MULTI_DIM_INDEX			= 90;
-static const int NT_VARIABLE_DEF_LST		        = 100;
+static const int NT_VARIABLE_DEF_LST		= 100;
 static const int RESULT_STRING				= 110;
-static const int FUNCTION_DEFINITION		        = 120;
+static const int FUNCTION_DEFINITION		= 120;
 static const int FUNCTION_CALL				= 130;
-static const int FUNCTION_CALL_CONSTRUCTOR              = 131;
-static const int FUNCTION_CALL_OF_OBJECT                = 132;
-static const int FUNCTION_CALL_STATIC                   = 133;
-static const int MEMBER_ACCESS_OF_OBJECT                = 134;
+static const int FUNCTION_CALL_CONSTRUCTOR  = 131;
+static const int FUNCTION_CALL_OF_OBJECT    = 132;
+static const int FUNCTION_CALL_STATIC       = 133;
+static const int MEMBER_ACCESS_OF_OBJECT    = 134;
 static const int STATEMENT_IF				= 140;
 static const int STATEMENT_IF_1L			= 150;
 static const int STATEMENT_CLOSE_CC			= 160;
@@ -41,21 +46,21 @@ static const int BASIC_TYPE_VOID			= 180;
 static const int BACKQUOTE_STRING			= 190;
 static const int TEMPLATED_VARIABLE			= 200;
 static const int RETURN_STATEMENT			= 210;
-static const int ENVIRONMENT_VARIABLE		        = 220;
+static const int ENVIRONMENT_VARIABLE       = 220;
 static const int STATEMENT_WHILE			= 230;
 static const int STATEMENT_WHILE_1L			= 240;
 static const int STATEMENT_BREAK			= 250;
 static const int STATEMENT_CONTINUE			= 260;
 static const int STATEMENT_FOR				= 270;
 static const int STATEMENT_FOR_1L			= 280;
-static const int LIST_VALUE				= 290;
+static const int LIST_VALUE				    = 290;
 static const int LIST_ELEMENT				= 300;
 static const int STATEMENT_DO				= 310;
 static const int CLASS_DECLARATION			= 320;
-static const int STATEMENT_NEW                          = 330;
-static const int KEYWORD_TRUE                           = 340;
-static const int KEYWORD_FALSE                          = 350;
-static const int KEYWORD_NULL                           = 360;
+static const int STATEMENT_NEW              = 330;
+static const int KEYWORD_TRUE               = 340;
+static const int KEYWORD_FALSE              = 350;
+static const int KEYWORD_NULL               = 360;
 
 static const int ENV_TYPE_CC				= 1000;
 /*
@@ -70,11 +75,11 @@ enum op_typeids
 {
     /* Addition, Substraction */
     OPERATOR_ADD = 10000,
-    OPERATOR_MINUS,                                     // 101
+    OPERATOR_MINUS,                     // 101
 
     /* unary + - */
-    OPERATOR_UNARY_PLUS,                                // 102
-    OPERATOR_UNARY_MINUS,                               // 103
+    OPERATOR_UNARY_PLUS,                // 102
+    OPERATOR_UNARY_MINUS,               // 103
 
     /* Divide, Multiplication, Modulo */
     OPERATOR_DIVIDE,					// 104
@@ -90,7 +95,7 @@ enum op_typeids
     OPERATOR_BITWISE_OR,				// 110
     OPERATOR_BITWISE_XOR,				// 111
     OPERATOR_BITWISE_COMP,				// 112
-    OPERATOR_NOT,					// 113
+    OPERATOR_NOT,					    // 113
 
     /* Assignment */
     OPERATOR_ASSIGN,					// 114

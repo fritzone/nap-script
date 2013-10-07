@@ -76,7 +76,13 @@ static void deal_with_while_loading(call_context* cc, expression_tree* new_node,
     new_node->reference = new_envelope(while_st, STATEMENT_WHILE);
 }
 
-static void deal_with_class_declaration(call_context* cc, expression_tree* new_node, method* the_method, char delim, int current_level, parsed_file* pf, expression_with_location* expwloc)
+static void deal_with_class_declaration(call_context* /*cc*/,
+                                        expression_tree* new_node,
+                                        method* /*the_method*/,
+                                        char /*delim*/,
+                                        int /*current_level*/,
+                                        parsed_file* pf,
+                                        expression_with_location* /*expwloc*/)
 {
     char* new_block = alloc_mem(char, pf->content_size - pf->position); // should be enough ...
     int lev = 1;
@@ -435,7 +441,7 @@ static void load_file(call_context* cc, const char* file_name, method* cur_metho
     }
 }
 
-int main(int argc, char* argv[], char* envp[])
+int main(int argc, char* argv[])
 {
     call_context* cur_cc = call_context_create(0, "global", NULL, NULL) ;
     global_cc = cur_cc;
@@ -444,6 +450,6 @@ int main(int argc, char* argv[], char* envp[])
     const char* file_name = argc > 1?argv[1]:"test.nap";
 
     load_file(cur_cc, file_name, cur_method);
-    call_context_compile(global_cc, envp);
+    call_context_compile(global_cc);
     return 1;
 }

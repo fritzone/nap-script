@@ -143,9 +143,9 @@ void reverse(char* s, int len)
 	}
 }
 
-char* extract(const char*s, const char* from, const char* to)
+char* extract(const char* from, const char* to)
 {
-char* res = new_string(to - from + 1);
+    char* res = new_string(to - from + 1);
 	strncpy(res, from + 1, to-from-1);
 	return res;
 }

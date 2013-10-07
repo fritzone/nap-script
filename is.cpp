@@ -34,12 +34,15 @@ int isnumber(const char *s)
 	}
     for(i=0; i<l; i++)
 	{
-		if(!isdigit(s[i]) && !(s[i]=='.') && !(s[i] == '-'))
+        if(!isdigit(s[i]) && !(s[i]=='.') && !(s[i] == '-') && !(s[i] == '+'))
 		{
 			return 0;
 		}
 	}
-	if(!isdigit(s[0])) return 0;
+    if(!isdigit(s[0]) && s[0] != '-' && s[0] != '+')
+    {
+        return 0;
+    }
 	return 1;
 }
 
