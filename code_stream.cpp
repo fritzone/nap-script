@@ -1,16 +1,14 @@
 #include "code_stream.h"
-#include <stdint.h>
+#include "is.h"
+#include "utils.h"
+#include "type.h"
+#include "opcodes.h"
+
 #include <string>
 #include <vector>
 #include <stdlib.h>
 #include <limits.h>
 
-#include "is.h"
-#include "utils.h"
-
-#include "opcodes.h"
-
-#define NUMBER_TYPE uint32_t
 
 const char* NEWLINE = "\n";
 
@@ -38,14 +36,14 @@ struct bc_method_entry
  */
 struct bc_variable_entry
 {
-    NUMBER_TYPE stack_location;
+    NUMBER_INTEGER_TYPE stack_location;
     std::string name;    
 };
 
 struct label_entry
 {
     // where this is in the bytecode stream
-    NUMBER_TYPE bytecode_location;
+    NUMBER_INTEGER_TYPE bytecode_location;
     
     // and the name of it
     std::string name;
@@ -53,7 +51,7 @@ struct label_entry
 
 struct bc_string_table_entry
 {
-    NUMBER_TYPE index;
+    NUMBER_INTEGER_TYPE index;
     uint32_t length;
     std::string the_string;
 };
@@ -70,7 +68,7 @@ static std::vector<bc_string_table_entry*> stringtable;
 static std::vector<label_entry*> jumptable;
 
 // this counts the variables
-static NUMBER_TYPE var_counter = 0;
+static NUMBER_INTEGER_TYPE var_counter = 0;
 
 // if the very first byte writte then also create the file
 static bool first_entry = true;
@@ -98,37 +96,37 @@ public:
     {
         FILE* f = fopen(fname.c_str(), "ab+");
         fseek(f, 0, SEEK_END);
-        NUMBER_TYPE meta_location = ftell(f);
+        NUMBER_INTEGER_TYPE meta_location = ftell(f);
         // write out the variables
         static const char FINALIZER[] = ".meta";
         fwrite(FINALIZER, 5, 1, f);
         for(unsigned int i=0; i<variables.size(); i++)
         {
-            fwrite(&variables[i]->stack_location, sizeof(NUMBER_TYPE), 1, f);
+            fwrite(&variables[i]->stack_location, sizeof(NUMBER_INTEGER_TYPE), 1, f);
             uint16_t var_name_length = variables[i]->name.length();
             fwrite(&var_name_length, sizeof(uint16_t), 1, f);
             const char* vname = variables[i]->name.c_str();
             fwrite(vname, sizeof(uint8_t), var_name_length, f);
         }
-        NUMBER_TYPE strtable_location = ftell(f);
+        NUMBER_INTEGER_TYPE strtable_location = ftell(f);
         // write out the stringtable
         static const char STRINGTABLE[] = ".str";
         fwrite(STRINGTABLE, 4, 1, f);
         for(unsigned int i=0; i<stringtable.size(); i++)
         {
-            fwrite(&stringtable[i]->index, sizeof(NUMBER_TYPE), 1, f);
+            fwrite(&stringtable[i]->index, sizeof(NUMBER_INTEGER_TYPE), 1, f);
             fwrite(&stringtable[i]->length, sizeof(uint32_t), 1, f);
             const char* str = stringtable[i]->the_string.c_str();
             fwrite(str, sizeof(uint8_t), stringtable[i]->length, f);
         }
         
-        NUMBER_TYPE jumptable_location = ftell(f);
+        NUMBER_INTEGER_TYPE jumptable_location = ftell(f);
         // write out the jumptable
         static const char JUMPTABLE[] = ".jmp";
         fwrite(JUMPTABLE, 4, 1, f);
         for(unsigned int i=0; i<jumptable.size(); i++)
         {
-            fwrite(&jumptable[i]->bytecode_location, sizeof(NUMBER_TYPE), 1, f);
+            fwrite(&jumptable[i]->bytecode_location, sizeof(NUMBER_INTEGER_TYPE), 1, f);
         }
         
         
@@ -148,9 +146,9 @@ public:
 // dummy object, we need its destructor
 static code_finalizer code_f;
 
-static NUMBER_TYPE last_file_pos = 0;
+static NUMBER_INTEGER_TYPE last_file_pos = 0;
 
-template <class T> NUMBER_TYPE write_stuff_to_file(FILE* fp, T stuff, int cnt)
+template <class T> NUMBER_INTEGER_TYPE write_stuff_to_file(FILE* fp, T stuff, int cnt)
 {
     fwrite(&stuff, sizeof(T), cnt, fp);
     return last_file_pos = ftell(fp);
@@ -159,20 +157,21 @@ template <class T> NUMBER_TYPE write_stuff_to_file(FILE* fp, T stuff, int cnt)
 void code_stream::output_bytecode(const char* s)
 {
     std::string expr = s;
-    if(expr == " ") return;
-    if(expr == "(") return;
-    if(expr == ")") return;
-    if(expr == "\n") return;
-    if(expr == ",") return;
-    
-    printf("%s\n", s);
+    if(expr == " " || expr == "(" || expr == ")" || expr == "\n" || expr == ",")
+    {
+        printf("%s", s);
+        return;
+    }
+
+    printf("%s", s);
+
     FILE* f = NULL;
     
     if(first_entry)
     {
         f = fopen(fname.c_str(), "wb+");
         first_entry = false;
-        NUMBER_TYPE temp = 0;               
+        NUMBER_INTEGER_TYPE temp = 0;
 
         fwrite(&temp, sizeof(temp), 1, f); // the meta location for variables
         fwrite(&temp, sizeof(temp), 1, f); // the stringtable location         
@@ -237,13 +236,13 @@ void code_stream::output_bytecode(const char* s)
             }
             else
             {
-                NUMBER_TYPE nr = atoi(expr.c_str());
+                NUMBER_INTEGER_TYPE nr = atoi(expr.c_str());
                 
                 // the size of the number
                 uint8_t type = OPCODE_BYTE;
                 if(nr > 255) type = OPCODE_SHORT;
                 if(nr > 65535) type = OPCODE_LONG;
-                if(nr > 4294967295) type = OPCODE_HUGE;
+                if(nr > 4294967294) type = OPCODE_HUGE;
                 
                 // if the value is signed or not
                 uint8_t sign = 0;
@@ -273,7 +272,7 @@ void code_stream::output_bytecode(const char* s)
                 if(type == OPCODE_HUGE)
                 {
                     int64_t nrf = atoi(expr.c_str());
-                    write_stuff_to_file(f, (NUMBER_TYPE)nrf, 1);
+                    write_stuff_to_file(f, (NUMBER_INTEGER_TYPE)nrf, 1);
                 }
             }
 
@@ -362,8 +361,8 @@ void code_stream::output_bytecode(const char* s)
                 }
                 if(idx > -1) // found a label
                 {
-                    NUMBER_TYPE index64 = idx;
-                    write_stuff_to_file(f, index64, 1);
+                    NUMBER_INTEGER_TYPE index = idx;
+                    write_stuff_to_file(f, index, 1);
                 }
                 else // let's create a label
                 {
@@ -371,8 +370,8 @@ void code_stream::output_bytecode(const char* s)
                     le->bytecode_location = 0;
                     le->name = expr;
                     jumptable.push_back(le);
-                    NUMBER_TYPE index64 = jumptable.size() - 1; // the real idx
-                    write_stuff_to_file(f, index64, 1);
+                    NUMBER_INTEGER_TYPE index = jumptable.size() - 1; // the real idx
+                    write_stuff_to_file(f, index, 1);
                 }                
             }
         }

@@ -7,33 +7,7 @@ struct variable;
 struct method;
 struct call_context;
 struct expression_with_location;
-
-/*
- * List for holding the variables of some method
- */
-struct variable_list
-{
-	/* link to the next element */
-	variable_list *next;
-
-	/* the actual variable */
-	variable *var;
-};
-
-/*
- * List for holding a list of strings
- */
-struct string_list
-{
-	/* connection to the next element*/
-	string_list* next;
-
-	/* the actual string */
-	char* str;
-
-	/* the length of the string, populated at run time*/
-	int len;
-};
+struct variable_list;
 
 /**
  * Adds a new hash  variable to the variable list. Creates a variable object and adds that to the list
@@ -45,9 +19,12 @@ struct string_list
  * @param cc - and/or in this call context
  * @param expwloc - at this location in the script file
  */
-variable* variable_list_add_variable(const char *var_name, const char* var_type,
-                                     int var_size, variable_list** first,
-                                     method* the_method, call_context* cc, 
+variable* variable_list_add_variable(const char *var_name, 
+                                     const char* var_type,
+                                     int var_size, 
+                                     variable_list** first,
+                                     method* the_method, 
+                                     call_context* cc, 
                                      const expression_with_location* expwloc);
 
 /**
@@ -55,7 +32,8 @@ variable* variable_list_add_variable(const char *var_name, const char* var_type,
  * @param s - the name of the variable
  * @param first - the list we're searching
  */
-variable_list* variable_list_has_variable(const char *s, struct variable_list* first);
+variable_list* variable_list_has_variable(const char *s, 
+                                          variable_list* first);
  
 /**
  * Creates a new string list from the instr which is separated by the given separator

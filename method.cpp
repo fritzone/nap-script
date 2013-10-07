@@ -24,7 +24,7 @@
 
 method_list* method_list_insert( method_list** list, method* meth)
 {
-method_list *tmp, *q;
+    method_list *tmp, *q;
     if(!list)
     {
         throw_error("Internal - cannot insert into NULL method list", NULL);

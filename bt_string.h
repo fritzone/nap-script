@@ -10,12 +10,14 @@
 bt_string* bt_string_create(const char* src);
 
 /**
- * Checks whether the parameter expr_trim is something enclosed in quotes (meaning: a String)
+ * Checks whether the parameter expr_trim is something enclosed in quotes 
+ * (meaning: a String)
  */
 int is_string(const char* expr_trim, int expr_len);
 
 /**
- * Checks if the given string is a statement string (ie: command, that will be executed, placed in ``)
+ * Checks if the given string is a statement string (ie: command, that will 
+ * be executed, placed in ``)
  */
 int is_statement_string(const char* expr_trim, int expr_len);
 

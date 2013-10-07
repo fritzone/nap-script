@@ -11,7 +11,7 @@ static void prepare_location(char* location)
     sprintf(location, "expr:[%s] file:[%s] around line:[%d]", g_location->expression, g_location->location->file_name, g_location->location->start_line_number);
 }
 
-void throw_error(const char* error, void* res)
+void throw_error(const char* error)
 {
     char location[1024];
     prepare_location(location);
@@ -21,7 +21,7 @@ void throw_error(const char* error, void* res)
     exit(1);
 }
 
-void throw_error(const char* error, const char* par1, const char* par2, void* res)
+void throw_error(const char* error, const char* par1, const char* par2)
 {
     char location[1024];
     prepare_location(location);
@@ -31,7 +31,7 @@ void throw_error(const char* error, const char* par1, const char* par2, void* re
     exit(1);
 }
 
-void throw_error(const char* error, const char* par, void* res)
+void throw_error(const char* error, const char* par)
 {
     char location[1024];
     prepare_location(location);
@@ -41,7 +41,7 @@ void throw_error(const char* error, const char* par, void* res)
     exit(1);
 }
 
-void throw_error(const char* error, int id, const char* par, void* res)
+void throw_error(const char* error, int id, const char* par)
 {
     char location[1024];
     prepare_location(location);
@@ -54,7 +54,7 @@ void throw_error(const char* error, int id, const char* par, void* res)
     exit(1);
 }
 
-void throw_index_out_of_range(const char* variable_name, int maximum_allowed, int got, void* res)
+void throw_index_out_of_range(const char* variable_name, int maximum_allowed, int got)
 {
     char location[1024];
     prepare_location(location);

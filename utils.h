@@ -88,7 +88,7 @@ void reverse(char* s, int len);
 /**
  * Extracts from s the seqction between from and to. Not including * from and * to
  */
-char* extract(const char*s, const char* from, const char* to);
+char* extract(const char* from, const char* to);
 
 /**
  * Skips the parantheses in the given expression, updates i

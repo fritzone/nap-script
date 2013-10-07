@@ -16,9 +16,19 @@
  */
 int level_0_char_operator(const char *expr, char op1, char op2, int need_first)
 {
-signed int i=0, len = strlen(expr);
-	if(len == 1 && expr[0] != op1 && expr[0] != op2) return -1;
-int level = 0, found_idx = -1;
+    signed int i=0, len = strlen(expr);
+    if(len == 1 && expr[0] != op1 && expr[0] != op2)
+    {
+        return -1;
+    }
+
+    // special case: a unary operator found at pos 0:
+    if(expr[0] == op1 || expr[0] == op2)
+    {
+        return 0;
+    }
+
+    int level = 0, found_idx = -1;
 	while(i<len)
 	{
 		if( expr[i] == C_PAR_OP ) level++;

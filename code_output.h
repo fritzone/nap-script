@@ -8,12 +8,10 @@ struct call_context;
 struct expression_tree_list;
 
 const char* get_opcode(int opt);
-void print_newline();
 void op_reg_reg(int op_type, char reg1_ty, int reg1_level, char reg2_ty, int reg2_level);
 void operation_start_register_atomic( const expression_tree* node, int reqd_type, int level );
 void operation_register_level_register_next_level( const expression_tree* node, int reqd_type, int level );
 void move_register_level_register_next_level( int reqd_type, int level );
-
 void move_atomic_into_index_register( int& idxc, expression_tree_list* indxs, const method* the_method, call_context* cc, int level, int forced_mov );
 void move_int_register_into_index_register( int& idxc, int level );
 void move_start_register_atomic( variable* dest, int level );
@@ -33,9 +31,9 @@ void operation_target_var_source_reg( call_context* cc, int opr, variable* var, 
 void operation_target_indexed_source_reg( call_context* cc, int opr, variable* var, int index, int level );
 void mov_var_into_reg(call_context* cc, variable* var, int level);
 void mov_indexed_into_reg( call_context* cc, variable* var, int level, int idxc );
-void init_reg_with_atomic(expression_tree* updateable_node, expression_tree* dest_node, int reqd_type, int level);
+void mov_reg(int reqd_type, int level);
 void operation_target_reg_source_reg( int req_type_1, int level_1, int req_type_2, int level_2 );
-void clear_indexes(call_context* cc);
+void clidx();
 void resolve_variable_add_dimension_number(call_context* cc, variable* var, long int dimension);
 void resolve_variable_add_dimension_regis(call_context* cc, variable* var, int level);
 void push_cc_start_marker();
@@ -47,5 +45,13 @@ void ujmp(const char* label);
 void jlbf(const char* label);
 void jnlbf(const char* label);
 void mov_number_into_reg();
+
+const char* push();
+const char* ref();
+const char* mov();
+const char* call();
+const char* pop();
+const char* reg();
+const char* ccidx();
 
 #endif

@@ -14,6 +14,8 @@
 #include <string.h>
 #include <string>
 
+using namespace std;
+
 struct call_context* global_cc = NULL;
 
 /**
@@ -52,7 +54,7 @@ struct class_declaration* class_declaration_create(const char* name, struct call
  */
 method_list* call_context_add_method(call_context* cc,  method* the_method)
 {
-method_list* q = method_list_insert(&cc->methods, the_method);
+    method_list* q = method_list_insert(&cc->methods, the_method);
     return q;
 }
 
@@ -91,7 +93,7 @@ variable* call_context_add_variable(call_context* cc, const char* name, const ch
  */
 method* call_context_get_method(call_context* cc, const char* name)
 {
-method_list* q = cc->methods;
+    method_list* q = cc->methods;
     while(q)
     {
         if(!strcmp(q->the_method->name, name))
@@ -109,21 +111,20 @@ method_list* q = cc->methods;
 
 long call_context_add_label(struct call_context* cc, long position, const char* name)
 {
-bytecode_label* bl = alloc_mem(bytecode_label, 1);
+    bytecode_label* bl = alloc_mem(bytecode_label, 1);
     bl->bytecode_location = position;
     bl->name = duplicate_string(name);
-    bl->type = 0;
-
+    bl->type = bytecode_label::LABEL_PLAIN;
     cc->labels->push_back(bl);
     return cc->labels->size();
 }
 
 struct bytecode_label* call_context_add_break_label(struct call_context* cc, long position, const char* name)
 {
-bytecode_label* bl = alloc_mem(bytecode_label, 1);
+    bytecode_label* bl = alloc_mem(bytecode_label, 1);
     bl->bytecode_location = position;
     bl->name = duplicate_string(name);
-    bl->type = 1;
+    bl->type = bytecode_label::LABEL_BREAK;
     cc->break_label = bl;
     cc->labels->push_back(bl);
     return bl;
@@ -162,7 +163,7 @@ int res;
  * found outside the methods.
  * Run method main
  */
-void call_context_compile(call_context* cc, char* envp[])
+void call_context_compile(call_context* cc)
 {
     {
     expression_tree_list* q = cc->expressions;
@@ -271,7 +272,7 @@ call_context_list* tmp = alloc_mem(call_context_list,1), *q;
     q->next = tmp;
 }
 
-struct bytecode_label* call_context_provide_label(struct call_context* cc, int break_label)
+struct bytecode_label* call_context_provide_label(struct call_context* cc)
 {
     int maxlen = strlen(cc->name) + 32;
     char* label_name = alloc_mem(char, maxlen);

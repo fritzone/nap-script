@@ -474,7 +474,7 @@ bool is_list_value(const char* what)
  * Returns the type if this expression looks like a variable definition. Return NULL if not.
  * Also checks if the variable defined is a class instance. (ie: TestClass a;)
  */
-static char* looks_like_var_def(const call_context* cc, char* expr, int expr_len, const  expression_tree* node)
+static char* looks_like_var_def(const call_context* cc, char* expr, int expr_len)
 {
     char* first_word = new_string(expr_len);
     int flc = 0;
@@ -635,7 +635,6 @@ static int accepted_variable_name(const char* name)
  */
 static variable_definition_list* define_variables(char* var_def_type, 
                                                   char* expr_trim, 
-                                                  int expr_len, 
                                                   expression_tree* node, 
                                                   method* the_method, 
                                                   call_context* cc, 
@@ -796,7 +795,7 @@ static variable_definition_list* define_variables(char* var_def_type,
  * @param the_variable - this is the variable we're working with
  * @param expwloc - this is the physical file location
  */
-static variable_template_reference* handle_variable_template_call(char *expr_trim, int expr_len, method* the_method, const char* orig_expr,
+static variable_template_reference* handle_variable_template_call(char *expr_trim, method* the_method, const char* orig_expr,
         call_context* cc, int* result, variable* the_variable,
         const expression_with_location* expwloc)
 {
@@ -1155,7 +1154,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
     int expr_len = strlen(expr_trim);
     const char* foundOperator;	/* the operator which will be identified*/
     int zlop;					/* the index of the identified zero level operation */
-    char* var_def_type = looks_like_var_def(cc, expr_trim, expr_len, node);
+    char* var_def_type = looks_like_var_def(cc, expr_trim, expr_len);
     int func_def = looks_like_function_def(expr_trim, expr_len, node, cc);
     method* func_call = NULL; /* if this entry is a function call or or not ... */
     char* index = new_string(expr_len);
@@ -1223,7 +1222,10 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
     /* second check: variable definition? */
     if(var_def_type && strcmp(var_def_type, "new"))
     {
-        variable_definition_list* vdl = define_variables(var_def_type, expr_trim, expr_len, node, the_method, cc, orig_expr, result, expwloc);
+        variable_definition_list* vdl = define_variables(var_def_type, expr_trim,
+                                                         node, the_method, cc,
+                                                         orig_expr, result,
+                                                         expwloc);
         *result = NT_VARIABLE_DEF_LST;
         return vdl;
     }
@@ -1238,16 +1240,20 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
         {
             *strchr(constructor_name, '(') = 0;
         }
-	class_declaration* cd = call_context_get_class_declaration(cc, constructor_name);
-	if(!cd)
-	{
+        class_declaration* cd = call_context_get_class_declaration(cc, constructor_name);
+        if(!cd)
+        {
             throw_error("Invalid constructor: ", constructor_name);
-	}
+        }
         method* called_constructor = call_context_get_method(cd, constructor_name);
-	called_constructor = (constructor_call*)realloc(called_constructor, sizeof(constructor_call));
-	constructor_call* ccf = (constructor_call*)called_constructor;
-	ccf->the_class = cd;
-        call_frame_entry* cfe = handle_function_call(keyword_new, expr_len, node, ccf, the_method, orig_expr, cd, result, expwloc, METHOD_CALL_CONSTRUCTOR);
+        called_constructor = (constructor_call*)realloc(called_constructor, sizeof(constructor_call));
+        constructor_call* ccf = (constructor_call*)called_constructor;
+        ccf->the_class = cd;
+        call_frame_entry* cfe = handle_function_call(keyword_new, expr_len,
+                                                     node, ccf, the_method,
+                                                     orig_expr, cd, result,
+                                                     expwloc,
+                                                     METHOD_CALL_CONSTRUCTOR);
         *result = STATEMENT_NEW;
         return cfe;
     }
@@ -1274,7 +1280,13 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
     }
 
     /* if or while? */
-    if(keyword_if || keyword_while) return deal_with_conditional_keywords(keyword_if, keyword_while, node, expwloc, expr_trim, expr_len, the_method, orig_expr, cc, result);
+    if(keyword_if || keyword_while)
+    {
+        return deal_with_conditional_keywords(keyword_if, keyword_while,
+                                              node, expwloc, expr_trim,
+                                              expr_len, the_method,
+                                              orig_expr, cc, result);
+    }
 
     /* the for keyword? */
     if(keyword_for)
@@ -1373,277 +1385,296 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
             /* now we should check for the 'unary' +- operators */
             if(ntype == OPERATOR_ADD || ntype == OPERATOR_MINUS || ntype == OPERATOR_BITWISE_COMP || ntype == OPERATOR_NOT)
             {
-                node->info = duplicate_string(foundOperator);
-                if(ntype == OPERATOR_ADD)
+                /* check if this is a number or not ?*/
+                char* afterer = trim(duplicate_string(expr_trim + 1));
+                if(!isnumber(afterer))
                 {
-                    ntype = OPERATOR_UNARY_PLUS;
+                    node->info = duplicate_string(foundOperator);
+                    if(ntype == OPERATOR_ADD)
+                    {
+                        ntype = OPERATOR_UNARY_PLUS;
+                    }
+                    else if(ntype == OPERATOR_MINUS)
+                    {
+                        ntype = OPERATOR_UNARY_MINUS;
+                    }
+                    node->op_type = ntype;
+                    node->left = new_expression_tree_with_father(node, expwloc);
+                    build_expr_tree(trim(duplicate_string(expr_trim + 1)), node->left, the_method, orig_expr, cc, result, expwloc);
+                    return NULL;
                 }
-                else if(ntype == OPERATOR_MINUS)
+                else
                 {
-                    ntype = OPERATOR_UNARY_MINUS;
+                    zlop = -1;
                 }
-                node->op_type = ntype;
-                node->left = new_expression_tree_with_father(node, expwloc);
-                build_expr_tree(trim(duplicate_string(expr_trim + 1)), node->left, the_method, orig_expr, cc, result, expwloc);
-                return NULL;
             }
             else	/* right now we are not dealing with more unary operators */
             {
                 throw_error(E0012_SYNTAXERR, expr, NULL);
             }
         }
+        else
+        {
+            /* finding the part which is after the operator */
 
-        /* finding the part which is after the operator */
-
-        char* afterer = trim(after(zlop + (foundOperator ? strlen(foundOperator) -1 : 0), expr_trim));
-        if(strlen(afterer)==0)
-        {
-            throw_error(E0012_SYNTAXERR, expr, NULL);
-        }
-        node->info = duplicate_string(foundOperator);
-        node->op_type = ntype;
-        node->left=new_expression_tree_with_father(node, expwloc);
-        node->right=new_expression_tree_with_father(node, expwloc);
-        /* the order here is important for the "." operator ... it needs to know the parent in order to identify the object to find its call_context*/
-        build_expr_tree(beforer, node->left, the_method, orig_expr, cc, result, expwloc);
-        build_expr_tree(afterer, node->right, the_method, orig_expr, cc, result, expwloc);
-    }
-    else /* no operator on the zeroth level ... */
-    {
-        /* Is this is a function call?*/
-        if((func_call = is_function_call(expr_trim, cc)))
-        {
-            call_frame_entry* cfe = handle_function_call(expr_trim, expr_len, node, func_call, the_method, orig_expr, cc, result, expwloc, METHOD_CALL_NORMAL);
-            *result = FUNCTION_CALL;
-            return cfe;
-        }
-        
-        /* Check if this is a function call of an object*/
-        if(node->father && node->father->op_type == OPERATOR_DOT)
-        {
-            /* let's search for the type in the left of the father.. */
-            if(node->father->left && node->father->left != node)
+            char* afterer = trim(after(zlop + (foundOperator ? strlen(foundOperator) -1 : 0), expr_trim));
+            if(strlen(afterer)==0)
             {
-                if(node->father->left->op_type == BASIC_TYPE_VARIABLE)  // to solve: a.func()
+                throw_error(E0012_SYNTAXERR, expr, NULL);
+            }
+            node->info = duplicate_string(foundOperator);
+            node->op_type = ntype;
+            node->left=new_expression_tree_with_father(node, expwloc);
+            node->right=new_expression_tree_with_father(node, expwloc);
+            /* the order here is important for the "." operator ... it needs to know the parent in order to identify the object to find its call_context*/
+            build_expr_tree(beforer, node->left, the_method, orig_expr, cc, result, expwloc);
+            build_expr_tree(afterer, node->right, the_method, orig_expr, cc, result, expwloc);
+        }
+
+        if(zlop != -1)
+        {
+            return NULL;
+        }
+    }
+
+    // no operator on the zeroth level
+
+    /* Is this is a function call?*/
+    if((func_call = is_function_call(expr_trim, cc)))
+    {
+        call_frame_entry* cfe = handle_function_call(expr_trim, expr_len, node, func_call, the_method, orig_expr, cc, result, expwloc, METHOD_CALL_NORMAL);
+        *result = FUNCTION_CALL;
+        return cfe;
+    }
+
+    /* Check if this is a function call of an object*/
+    if(node->father && node->father->op_type == OPERATOR_DOT)
+    {
+        /* let's search for the type in the left of the father.. */
+        if(node->father->left && node->father->left != node)
+        {
+            if(node->father->left->op_type == BASIC_TYPE_VARIABLE)  // to solve: a.func()
+            {
+                variable* v = (variable*)(node->father->left->reference->to_interpret);
+                class_declaration* cd = call_context_get_class_declaration(v->cc, v->c_type);
+                if(!cd)
                 {
-                    variable* v = (variable*)(node->father->left->reference->to_interpret);
-                    class_declaration* cd = call_context_get_class_declaration(v->cc, v->c_type);
-                    if(!cd)
-                    {
-                        throw_error("Only class type variables can call methods on themselves", v->name);
-                    }
-                    if((func_call = is_function_call(expr_trim, cd)))
-                    {    
-                        call_frame_entry* cfe = handle_function_call(expr_trim, expr_len, node, func_call, the_method, orig_expr, cd, result, expwloc, METHOD_CALL_OF_OBJECT);
-                        *result = FUNCTION_CALL;
-                        return cfe;
-                    }
-                    
-                    // now see if this is a class variable: a.b = 4
-                    int templated = 0;
-                    int env_var = 0;
-                    if(variable* var = method_has_variable(0, cd, expr_trim, &templated, &env_var))
-		    {
-			*result = MEMBER_ACCESS_OF_OBJECT;
-                        envelope* envl = new_envelope(var, BASIC_TYPE_VARIABLE);
-                        node->op_type = MEMBER_ACCESS_OF_OBJECT;
-                        node->reference = envl;
-                        return envl;
-		    }
+                    throw_error("Only class type variables can call methods on themselves", v->name);
                 }
-                else
-                if(node->father->left->op_type == FUNCTION_CALL)    // to solve func().anotherOne()
+                if((func_call = is_function_call(expr_trim, cd)))
                 {
+                    call_frame_entry* cfe = handle_function_call(expr_trim, expr_len, node, func_call, the_method, orig_expr, cd, result, expwloc, METHOD_CALL_OF_OBJECT);
+                    *result = FUNCTION_CALL;
+                    return cfe;
                 }
+
+                // now see if this is a class variable: a.b = 4
+                int templated = 0;
+                int env_var = 0;
+                if(variable* var = method_has_variable(0, cd, expr_trim, &templated, &env_var))
+        {
+        *result = MEMBER_ACCESS_OF_OBJECT;
+                    envelope* envl = new_envelope(var, BASIC_TYPE_VARIABLE);
+                    node->op_type = MEMBER_ACCESS_OF_OBJECT;
+                    node->reference = envl;
+                    return envl;
+        }
+            }
+            else
+            if(node->father->left->op_type == FUNCTION_CALL)    // to solve func().anotherOne()
+            {
             }
         }
+    }
 
-        /* check: pre-increment */
-        if(expr_len > 2 && expr_trim[0] == expr_trim[1] && (expr_trim[0] == C_SUB || expr_trim[0] == C_ADD) )
+    /* check: pre-increment */
+    if(expr_len > 2 && expr_trim[0] == expr_trim[1] && (expr_trim[0] == C_SUB || expr_trim[0] == C_ADD) )
+    {
+        const char* p = STR_PLUSPLUS;
+        ntype = OPERATOR_PREINC;
+        if(expr_trim[0] == C_SUB)
+        {
+            p = STR_MINMIN;
+            ntype = OPERATOR_PREDEC;
+        }
+        node->info = duplicate_string(p);
+        node->op_type = ntype;
+        node->left = new_expression_tree_with_father(node, expwloc);
+        build_expr_tree(expr_trim + 2, node->left, the_method, orig_expr, cc, result, expwloc);
+    }
+    else
+        /* check if it's post increment/decrement */
+        if(expr_len > 2 && expr_trim[expr_len - 1] == expr_trim[expr_len - 2] && (expr_trim[expr_len - 1] == C_SUB || expr_trim[expr_len - 1] == C_ADD ) )
         {
             const char* p = STR_PLUSPLUS;
-            ntype = OPERATOR_PREINC;
-            if(expr_trim[0] == C_SUB)
+            ntype = OPERATOR_POSTINC;
+            if(C_SUB == expr_trim[expr_len - 1])
             {
                 p = STR_MINMIN;
-                ntype = OPERATOR_PREDEC;
+                ntype = OPERATOR_POSTDEC;
             }
             node->info = duplicate_string(p);
             node->op_type = ntype;
-            node->left = new_expression_tree_with_father(node, expwloc);
-            build_expr_tree(expr_trim + 2, node->left, the_method, orig_expr, cc, result, expwloc);
-        }
-        else
-            /* check if it's post increment/decrement */
-            if(expr_len > 2 && expr_trim[expr_len - 1] == expr_trim[expr_len - 2] && (expr_trim[expr_len - 1] == C_SUB || expr_trim[expr_len - 1] == C_ADD ) )
-            {
-                const char* p = STR_PLUSPLUS;
-                ntype = OPERATOR_POSTINC;
-                if(C_SUB == expr_trim[expr_len - 1])
-                {
-                    p = STR_MINMIN;
-                    ntype = OPERATOR_POSTDEC;
-                }
-                node->info = duplicate_string(p);
-                node->op_type = ntype;
 
-                /* now add the  variable to the tree... */
-                node->left = new_expression_tree_with_father(node, expwloc);
-                expr_trim[expr_len - 2] = 0;	/* this is to cut down the two ++ or -- signs ... */
-                build_expr_tree(expr_trim, node->left, the_method, orig_expr, cc, result, expwloc);
-            }
-            else if( C_PAR_OP == expr_trim[0] ) /* if this is enclosed in a paranthesis */
+            /* now add the  variable to the tree... */
+            node->left = new_expression_tree_with_father(node, expwloc);
+            expr_trim[expr_len - 2] = 0;	/* this is to cut down the two ++ or -- signs ... */
+            build_expr_tree(expr_trim, node->left, the_method, orig_expr, cc, result, expwloc);
+        }
+        else if( C_PAR_OP == expr_trim[0] ) /* if this is enclosed in a paranthesis */
+        {
+            if(expr_len > 1 && C_PAR_CL == expr_trim[expr_len - 1])
             {
-                if(expr_len > 1 && C_PAR_CL == expr_trim[expr_len - 1])
+                expr_trim[expr_len-1]=0;		/* here we have removed the trailing parantheses */
+                expr_trim ++;
+                expr_trim = trim(expr_trim);
+                if(strlen(expr_trim)==0)
                 {
-                    expr_trim[expr_len-1]=0;		/* here we have removed the trailing parantheses */
-                    expr_trim ++;
-                    expr_trim = trim(expr_trim);
-                    if(strlen(expr_trim)==0)
-                    {
-                        throw_error(E0012_SYNTAXERR, expr, NULL);
-                    }
-                    else
-                    {
-                        build_expr_tree(expr_trim, node, the_method, orig_expr, cc, result, expwloc);
-                    }
+                    throw_error(E0012_SYNTAXERR, expr, NULL);
                 }
                 else
                 {
-                    throw_error(E0009_PARAMISM, expr_trim, NULL);
+                    build_expr_tree(expr_trim, node, the_method, orig_expr, cc, result, expwloc);
                 }
-            }
-            else if(indexed_elem)	/* if this is something indexed */
-            {   /* here we should grab from the end the first set of square parantheses and pass the stuff before it to the indexed, the stuff in it to the index...*/
-                string_list* entries = string_list_create_bsep(index, C_COMMA);
-                string_list* q = entries;
-                expression_tree_list* index_list = NULL;
-                multi_dimension_index* dim = new_multi_dimension_index(expr_trim);
-
-                node->info = duplicate_string(STR_IDXID);
-                node->left = new_expression_tree_with_father(node, expwloc);
-                node->right = new_expression_tree_with_father(node, expwloc);
-                build_expr_tree(indexed_elem, node->left, the_method, orig_expr, cc, result, expwloc);	/* to discover the indexed element */
-
-                /* and now identify the indexes and work on them*/
-
-                int indx_cnt = 0;
-                while(q)
-                {
-                    expression_tree* cur_indx = new_expression_tree(expwloc);
-                    build_expr_tree(q->str, cur_indx, the_method, orig_expr, cc, result, expwloc);
-                    expression_tree_list* tmp = expression_tree_list_add_new_expression(cur_indx, &index_list, q->str);
-                    if(NULL == index_list)
-                    {
-                        index_list = tmp;
-                    }
-                    q = q->next;
-                    indx_cnt ++;
-                }
-                dim->dimension_values = index_list;
-                node->right->reference = new_envelope(dim, MULTI_DIM_INDEX); /*((variable*)node->father->left->reference->to_interpret)->mult_dim_def*/
-                node->right->info = duplicate_string(expr_trim);
-                node->op_type = MULTI_DIM_INDEX;
             }
             else
             {
-                /* here determine what can be this
-                    here we are supposed to add only  variables/attributes, or the post increment stuff */
-                envelope* envl = NULL;
-                char* t = duplicate_string(expr_trim);
-                int tlen = strlen(t);
-                int templated = 0;
-                int env_var = 0;
-                variable* var = method_has_variable(the_method, cc, t, &templated, &env_var);
-                if(env_var)
-                {
-                    node->op_type = ENVIRONMENT_VARIABLE;
-                    envl = new_envelope(t, ENVIRONMENT_VARIABLE);
-                }
-                if(var)	/* if this is a variable */
-                {
-                    if(templated)
-                    {
-                        variable_template_reference* vtr = handle_variable_template_call(expr_trim, expr_len, the_method, orig_expr, cc, result, var, expwloc);
-                        envl = new_envelope(vtr, TEMPLATED_VARIABLE);
-                        node->op_type = TEMPLATED_VARIABLE;
-                    }
-                    else
-                    {
-                        // TODO: Check if this is a class variable
-                        envl = new_envelope(var, BASIC_TYPE_VARIABLE);
-                        node->op_type = BASIC_TYPE_VARIABLE;
-                    }
-                }
-                if(node->info && !strcmp(node->info, expr))
-                {
-                    {
-                        throw_error(E0012_SYNTAXERR, expr, NULL);
-                    }
-                }
-                node->info=duplicate_string(expr_trim);
-                while(tlen > 0 && !isalnum( t[tlen - 1]) && t[tlen -1] != '\"' && t[tlen - 1] != '(' && t[tlen - 1] != ')' )
-                {
-                    t[tlen - 1] = 0 ;
-                    t = trim(t);
-                    tlen = strlen(t);
-                }
-
-                if(strlen(t) == 0)
-                {
-                    throw_error(E0012_SYNTAXERR, orig_expr, NULL);
-                }
-
-                if(isnumber(t))
-                {
-                    number* nr = new_number_str(t);
-                    envl = new_envelope(nr, nr->type);
-                    node->op_type = nr->type;
-                }
-                else
-                if(!strcmp(t, "true"))
-                {
-                    envl = new_envelope(0, KEYWORD_TRUE);
-                    node->op_type = KEYWORD_TRUE;
-                    *result = KEYWORD_TRUE;
-                }
-                else
-                if(!strcmp(t, "false"))
-                {
-                    envl = new_envelope(0, KEYWORD_FALSE);
-                    node->op_type = KEYWORD_FALSE;
-                    *result = KEYWORD_FALSE;
-                }
-                else
-                {
-                    /* here maybe we should check for cases like: a[10]++ */
-                }
-
-                if(strstr(t, "class") == t) /* class definition */
-                {
-                    char* cname = t + 5;
-                    while(isspace(*cname)) cname ++;
-                    char* tcname = duplicate_string(cname);
-                    char* the_class_name = tcname;
-                    while(is_identifier_char(*cname))
-                    {
-                        tcname ++;
-                        cname ++;
-                    }
-                    *tcname = 0;
-                    class_declaration* cd = class_declaration_create(the_class_name, cc);
-
-                    envl = new_envelope(cd, CLASS_DECLARATION);
-                    node->op_type = CLASS_DECLARATION;
-                    *result = CLASS_DECLARATION;
-                }
-                if(!envl)
-                {
-                    build_expr_tree(t, node, the_method, orig_expr, cc, result, expwloc);
-                }
-                node->reference = envl;
+                throw_error(E0009_PARAMISM, expr_trim, NULL);
             }
-    }
+        }
+        else if(indexed_elem)	/* if this is something indexed */
+        {   /* here we should grab from the end the first set of square parantheses and pass the stuff before it to the indexed, the stuff in it to the index...*/
+            string_list* entries = string_list_create_bsep(index, C_COMMA);
+            string_list* q = entries;
+            expression_tree_list* index_list = NULL;
+            multi_dimension_index* dim = new_multi_dimension_index(expr_trim);
+
+            node->info = duplicate_string(STR_IDXID);
+            node->left = new_expression_tree_with_father(node, expwloc);
+            node->right = new_expression_tree_with_father(node, expwloc);
+            build_expr_tree(indexed_elem, node->left, the_method, orig_expr, cc, result, expwloc);	/* to discover the indexed element */
+
+            /* and now identify the indexes and work on them*/
+
+            int indx_cnt = 0;
+            while(q)
+            {
+                expression_tree* cur_indx = new_expression_tree(expwloc);
+                build_expr_tree(q->str, cur_indx, the_method, orig_expr, cc, result, expwloc);
+                expression_tree_list* tmp = expression_tree_list_add_new_expression(cur_indx, &index_list, q->str);
+                if(NULL == index_list)
+                {
+                    index_list = tmp;
+                }
+                q = q->next;
+                indx_cnt ++;
+            }
+            dim->dimension_values = index_list;
+            node->right->reference = new_envelope(dim, MULTI_DIM_INDEX); /*((variable*)node->father->left->reference->to_interpret)->mult_dim_def*/
+            node->right->info = duplicate_string(expr_trim);
+            node->op_type = MULTI_DIM_INDEX;
+        }
+        else
+        {
+            /* here determine what can be this
+                here we are supposed to add only  variables/attributes, or the post increment stuff */
+            envelope* envl = NULL;
+            char* t = duplicate_string(expr_trim);
+            int tlen = strlen(t);
+            int templated = 0;
+            int env_var = 0;
+            variable* var = method_has_variable(the_method, cc, t, &templated, &env_var);
+            if(env_var)
+            {
+                node->op_type = ENVIRONMENT_VARIABLE;
+                envl = new_envelope(t, ENVIRONMENT_VARIABLE);
+            }
+            if(var)	/* if this is a variable */
+            {
+                if(templated)
+                {
+                    variable_template_reference* vtr = handle_variable_template_call(expr_trim,
+                                                                                     the_method, orig_expr,
+                                                                                     cc, result, var, expwloc);
+                    envl = new_envelope(vtr, TEMPLATED_VARIABLE);
+                    node->op_type = TEMPLATED_VARIABLE;
+                }
+                else
+                {
+                    // TODO: Check if this is a class variable
+                    envl = new_envelope(var, BASIC_TYPE_VARIABLE);
+                    node->op_type = BASIC_TYPE_VARIABLE;
+                }
+            }
+            if(node->info && !strcmp(node->info, expr))
+            {
+                {
+                    throw_error(E0012_SYNTAXERR, expr, NULL);
+                }
+            }
+            node->info=duplicate_string(expr_trim);
+            while(tlen > 0 && !isalnum( t[tlen - 1]) && t[tlen -1] != '\"' && t[tlen - 1] != '(' && t[tlen - 1] != ')' )
+            {
+                t[tlen - 1] = 0 ;
+                t = trim(t);
+                tlen = strlen(t);
+            }
+
+            if(strlen(t) == 0)
+            {
+                throw_error(E0012_SYNTAXERR, orig_expr, NULL);
+            }
+
+            if(isnumber(t))
+            {
+                number* nr = new_number_str(t);
+                envl = new_envelope(nr, nr->type);
+                node->op_type = nr->type;
+            }
+            else
+            if(!strcmp(t, "true"))
+            {
+                envl = new_envelope(0, KEYWORD_TRUE);
+                node->op_type = KEYWORD_TRUE;
+                *result = KEYWORD_TRUE;
+            }
+            else
+            if(!strcmp(t, "false"))
+            {
+                envl = new_envelope(0, KEYWORD_FALSE);
+                node->op_type = KEYWORD_FALSE;
+                *result = KEYWORD_FALSE;
+            }
+            else
+            {
+                /* here maybe we should check for cases like: a[10]++ */
+            }
+
+            if(strstr(t, "class") == t) /* class definition */
+            {
+                char* cname = t + 5;
+                while(isspace(*cname)) cname ++;
+                char* tcname = duplicate_string(cname);
+                char* the_class_name = tcname;
+                while(is_identifier_char(*cname))
+                {
+                    tcname ++;
+                    cname ++;
+                }
+                *tcname = 0;
+                class_declaration* cd = class_declaration_create(the_class_name, cc);
+
+                envl = new_envelope(cd, CLASS_DECLARATION);
+                node->op_type = CLASS_DECLARATION;
+                *result = CLASS_DECLARATION;
+            }
+            if(!envl)
+            {
+                build_expr_tree(t, node, the_method, orig_expr, cc, result, expwloc);
+            }
+            node->reference = envl;
+        }
+
     return NULL;
 }
 
