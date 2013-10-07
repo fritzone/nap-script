@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <vector>
+#include <string>
 
 struct call_context;
 struct call_context_list;

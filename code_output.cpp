@@ -328,17 +328,17 @@ void peek(call_context* cc, const char *type, int idx, const char *dest)
     code_stream() <<"peek" << type << C_PAR_OP << idx << C_PAR_CL << C_COMMA << SPACE << fully_qualified_varname(cc, dest) << NEWLINE;
 }
 
-void jmp(const char *label)
+void jmp(const std::string& label)
 {
     code_stream() << "jmp" << SPACE <<label << NEWLINE;
 }
 
-void ujmp(const char *label)
+void ujmp(const std::string& label)
 {
     code_stream() <<"ujmp" << SPACE << label << NEWLINE;
 }
 
-void jlbf(const char *label)
+void jlbf(const std::string& label)
 {
     code_stream() << "jlbf" << SPACE << label << NEWLINE;
 }

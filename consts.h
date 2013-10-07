@@ -90,6 +90,7 @@ const char C_STAR			= C_MUL;
 const char C_NEWLINE		= '\n';
 const char C_CARRET			= '\r';
 const char C_TAB			= '\t';
+const char C_UNDERLINE      = '_';
 
 /*
  * x= operators (+=, -=, etc ...)
