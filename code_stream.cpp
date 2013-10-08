@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <limits.h>
 
-
+static const char BITSIZE = 0x32;
 const char* NEWLINE = "\n";
 
 /**
@@ -97,12 +97,13 @@ public:
         FILE* f = fopen(fname.c_str(), "ab+");
         fseek(f, 0, SEEK_END);
 
-        long meta_location = ftell(f);
+        uint32_t meta_location = ftell(f);
         // write out the variables
-        static const char FINALIZER[] = ".meta";
-
-        fwrite(FINALIZER, 5, 1, f);
-        for(unsigned int i=0; i<variables.size(); i++)
+        static const char METATABLE[] = ".meta";
+        fwrite(METATABLE, 5, 1, f);
+        uint32_t meta_count = variables.size();
+        fwrite(&meta_count, sizeof(uint32_t), 1, f);
+        for(unsigned int i=0; i<meta_count; i++)
         {
             fwrite(&variables[i]->meta_location, sizeof(NUMBER_INTEGER_TYPE), 1, f);
             uint16_t var_name_length = variables[i]->name.length();
@@ -111,11 +112,13 @@ public:
             fwrite(vname, sizeof(uint8_t), var_name_length, f);
         }
 
-        long strtable_location = ftell(f);
+        uint32_t strtable_location = ftell(f);
         // write out the stringtable
         static const char STRINGTABLE[] = ".str";
         fwrite(STRINGTABLE, 4, 1, f);
-        for(unsigned int i=0; i<stringtable.size(); i++)
+        uint32_t strtable_count = stringtable.size();
+        fwrite(&strtable_count, sizeof(uint32_t), 1, f);
+        for(unsigned int i=0; i<strtable_count; i++)
         {
             fwrite(&stringtable[i]->index, sizeof(NUMBER_INTEGER_TYPE), 1, f);
             fwrite(&stringtable[i]->length, sizeof(uint32_t), 1, f);
@@ -123,11 +126,13 @@ public:
             fwrite(str, sizeof(uint8_t), stringtable[i]->length, f);
         }
         
-        long jumptable_location = ftell(f);
+        uint32_t jumptable_location = ftell(f);
         // write out the jumptable
         static const char JUMPTABLE[] = ".jmp";
         fwrite(JUMPTABLE, 4, 1, f);
-        for(unsigned int i=0; i<jumptable.size(); i++)
+        uint32_t jumptable_count = jumptable.size();
+        fwrite(&jumptable_count, sizeof(uint32_t), 1, f);
+        for(unsigned int i=0; i<jumptable_count; i++)
         {
             fwrite(&jumptable[i]->bytecode_location, sizeof(NUMBER_INTEGER_TYPE), 1, f);
         }
@@ -136,7 +141,9 @@ public:
         fclose(f);
         
         f = fopen(fname.c_str(), "r+");
-        
+
+        uint8_t type = BITSIZE;
+        fwrite(&type, sizeof(type), 1, f);  // the type of the file: 32 bit
         fwrite(&meta_location, sizeof(meta_location), 1, f); // the meta location for variables
         fwrite(&strtable_location, sizeof(strtable_location), 1, f); // the stringtable location         
         fwrite(&jumptable_location, sizeof(jumptable_location), 1, f); // the jumptable location
@@ -162,11 +169,11 @@ void code_stream::output_bytecode(const char* s)
     std::string expr = s;
     if(expr == " " || expr == "(" || expr == ")" || expr == "\n" || expr == ",")
     {
-        printf("%s", s);
+        printf("%s ", s);
         return;
     }
 
-    printf("%s", s);
+    printf("%s ", s);
 
     FILE* f = NULL;
     
@@ -175,7 +182,9 @@ void code_stream::output_bytecode(const char* s)
         f = fopen(fname.c_str(), "wb+");
         first_entry = false;
         NUMBER_INTEGER_TYPE temp = 0;
+        uint8_t type = BITSIZE;
 
+        fwrite(&type, sizeof(type), 1, f);  // the type of the file: 32 bit
         fwrite(&temp, sizeof(temp), 1, f); // the meta location for variables
         fwrite(&temp, sizeof(temp), 1, f); // the stringtable location         
         fwrite(&temp, sizeof(temp), 1, f); // the jumptable location
@@ -207,6 +216,11 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "div") opcode = OPCODE_DIV;
     if(expr == "mod") opcode = OPCODE_MOD;
     if(expr == "eq") opcode = OPCODE_EQ;
+    if(expr == "lt") opcode = OPCODE_LT;
+    if(expr == "gt") opcode = OPCODE_GT;
+    if(expr == "lte") opcode = OPCODE_LTE;
+    if(expr == "gte") opcode = OPCODE_GTE;
+    if(expr == "neq") opcode = OPCODE_NEQ;
     if(expr == "jlbf") opcode = OPCODE_JLBF;
     if(expr == "jmp") opcode = OPCODE_JMP;
     if(expr == "marks") opcode = OPCODE_MARKS;
@@ -276,7 +290,7 @@ void code_stream::output_bytecode(const char* s)
                 if(type == OPCODE_HUGE)
                 {
                     int64_t nrf = atoi(expr.c_str());
-                    write_stuff_to_file(f, (NUMBER_INTEGER_TYPE)nrf, 1);
+                    write_stuff_to_file(f, (uint64_t)nrf, 1);
                 }
             }
 
@@ -330,6 +344,7 @@ void code_stream::output_bytecode(const char* s)
                 int idx = -1;
                 for(unsigned int i=0; i<variables.size(); i++)
                 {
+                    printf("\nXXX %s --> %s\n", variables[i]->name.c_str(), expr.c_str());
                     if(variables[i]->name == expr)
                     {
                         idx = i;

@@ -24,9 +24,13 @@ static const unsigned char OPCODE_JLBF          = 0xBF;
 static const unsigned char OPCODE_CALL          = 0xCA;
 static const unsigned char OPCODE_DIV           = 0xD8;
 static const unsigned char OPCODE_EQ            = 0xE0;
-static const unsigned char OPCODE_EXIT          = 0xE1;
+static const unsigned char OPCODE_NEQ           = 0xE1;
+static const unsigned char OPCODE_LT            = 0xE2;
+static const unsigned char OPCODE_GT            = 0xE3;
+static const unsigned char OPCODE_LTE           = 0xE4;
+static const unsigned char OPCODE_GTE           = 0xE5;
 static const unsigned char OPCODE_REG           = 0xEE;
 static const unsigned char OPCODE_REF           = 0xEF;
 static const unsigned char OPCODE_VAR           = 0xFE;
-
+static const unsigned char OPCODE_EXIT          = 0xFF;
 #endif

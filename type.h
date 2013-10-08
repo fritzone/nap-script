@@ -3,8 +3,9 @@
 
 #include <stdint.h>
 
-#define NUMBER_INTEGER_TYPE uint32_t
-#define NUMBER_REAL_TYPE double
+typedef uint32_t NUMBER_INTEGER_TYPE;
+
+typedef double NUMBER_REAL_TYPE ;
 
 /* the typeid type, just a simple int, used to identify the types found in leaf nodes */
 typedef int m_typeid;
