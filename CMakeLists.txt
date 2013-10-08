@@ -27,3 +27,7 @@ add_executable(nap
     code_output.cpp
     code_stream.cpp
 )
+
+add_executable(napi
+    nbci.c
+)
