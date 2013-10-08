@@ -344,7 +344,6 @@ void code_stream::output_bytecode(const char* s)
                 int idx = -1;
                 for(unsigned int i=0; i<variables.size(); i++)
                 {
-                    printf("\nXXX %s --> %s\n", variables[i]->name.c_str(), expr.c_str());
                     if(variables[i]->name == expr)
                     {
                         idx = i;
