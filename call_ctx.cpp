@@ -189,7 +189,7 @@ void call_context_compile(call_context* cc)
             peek(ccs_methods->the_method->main_cc, vlist->var->c_type, pctr++, vlist->var->name);
             vlist = vlist->next;
         }
-        push_cc_start_marker();
+
         expression_tree_list* q1 = ccs_methods->the_method->main_cc->expressions;
         while(q1)
         {
@@ -199,7 +199,7 @@ void call_context_compile(call_context* cc)
             q1=q1->next;
         }
         ccs_methods = ccs_methods->next;
-        code_stream() << "ret" << NEWLINE;
+        code_stream() << "return" << NEWLINE;
     }
     }
 
@@ -233,7 +233,7 @@ void call_context_compile(call_context* cc)
 
 
             ccs_methods = ccs_methods->next;
-            code_stream() << "ret" << NEWLINE;
+            code_stream() << "return" << NEWLINE;
         }
     }
     }

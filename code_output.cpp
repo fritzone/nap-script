@@ -253,14 +253,33 @@ void resolve_variable_add_dimension_regis(call_context* cc, variable* var, int l
     code_stream() << call() << SPACE << grow() << C_PAR_OP << fully_qualified_varname(cc, var)<< C_COMMA  << reg() << 'i' << C_PAR_OP << level << C_PAR_CL << C_PAR_CL << NEWLINE;
 }
 
-void push_cc_start_marker()
+void push_cc_start_marker(const char* marker_name)
 {
-    code_stream() << "marks" << NEWLINE;
+    if(marker_name)
+    {
+        code_stream() << "marksn" ;
+        code_stream() << marker_name;
+    }
+    else
+    {
+        code_stream() << "marks" ;
+    }
+    code_stream() << NEWLINE;
 }
 
-void push_cc_end_marker()
+void push_cc_end_marker(const char* marker_name)
 {
-    code_stream() << "clrs" << NEWLINE ;
+    if(marker_name)
+    {
+        code_stream() << "clrsn";
+        code_stream() << marker_name;
+    }
+    else
+    {
+        code_stream() << "clrs";
+    }
+    code_stream() << NEWLINE;
+
 }
 
 void move_atomic_into_index_register( int& idxc, expression_tree_list* indxs, const method* the_method, call_context* cc, int level, int forced_mov )
@@ -325,7 +344,10 @@ void exit_app()
 
 void peek(call_context* cc, const char *type, int idx, const char *dest)
 {
-    code_stream() <<"peek" << type << C_PAR_OP << idx << C_PAR_CL << C_COMMA << SPACE << fully_qualified_varname(cc, dest) << NEWLINE;
+    code_stream() <<"peek" << type
+                 << C_PAR_OP << idx << C_PAR_CL
+                 << C_COMMA
+                 << SPACE << fully_qualified_varname(cc, dest) << NEWLINE;
 }
 
 void jmp(const std::string& label)
