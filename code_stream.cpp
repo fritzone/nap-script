@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "type.h"
 #include "opcodes.h"
+#include "throw_error.h"
 
 #include <string>
 #include <vector>
@@ -40,6 +41,15 @@ struct bc_variable_entry
     std::string name;    
 };
 
+/**
+ * The named marks
+ */
+struct bc_named_marks
+{
+    uint32_t marker_code;
+    std::string marker_name;
+};
+
 struct label_entry
 {
     // where this is in the bytecode stream
@@ -66,6 +76,8 @@ static std::vector<bc_string_table_entry*> stringtable;
 
 // the table holding all the jump location in the code
 static std::vector<label_entry*> jumptable;
+
+static std::vector<bc_named_marks> namedmarks;
 
 // this counts the variables
 static NUMBER_INTEGER_TYPE var_counter = 0;
@@ -205,7 +217,10 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "f")  opcode = OPCODE_FLOAT;
     if(expr == "real")  opcode = OPCODE_FLOAT;
     if(expr == "string")  opcode = OPCODE_STRING;
-    if(expr == "call") opcode = OPCODE_CALL;
+    if(expr == "call")
+    {
+        opcode = OPCODE_CALL;
+    }
     if(expr == "mov") opcode = OPCODE_MOV;
     if(expr == "inc") opcode = OPCODE_INC;
     if(expr == "reg") opcode = OPCODE_REG;
@@ -224,7 +239,12 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "jlbf") opcode = OPCODE_JLBF;
     if(expr == "jmp") opcode = OPCODE_JMP;
     if(expr == "marks") opcode = OPCODE_MARKS;
+    if(expr == "marksn") opcode = OPCODE_MARKS_NAME;
     if(expr == "clrs") opcode = OPCODE_CLRS;
+    if(expr == "clrsn") opcode = OPCODE_CLRS_NAME;
+    if(expr == "return") opcode = OPCODE_RETURN;
+    if(expr == "pop") opcode = OPCODE_POP;
+    if(expr == "peek") opcode = OPCODE_PEEK;
     
     if(isnumber((expr.c_str())))
     {
@@ -247,7 +267,7 @@ void code_stream::output_bytecode(const char* s)
         built_upvar_name = "";
         if(opcode == OPCODE_IMMEDIATE)
         {
-            if(opcode == OPCODE_IMMEDIATE && opcode_counter > 3 && opcodes[opcode_counter - 3] == OPCODE_REG)
+            if(opcode_counter > 3 && opcodes[opcode_counter - 3] == OPCODE_REG)
             { // if this counts a register
                 uint8_t nrf = atoi(expr.c_str());
                 write_stuff_to_file(f,nrf, 1);
@@ -317,6 +337,10 @@ void code_stream::output_bytecode(const char* s)
         else
         if(s[ 0 ] == '@') // function call
         {
+            if(last_opcode != OPCODE_CALL)
+            {
+                throw_error("wrong last opcode");
+            }
         }
         else
         if(s[ 0 ] == '$') // method call
@@ -339,7 +363,36 @@ void code_stream::output_bytecode(const char* s)
         }
         else
         {
-            if(last_opcode != OPCODE_JLBF && last_opcode != OPCODE_JMP)
+            if(last_opcode == OPCODE_MARKS_NAME || last_opcode == OPCODE_CLRS_NAME)
+            {
+                // this is a nmed mark
+                int idx = -1;
+                for(unsigned int i=0; i<namedmarks.size(); i++)
+                {
+                    if(namedmarks[i].marker_name == expr)
+                    {
+                        idx = i;
+                    }
+                }
+                if(idx > -1) // found a named mark
+                {
+                    NUMBER_INTEGER_TYPE index = idx;
+                    write_stuff_to_file(f, index, 1);
+                }
+                else // let's create a named mark
+                {
+                    bc_named_marks mark;
+                    mark.marker_code = namedmarks.size();
+                    mark.marker_name = expr;
+
+                    namedmarks.push_back(mark);
+                    NUMBER_INTEGER_TYPE index = namedmarks.size() - 1; // the real idx
+                    write_stuff_to_file(f, index, 1);
+                }
+
+            }
+            else
+            if(last_opcode != OPCODE_JLBF && last_opcode != OPCODE_JMP && last_opcode != OPCODE_CALL)
             { // this is a plain variable 
                 int idx = -1;
                 for(unsigned int i=0; i<variables.size(); i++)
@@ -367,7 +420,7 @@ void code_stream::output_bytecode(const char* s)
                 }
             }
             else
-            { // this is a label
+            { // this is a label but also a function call (which is treated as a label)
                 int idx = -1;
                 for(unsigned int i=0; i<jumptable.size(); i++)
                 {
@@ -395,3 +448,4 @@ void code_stream::output_bytecode(const char* s)
     }    
     fclose(f);
 }
+

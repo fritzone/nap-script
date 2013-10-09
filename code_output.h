@@ -38,8 +38,8 @@ void operation_target_reg_source_reg( int req_type_1, int level_1, int req_type_
 void clidx();
 void resolve_variable_add_dimension_number(call_context* cc, variable* var, long int dimension);
 void resolve_variable_add_dimension_regis(call_context* cc, variable* var, int level);
-void push_cc_start_marker();
-void push_cc_end_marker();
+void push_cc_start_marker(const char *marker_name = 0);
+void push_cc_end_marker(const char* marker_name = 0);
 void exit_app();
 void peek(call_context* cc, const char* type, int idx, const char* dest);
 void jmp(const std::string &label);

@@ -1335,7 +1335,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
             method* m = cfe->the_method;
             parameter_list* ingoing_parameters = cfe->parameters;
             int pc = 0;
-            push_cc_start_marker();
+            push_cc_start_marker(m->name);
             while(ingoing_parameters)
             {
                 parameter* p = ingoing_parameters->param;
@@ -1363,11 +1363,12 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 // this solves the problem when the function does not return anything
                 // but is required to. We might raise a runtime exception in this case
             }
-            push_cc_end_marker();
+            push_cc_end_marker(m->name);
             break;
         }
 
         case RETURN_STATEMENT:
+            {
             if(node->reference)
             {
                 expression_tree* t = (expression_tree*)node->reference->to_interpret;
@@ -1377,10 +1378,20 @@ void compile(const expression_tree* node, const method* the_method, call_context
                     code_stream() << mov() << SPACE << reg() << get_reg_type(ret_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
                 }
                 compile(t, the_method, cc, level, ret_type, forced_mov);
-                code_stream() << NEWLINE << get_opcode(node->op_type) << SPACE << "reg"
-                              << get_reg_type(ret_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
+                code_stream() << NEWLINE
+                              << push()
+                              << SPACE
+                              << reg() << get_reg_type(ret_type) << C_PAR_OP << level << C_PAR_CL
+                              << NEWLINE;
+
+                code_stream() << "return" << NEWLINE;
+            }
+            else
+            {
+                code_stream() << "return" << NEWLINE;
             }
             break;
+            }
             
         case KEYWORD_TRUE:
             code_stream() << "true";
