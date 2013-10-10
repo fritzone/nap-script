@@ -822,7 +822,7 @@ static variable_template_reference* handle_variable_template_call(char *expr_tri
             cur_par_expr = new_expression_tree(expwloc);
             build_expr_tree(q->str, cur_par_expr, the_method, orig_expr, cc, result, expwloc);
         }
-        parameter* cur_par_obj = new_parameter();
+        parameter* cur_par_obj = new_parameter(the_method);
         cur_par_obj->expr = cur_par_expr;
         cur_par_obj->modifiable = -1;
 
@@ -897,7 +897,7 @@ static call_frame_entry* handle_function_call(char *expr_trim, int expr_len, exp
             cur_par_expr = new_expression_tree(expwloc);
             build_expr_tree(q->str, cur_par_expr, the_method, orig_expr, cc, result, expwloc);
             
-            parameter* cur_par_obj = new_parameter();
+            parameter* cur_par_obj = new_parameter(the_method);
             cur_par_obj->expr = cur_par_expr;
             cur_par_obj->modifiable = -1;
 

@@ -404,7 +404,15 @@ void resolve_assignment( const expression_tree* node, int level, const method* t
                             }
                             compile(node->right, the_method, cc, level, dest->i_type, forced_mov);
                             code_stream() << NEWLINE;
-                            move_reg_into_var(cc, dest, level);
+
+                            if(dest->func_par)
+                            {
+                                move_reg_into_var(dest->func_par->the_method->main_cc, dest, level);
+                            }
+                            else
+                            {
+                                move_reg_into_var(cc, dest, level);
+                            }
                         }
                     }
                     else	/* postinc/dec / preinc/dec*/
