@@ -278,6 +278,87 @@ void set_lbf_to_op_result(int64_t reg, int64_t immediate, uint8_t opcode)
     if(opcode == OPCODE_GTE) lbf = (reg >= immediate);
 }
 
+/**
+ * Cleans the allocated memory
+ */
+void cleanup()
+{
+    uint64_t i;
+    puts("leaving...");
+    for(i=0; i<meta_size; i++)
+    {
+        if(metatable[i]->instantiation)
+        {
+            if(metatable[i]->instantiation->value)
+            {
+                if(metatable[i]->instantiation->type == STACK_ENTRY_INT)
+                {
+                    printf("E:[%s=%"PRId64"](%i/%i)\n", metatable[i]->name,
+                           *(int64_t*)(metatable[i]->instantiation->value)
+                           ,i, meta_size);
+                }
+                else
+                {
+                    printf("X:[%s=%"PRId64"](%i/%i)\n", metatable[i]->name,
+                           *(int64_t*)(metatable[i]->instantiation->value)
+                           ,i, meta_size);
+
+                }
+                free(metatable[i]->instantiation->value);
+            }
+            else
+            {
+                printf("N:[%s=??](%i/%i)\n", metatable[i]->name,
+                       i, meta_size);
+
+            }
+            free(metatable[i]->instantiation);
+        }
+        else
+        {
+            printf("?:[%s=??](%i/%i)\n", metatable[i]->name,
+                   i, meta_size);
+        }
+    }
+    for(i=0; i<meta_size; i++)
+    {
+        free(metatable[i]->name);
+        free(metatable[i]);
+    }
+    free(metatable);
+
+    /* free the allocated stack */
+    int64_t tempst;
+    for(tempst = stack_pointer; tempst > -1; tempst --)
+    {
+        if(stack[tempst]->type == OPCODE_INT) /* or float/string */
+        {
+            /* this wa already freed in the metatable */
+        }
+        else /* register type */
+        if(stack[tempst]->type == OPCODE_REG || stack[tempst]->type == STACK_ENTRY_MARKER_NAME)
+        {
+            free(stack[tempst]->value);
+        }
+
+        free(stack[tempst]);
+    }
+    free(stack);
+
+    /* freeing the jumptable */
+    int64_t tempjmi;
+    for(tempjmi = jumptable_size - 1; tempjmi >= 0; tempjmi --)
+    {
+        free(jumptable[tempjmi]);
+    }
+
+    free(jumptable);
+
+    /* freeing the content */
+    free(content);
+}
+
+
 /*
  * Main entry point
  */
@@ -864,80 +945,7 @@ int main()
         if(current_opcode == OPCODE_EXIT)
         {
             /* free the allocated metatable */
-            uint64_t i;
-            puts("leaving...");
-            for(i=0; i<meta_size; i++)
-            {
-                if(metatable[i]->instantiation)
-                {
-                    if(metatable[i]->instantiation->value)
-                    {
-                        if(metatable[i]->instantiation->type == STACK_ENTRY_INT)
-                        {
-                            printf("E:[%s=%"PRId64"](%i/%i)\n", metatable[i]->name,
-                                   *(int64_t*)(metatable[i]->instantiation->value)
-                                   ,i, meta_size);
-                        }
-                        else
-                        {
-                            printf("X:[%s=%"PRId64"](%i/%i)\n", metatable[i]->name,
-                                   *(int64_t*)(metatable[i]->instantiation->value)
-                                   ,i, meta_size);
-
-                        }
-                        free(metatable[i]->instantiation->value);
-                    }
-                    else
-                    {
-                        printf("N:[%s=??](%i/%i)\n", metatable[i]->name,
-                               i, meta_size);
-
-                    }
-                    free(metatable[i]->instantiation);
-                }
-                else
-                {
-                    printf("?:[%s=??](%i/%i)\n", metatable[i]->name,
-                           i, meta_size);
-                }
-            }
-            for(i=0; i<meta_size; i++)
-            {
-                free(metatable[i]->name);
-                free(metatable[i]);
-            }
-            free(metatable);
-
-            /* free the allocated stack */
-            int64_t tempst;
-            for(tempst = stack_pointer; tempst > -1; tempst --)
-            {
-                if(stack[tempst]->type == OPCODE_INT) /* or float/string */
-                {
-                    /* this wa already freed in the metatable */
-                }
-                else /* register type */
-                if(stack[tempst]->type == OPCODE_REG || stack[tempst]->type == STACK_ENTRY_MARKER_NAME)
-                {
-                    free(stack[tempst]->value);
-                }
-
-                free(stack[tempst]);
-            }
-            free(stack);
-
-            /* freeing the jumptable */
-            int64_t tempjmi;
-            for(tempjmi = jumptable_size - 1; tempjmi >= 0; tempjmi --)
-            {
-                free(jumptable[tempjmi]);
-            }
-
-            free(jumptable);
-
-            /* freeing the content */
-            free(content);
-
+            cleanup();
             /* and finally leaving */
             exit(0);
         }
