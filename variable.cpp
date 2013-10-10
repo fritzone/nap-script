@@ -83,7 +83,7 @@ static parameter* variable_add_template_parameter(variable* the_variable, const 
     {
         throw_error(E0030_PARMNOTALL, the_variable->name, NULL);
     }
-    parameter* func_par = new_parameter();
+    parameter* func_par = new_parameter(the_method);
     char *name_dup = duplicate_string(name);
     char* indexOfEq = strchr(name_dup, C_EQ);
     variable* nvar = NULL;

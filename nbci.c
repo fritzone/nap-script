@@ -22,10 +22,10 @@ uint8_t lbf = 0;         /* the last boolean flag of the machine */
 
 typedef enum TStackEntryType
 {
-    STACK_ENTRY_INT = 1,
-    STACK_ENTRY_REAL = 2,
-    STACK_ENTRY_STRING = 3,
-    STACK_ENTRY_REF = 4,
+    STACK_ENTRY_INT = 1,                /* same as OPCODE_INT */
+    STACK_ENTRY_REAL = 2,               /* same as OPCODE_FLOAT */
+    STACK_ENTRY_STRING = 3,             /* same as OPCODE_STRING */
+    STACK_ENTRY_CHAR = 4,               /* same as OPCODE_CHAR */
     STACK_ENTRY_MARKER = 5,
     STACK_ENTRY_IMMEDIATE_INT = 6,
     STACK_ENTRY_MARKER_NAME = 7
@@ -54,7 +54,7 @@ struct stack_entry
 /* variables for the stack */
 static struct stack_entry** stack = NULL;           /* in this stack */
 static uint64_t stack_size = STACK_INIT;            /* initial stack size */
-static uint64_t stack_pointer = 0;                  /* the stack pointer */
+static int64_t stack_pointer = -1;                  /* the stack pointer */
 
 /* generic variables regarding teh file */
 static uint8_t* content = 0;                       /* the content of the file */
@@ -132,6 +132,7 @@ static void read_metatable(FILE* fp, uint64_t meta_location)
                                     calloc(1, sizeof(struct variable_entry));
             new_var->index = index;
             new_var->name = name;
+            printf("R:[%s] (%i/%i)\n", name, index,count);
             new_var->instantiation = 0;
             metatable[index] = new_var;
         }
@@ -348,7 +349,7 @@ int main()
                                         calloc(sizeof(struct stack_entry), 1));
             se->type = content[cc ++];
 
-            if(se->type == OPCODE_INT)
+            if(se->type == OPCODE_INT) /* or float or string */
             {
                 uint8_t push_what = content[cc ++];
 
@@ -357,9 +358,12 @@ int main()
                     uint32_t* p_var_index = (uint32_t*)(content + cc);
                     cc += sizeof(uint32_t);
                     struct variable_entry* ve = metatable[*p_var_index];
+
+                    /* and create an instantiation ... there should be none */
                     ve->instantiation = (struct stack_entry*)(
                                 calloc(sizeof(struct stack_entry), 1));
                     ve->instantiation->type = se->type;
+
                     if(se->type == OPCODE_INT)
                     {
                         int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
@@ -369,6 +373,7 @@ int main()
                     else
                     {
                         /* TODO */
+                        /* or float or strign */
                     }
 
                     /* setting the value of the stack entry */
@@ -405,11 +410,11 @@ int main()
                 exit(10);
             }
                 
-            stack[stack_pointer ++ ] = se;
+            stack[++ stack_pointer] = se;
         }
         else
         /* is this checking for something? */
-        if(current_opcode == OPCODE_EQ)
+        if(current_opcode == OPCODE_EQ || current_opcode == OPCODE_LT)
         {
             uint8_t mov_target = content[cc ++];   /* what to check (reg only)*/
 
@@ -587,10 +592,17 @@ int main()
                         {
                             if(*(int64_t*)var->instantiation->value != regi[register_index])
                             {
+                                free(var->instantiation->value);
                                 int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
                                 *temp = regi[register_index];
                                 var->instantiation->value = temp;
                             }
+                        }
+                        else /* allocate the memory for the value */
+                        {
+                            int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
+                            *temp = regi[register_index];
+                            var->instantiation->value = temp;
                         }
                     }
                     else
@@ -618,7 +630,21 @@ int main()
             uint32_t* p_jmpt_index = (uint32_t*)(content + cc);
 
             /* and simply set cc to be where we need to go */
-            cc = jumptable[*p_jmpt_index]->location;
+            if(current_opcode == OPCODE_JMP)
+            {
+                cc = jumptable[*p_jmpt_index]->location;
+            }
+            else
+            {
+                if(lbf)
+                {
+                    cc = jumptable[*p_jmpt_index]->location;
+                }
+                else
+                {
+                    cc += sizeof(uint32_t);
+                }
+            }
         }
         else
         /* Marking our territory */
@@ -628,7 +654,7 @@ int main()
                         calloc(sizeof(struct stack_entry), 1));
             marker->type = STACK_ENTRY_MARKER;
             marker->value = 0;
-            stack[stack_pointer ++] = marker;
+            stack[++ stack_pointer] = marker;
         }
         else
         if(current_opcode == OPCODE_MARKS_NAME)
@@ -646,36 +672,56 @@ int main()
 
             marker->value = temp;
 
-            stack[stack_pointer ++] = marker;
+            stack[++ stack_pointer] = marker;
         }
         else
         /* giving up our territory? */
         if(current_opcode == OPCODE_CLRS)
         {
-            int temp_sp = stack_pointer - 1;
-            while(temp_sp >= 0 && stack[temp_sp]->type != STACK_ENTRY_MARKER)
+            while(stack_pointer > -1 && stack[stack_pointer]->type != STACK_ENTRY_MARKER)
             {
-                if(stack[temp_sp]->value)
+                if(stack[stack_pointer]->type == OPCODE_REG || stack[stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
                 {
-                    /* TODO: this is a variable entry, free it properly !!! */
-                    free(stack[temp_sp]->value);
+                    free(stack[stack_pointer]->value);
                 }
-                free(stack[temp_sp]);
-                temp_sp --;
+
+                free(stack[stack_pointer]);
+                stack_pointer --;
             }
 
-            /* remove the marker */
-            if(temp_sp >= 0)
+            if(stack[stack_pointer]->type == STACK_ENTRY_MARKER)
             {
-                free(stack[temp_sp]);
-                temp_sp --;
-                stack_pointer = temp_sp;
+                free(stack[stack_pointer]);
+                stack_pointer --;
             }
-            else
+        }
+        else
+        /* giving up our territory for a given function? */
+        if(current_opcode == OPCODE_CLRS_NAME)
+        {
+            uint32_t* p_marker_code = (uint32_t*)(content + cc);
+            cc += sizeof(uint32_t);
+
+            while(stack_pointer > -1
+                  && stack[stack_pointer]->type != STACK_ENTRY_MARKER_NAME
+                  && stack[stack_pointer]->value
+                  && *(uint32_t*)(stack[stack_pointer]->value) != *p_marker_code)
             {
-                stack_pointer = 0;
+                if(stack[stack_pointer]->type == OPCODE_REG || stack[stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
+                {
+                    free(stack[stack_pointer]->value);
+                }
+
+                free(stack[stack_pointer]);
+                stack_pointer --;
             }
 
+            if(stack[stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
+            {
+                free(stack[stack_pointer]->value);
+                free(stack[stack_pointer]);
+                stack_pointer --;
+            }
         }
         else
         /* calling someone */
@@ -745,7 +791,7 @@ int main()
                     if(peek_type == OPCODE_INT)
                     {
                         int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
-                        *temp = *(int64_t*)stack[stack_pointer - peek_index - 1]->value; // STACK VALUE FROM peek_index
+                        *temp = *(int64_t*)stack[stack_pointer - peek_index]->value; // STACK VALUE FROM peek_index
                         ve->instantiation->value = temp;
                     }
                     else
@@ -764,6 +810,50 @@ int main()
         else
         if(current_opcode == OPCODE_POP)
         {
+            uint8_t pop_what = content[cc ++];
+            if(pop_what == OPCODE_REG)
+            {
+                uint8_t register_type = content[cc ++]; /* int/string/float...*/
+
+                /* we are dealing with an INT type register */
+                if(register_type == OPCODE_INT)
+                {
+                    uint8_t register_index = content[cc ++]; /* 0, 1, 2 ...*/
+
+                    if(stack[stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
+                    {
+                        /*obviously popping something when nothing was returned
+                         from a misbehvaing function. Set the register to 0 */
+                        regi[register_index] = 0;
+                        /* Do not touch the stack for now.*/
+                    }
+                    else
+                    {
+                        /* check if they have the same type */
+                        if(stack[stack_pointer]->type == STACK_ENTRY_INT)
+                        {
+                            regi[register_index] = *(int64_t*)stack[stack_pointer]->value;
+                        }
+                        else
+                        {
+                            regi[register_index] = 0;
+                        }
+                        free(stack[stack_pointer]->value);
+                        free(stack[stack_pointer]);
+
+                        stack_pointer --;
+                    }
+
+                }
+                else
+                {
+                    /* TODO */
+                }
+            }
+            else
+            {
+                /* TODO */
+            }
         }
         else
         if(current_opcode == OPCODE_RETURN)
@@ -773,7 +863,82 @@ int main()
         else
         if(current_opcode == OPCODE_EXIT)
         {
-            printf("bye\n");
+            /* free the allocated metatable */
+            uint64_t i;
+            puts("leaving...");
+            for(i=0; i<meta_size; i++)
+            {
+                if(metatable[i]->instantiation)
+                {
+                    if(metatable[i]->instantiation->value)
+                    {
+                        if(metatable[i]->instantiation->type == STACK_ENTRY_INT)
+                        {
+                            printf("E:[%s=%"PRId64"](%i/%i)\n", metatable[i]->name,
+                                   *(int64_t*)(metatable[i]->instantiation->value)
+                                   ,i, meta_size);
+                        }
+                        else
+                        {
+                            printf("X:[%s=%"PRId64"](%i/%i)\n", metatable[i]->name,
+                                   *(int64_t*)(metatable[i]->instantiation->value)
+                                   ,i, meta_size);
+
+                        }
+                        free(metatable[i]->instantiation->value);
+                    }
+                    else
+                    {
+                        printf("N:[%s=??](%i/%i)\n", metatable[i]->name,
+                               i, meta_size);
+
+                    }
+                    free(metatable[i]->instantiation);
+                }
+                else
+                {
+                    printf("?:[%s=??](%i/%i)\n", metatable[i]->name,
+                           i, meta_size);
+                }
+            }
+            for(i=0; i<meta_size; i++)
+            {
+                free(metatable[i]->name);
+                free(metatable[i]);
+            }
+            free(metatable);
+
+            /* free the allocated stack */
+            int64_t tempst;
+            for(tempst = stack_pointer; tempst > -1; tempst --)
+            {
+                if(stack[tempst]->type == OPCODE_INT) /* or float/string */
+                {
+                    /* this wa already freed in the metatable */
+                }
+                else /* register type */
+                if(stack[tempst]->type == OPCODE_REG || stack[tempst]->type == STACK_ENTRY_MARKER_NAME)
+                {
+                    free(stack[tempst]->value);
+                }
+
+                free(stack[tempst]);
+            }
+            free(stack);
+
+            /* freeing the jumptable */
+            int64_t tempjmi;
+            for(tempjmi = jumptable_size - 1; tempjmi >= 0; tempjmi --)
+            {
+                free(jumptable[tempjmi]);
+            }
+
+            free(jumptable);
+
+            /* freeing the content */
+            free(content);
+
+            /* and finally leaving */
             exit(0);
         }
         else
@@ -784,8 +949,6 @@ int main()
 
         }
     }
-
-    printf("exit\n");
 
     return 0;
 }

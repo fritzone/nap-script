@@ -179,6 +179,9 @@ struct parameter
         /* 1 if the value is simpl (meaning, no dimensions) 0 if the value is not so simple, meaning dimensions */
         int simple_value;
 
+        /* the method in which this parameter belongs */
+        method* the_method;
+
     int type;
 };
 

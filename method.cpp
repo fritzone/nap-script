@@ -219,7 +219,7 @@ call_frame_list* elem = alloc_mem(call_frame_list,1);
  */
 parameter* method_add_parameter(method* the_method, char* name, char* type, int dimension, int modifiable, const expression_with_location* expwloc)
 {
-parameter* func_par = new_parameter();
+parameter* func_par = new_parameter(the_method);
 char* indexOfEq = strchr(name, C_EQ);
 variable* nvar = NULL;
 parameter_list* flist = NULL, *q = NULL;

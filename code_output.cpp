@@ -192,7 +192,10 @@ void mov_var_into_reg(expression_tree* var_node, int reqd_type, int level,
 
 void operation_on_variable(call_context* cc, int opr, variable* var )
 {
-    code_stream() << get_opcode(opr) << SPACE << (std::string(cc->name) + STR_DOT  + var->name).c_str() << NEWLINE;
+    code_stream() << get_opcode(opr)
+                  << SPACE
+                  << fully_qualified_varname(cc, var)
+                  << NEWLINE;
 }
 
 void operation_on_indexed(call_context* cc, int opr, const variable* var, int idxc )
@@ -225,7 +228,10 @@ void cmp_register_with_zero( int reqd_type, int level )
 
 void mov_var_into_reg(call_context* cc, variable* var, int level)
 {
-    code_stream() << mov() << SPACE << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA << (std::string(cc->name) + STR_DOT  + var->name).c_str() << NEWLINE;
+    code_stream() << mov()
+                  << SPACE
+                  << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL
+                  << C_COMMA << fully_qualified_varname(cc, var) << NEWLINE;
 }
 
 void mov_indexed_into_reg(call_context* cc, variable* var, int level, int idxc )
@@ -306,7 +312,14 @@ void move_start_register_atomic_with_type( int reqd_type, int level )
 
 void move_reg_into_var(call_context* cc,  variable* dest, int level )
 {
-    code_stream() << mov() << SPACE << fully_qualified_varname(cc, dest) << C_COMMA << reg() << get_reg_type(dest->i_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
+    if(dest->cc)
+    {
+        code_stream() << mov() << SPACE << fully_qualified_varname(dest->cc, dest) << C_COMMA << reg() << get_reg_type(dest->i_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
+    }
+    else
+    {
+        code_stream() << mov() << SPACE << fully_qualified_varname(cc, dest) << C_COMMA << reg() << get_reg_type(dest->i_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
+    }
 }
 
 
