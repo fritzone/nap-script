@@ -368,11 +368,6 @@ void jmp(const std::string& label)
     code_stream() << "jmp" << SPACE <<label << NEWLINE;
 }
 
-void ujmp(const std::string& label)
-{
-    code_stream() <<"ujmp" << SPACE << label << NEWLINE;
-}
-
 void jlbf(const std::string& label)
 {
     code_stream() << "jlbf" << SPACE << label << NEWLINE;

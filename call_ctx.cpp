@@ -180,7 +180,7 @@ void call_context_compile(call_context* cc)
     method_list* ccs_methods = cc->methods;
     while(ccs_methods)
     {
-        code_stream() << NEWLINE << fully_qualified_label(ccs_methods->the_method->name) << NEWLINE;
+        code_stream() << NEWLINE << fully_qualified_label(std::string(std::string(ccs_methods->the_method->main_cc->father->name) +'.' + ccs_methods->the_method->name).c_str()) << NEWLINE;
         // now pop off the variables from the stack
         variable_list* vlist = ccs_methods->the_method->variables;
         int pctr = 0;
@@ -189,7 +189,8 @@ void call_context_compile(call_context* cc)
             peek(ccs_methods->the_method->main_cc, vlist->var->c_type, pctr++, vlist->var->name);
             vlist = vlist->next;
         }
-        push_cc_start_marker();
+        std::string fun_hash = generate_unique_hash();
+        push_cc_start_marker(fun_hash.c_str());
         expression_tree_list* q1 = ccs_methods->the_method->main_cc->expressions;
         while(q1)
         {
@@ -199,6 +200,7 @@ void call_context_compile(call_context* cc)
             q1=q1->next;
         }
         ccs_methods = ccs_methods->next;
+        push_cc_end_marker(fun_hash.c_str());
         code_stream() << "return" << NEWLINE;
     }
     }
@@ -221,7 +223,9 @@ void call_context_compile(call_context* cc)
                 peek(ccs_methods->the_method->main_cc, vlist->var->c_type, pctr++, vlist->var->name);
                 vlist = vlist->next;
             }
-            push_cc_start_marker();
+            std::string class_fun_hash = generate_unique_hash();
+
+            push_cc_start_marker(class_fun_hash.c_str());
             expression_tree_list* q1 = ccs_methods->the_method->main_cc->expressions;
                 while(q1)
                 {
@@ -233,6 +237,7 @@ void call_context_compile(call_context* cc)
 
 
             ccs_methods = ccs_methods->next;
+            push_cc_end_marker(class_fun_hash.c_str());
             code_stream() << "return" << NEWLINE;
         }
     }

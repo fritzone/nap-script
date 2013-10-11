@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <sstream>
+#include <set>
 
 /**
  * Transforms a character to a string
@@ -319,4 +320,32 @@ std::string fully_qualified_label(std::string& l)
     ss << STR_COLON << l << STR_COLON;
     std::string s = ss.str();
     return s;
+}
+
+int irand(int min, int max)
+{
+    return ((double)rand() / ((double)RAND_MAX + 1.0)) * (max - min + 1) + min;
+}
+
+static std::string generate_hash_tag()
+{
+    char str[5];
+    for (int i = 0; i < 4; ++i)
+    str[i] = irand('a', 'z');
+    str[4] = '\0';
+    return std::string(str);
+}
+
+
+std::string generate_unique_hash()
+{
+    static std::set<std::string> hashes;
+
+    std::string hash = generate_hash_tag();
+    while(hashes.count(hash))
+    {
+        hash = generate_hash_tag();
+    }
+    hashes.insert(hash);
+    return hash;
 }

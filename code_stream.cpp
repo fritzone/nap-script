@@ -214,7 +214,13 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "i")  opcode = OPCODE_INT;
     if(expr == "c")  opcode = OPCODE_CHAR;
     if(expr == "char")  opcode = OPCODE_CHAR;
-    if(expr == "f")  opcode = OPCODE_FLOAT;
+    if(expr == "f")
+    {
+        if(last_opcode != OPCODE_JLBF && last_opcode != OPCODE_JMP && last_opcode != OPCODE_CALL)
+        {
+            opcode = OPCODE_FLOAT;
+        }
+    }
     if(expr == "real")  opcode = OPCODE_FLOAT;
     if(expr == "string")  opcode = OPCODE_STRING;
     if(expr == "call")
@@ -239,7 +245,10 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "jlbf") opcode = OPCODE_JLBF;
     if(expr == "jmp") opcode = OPCODE_JMP;
     if(expr == "marks") opcode = OPCODE_MARKS;
-    if(expr == "marksn") opcode = OPCODE_MARKS_NAME;
+    if(expr == "marksn")
+    {
+        opcode = OPCODE_MARKS_NAME;
+    }
     if(expr == "clrs") opcode = OPCODE_CLRS;
     if(expr == "clrsn") opcode = OPCODE_CLRS_NAME;
     if(expr == "return") opcode = OPCODE_RETURN;
@@ -332,6 +341,13 @@ void code_stream::output_bytecode(const char* s)
             if(idx > -1) // found a label
             {
                 jumptable[idx]->bytecode_location = last_file_pos;
+            }
+            else /* possibly creating a label before using it */
+            {
+                label_entry* le = new label_entry;
+                le->bytecode_location = last_file_pos;
+                le->name = lblName;
+                jumptable.push_back(le);
             }
         }
         else

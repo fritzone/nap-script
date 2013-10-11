@@ -916,6 +916,11 @@ int main()
                             regi[register_index] = *(int64_t*)stack[stack_pointer]->value;
                         }
                         else
+                        if(stack[stack_pointer]->type == OPCODE_REG)
+                        {
+                            regi[register_index] = *(int64_t*)stack[stack_pointer]->value;
+                        }
+                        else /* default value */
                         {
                             regi[register_index] = 0;
                         }
@@ -950,9 +955,35 @@ int main()
             exit(0);
         }
         else
+        if(current_opcode == OPCODE_INC) /* increment */
+        {
+            uint8_t inc_what = content[cc ++]; /* variable, register*/
+            if(inc_what == OPCODE_VAR)
+            {
+                uint32_t* p_var_index = (uint32_t*)(content + cc);
+                cc += sizeof(uint32_t);
+
+                struct variable_entry* ve = metatable[*p_var_index];
+                if(ve->instantiation->type == OPCODE_INT)
+                {
+                    (*(int64_t*)ve->instantiation->value) ++;
+                }
+                else
+                {
+                    /* TODO */
+                }
+            }
+            else
+            {
+                /* TODO */
+            }
+
+        }
+        else
         {
             fprintf(stderr, "invalid opcode [%x] at %"PRIu64" (%"PRIx64")\n",
                     current_opcode, cc - 1, cc - 1);
+            cleanup();
             exit(5);
 
         }

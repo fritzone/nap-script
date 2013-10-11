@@ -25,7 +25,10 @@ int level_0_char_operator(const char *expr, char op1, char op2, int need_first)
     // special case: a unary operator found at pos 0:
     if(expr[0] == op1 || expr[0] == op2)
     {
-        return 0;
+        if(len > 1 && (expr[1] != op1 && expr[1] != op2) )
+        {
+            return 0;
+        }
     }
 
     int level = 0, found_idx = -1;
