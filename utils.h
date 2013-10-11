@@ -138,4 +138,8 @@ std::string fully_qualified_varname(call_context* cc, const char* v);
 std::string fully_qualified_label(std::string& l);
 std::string fully_qualified_label(const char*);
 
+int irand(int min, int max);
+
+std::string generate_unique_hash();
+
 #endif

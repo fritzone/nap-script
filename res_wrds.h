@@ -61,6 +61,8 @@ struct resw_for
 	expression_tree* tree_expr;
 
 	call_context* operations;
+
+    const char* unique_hash;
 };
 
 #endif

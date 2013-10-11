@@ -1332,6 +1332,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
         char* expr_stmt = q->str;
         resw_for* rswfor = alloc_mem(resw_for,1);
 
+        rswfor->unique_hash = duplicate_string(generate_unique_hash().c_str());
         rswfor->init_stmt = init_stmt;
         rswfor->tree_init_stmt = new_expression_tree(expwloc);
         build_expr_tree(init_stmt, rswfor->tree_init_stmt, the_method, orig_expr, cc, result, expwloc);

@@ -619,13 +619,15 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
         {
             if(q)	/*to solve: if(1); else ...*/
             {
-                push_cc_start_marker();						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
-                while(q->next)
+                std::string if_hash = generate_unique_hash();
+
+                push_cc_start_marker(if_hash.c_str());						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
+                while(q)
                 {
                     compile(q->root, the_method, my_if->if_branch, level + 1, reqd_type, forced_mov);
                     q=q->next;
                 }
-                push_cc_end_marker();
+                push_cc_end_marker(if_hash.c_str());
             }
         }
 
@@ -635,19 +637,22 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
             jmp(end_label_name);	/* make sure, that after executing the 'if' branch we don't end up here */
             code_stream() << fully_qualified_label(else_label_name) << NEWLINE;	/* here place the label so the bytecode will know where to jump */
             call_context_add_label(cc, -1, else_label_name);	/* for now added with dummy data to the CC*/
-        expression_tree_list* q = my_if->else_branch->expressions;			/* and compile the instructions in the else branch too */
+            expression_tree_list* q = my_if->else_branch->expressions;			/* and compile the instructions in the else branch too */
             if(q && !q->next)			/* one line if, no parantheses*/
             {
                 compile(q->root, the_method, my_if->if_branch, level + 1, reqd_type, forced_mov);
             }
             else
             {
-                push_cc_start_marker();						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
-                while(q->next)
+                std::string if_hash = generate_unique_hash();
+
+                push_cc_start_marker(if_hash.c_str());						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
+                while(q)
                 {
                     compile(q->root, the_method, my_if->if_branch, level + 1, reqd_type, forced_mov);
                     q=q->next;
                 }
+                push_cc_end_marker(if_hash.c_str());
             }
 
         }
@@ -659,22 +664,25 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
         if(my_if->else_branch)	/* but we have an else branch */
         {
             /* generating a name for the end of the 'if' */
-        char* end_label_name = alloc_mem(char, strlen(cc->name) + 32);
+            char* end_label_name = alloc_mem(char, strlen(cc->name) + 32);
             sprintf(end_label_name, "%s_%d", cc->name, (int)cc->labels->size());
             jlbf(end_label_name);				/* jump to the end of the if, if the logical expression evaluated to true */
-        expression_tree_list* q = my_if->else_branch->expressions;			/* compile the instructions in the else branch too */
+            expression_tree_list* q = my_if->else_branch->expressions;			/* compile the instructions in the else branch too */
             if(q && !q->next)			/* one line if, no parantheses*/
             {
                 compile(q->root, the_method, my_if->if_branch, level + 1, reqd_type, forced_mov);
             }
             else
             {
-                push_cc_start_marker();						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
-                while(q->next)
+                std::string if_hash = generate_unique_hash();
+
+                push_cc_start_marker(if_hash.c_str());						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
+                while(q)
                 {
                     compile(q->root, the_method, my_if->if_branch, level + 1, reqd_type, forced_mov);
                     q=q->next;
                 }
+                push_cc_end_marker(if_hash.c_str());
             }
             /* label after else */
             code_stream() << fully_qualified_label(end_label_name) << NEWLINE;
@@ -761,12 +769,16 @@ static void resolve_while_keyword(const expression_tree* node, const method* the
         {
             if(q)	/*to resolve: while(1); trallala */
             {
-                push_cc_start_marker();						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
-                while(q->next)
+                std::string while_hash = generate_unique_hash();
+
+                push_cc_start_marker(while_hash.c_str());						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
+                while(q)
                 {
                     compile(q->root, the_method, my_while->operations, level + 1, reqd_type, forced_mov);
                     q=q->next;
                 }
+                push_cc_end_marker(while_hash.c_str());
+
             }
         }
         jmp( while_label_name);
@@ -790,6 +802,7 @@ static void resolve_for_keyword(const expression_tree* node, const method* the_m
 {
     struct resw_for* my_for = (struct resw_for*)node->reference->to_interpret;
 
+    push_cc_start_marker(my_for->unique_hash);
     /* as a first step we should compile the init statement of the for*/
     compile(my_for->tree_init_stmt, the_method, cc, level + 1, reqd_type, forced_mov);
 
@@ -811,12 +824,15 @@ static void resolve_for_keyword(const expression_tree* node, const method* the_m
         }
         else
         {
-            push_cc_start_marker();						/* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
-            while(q->next)
+            std::string for_hash = generate_unique_hash(); /* marker for the boyd of the loop */
+
+            push_cc_start_marker(for_hash.c_str());						/* push a marker onto the stack so that the end of the for's body CC will know till where to delete*/
+            while(q)
             {
                 compile(q->root, the_method, my_for->operations, level + 1, reqd_type, forced_mov);
                 q=q->next;
             }
+            push_cc_end_marker(for_hash.c_str());
         }
     }
 
@@ -846,8 +862,13 @@ static void resolve_for_keyword(const expression_tree* node, const method* the_m
         compile(my_for->tree_condition, the_method, cc, level, reqd_type, forced_mov);	/* first step: compile the logical expression*/
     }
 
+    code_stream() << NEWLINE;
+    // do we still need to loop?
+
     jlbf(start_label->name);
     code_stream() << fully_qualified_label(end_label->name) << NEWLINE ;
+
+    push_cc_end_marker(my_for->unique_hash);
 }
 
 
@@ -900,7 +921,7 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
                             resolve_assignment(tempassign, level, the_method, cc, reqd_type, forced_mov);
                             
                             // the constructor call is NOT pushing this
-                            push_cc_end_marker();
+                            // TODO: This was here ... push_cc_end_marker();
 
                             
                         }
@@ -988,22 +1009,16 @@ static void resolve_break_keyword(call_context* cc)
     /* find the first while or for call context. Also consider switch statements*/
     struct call_context* qcc = cc;
     /* hold the number of stack rollbacks we need to put in here*/
-    int ccsc = 0;
     while(qcc && qcc->type != CALL_CONTEXT_TYPE_WHILE && qcc->type != CALL_CONTEXT_TYPE_FOR)
     {
         qcc = qcc->father;
-        ccsc ++;
     }
     if(!qcc)	/* means this has reached to the highest level and the break was not placed in a for/while/switch*/
     {
         throw_error(E0012_SYNTAXERR);
     }
 
-    for(int i=0; i< ccsc; i++)
-    {
-        push_cc_end_marker();
-    }
-    ujmp(qcc->break_label->name);
+    jmp(qcc->break_label->name);
 }
 
 /**
@@ -1218,16 +1233,20 @@ void compile(const expression_tree* node, const method* the_method, call_context
             return;
 
         case STATEMENT_CLOSE_CC:	/* in this case put a marker on the stack to show the interpreter till which point to purge the variables on the stack when closingthe CC*/
-            push_cc_end_marker();
+            // push_cc_end_marker();
             break;
 
         case STATEMENT_NEW_CC:
             {
                 if(node->reference)
                 {
-                    push_cc_start_marker();
-                call_context* new_cc = (call_context*)node->reference->to_interpret;	// Here we don't get a reference ... :(
+                    std::string cc_start_hash = generate_unique_hash();
+
+                    push_cc_start_marker(cc_start_hash.c_str());
+                    call_context* new_cc = (call_context*)node->reference->to_interpret;	// Here we don't get a reference ... :(
                     call_context_run_inner(new_cc, level, reqd_type, forced_mov);
+
+                    push_cc_end_marker(cc_start_hash.c_str());
                 }
                 break;
             }
@@ -1244,7 +1263,9 @@ void compile(const expression_tree* node, const method* the_method, call_context
                     method* m = cfe->the_method;
                     parameter_list* ingoing_parameters = cfe->parameters;
                     int pc = 0;
-                    push_cc_start_marker();
+                    std::string dot_determiner_hash = generate_unique_hash();
+
+                    push_cc_start_marker(dot_determiner_hash.c_str());
                     while(ingoing_parameters)
                     {
                         parameter* p = ingoing_parameters->param;
@@ -1272,7 +1293,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
                         // this solves the problem when the function does not return anything
                         // but is required to. We might raise a runtime exception in this case
                     }
-                    push_cc_end_marker();
+                    push_cc_end_marker(dot_determiner_hash.c_str());
                     break;
 
                 }
@@ -1306,7 +1327,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
             constructor_call* m = (constructor_call*)cfe->the_method;
             parameter_list* ingoing_parameters = cfe->parameters;
             int pc = 0;
-            push_cc_start_marker();
+
             while(ingoing_parameters)
             {
                 parameter* p = ingoing_parameters->param;
@@ -1343,7 +1364,8 @@ void compile(const expression_tree* node, const method* the_method, call_context
             method* m = cfe->the_method;
             parameter_list* ingoing_parameters = cfe->parameters;
             int pc = 0;
-            push_cc_start_marker(m->name);
+            std::string func_call_hash = generate_unique_hash();
+            push_cc_start_marker(func_call_hash.c_str());
             while(ingoing_parameters)
             {
                 parameter* p = ingoing_parameters->param;
@@ -1363,7 +1385,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 ingoing_parameters = ingoing_parameters->next;
                 pc ++;
             }
-            code_stream() << call() << SPACE << '@' << m->name << NEWLINE;
+            code_stream() << call() << SPACE << '@' << std::string(m->main_cc->father->name) +'.' + m->name << NEWLINE;
             if(m->ret_type) // pop something only if the method was defined to return something
             {
                 code_stream() << pop() << SPACE << reg() << get_reg_type(m->ret_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
@@ -1371,7 +1393,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 // this solves the problem when the function does not return anything
                 // but is required to. We might raise a runtime exception in this case
             }
-            push_cc_end_marker(m->name);
+            push_cc_end_marker(func_call_hash.c_str());
             break;
         }
 

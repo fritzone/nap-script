@@ -280,8 +280,11 @@ int lineIncd = 0;
  */
 char* parser_preview_next_word(struct parsed_file* f, char* delim)
 {
+    int save_prev_p = f->position;
+    int save_prev_prev_p = f->previous_position;
 expression_with_location* expwloc = parser_next_phrase(f, delim);
-    f->position = f->previous_position;						/* nothing happened */
+    f->position = save_prev_p;						/* nothing happened */
+    f->previous_position = save_prev_prev_p;
     if(!expwloc)
     {
         return NULL;
