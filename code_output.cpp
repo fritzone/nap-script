@@ -106,6 +106,11 @@ const char* reg()
     return "reg";
 }
 
+const char* idx()
+{
+    return "idx";
+}
+
 static const char* cmp()
 {
     return "cmp";
@@ -118,12 +123,12 @@ const char* call()
 
 const char* ccidx()
 {
-    return "@ccidx";
+    return "@#ccidx";
 }
 
 static const char* grow()
 {
-    return "@grow";
+    return "@#grow";
 }
 
 void clidx()
@@ -290,14 +295,14 @@ void push_cc_end_marker(const char* marker_name)
 
 void move_atomic_into_index_register( int& idxc, expression_tree_list* indxs, const method* the_method, call_context* cc, int level, int forced_mov )
 {
-    code_stream() << mov() << SPACE << "reg_idx" << C_PAR_OP << idxc << C_PAR_CL << C_COMMA;
+    code_stream() << NEWLINE << mov() << SPACE << reg() << idx() << C_PAR_OP << idxc << C_PAR_CL << C_COMMA;
     compile(indxs->root, the_method, cc, level, BASIC_TYPE_INT, forced_mov);
     code_stream() << NEWLINE;
 }
 
 void move_int_register_into_index_register( int& idxc, int level )
 {
-    code_stream() << mov() << SPACE << "reg_idx" << 'i' << C_PAR_OP << idxc << C_PAR_CL << C_COMMA << reg() << get_reg_type(BASIC_TYPE_INT) << C_PAR_OP<< level + 1 << C_PAR_CL << NEWLINE;
+    code_stream() << mov() << SPACE << reg() << idx() << 'i' << C_PAR_OP << idxc << C_PAR_CL << C_COMMA << reg() << get_reg_type(BASIC_TYPE_INT) << C_PAR_OP<< level + 1 << C_PAR_CL << NEWLINE;
 }
 
 void move_start_register_atomic( variable* dest, int level )
@@ -336,7 +341,7 @@ void second_operand_register_level( variable* dest, int level)
 
 void move_register_level_into_indexe_variable( variable* dest, int idxc, int level )
 {
-    code_stream() << mov() << SPACE << ccidx() << C_PAR_OP << dest->name << C_COMMA << idxc << C_PAR_CL << '<' << reg() << get_reg_type(dest->i_type) <<C_PAR_OP << level << C_PAR_CL << NEWLINE ;
+    code_stream() << mov() << SPACE << ccidx() << C_PAR_OP << fully_qualified_varname(0, dest) << C_COMMA << idxc << C_PAR_CL << C_COMMA << reg() << get_reg_type(dest->i_type) <<C_PAR_OP << level << C_PAR_CL << NEWLINE ;
 }
 
 void push_variable(call_context* cc, variable* var)
