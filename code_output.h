@@ -53,6 +53,7 @@ const char* mov();
 const char* call();
 const char* pop();
 const char* reg();
+const char* idx();
 const char* ccidx();
 
 #endif

@@ -223,12 +223,15 @@ void code_stream::output_bytecode(const char* s)
     }
     if(expr == "real")  opcode = OPCODE_FLOAT;
     if(expr == "string")  opcode = OPCODE_STRING;
+    if(expr == "s")  opcode = OPCODE_STRING;
+    if(expr == "idx")  opcode = OPCODE_IDX;
     if(expr == "call")
     {
         opcode = OPCODE_CALL;
     }
     if(expr == "mov") opcode = OPCODE_MOV;
     if(expr == "inc") opcode = OPCODE_INC;
+    if(expr == "dec") opcode = OPCODE_DEC;
     if(expr == "reg") opcode = OPCODE_REG;
     if(expr == "exit") opcode = OPCODE_EXIT;
     if(expr == "add") opcode = OPCODE_ADD;
@@ -244,17 +247,16 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "neq") opcode = OPCODE_NEQ;
     if(expr == "jlbf") opcode = OPCODE_JLBF;
     if(expr == "jmp") opcode = OPCODE_JMP;
-    if(expr == "marks") opcode = OPCODE_MARKS;
     if(expr == "marksn")
     {
         opcode = OPCODE_MARKS_NAME;
     }
-    if(expr == "clrs") opcode = OPCODE_CLRS;
     if(expr == "clrsn") opcode = OPCODE_CLRS_NAME;
     if(expr == "return") opcode = OPCODE_RETURN;
     if(expr == "pop") opcode = OPCODE_POP;
     if(expr == "peek") opcode = OPCODE_PEEK;
-    
+    if(expr == "clidx")  opcode = OPCODE_CLIDX;
+
     if(isnumber((expr.c_str())))
     {
         opcode = OPCODE_IMMEDIATE;
@@ -353,9 +355,19 @@ void code_stream::output_bytecode(const char* s)
         else
         if(s[ 0 ] == '@') // function call
         {
-            if(last_opcode != OPCODE_CALL)
-            {
-                throw_error("wrong last opcode");
+            if(last_opcode == OPCODE_MOV)
+            { // possibly a @#ccidx, @#grow
+                if(s[1] == '#') // builtin function
+                {
+                    if(expr == "@#ccidx")
+                    {
+                        write_stuff_to_file(f, OPCODE_CCIDX, 1);
+                    }
+                    if(expr == "@#grow")
+                    {
+                        write_stuff_to_file(f, OPCODE_GROW, 1);
+                    }
+                }
             }
         }
         else
@@ -367,7 +379,7 @@ void code_stream::output_bytecode(const char* s)
         {
         }
         else
-        if(s[0] == '\"') // string
+        if(s[0] == '\"') // string. Every mention of it creates a new stringtable entry
         {
             bc_string_table_entry* entry = new bc_string_table_entry;
             entry->index = stringtable.size();
@@ -381,7 +393,7 @@ void code_stream::output_bytecode(const char* s)
         {
             if(last_opcode == OPCODE_MARKS_NAME || last_opcode == OPCODE_CLRS_NAME)
             {
-                // this is a nmed mark
+                // this is a named mark
                 int idx = -1;
                 for(unsigned int i=0; i<namedmarks.size(); i++)
                 {
