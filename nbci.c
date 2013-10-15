@@ -6,14 +6,20 @@
 #include <string.h>
 
 #define __STDC_FORMAT_MACROS
+#ifndef _WIN32
 #include <inttypes.h>
+#else
+#define PRId64 "lld"
+#define PRIu64 "lld"
+#define PRIx64 "x"
+#endif
 
 /******************************************************************************/
 /*                             Debugging section                              */
 /******************************************************************************/
 
 #define _NOT_IMPLEMENTED \
-    fprintf(stderr, "NI: line [%d] instr [%d] opcode [%x] at %"PRIu64" (%"PRIx64")\n\n", \
+    fprintf(stderr, "NI: line [%d] instr [%d] opcode [%x] at %" PRIu64 " (%" PRIx64 ")\n\n", \
             __LINE__, content[cc - 1], current_opcode, cc - 1, cc - 1); \
     exit(99);
 
@@ -115,8 +121,8 @@ static uint64_t meta_size = 0;           /* the size of  the variables vector */
  */
 static void read_metatable(FILE* fp, uint64_t meta_location)
 {
-    fseek(fp, meta_location + 5, SEEK_SET); /* skip the ".meta" */
     uint32_t count = 0;
+    fseek(fp, meta_location + 5, SEEK_SET); /* skip the ".meta" */
     fread(&count, sizeof(uint32_t), 1, fp);
     if(count == 0)
     {
@@ -128,8 +134,9 @@ static void read_metatable(FILE* fp, uint64_t meta_location)
     while(1)
     {
         uint32_t index = 0;
+        int end_of_file = 0;
         fread(&index, file_bitsize, 1, fp);
-        int end_of_file = feof(fp);
+        end_of_file = feof(fp);
         if(index == 1920234286 || end_of_file) /* ".str" */
         {
             if(end_of_file)
@@ -142,15 +149,21 @@ static void read_metatable(FILE* fp, uint64_t meta_location)
         else
         {
             uint16_t len = 0;
+			uint8_t* name = NULL;
+			struct variable_entry* new_var = NULL;
+
             fread(&len, sizeof(uint16_t), 1, fp);
-            uint8_t* name = (uint8_t*)calloc(sizeof(uint8_t), len + 1);
+            name = (uint8_t*)calloc(sizeof(uint8_t), len + 1);
+			if(name == NULL)
+			{
+			}
             fread(name, sizeof(uint8_t), len, fp);
             if(meta_size < index + 1)
             { /* seems there is something wrong with the metatable size*/
                 metatable = (struct variable_entry**) realloc(metatable,
                                    sizeof(struct variable_entry**)*(index + 1));
             }
-            struct variable_entry* new_var = (struct variable_entry*)
+            new_var = (struct variable_entry*)
                                     calloc(1, sizeof(struct variable_entry));
             new_var->index = index;
             new_var->name = name;
@@ -188,8 +201,8 @@ static uint64_t strt_size = 0;                 /* the size of the stringtable */
  */
 static void read_stringtable(FILE* fp, uint64_t stringtable_location)
 {
-    fseek(fp, stringtable_location + 4, SEEK_SET); /* skip the ".str" */
     uint32_t count = 0;
+    fseek(fp, stringtable_location + 4, SEEK_SET); /* skip the ".str" */
     fread(&count, sizeof(uint32_t), 1, fp);
     if(count == 0)
     {
@@ -201,8 +214,9 @@ static void read_stringtable(FILE* fp, uint64_t stringtable_location)
     while(1)
     {
         uint32_t index = 0;
+		int end_of_file = 0;
         fread(&index, file_bitsize, 1, fp);
-        int end_of_file = feof(fp);
+        end_of_file = feof(fp);
 
         if(index == 1886218798 || end_of_file) /* .jmp */
         {
@@ -216,16 +230,17 @@ static void read_stringtable(FILE* fp, uint64_t stringtable_location)
         else
         {
             uint32_t len = 0;
+			char* str = NULL;
+			struct strtable_entry* new_strentry = NULL;
             fread(&len, sizeof(uint32_t), 1, fp);
-            char* str = (char*)calloc(sizeof(char), len + 1);
+            str = (char*)calloc(sizeof(char), len + 1);
             fread(str, sizeof(uint8_t), len, fp);
             if(strt_size < index + 1)
             {
                 stringtable = (struct strtable_entry**) realloc(stringtable,
                                  sizeof(struct strtable_entry**) * (index + 1));
             }
-            struct strtable_entry* new_strentry = (struct strtable_entry*)
-                                       calloc(1, sizeof(struct strtable_entry));
+            new_strentry = (struct strtable_entry*)calloc(1, sizeof(struct strtable_entry));
             new_strentry->index = index;
             new_strentry->string = str;
             new_strentry->len = len;
@@ -250,14 +265,14 @@ struct jumptable_entry
 /* variables for the jumptable */
 static struct jumptable_entry** jumptable = NULL;   /* the jumptable itself */
 static uint64_t jumptable_size = 0;              /* the size of the jumptable */
-static uint jmpc = 0;               /* counts the jumptable entries on loading*/
+static uint32_t jmpc = 0;               /* counts the jumptable entries on loading*/
 /*
  * Read the stringtable of the bytecode file. Exits on failure.
  */
 static void read_jumptable(FILE* fp, uint64_t stringtable_location)
 {
-    fseek(fp, stringtable_location + 4, SEEK_SET); /* skip the ".str" */
     uint32_t count = 0;
+    fseek(fp, stringtable_location + 4, SEEK_SET); /* skip the ".str" */
     fread(&count, sizeof(uint32_t), 1, fp);
     if(count == 0)
     {
@@ -269,16 +284,17 @@ static void read_jumptable(FILE* fp, uint64_t stringtable_location)
     while(1)
     {
         uint32_t index = 0;
+		int end_of_file = 0;
+		struct jumptable_entry* new_jmpentry = NULL;
         fread(&index, sizeof(uint32_t), 1, fp);
-        int end_of_file = feof(fp);
+        end_of_file = feof(fp);
         if(end_of_file)
         {
             return;
         }
 
 
-        struct jumptable_entry* new_jmpentry = (struct jumptable_entry*)
-                calloc(1, sizeof(struct jumptable_entry));
+        new_jmpentry = (struct jumptable_entry*)calloc(1, sizeof(struct jumptable_entry));
         new_jmpentry->location = index;
         jumptable[ jmpc++ ] = new_jmpentry;
     }
@@ -363,7 +379,7 @@ static void do_operation(int64_t* target, int64_t to_add, uint8_t opcode)
     }
 }
 
-static void dump()
+static void dump(void)
 {
     uint64_t i;
     puts("");
@@ -375,7 +391,7 @@ static void dump()
             {
                 if(metatable[i]->instantiation->type == STACK_ENTRY_INT)
                 {
-                    printf("E:[%s=%"PRId64"](%"PRIu64"/%"PRIu64")\n",
+                    printf("E:[%s=%" PRId64 "](%" PRIu64 "/%" PRIu64 ")\n",
                            metatable[i]->name,
                            *(int64_t*)(metatable[i]->instantiation->value)
                            ,i, meta_size);
@@ -383,14 +399,14 @@ static void dump()
                 else
                 if(metatable[i]->instantiation->type == STACK_ENTRY_STRING)
                 {
-                    printf("E:[%s=%s](%"PRIu64"/%"PRIu64")\n",
+                    printf("E:[%s=%s](%" PRIu64 "/%" PRIu64 ")\n",
                            metatable[i]->name,
                            (char*)(metatable[i]->instantiation->value)
                            ,i, meta_size);
                 }
                 else
                 {
-                    printf("X:[%s=%"PRId64"](%"PRIu64"/%"PRIu64")\n",
+                    printf("X:[%s=%"PRId64"](%" PRIu64 "/%" PRIu64 ")\n",
                            metatable[i]->name,
                            *(int64_t*)(metatable[i]->instantiation->value)
                            ,i, meta_size);
@@ -399,7 +415,7 @@ static void dump()
             }
             else
             {
-                printf("N:[%s=??](%"PRIu64"/%"PRIu64")\n", metatable[i]->name,
+                printf("N:[%s=??](%" PRIu64 "/%" PRIu64 ")\n", metatable[i]->name,
                        i, meta_size);
 
             }
@@ -415,10 +431,12 @@ static void dump()
 /**
  * Cleans the allocated memory
  */
-static void cleanup()
+static void cleanup(void)
 {
-    dump();
     uint64_t i;
+    int64_t tempst;
+    int64_t tempjmi;
+    dump();
     for(i=0; i<meta_size; i++)
     {
         if(metatable[i]->instantiation)
@@ -438,7 +456,6 @@ static void cleanup()
     free(metatable);
 
     /* free the allocated stack */
-    int64_t tempst;
     for(tempst = stack_pointer; tempst > -1; tempst --)
     {
         if(stack[tempst]->type == OPCODE_INT) /* or float/string */
@@ -456,7 +473,6 @@ static void cleanup()
     free(stack);
 
     /* freeing the jumptable */
-    int64_t tempjmi;
     for(tempjmi = jumptable_size - 1; tempjmi >= 0; tempjmi --)
     {
         free(jumptable[tempjmi]);
@@ -472,25 +488,27 @@ static void cleanup()
 /*
  * Main entry point
  */
-int main()
+int main(int argc, char* argv[])
 {
     FILE* fp = fopen("test.ncb", "rb");
-    if(!fp) exit(1);
+	uint64_t fsize = 0;
+    uint32_t meta_location = 0;
+    uint32_t stringtable_location = 0;
+    uint32_t jumptable_location = 0;
+
+    uint8_t type = 0;
+
+	if(!fp) exit(1);
     fseek(fp, 0, SEEK_END);
     
     /* read in all the data in memory. Should be faster */
-    uint64_t fsize = ftell(fp);
+    fsize = ftell(fp);
     content = (uint8_t *) calloc(sizeof(uint8_t), fsize);
     fseek(fp, 0, SEEK_SET);
     fread(content, sizeof(uint8_t ), fsize, fp);
     
     fseek(fp, 0, SEEK_SET);
     
-    uint32_t meta_location = 0;
-    uint32_t stringtable_location = 0;
-    uint32_t jumptable_location = 0;
-
-    uint8_t type = 0;
     /* create the stack */
     stack = (struct stack_entry**) calloc( 
                                         sizeof(struct stack_entry*), stack_size
@@ -538,7 +556,7 @@ int main()
         {
             struct stack_entry* se = (struct stack_entry*)(
                                         calloc(sizeof(struct stack_entry), 1));
-            se->type = content[cc ++];
+			se->type = (StackEntryType)content[cc ++];
 
             if(se->type == OPCODE_INT || se->type == OPCODE_STRING) /* or float*/
             {
@@ -547,9 +565,9 @@ int main()
                 if(push_what == OPCODE_VAR)
                 {
                     uint32_t* p_var_index = (uint32_t*)(content + cc);
-                    cc += sizeof(uint32_t);
-
                     struct variable_entry* ve = metatable[*p_var_index];
+
+					cc += sizeof(uint32_t);
 
                     ve->instantiation = (struct stack_entry*)(calloc(sizeof(struct stack_entry), 1));
                     ve->instantiation->type = se->type; /* must match the stack entry */
@@ -851,9 +869,10 @@ int main()
             if(mov_target == OPCODE_VAR) /* we move into a variable */
             {
                 uint32_t* p_var_index = (uint32_t*)(content + cc);
-                cc += sizeof(uint32_t);
-
                 struct variable_entry* var = metatable[*p_var_index];
+				uint8_t move_source = 0;
+
+                cc += sizeof(uint32_t);
 
                 /* first time usage of this variable? */
                 if(var->instantiation == 0)
@@ -865,7 +884,7 @@ int main()
                 }
 
                 /* and now let's see what we move in the variable */
-                uint8_t move_source = content[cc ++];
+                move_source = content[cc ++];
 
                 /* moving a register in a variable? */
                 if(move_source == OPCODE_REG)
@@ -884,9 +903,9 @@ int main()
                             {
                                 if(*(int64_t*)var->instantiation->value != regi[register_index])
                                 {
-                                    free(var->instantiation->value);
                                     int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
                                     *temp = regi[register_index];
+                                    free(var->instantiation->value);
                                     var->instantiation->value = temp;
                                 }
                             }
@@ -911,11 +930,11 @@ int main()
                             if(var->instantiation->value)
                             {
                                 /* copy only if they are not the same */
-                                if(strcmp(var->instantiation->value, regs[register_index]))
+                                if(strcmp((char*)var->instantiation->value, regs[register_index]))
                                 {
-                                    free(var->instantiation->value);
                                     char* temp = (char*)calloc(strlen(regs[register_index]) + 1, sizeof(char));
                                     strcpy(temp, regs[register_index]);
+                                    free(var->instantiation->value);
                                     var->instantiation->value = temp;
                                     var->instantiation->len = strlen(regs[register_index]);
                                 }
@@ -952,8 +971,10 @@ int main()
                 if(ccidx_target == OPCODE_VAR)
                 {
                     uint32_t* p_var_index = (uint32_t*)(content + cc);
-                    cc += sizeof(uint32_t);
                     struct variable_entry* var = metatable[*p_var_index];
+					uint8_t ctr_used_index_regs = 0;
+                    uint8_t move_src = 0;
+					cc += sizeof(uint32_t);
 
                     /* first time usage of this variable? */
                     if(var->instantiation == 0)
@@ -966,10 +987,10 @@ int main()
 
                     /* now should come the index reg counter of ccidx,
                        a simple byte since there are max 256 indexes */
-                    uint8_t ctr_used_index_regs = content[cc ++];
+                    ctr_used_index_regs = content[cc ++];
 
                     /* and find what is moved into this ccidx destination*/
-                    uint8_t move_src = content[cc ++];
+                    move_src = content[cc ++];
                     if(move_src == OPCODE_REG)
                     { /* moving a register in the indexed destination */
                         uint8_t register_type = content[cc ++]; /* int/string/float...*/
@@ -1055,15 +1076,16 @@ int main()
         else
         if(current_opcode == OPCODE_MARKS_NAME)
         {
+			uint32_t* p_marker_code = NULL;
+			int32_t* temp = NULL;
             struct stack_entry* marker = (struct stack_entry*)(
                         calloc(sizeof(struct stack_entry), 1));
             marker->type = STACK_ENTRY_MARKER_NAME;
 
-
-            uint32_t* p_marker_code = (uint32_t*)(content + cc);
+            p_marker_code = (uint32_t*)(content + cc);
             cc += sizeof(uint32_t);
 
-            int32_t* temp = (int32_t*)calloc(1, sizeof(int32_t));
+            temp = (int32_t*)calloc(1, sizeof(int32_t));
             *temp = *p_marker_code;
 
             marker->value = temp;
@@ -1120,6 +1142,7 @@ int main()
             {
                 uint8_t peek_index_type = content[cc ++]; /* what are we moving in*/
                 uint32_t peek_index = 0;
+				uint8_t peek_target = 0;
 
                 if(peek_index_type == OPCODE_IMMEDIATE) /* immediate value (1,..) */
                 {
@@ -1146,13 +1169,6 @@ int main()
                         cc += 4;
                     }
                     else
-                    if(imm_size == OPCODE_HUGE)
-                    {
-                        int64_t* immediate = (int64_t*)(content + cc);
-                        peek_index = *immediate;
-                        cc += 8;
-                    }
-                    else
                     {
                         printf("invalid immediate size: 0x%x", imm_size);
                         exit(14);
@@ -1164,18 +1180,17 @@ int main()
                 }
 
                 /* now we know the peek index, see into what are we peeking */
-                uint8_t peek_target = content[cc ++];
+                peek_target = content[cc ++];
                 if(peek_target == OPCODE_VAR)
                 {
                     uint32_t* p_var_index = (uint32_t*)(content + cc);
-                    cc += sizeof(uint32_t);
-
                     struct variable_entry* ve = metatable[*p_var_index];
+                    cc += sizeof(uint32_t);
 
                     /* there is no instantioation at this point for the var */
                     ve->instantiation = (struct stack_entry*)(
                                 calloc(sizeof(struct stack_entry), 1));
-                    ve->instantiation->type = peek_type;
+                    ve->instantiation->type = (StackEntryType)peek_type;
                     if(peek_type == OPCODE_INT)
                     {
                         int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
@@ -1270,9 +1285,8 @@ int main()
             if(inc_what == OPCODE_VAR)
             {
                 uint32_t* p_var_index = (uint32_t*)(content + cc);
-                cc += sizeof(uint32_t);
-
                 struct variable_entry* ve = metatable[*p_var_index];
+                cc += sizeof(uint32_t);
                 if(ve->instantiation->type == OPCODE_INT)
                 {
                     (*(int64_t*)ve->instantiation->value) ++;
@@ -1294,9 +1308,9 @@ int main()
             if(inc_what == OPCODE_VAR)
             {
                 uint32_t* p_var_index = (uint32_t*)(content + cc);
+                struct variable_entry* ve = metatable[*p_var_index];
                 cc += sizeof(uint32_t);
 
-                struct variable_entry* ve = metatable[*p_var_index];
                 if(ve->instantiation->type == OPCODE_INT)
                 {
                     (*(int64_t*)ve->instantiation->value) --;
@@ -1415,9 +1429,9 @@ int main()
             if(add_target == OPCODE_VAR) /* we move into a variable */
             {
                 uint32_t* p_var_index = (uint32_t*)(content + cc);
-                cc += sizeof(uint32_t);
-
+                uint8_t add_source = 0;
                 struct variable_entry* var = metatable[*p_var_index];
+				cc += sizeof(uint32_t);
 
                 /* first time usage of this variable? */
                 if(var->instantiation == 0)
@@ -1429,7 +1443,7 @@ int main()
                 }
 
                 /* and now let's see what we move in the variable */
-                uint8_t add_source = content[cc ++];
+                add_source = content[cc ++];
 
                 /* moving a register in a variable? */
                 if(add_source == OPCODE_REG)
@@ -1444,7 +1458,7 @@ int main()
                         /* perform the operation only if the values are not the same already*/
                         if(var->instantiation->value)
                         {
-                            int64_t* temp = var->instantiation->value;
+                            int64_t* temp = (int64_t*)var->instantiation->value;
                             do_operation(temp, regi[register_index], current_opcode);
                         }
                         else /* allocate the memory for the value */

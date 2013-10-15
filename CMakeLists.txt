@@ -1,7 +1,11 @@
 cmake_minimum_required (VERSION 2.6)
 project (nap-script)
 
-add_definitions(-Wall -Wextra)
+add_definitions(-Wall)
+
+if(NOT WIN32)
+  add_definitions(-Wextra)
+endif()
 
 add_executable(nap 
     bt_string.cpp
