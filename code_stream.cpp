@@ -259,7 +259,17 @@ void code_stream::output_bytecode(const char* s)
 
     if(isnumber((expr.c_str())))
     {
-        opcode = OPCODE_IMMEDIATE;
+        // the method calls just output a byte counter, no number identifier
+        if(last_opcode == OPCODE_CCIDX || last_opcode ==OPCODE_GROW)
+        {
+            int8_t nrf = atoi(expr.c_str());
+            write_stuff_to_file(f, (uint8_t)nrf, 1);
+            return;
+        }
+        else
+        {
+            opcode = OPCODE_IMMEDIATE;
+        }
     }
     
     if(opcode)
@@ -362,10 +372,12 @@ void code_stream::output_bytecode(const char* s)
                     if(expr == "@#ccidx")
                     {
                         write_stuff_to_file(f, OPCODE_CCIDX, 1);
+                        last_opcode = OPCODE_CCIDX;
                     }
                     if(expr == "@#grow")
                     {
                         write_stuff_to_file(f, OPCODE_GROW, 1);
+                        last_opcode = OPCODE_GROW;
                     }
                 }
             }

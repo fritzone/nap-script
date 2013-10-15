@@ -21,9 +21,10 @@
 /*                             Registers section                              */
 /******************************************************************************/
 
-int64_t regi[256] = {0}; /* the integer registers */
-char* regs[256] = {0}; /* the string registers */
-uint8_t lbf = 0;         /* the last boolean flag of the machine */
+int64_t regi[256] = {0};     /* the integer registers */
+char* regs[256] = {0};       /* the string registers */
+int64_t regidx[256] = {0};   /* the register indexes */
+uint8_t lbf = 0;             /* the last boolean flag of the machine */
 
 /******************************************************************************/
 /*                             Stack section                                  */
@@ -377,6 +378,14 @@ static void dump()
                     printf("E:[%s=%"PRId64"](%"PRIu64"/%"PRIu64")\n",
                            metatable[i]->name,
                            *(int64_t*)(metatable[i]->instantiation->value)
+                           ,i, meta_size);
+                }
+                else
+                if(metatable[i]->instantiation->type == STACK_ENTRY_STRING)
+                {
+                    printf("E:[%s=%s](%"PRIu64"/%"PRIu64")\n",
+                           metatable[i]->name,
+                           (char*)(metatable[i]->instantiation->value)
                            ,i, meta_size);
                 }
                 else
@@ -786,6 +795,54 @@ int main()
                     }
                 }
                 else
+                if(register_type == OPCODE_IDX)
+                {
+                    uint8_t register_index = content[cc ++]; /* 0, 1, 2 ...*/
+                    uint8_t move_source = content[cc ++]; /* the index definition */
+                    if(move_source == OPCODE_IMMEDIATE) /* immediate value (1,..) */
+                    {
+                        uint8_t imm_size = content[cc ++];
+                        /* and now write the number according to the size */
+                        if(imm_size == OPCODE_BYTE)
+                        {
+                            int8_t* immediate = (int8_t*)(content + cc);
+                            regidx[register_index] = *immediate;
+                            cc ++;
+                        }
+                        else
+                        if(imm_size == OPCODE_SHORT)
+                        {
+                            int16_t* immediate = (int16_t*)(content + cc);
+                            regidx[register_index] = *immediate;
+                            cc += 2;
+                        }
+                        else
+                        if(imm_size == OPCODE_LONG)
+                        {
+                            int32_t* immediate = (int32_t*)(content + cc);
+                            regidx[register_index] = *immediate;
+                            cc += 4;
+                        }
+                        else
+                        if(imm_size == OPCODE_HUGE)
+                        {
+                            int64_t* immediate = (int64_t*)(content + cc);
+                            regidx[register_index] = *immediate;
+                            cc += 8;
+                        }
+                        else
+                        {
+                            printf("invalid immediate size [mov]: 0x%x", imm_size);
+                            exit(13);
+                        }
+                    }
+                    else
+                    {
+                        _NOT_IMPLEMENTED
+                    }
+
+                }
+                else
                 {
                     _NOT_IMPLEMENTED
                 }
@@ -889,9 +946,87 @@ int main()
                 }
             }
             else
+            if(mov_target == OPCODE_CCIDX)
             {
-                fprintf(stderr, "cannot move to a target\n");
-                exit(9);
+                uint8_t ccidx_target = content[cc ++];  /* should be a variable */
+                if(ccidx_target == OPCODE_VAR)
+                {
+                    uint32_t* p_var_index = (uint32_t*)(content + cc);
+                    cc += sizeof(uint32_t);
+                    struct variable_entry* var = metatable[*p_var_index];
+
+                    /* first time usage of this variable? */
+                    if(var->instantiation == 0)
+                    {
+                        fprintf(stderr,
+                                "using variable [%s] without being on stack\n",
+                                var->name);
+                        exit(6);
+                    }
+
+                    /* now should come the index reg counter of ccidx,
+                       a simple byte since there are max 256 indexes */
+                    uint8_t ctr_used_index_regs = content[cc ++];
+
+                    /* and find what is moved into this ccidx destination*/
+                    uint8_t move_src = content[cc ++];
+                    if(move_src == OPCODE_REG)
+                    { /* moving a register in the indexed destination */
+                        uint8_t register_type = content[cc ++]; /* int/string/float...*/
+                        uint8_t register_index = content[cc ++]; /* 0, 1, 2 ...*/
+                        if(register_type == OPCODE_STRING)
+                        { /* moving a string register into a variable at a specific location */
+                            if(var->instantiation->type == OPCODE_STRING)
+                            { /* this is a string, accessing a character from it:
+                                 so calculate the "real" index ofthe variable based
+                                 on the regidx vector and ctr_used_index_regs
+                               */
+                                int real_index = 0;
+                                int i;
+                                for(i=0; i<ctr_used_index_regs; i++)
+                                {
+                                    /* first step: calculate the deplasation to find the "row"
+                                       this is actually the size of the "matrix".
+                                       TODO: The 1 should be replaced by something meaningful
+                                     */
+
+                                    real_index += real_index * 1;
+
+                                    /* then the column */
+                                    real_index += regidx[i];
+                                }
+
+                                /* and finally do a strcpy */
+                                strncpy((char*)var->instantiation->value + real_index - 1,
+                                        regs[register_index],
+                                        strlen(regs[register_index]));
+
+                            }
+                            else
+                            {
+                                _NOT_IMPLEMENTED
+                            }
+                        }
+                        else
+                        {
+                            _NOT_IMPLEMENTED
+                        }
+                    }
+                    else
+                    {
+                        /* moving an immediate value/variable into an index destination */
+                        _NOT_IMPLEMENTED
+                    }
+                }
+                else
+                {
+                    /* moving into something other indexed, than a variable */
+                    _NOT_IMPLEMENTED
+                }
+            }
+            else
+            {
+                _NOT_IMPLEMENTED
             }
         }
         else
@@ -1175,6 +1310,11 @@ int main()
             {
                 _NOT_IMPLEMENTED
             }
+        }
+        else
+        if(current_opcode == OPCODE_CLIDX)
+        {
+            memset(regidx, 0, sizeof(regidx));
         }
         else
         /* is this a mathematical operation? */
