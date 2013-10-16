@@ -312,7 +312,6 @@ void load_next_block(parsed_file* pf, method* the_method, call_context* par_cc, 
                     }
                     cc = cc->father;	/* stepping back */
                     current_level --;
-                    pf->position ++;	/* hack, to skip to the next character, to not to loop on the } 4ever */
                     if(current_level == orig_level)
                     {
                         can_stop = 1;

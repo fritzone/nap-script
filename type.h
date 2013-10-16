@@ -39,6 +39,7 @@ static const int FUNCTION_CALL_CONSTRUCTOR  = 131;
 static const int FUNCTION_CALL_OF_OBJECT    = 132;
 static const int FUNCTION_CALL_STATIC       = 133;
 static const int MEMBER_ACCESS_OF_OBJECT    = 134;
+static const int FUNCTION_STRING_LEN        = 135;
 static const int STATEMENT_IF				= 140;
 static const int STATEMENT_IF_1L			= 150;
 static const int STATEMENT_CLOSE_CC			= 160;

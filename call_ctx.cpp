@@ -169,7 +169,8 @@ void call_context_compile(call_context* cc)
     expression_tree_list* q = cc->expressions;
     while(q)
     {
-        compile(q->root, NULL, cc, 0, -1, 0);
+        int unknown_type = -1;
+        compile(q->root, NULL, cc, 0, unknown_type, 0);
         q=q->next;
     }
     exit_app();
@@ -194,9 +195,10 @@ void call_context_compile(call_context* cc)
         expression_tree_list* q1 = ccs_methods->the_method->main_cc->expressions;
         while(q1)
         {
+            int unknown_type = -1;
             compile(q1->root, ccs_methods->the_method,
                     ccs_methods->the_method->main_cc,
-                    0, -1, 0);
+                    0, unknown_type, 0);
             q1=q1->next;
         }
         ccs_methods = ccs_methods->next;
@@ -229,9 +231,10 @@ void call_context_compile(call_context* cc)
             expression_tree_list* q1 = ccs_methods->the_method->main_cc->expressions;
                 while(q1)
                 {
+                    int unknown_type = -1;
                     compile(q1->root, ccs_methods->the_method,
                             ccs_methods->the_method->main_cc,
-                            0, -1, 0);
+                            0, unknown_type, 0);
                     q1=q1->next;
                 }
 

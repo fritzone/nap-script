@@ -8,7 +8,7 @@ void compile(const expression_tree* node,
              const method* the_method,
              call_context* cc,
              int level,
-             int reqd_type,
+             int &reqd_type,
              int forced_mov);
 
 void deliver_ccidx_dest(const expression_tree* node, int level, 
@@ -16,6 +16,6 @@ void deliver_ccidx_dest(const expression_tree* node, int level,
                         int reqd_type, int& idxc, const variable* var, 
                         int forced_mov);
 
-char get_reg_type(int req_type);
+const char *get_reg_type(int req_type);
 
 #endif
