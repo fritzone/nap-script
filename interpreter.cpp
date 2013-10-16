@@ -1460,7 +1460,20 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                 class_declaration* cd = call_context_get_class_declaration(v->cc, v->c_type);
                 if(!cd)
                 {
-                    throw_error("Only class type variables can call methods on themselves", v->name);
+                    // see if this is a string or not
+                    if(v->i_type == BASIC_TYPE_STRING)
+                    {
+                        if(!strcmp(expr_trim, "len")) // the length of the string
+                        {
+                            *result = FUNCTION_STRING_LEN;
+                            node->op_type = *result;
+                            return 0;
+                        }
+                    }
+                    else
+                    {
+                        throw_error("Only class type variables can call methods on themselves", v->name);
+                    }
                 }
                 if((func_call = is_function_call(expr_trim, cd)))
                 {
@@ -1473,18 +1486,19 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                 int templated = 0;
                 int env_var = 0;
                 if(variable* var = method_has_variable(0, cd, expr_trim, &templated, &env_var))
-        {
-        *result = MEMBER_ACCESS_OF_OBJECT;
+                {
+                    *result = MEMBER_ACCESS_OF_OBJECT;
                     envelope* envl = new_envelope(var, BASIC_TYPE_VARIABLE);
                     node->op_type = MEMBER_ACCESS_OF_OBJECT;
                     node->reference = envl;
                     return envl;
-        }
+                }
             }
             else
-            if(node->father->left->op_type == FUNCTION_CALL)    // to solve func().anotherOne()
-            {
-            }
+                if(node->father->left->op_type == FUNCTION_CALL)    // to solve func().anotherOne()
+                {
+                    notimpl("func().anotherOne()");
+                }
         }
     }
 

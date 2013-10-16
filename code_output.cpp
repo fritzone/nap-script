@@ -10,22 +10,22 @@
 #include <stdio.h>
 #include <string>
 
-char get_reg_type(int req_type)
+const char* get_reg_type(int req_type)
 {
     switch(req_type)
     {
     case BASIC_TYPE_INT:
-        return 'i';
+        return "int";
     case BASIC_TYPE_REAL:
-        return 'f';
+        return "real";
     case BASIC_TYPE_BOOL:
-        return 'b';
+        return "bool";
     case BASIC_TYPE_CHAR:
-        return 'c';
+        return "char";
     case BASIC_TYPE_STRING:
-        return 's';
+        return "string";
     }
-    return 'g';
+    return "generic";
 }
 
 const char* mov()
@@ -109,11 +109,6 @@ const char* reg()
 const char* idx()
 {
     return "idx";
-}
-
-static const char* cmp()
-{
-    return "cmp";
 }
 
 const char* call()
@@ -228,7 +223,7 @@ void operation_start_register_atomic( const expression_tree* node, int reqd_type
 
 void cmp_register_with_zero( int reqd_type, int level )
 {
-    code_stream() << NEWLINE << cmp() << SPACE << reg() << get_reg_type(reqd_type) << C_PAR_OP<< level << C_PAR_CL << C_COMMA << '0' << NEWLINE;
+    code_stream() << NEWLINE << "neq" << SPACE << reg() << get_reg_type(reqd_type) << C_PAR_OP<< level << C_PAR_CL << C_COMMA << '0' << NEWLINE;
 }
 
 void mov_var_into_reg(call_context* cc, variable* var, int level)
@@ -261,7 +256,7 @@ void resolve_variable_add_dimension_number(call_context* cc, variable* var, long
 
 void resolve_variable_add_dimension_regis(call_context* cc, variable* var, int level)
 {
-    code_stream() << call() << SPACE << grow() << C_PAR_OP << fully_qualified_varname(cc, var)<< C_COMMA  << reg() << 'i' << C_PAR_OP << level << C_PAR_CL << C_PAR_CL << NEWLINE;
+    code_stream() << call() << SPACE << grow() << C_PAR_OP << fully_qualified_varname(cc, var)<< C_COMMA  << reg() << "int" << C_PAR_OP << level << C_PAR_CL << C_PAR_CL << NEWLINE;
 }
 
 void push_cc_start_marker(const char* marker_name)
@@ -296,13 +291,14 @@ void push_cc_end_marker(const char* marker_name)
 void move_atomic_into_index_register( int& idxc, expression_tree_list* indxs, const method* the_method, call_context* cc, int level, int forced_mov )
 {
     code_stream() << NEWLINE << mov() << SPACE << reg() << idx() << C_PAR_OP << idxc << C_PAR_CL << C_COMMA;
-    compile(indxs->root, the_method, cc, level, BASIC_TYPE_INT, forced_mov);
+    int int_type = BASIC_TYPE_INT;
+    compile(indxs->root, the_method, cc, level, int_type, forced_mov);
     code_stream() << NEWLINE;
 }
 
 void move_int_register_into_index_register( int& idxc, int level )
 {
-    code_stream() << mov() << SPACE << reg() << idx() << 'i' << C_PAR_OP << idxc << C_PAR_CL << C_COMMA << reg() << get_reg_type(BASIC_TYPE_INT) << C_PAR_OP<< level + 1 << C_PAR_CL << NEWLINE;
+    code_stream() << mov() << SPACE << reg() << idx() << "int" << C_PAR_OP << idxc << C_PAR_CL << C_COMMA << reg() << get_reg_type(BASIC_TYPE_INT) << C_PAR_OP<< level + 1 << C_PAR_CL << NEWLINE;
 }
 
 void move_start_register_atomic( variable* dest, int level )

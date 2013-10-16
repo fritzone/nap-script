@@ -103,7 +103,7 @@ struct variable_entry
     uint32_t index;
 
     /* the name of the variable */
-    uint8_t* name;
+    char* name;
 
     /* the actual value of the variable */
     struct stack_entry* instantiation;
@@ -149,11 +149,11 @@ static void read_metatable(FILE* fp, uint64_t meta_location)
         else
         {
             uint16_t len = 0;
-			uint8_t* name = NULL;
+            char* name = NULL;
 			struct variable_entry* new_var = NULL;
 
             fread(&len, sizeof(uint16_t), 1, fp);
-            name = (uint8_t*)calloc(sizeof(uint8_t), len + 1);
+            name = (char*)calloc(sizeof(char), len + 1);
 			if(name == NULL)
 			{
 			}
@@ -488,7 +488,7 @@ static void cleanup(void)
 /*
  * Main entry point
  */
-int main(int argc, char* argv[])
+int main()
 {
     FILE* fp = fopen("test.ncb", "rb");
 	uint64_t fsize = 0;
@@ -1017,8 +1017,15 @@ int main(int argc, char* argv[])
                                     real_index += regidx[i];
                                 }
 
+                                if(real_index + strlen(regs[register_index]) > strlen((char*)var->instantiation->value))
+                                {
+                                    fprintf(stderr,
+                                            "Index overflow error for [%s]. Requested index: [%d] Available length: [%ld] Assumed length: [%ld]\n",
+                                            var->name, real_index, strlen((char*)var->instantiation->value), real_index + strlen(regs[register_index]));
+                                    exit(18);
+                                }
                                 /* and finally do a strcpy */
-                                strncpy((char*)var->instantiation->value + real_index - 1,
+                                strncpy((char*)var->instantiation->value + real_index,
                                         regs[register_index],
                                         strlen(regs[register_index]));
 
@@ -1147,7 +1154,7 @@ int main(int argc, char* argv[])
                 if(peek_index_type == OPCODE_IMMEDIATE) /* immediate value (1,..) */
                 {
                     uint8_t imm_size = content[cc ++];
-                    // and now write the number according to the size
+                    /* and now write the number according to the size */
                     if(imm_size == OPCODE_BYTE)
                     {
                         int8_t* immediate = (int8_t*)(content + cc);
@@ -1194,7 +1201,7 @@ int main(int argc, char* argv[])
                     if(peek_type == OPCODE_INT)
                     {
                         int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
-                        *temp = *(int64_t*)stack[stack_pointer - peek_index]->value; // STACK VALUE FROM peek_index
+                        *temp = *(int64_t*)stack[stack_pointer - peek_index]->value; /* STACK VALUE FROM peek_index */
                         ve->instantiation->value = temp;
                     }
                     else

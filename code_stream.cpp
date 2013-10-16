@@ -211,24 +211,12 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "push") opcode = OPCODE_PUSH;
     if(expr == "ref")  opcode = OPCODE_REF;
     if(expr == "int")  opcode = OPCODE_INT;
-    if(expr == "i")  opcode = OPCODE_INT;
-    if(expr == "c")  opcode = OPCODE_CHAR;
+    if(expr == "bool")  opcode = OPCODE_INT; /*bool treated as int in the bytecode*/
     if(expr == "char")  opcode = OPCODE_CHAR;
-    if(expr == "f")
-    {
-        if(last_opcode != OPCODE_JLBF && last_opcode != OPCODE_JMP && last_opcode != OPCODE_CALL)
-        {
-            opcode = OPCODE_FLOAT;
-        }
-    }
-    if(expr == "real")  opcode = OPCODE_FLOAT;
+    if(expr == "real") opcode = OPCODE_FLOAT;
     if(expr == "string")  opcode = OPCODE_STRING;
-    if(expr == "s")  opcode = OPCODE_STRING;
     if(expr == "idx")  opcode = OPCODE_IDX;
-    if(expr == "call")
-    {
-        opcode = OPCODE_CALL;
-    }
+    if(expr == "call") opcode = OPCODE_CALL;
     if(expr == "mov") opcode = OPCODE_MOV;
     if(expr == "inc") opcode = OPCODE_INC;
     if(expr == "dec") opcode = OPCODE_DEC;
@@ -247,10 +235,7 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "neq") opcode = OPCODE_NEQ;
     if(expr == "jlbf") opcode = OPCODE_JLBF;
     if(expr == "jmp") opcode = OPCODE_JMP;
-    if(expr == "marksn")
-    {
-        opcode = OPCODE_MARKS_NAME;
-    }
+    if(expr == "marksn") opcode = OPCODE_MARKS_NAME;
     if(expr == "clrsn") opcode = OPCODE_CLRS_NAME;
     if(expr == "return") opcode = OPCODE_RETURN;
     if(expr == "pop") opcode = OPCODE_POP;
@@ -260,7 +245,7 @@ void code_stream::output_bytecode(const char* s)
     if(isnumber((expr.c_str())))
     {
         // the method calls just output a byte counter, no number identifier
-        if(last_opcode == OPCODE_CCIDX || last_opcode ==OPCODE_GROW)
+        if(last_opcode == OPCODE_CCIDX || last_opcode == OPCODE_GROW)
         {
             int8_t nrf = atoi(expr.c_str());
             write_stuff_to_file(f, (uint8_t)nrf, 1);
@@ -434,29 +419,41 @@ void code_stream::output_bytecode(const char* s)
             else
             if(last_opcode != OPCODE_JLBF && last_opcode != OPCODE_JMP && last_opcode != OPCODE_CALL)
             { // this is a plain variable 
-                int idx = -1;
-                for(unsigned int i=0; i<variables.size(); i++)
+                if(expr == "true")
                 {
-                    if(variables[i]->name == expr)
-                    {
-                        idx = i;
-                    }
+                    output_bytecode("1");
                 }
-                
-                if(idx > -1)
+                else
+                if(expr == "false")
                 {
-                    write_stuff_to_file(f, OPCODE_VAR, 1);
-                    write_stuff_to_file(f, variables[idx]->meta_location, 1);
+                    output_bytecode("0");
                 }
                 else
                 {
-                    bc_variable_entry* new_var = new bc_variable_entry;
-                    new_var->meta_location = var_counter;
-                    new_var->name = expr;
-                    variables.push_back(new_var);
-                    write_stuff_to_file(f, OPCODE_VAR, 1);
-                    write_stuff_to_file(f, var_counter, 1);
-                    var_counter ++;
+                    int idx = -1;
+                    for(unsigned int i=0; i<variables.size(); i++)
+                    {
+                        if(variables[i]->name == expr)
+                        {
+                            idx = i;
+                        }
+                    }
+
+                    if(idx > -1)
+                    {
+                        write_stuff_to_file(f, OPCODE_VAR, 1);
+                        write_stuff_to_file(f, variables[idx]->meta_location, 1);
+                    }
+                    else
+                    {
+                        bc_variable_entry* new_var = new bc_variable_entry;
+                        new_var->meta_location = var_counter;
+                        new_var->name = expr;
+                        variables.push_back(new_var);
+                        write_stuff_to_file(f, OPCODE_VAR, 1);
+                        write_stuff_to_file(f, var_counter, 1);
+                        var_counter ++;
+                    }
                 }
             }
             else
