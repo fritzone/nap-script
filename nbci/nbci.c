@@ -79,14 +79,14 @@ static uint64_t stack_size = STACK_INIT;            /* initial stack size */
 static int64_t stack_pointer = -1;                  /* the stack pointer */
 
 /* generic variables regarding teh file */
-static uint8_t* content = 0;                       /* the content of the file */
 static uint8_t file_bitsize = 0;                   /* the bit size: 0x32, 0x64*/
 
 /* variables regarding the execution flow */
+static uint8_t* content = 0;                       /* the content of the file */
 static uint64_t cc = 0;                            /* the instruction pointer */
 static uint64_t call_frames[STACK_INIT] = {0};     /* the jump back points */
 static uint32_t cfsize = 0;
-uint8_t current_opcode = 0;                        /* the current opcode */
+static uint8_t current_opcode = 0;                        /* the current opcode */
 /******************************************************************************/
 /*                             Metatable section                              */
 /******************************************************************************/
@@ -495,7 +495,6 @@ int main()
     uint32_t meta_location = 0;
     uint32_t stringtable_location = 0;
     uint32_t jumptable_location = 0;
-
     uint8_t type = 0;
 
 	if(!fp) exit(1);
@@ -1482,7 +1481,7 @@ int main()
                 }
                 else
                 {
-                    fprintf(stderr, "only register can be added a to var [%s]\n",
+                    fprintf(stderr, "only register can be added to var [%s]\n",
                             var->name);
                     exit(5);
                 }
