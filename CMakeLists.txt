@@ -7,6 +7,8 @@ if(NOT WIN32)
   add_definitions(-Wextra)
 endif()
 
+include_directories(inc)
+
 add_executable(nap 
     bt_string.cpp
     call_ctx.cpp
@@ -35,6 +37,6 @@ add_executable(nap
 set_source_files_properties(nbci.c PROPERTIES COMPILE_FLAGS -std=c90)
 
 add_executable(napi
-    nbci.c
+    nbci/nbci.c
 )
 
