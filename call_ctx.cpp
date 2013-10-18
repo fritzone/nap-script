@@ -3,7 +3,6 @@
 #include "code_output.h"
 #include "sys_brkp.h"
 #include "type.h"
-#include "preverify.h"
 #include "consts.h"
 #include "interpreter.h"
 #include "evaluate.h"
@@ -16,14 +15,14 @@
 
 using namespace std;
 
-struct call_context* global_cc = NULL;
+call_context* global_cc = NULL;
 
 /**
  * Creates a new call context object
  */
-struct call_context* call_context_create(int type, const char* name, struct method* the_method, struct call_context* father)
+call_context* call_context_create(int type, const char* name, method* the_method, call_context* father)
 {
-    struct call_context* cc = alloc_mem(call_context,1);
+    call_context* cc = alloc_mem(call_context,1);
     cc->type = type;
     cc->name = duplicate_string(name);
     cc->ccs_method = the_method;
@@ -34,7 +33,7 @@ struct call_context* call_context_create(int type, const char* name, struct meth
     return cc;
 }
 
-struct class_declaration* class_declaration_create(const char* name, struct call_context* father)
+struct class_declaration* class_declaration_create(const char* name, call_context* father)
 {
     struct class_declaration* cc = alloc_mem(class_declaration, 1);
     cc->type = CLASS_DECLARATION;
@@ -63,10 +62,10 @@ method_list* call_context_add_method(call_context* cc,  method* the_method)
  */
 variable* call_context_get_variable(call_context* cc, const char* v_name)
 {
-variable_list* vl = variable_list_has_variable(v_name, cc->variables);
-    if(vl)
+    std::vector<variable*>::const_iterator vl = variable_list_has_variable(v_name, cc->variables);
+    if(vl != cc->variables.end())
     {
-        return vl->var;
+        return (*vl);
     }
     else
     {
@@ -79,11 +78,11 @@ variable_list* vl = variable_list_has_variable(v_name, cc->variables);
  */
 variable* call_context_add_variable(call_context* cc, const char* name, const char* type, int dimension, const expression_with_location* expwloc)
 {
-    if(variable_list_has_variable(name, cc->variables))
+    if(variable_list_has_variable(name, cc->variables) != cc->variables.end())
     {
         throw_error(E0034_SYMBOLDEFD, NULL);
     }
-    variable* v = variable_list_add_variable(name, type, dimension, &cc->variables, cc->ccs_method, cc, expwloc);
+    variable* v = variable_list_add_variable(name, type, dimension, cc->variables, cc->ccs_method, cc, expwloc);
     v->cc = cc;
     return v;
 }
@@ -109,7 +108,7 @@ method* call_context_get_method(call_context* cc, const char* name)
     return NULL;
 }
 
-long call_context_add_label(struct call_context* cc, long position, const std::string& name)
+long call_context_add_label(call_context* cc, long position, const std::string& name)
 {
     bytecode_label* bl = alloc_mem(bytecode_label, 1);
     bl->bytecode_location = position;
@@ -119,7 +118,7 @@ long call_context_add_label(struct call_context* cc, long position, const std::s
     return cc->labels->size();
 }
 
-struct bytecode_label* call_context_add_break_label(struct call_context* cc, long position, const std::string& name)
+struct bytecode_label* call_context_add_break_label(call_context* cc, long position, const std::string& name)
 {
     bytecode_label* bl = alloc_mem(bytecode_label, 1);
     bl->bytecode_location = position;
@@ -133,7 +132,7 @@ struct bytecode_label* call_context_add_break_label(struct call_context* cc, lon
 /**
  * Adds a new compiled expression to the given call context
  */
-void call_context_add_compiled_expression(struct call_context* the_cc, const struct expression_tree* co_expr, const char* expr)
+void call_context_add_compiled_expression(call_context* the_cc, const struct expression_tree* co_expr, const char* expr)
 {
 expression_tree_list* tmp = expression_tree_list_add_new_expression(co_expr, &the_cc->expressions, expr);
     if(NULL == the_cc->expressions)
@@ -147,10 +146,10 @@ expression_tree_list* tmp = expression_tree_list_add_new_expression(co_expr, &th
  */
 expression_tree* call_context_add_new_expression(call_context* the_cc, const char* expr, const expression_with_location* expwloc)
 {
-expression_tree* new_expression = new_expression_tree(expwloc);
-char *t;
-int res;
-    t = prepare_expression(expr);
+    expression_tree* new_expression = new_expression_tree(expwloc);
+    char *t1 = duplicate_string(expr);
+    int res;
+    char*t = rtrim(t1);
     build_expr_tree(t, new_expression, the_cc->ccs_method, t, the_cc, &res, expwloc);
     validate(new_expression);
     expression_tree_list_add_new_expression(new_expression, &the_cc->expressions, t);
@@ -183,13 +182,14 @@ void call_context_compile(call_context* cc)
     {
         code_stream() << NEWLINE << fully_qualified_label(std::string(std::string(ccs_methods->the_method->main_cc->father->name) +'.' + ccs_methods->the_method->name).c_str()) << NEWLINE;
         // now pop off the variables from the stack
-        variable_list* vlist = ccs_methods->the_method->variables;
+        std::vector<variable*>::const_iterator vlist = ccs_methods->the_method->variables.begin();
         int pctr = 0;
-        while(vlist)
+        while(vlist != ccs_methods->the_method->variables.end())
         {
-            peek(ccs_methods->the_method->main_cc, vlist->var->c_type, pctr++, vlist->var->name);
-            vlist = vlist->next;
+            peek(ccs_methods->the_method->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name);
+            vlist ++;
         }
+
         std::string fun_hash = generate_unique_hash();
         push_cc_start_marker(fun_hash.c_str());
         expression_tree_list* q1 = ccs_methods->the_method->main_cc->expressions;
@@ -218,12 +218,12 @@ void call_context_compile(call_context* cc)
         {
             code_stream() <<  fully_qualified_label( (std::string(cd->name) + STR_DOT + ccs_methods->the_method->name).c_str() ) << NEWLINE;
             // now pop off the variables from the stack
-            variable_list* vlist = ccs_methods->the_method->variables;
+            std::vector<variable*>::const_iterator vlist = ccs_methods->the_method->variables.begin();
             int pctr = 0;
-            while(vlist)
+            while(vlist != ccs_methods->the_method->variables.end())
             {
-                peek(ccs_methods->the_method->main_cc, vlist->var->c_type, pctr++, vlist->var->name);
-                vlist = vlist->next;
+                peek(ccs_methods->the_method->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name);
+                vlist ++;
             }
             std::string class_fun_hash = generate_unique_hash();
 
@@ -280,11 +280,11 @@ call_context_list* tmp = alloc_mem(call_context_list,1), *q;
     q->next = tmp;
 }
 
-struct bytecode_label* call_context_provide_label(struct call_context* cc)
+struct bytecode_label* call_context_provide_label(call_context* cc)
 {
     int maxlen = strlen(cc->name) + 32;
     char* label_name = alloc_mem(char, maxlen);
-    sprintf(label_name, "%s_%d", cc->name, (int)cc->labels->size());	/* generating a name for the end of the while */
+    sprintf(label_name, "%s_%d", cc->name, (int)cc->labels->size());    /* generating a name for the end of the while */
     long idx = call_context_add_label(cc, -1, label_name);
     return cc->labels->at(idx - 1);
 }

@@ -1,7 +1,6 @@
 #include "parser.h"
 #include "utils.h"
 #include "consts.h"
-#include "is.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -18,7 +17,7 @@ static void remove_comments(parsed_file *f)
         /* first comment style: Unix style # and C++'s //. Both of these go till end of line*/
         if (C_HASH == f->content[cloc] || (C_SLASH == f->content[cloc] && cloc + 1 < f->content_size && f->content[cloc + 1] == C_SLASH))
         {
-            while (cloc < f->content_size && (f->content[cloc] != '\n' && f->content[cloc] != '\r'))	/* End-line ... */
+            while (cloc < f->content_size && (f->content[cloc] != '\n' && f->content[cloc] != '\r'))    /* End-line ... */
             {
                 f->content[cloc] = C_SPACE;
                 cloc ++;
@@ -27,14 +26,14 @@ static void remove_comments(parsed_file *f)
         /* second comment style: C's classic comments. like this. */
         if (C_SLASH == f->content[cloc] && cloc + 1 < f->content_size && C_STAR == f->content[cloc + 1])
         {
-            f->content[cloc++] = C_SPACE; 				/* skip the / and * */
+            f->content[cloc++] = C_SPACE;                 /* skip the / and * */
             f->content[cloc++] = C_SPACE;
 
-            while (cloc < f->content_size - 1 && (C_STAR != f->content[cloc] && C_SLASH != f->content[cloc + 1]))	/* End-comment ... will stop at the closing '*' */
+            while (cloc < f->content_size - 1 && (C_STAR != f->content[cloc] && C_SLASH != f->content[cloc + 1]))    /* End-comment ... will stop at the closing '*' */
             {
                 f->content[cloc++] = C_SPACE;
             }
-            f->content[cloc++] = C_SPACE;				/* and the closing ones too */
+            f->content[cloc++] = C_SPACE;                /* and the closing ones too */
             f->content[cloc++] = C_SPACE;
         }
         cloc ++;
@@ -135,7 +134,7 @@ expression_with_location *parser_next_phrase(parsed_file *f, char *delim)
             cur_save ++;
             while (sepctr != 3) /* 0 - start, 1 - end of init, 2 - end of condition, 3 - end of expression and maybe the statement if it's a 1 line for*/
             {
-                if (is_string_delimiter(f->content[cur_save]))	/* skip the strings inside */
+                if (is_string_delimiter(f->content[cur_save]))    /* skip the strings inside */
                 {
                     cur_save ++;
                     int strlimend = 0; /* string limit ended*/
@@ -203,7 +202,7 @@ expression_with_location *parser_next_phrase(parsed_file *f, char *delim)
                 {
                     cur_save ++;
                     skipper = 0;
-                    while (cur_save < f->content_size &&	is_whitespace(f->content[cur_save]))
+                    while (cur_save < f->content_size &&    is_whitespace(f->content[cur_save]))
                     {
                         cur_save ++;
                     }
@@ -323,7 +322,7 @@ char *parser_preview_next_word(struct parsed_file *f, char *delim)
     int save_prev_p = f->position;
     int save_prev_prev_p = f->previous_position;
     expression_with_location *expwloc = parser_next_phrase(f, delim);
-    f->position = save_prev_p;						/* nothing happened */
+    f->position = save_prev_p;                        /* nothing happened */
     f->previous_position = save_prev_prev_p;
     if (!expwloc)
     {

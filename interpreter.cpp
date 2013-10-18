@@ -2,7 +2,6 @@
 #include "parametr.h"
 #include "utils.h"
 #include "consts.h"
-#include "is.h"
 #include "number.h"
 #include "envelope.h"
 #include "throw_error.h"
@@ -33,24 +32,24 @@ listv* listv_prepare_list(const char* src,  method* the_method, const char* orig
     // to skip the whitespace in front of the { (in case there's any)
     skip_whitespace(src, l, &i);
     if(src[i] != '{') throw_error(E0012_SYNTAXERR);
-    i++;		// with this i points to the first character after the {
+    i++;        // with this i points to the first character after the {
     while(i < l)
     {
         // can be whitespace
         skip_whitespace(src, l, &i);
         // read the next list element
         bool read_next=false;
-        char* tmp = alloc_mem(char, l);	// the worst case
+        char* tmp = alloc_mem(char, l);    // the worst case
         int j = 0;
         while(!read_next && i < l)
         {
             tmp[j++] = src[i++];
-            if(src[i] == C_PAR_OP || src[i] == C_SQPAR_OP)	// read if something was in parenthesis, such as function call, etc
+            if(src[i] == C_PAR_OP || src[i] == C_SQPAR_OP)    // read if something was in parenthesis, such as function call, etc
             {
                 char x = src[i], xcl = other_par(src[i]);
                 int level = 1;
                 bool readt = false;
-                while(!readt && i < l)						// match the parenthesis
+                while(!readt && i < l)                        // match the parenthesis
                 {
                     tmp[j++] = src[i++];
                     if(src[i] == x) level ++;
@@ -66,7 +65,7 @@ listv* listv_prepare_list(const char* src,  method* the_method, const char* orig
             // here we have finished reading the stuff that was in parenthesis, continue till we find the ',' separator or ..
             if(src[i] == ',')
             {
-                tmp[j] = 0;	// cause we added the ',' too :(
+                tmp[j] = 0;    // cause we added the ',' too :(
                 expression_tree* new_expression = new_expression_tree(expwloc);
                 build_expr_tree(tmp, new_expression, the_method, orig_expr, cc, result, expwloc);
                 envelope* expr_holder = new_envelope(new_expression, LIST_ELEMENT);
@@ -75,7 +74,7 @@ listv* listv_prepare_list(const char* src,  method* the_method, const char* orig
                 lst = lst->next;
 
                 read_next = true;
-                i++;	// to skip the ','
+                i++;    // to skip the ','
             }
             if(src[i] == '.')
             {
@@ -109,19 +108,19 @@ listv* listv_prepare_list(const char* src,  method* the_method, const char* orig
  */
 static int get_operator(const char* expr, const char** foundOperator, int* ntype)
 {
-    int zladd = level_0_add_operator(expr);					/* the position of a +- sign on the first level */
-    int zlbit = level_0_bitwise_operator(expr);				/* if any bitwise (&|~_ operators can be found on level 0 */
-    int zllogic = level_0_logical_operator(expr);			/* && or || or ! on the zeroth level */
-    int zlmlt=level_0_multiply_operator(expr);				/* the position of a * / sign on the first level */
+    int zladd = level_0_add_operator(expr);                    /* the position of a +- sign on the first level */
+    int zlbit = level_0_bitwise_operator(expr);                /* if any bitwise (&|~_ operators can be found on level 0 */
+    int zllogic = level_0_logical_operator(expr);            /* && or || or ! on the zeroth level */
+    int zlmlt=level_0_multiply_operator(expr);                /* the position of a * / sign on the first level */
     int zlev_assignment = level_0_assignment_operator(expr);/* the position of an equal operator on the first level */
     int zlev_dot = level_0_dot_operator(expr);              /* the position of a dot operator on the first level */
-    int zlev_shift = level_0_shift(expr);					/* Shift operator << >> */
+    int zlev_shift = level_0_shift(expr);                    /* Shift operator << >> */
 
-    const char* found_comp_operator = NULL;						/* the comparison operator that was found */
+    const char* found_comp_operator = NULL;                        /* the comparison operator that was found */
     int zlev_comparison = level_0_comparison_operator(expr, &found_comp_operator);
 
-    int sgeq_type = -1;										/* the type of the sg_eq operator*/
-    const char* found_sq_eq_operator = NULL;						/* the found sg_eq operator*/
+    int sgeq_type = -1;                                        /* the type of the sg_eq operator*/
+    const char* found_sq_eq_operator = NULL;                        /* the found sg_eq operator*/
     int zlev_sg_eq_operator = level_0_sg_eq_operator(expr, &found_sq_eq_operator, &sgeq_type);
 
     int zlop = -1;
@@ -180,7 +179,7 @@ static int get_operator(const char* expr, const char** foundOperator, int* ntype
     if(zlmlt != -1)
     {
         zlop = zlmlt;
-        *foundOperator = c2str(expr[zlop]);	/* will be "*" or "/" or "%" */
+        *foundOperator = c2str(expr[zlop]);    /* will be "*" or "/" or "%" */
         if(C_MUL == expr[zlop])
         {
             *ntype = OPERATOR_MULTIPLY;
@@ -198,7 +197,7 @@ static int get_operator(const char* expr, const char** foundOperator, int* ntype
     if(zladd != -1)
     {
         zlop = zladd;
-        *foundOperator = c2str(expr[zlop]);	/*  will be "+" or "-" */
+        *foundOperator = c2str(expr[zlop]);    /*  will be "+" or "-" */
         if(C_ADD == expr[zlop])
         {
             *ntype = OPERATOR_ADD;
@@ -265,7 +264,7 @@ static int get_operator(const char* expr, const char** foundOperator, int* ntype
                 *ntype = OPERATOR_ASSIGN;
             }
         }
-        else	/* if zlev_assignment is == 0 it's not valid anyway, but for this case it does not matter */
+        else    /* if zlev_assignment is == 0 it's not valid anyway, but for this case it does not matter */
         {
             zlop = zlev_assignment;
             *foundOperator = duplicate_string("=");
@@ -316,14 +315,14 @@ method* is_function_call(char *s,  call_context* cc)
  */
 static int looks_like_function_def(const char* expr, int expr_len, const expression_tree* node, call_context* cc)
 {
-    if(node && node->father && node->father->op_type == OPERATOR_ASSIGN) return 0;	/* this is part of a templated variable definition */
+    if(node && node->father && node->father->op_type == OPERATOR_ASSIGN) return 0;    /* this is part of a templated variable definition */
     if(expr[expr_len - 1] != C_PAR_CL) return 0; /* not ending with ), return false*/
     int i=expr_len - 2; /* the first one: to skip the paranthesys, the second one is the last character inside the parantheses*/
-    char* tmp = new_string(expr_len);	/* will hold the parameters in the first run*/
+    char* tmp = new_string(expr_len);    /* will hold the parameters in the first run*/
     int can_stop = 0;
     int tmpc = 0;
     int level = 1;
-    while(i && !can_stop)			/* this is reading backwards */
+    while(i && !can_stop)            /* this is reading backwards */
     {
         if(expr[i] == C_PAR_CL) level ++;
         if(expr[i] == C_PAR_OP) level --;
@@ -335,15 +334,15 @@ static int looks_like_function_def(const char* expr, int expr_len, const express
 
     if(i == 0) return 0; /* this means, we've got to the first character, there is nothing before this */
 
-    i--;		/* skip the parantheses*/
+    i--;        /* skip the parantheses*/
 
-    while(i && is_whitespace(expr[i])) i --;	/* skip the whitespaces */
+    while(i && is_whitespace(expr[i])) i --;    /* skip the whitespaces */
 
-    if(!i) return 0;					/* this was something in paranthese starting with spaces */
+    if(!i) return 0;                    /* this was something in paranthese starting with spaces */
 
-    if(!is_identifier_char(expr[i])) return 0;	/* cannot be anything else but an identifier */
+    if(!is_identifier_char(expr[i])) return 0;    /* cannot be anything else but an identifier */
 
-    while(i>-1 && is_identifier_char(expr[i]))	i--;	/* fetch the name */
+    while(i>-1 && is_identifier_char(expr[i]))    i--;    /* fetch the name */
 
     if(i == -1) /* meaning, either we have defined a function with no return type or this is a function call */
     {   /* we need to analyze the parameters, if they look like definition, then it's fine, give back 1 */
@@ -351,7 +350,7 @@ static int looks_like_function_def(const char* expr, int expr_len, const express
         string_list* q = pars;
         while(q)
         {
-            int j=0;	/* will go through the parameters value and see if the first word from it is a type or not*/
+            int j=0;    /* will go through the parameters value and see if the first word from it is a type or not*/
             char* firstw = new_string(q->len);
             while(j < q->len && q->str[j] != ' ')
             {
@@ -364,7 +363,7 @@ static int looks_like_function_def(const char* expr, int expr_len, const express
                 if(strstr(expr, STR_IF) == expr) return 0;
                 if(strstr(expr, STR_WHILE) == expr) return 0;
                 if(strstr(expr, STR_FOR) == expr) return 0;
-                return 1;	/* function with no return type */
+                return 1;    /* function with no return type */
             }
             else
             {
@@ -388,15 +387,15 @@ static int looks_like_function_def(const char* expr, int expr_len, const express
                         return 0;
                     }
                 }
-                return 0;	/* function call*/
+                return 0;    /* function call*/
             }
         }
 
     }
 
-    while(i && is_whitespace(expr[i])) i --;	/* skip the whitespaces between name and type */
+    while(i && is_whitespace(expr[i])) i --;    /* skip the whitespaces between name and type */
 
-    if(!is_identifier_char(expr[i]) && expr[i] != C_PAR_CL) return 0;	/* cannot be anything else but an identifier  */
+    if(!is_identifier_char(expr[i]) && expr[i] != C_PAR_CL) return 0;    /* cannot be anything else but an identifier  */
 
     if(is_identifier_char(expr[i]))
     {
@@ -416,14 +415,14 @@ static int looks_like_function_def(const char* expr, int expr_len, const express
         {
             if(get_typeid(ret_type) != BASIC_TYPE_DONTCARE)
             {
-                return 1;	/* valid function definition */
+                return 1;    /* valid function definition */
             }
             else
             {
                 return 0;
             }
         }
-        else	/* before the return type there was something else too */
+        else    /* before the return type there was something else too */
         {
             /* now fetch it. it can be 'extern' or 'use' or something else */
             tmpc = 0;
@@ -436,24 +435,24 @@ static int looks_like_function_def(const char* expr, int expr_len, const express
             reverse(tmp, strlen(tmp));
             if(!strcmp(tmp, STR_EXTERN) || !strcmp(tmp, STR_USE))
             {
-                while(i > -1 && is_whitespace(expr[i])) i--;	/* see if we have something before the extern. We may not have*/
+                while(i > -1 && is_whitespace(expr[i])) i--;    /* see if we have something before the extern. We may not have*/
                 if(i > -1)
                 {
-                    return 0;	/* there is something before it*/
+                    return 0;    /* there is something before it*/
                 }
                 else
                 {
-                    return 1;	/* finally, valid function definition */
+                    return 1;    /* finally, valid function definition */
                 }
 
             }
             else
             {
-                return 0;	/* something which is not extern/use was found before the type*/
+                return 0;    /* something which is not extern/use was found before the type*/
             }
         }
     }
-    else	/* some garbage */
+    else    /* some garbage */
     {
         return 0;
     }
@@ -498,7 +497,7 @@ static char* looks_like_var_def(const call_context* cc, char* expr, int expr_len
         {
             int tclev = 1;
             int can_stop = 0;
-            tc ++;	/* to skip the parenthesys */
+            tc ++;    /* to skip the parenthesys */
             while(tc < expr_len && !can_stop)
             {
                 if(expr[tc] == C_PAR_OP) tclev ++;
@@ -511,7 +510,7 @@ static char* looks_like_var_def(const call_context* cc, char* expr, int expr_len
             while(tc < expr_len && is_whitespace(expr[tc])) tc ++;
             if(tc < expr_len && expr[tc] == '=')
             {
-                return first_word;	/* this is a templated variable definition */
+                return first_word;    /* this is a templated variable definition */
             }
         }
     }
@@ -533,12 +532,12 @@ static method* define_method(const char* expr, int expr_len, expression_tree* no
     int name_counter = 0;
     int type_counter = 0;
     method* created_method = NULL;
-    char* parameters = new_string(expr_len);	/* will hold the parameters */
-    char* func_name = new_string(expr_len);		/* will hold the name of the function .. maybe optimize it a bit*/
-    char* ret_type = new_string(expr_len);		/* will hold the return type definition */
+    char* parameters = new_string(expr_len);    /* will hold the parameters */
+    char* func_name = new_string(expr_len);        /* will hold the name of the function .. maybe optimize it a bit*/
+    char* ret_type = new_string(expr_len);        /* will hold the return type definition */
     int can_stop = 0;
     int level = 1;
-    while(i && !can_stop)					/* this reads backwards */
+    while(i && !can_stop)                    /* this reads backwards */
     {
         if(expr[i] == C_PAR_CL) level ++;
         if(expr[i] == C_PAR_OP) level --;
@@ -592,15 +591,15 @@ static int var_declaration_followed_by_initialization(const char* expr, int expr
 {
     int i = 0;
     // here we can get [10] c = a; so let's skip them if any
-    skip_whitespace(expr, expr_len, &i);	// skip the leading whitespace if any
-    if(expr[i] == C_SQPAR_OP)	// square parenthesis?
+    skip_whitespace(expr, expr_len, &i);    // skip the leading whitespace if any
+    if(expr[i] == C_SQPAR_OP)    // square parenthesis?
     {
         skip_sq_pars(expr, expr_len, &i);
     }
     skip_whitespace(expr, expr_len, &i);
     /* now i points to the first non blank character after the square parenthesis */
 
-    while(i < expr_len && is_identifier_char(expr[i])) i++;	/* skip the name */
+    while(i < expr_len && is_identifier_char(expr[i])) i++;    /* skip the name */
     skip_whitespace(expr, expr_len, &i);
     // actually there can be parentheses even after this ...
     if(expr[i] == C_PAR_OP || expr[i] == C_SQPAR_OP)
@@ -648,13 +647,13 @@ static variable_definition_list* define_variables(char* var_def_type,
     var_def_type = trim(var_def_type);
     while(q)
     {
-        multi_dimension_def* mdd = NULL, *qm;	/* will contain the dimension definitions if any */
+        multi_dimension_def* mdd = NULL, *qm;    /* will contain the dimension definitions if any */
         char* name = q->str;
         if(!accepted_variable_name(name))
         {
             throw_error(E0037_INV_IDENTF, name);
         }
-        variable* added_var = NULL;	/* will be used if we'll need to implement the definition */
+        variable* added_var = NULL;    /* will be used if we'll need to implement the definition */
         char* idx_def_start = strchr(name, C_SQPAR_OP);
         char* pos_eq = strchr(name, C_EQ);
         if(pos_eq && idx_def_start > pos_eq) idx_def_start = NULL; /* no index definition if the first index is after an equation sign*/
@@ -681,7 +680,7 @@ static variable_definition_list* define_variables(char* var_def_type,
                 if(!can_stop) *index ++ = *idx_def_start ++;
             }
             string_list* dimensions = string_list_create_bsep(index_save, C_COMMA);
-            string_list* qDimensionStrings = dimensions;	/* to walk through the dimensions */
+            string_list* qDimensionStrings = dimensions;    /* to walk through the dimensions */
             int countedDimensions = 0;
             mdd = alloc_mem(multi_dimension_def,1);
             qm = mdd;
@@ -695,7 +694,7 @@ static variable_definition_list* define_variables(char* var_def_type,
                 else
                 {
                     /* check if there are multiple dimensions for this variable. If yes disallow the dynamic dimensions for now */
-                    if(countedDimensions > 0)	/* awkward but correct */
+                    if(countedDimensions > 0)    /* awkward but correct */
                     {
                         throw_error(E0038_DYNDIMNALL, expr_trim);
                     }
@@ -712,7 +711,7 @@ static variable_definition_list* define_variables(char* var_def_type,
 
         /* check whether we have direct initialization */
         int eqp = var_declaration_followed_by_initialization(name, strlen(name));
-        char* deflist = NULL;				/* the definition list for this variable */
+        char* deflist = NULL;                /* the definition list for this variable */
         if(eqp)
         {
             char* name_val = duplicate_string(name);
@@ -728,13 +727,13 @@ static variable_definition_list* define_variables(char* var_def_type,
             char* tmpname = strrchr(name, C_SQPAR_CL) + 1;
             /* TODO: ez meghal: int x=a[1]; re */
             char* tmp1name = trim(tmpname);
-            if(strlen(tmp1name) == 0)	/* in this case the index definition was after the name: int name[12];*/
+            if(strlen(tmp1name) == 0)    /* in this case the index definition was after the name: int name[12];*/
             {
                 tmpname = strchr(name, C_SQPAR_OP);
                 *tmpname = 0;
                 name = trim(name);
             }
-            else	/* if the index definition was before the name: int[12] name*/
+            else    /* if the index definition was before the name: int[12] name*/
             {
                 name = duplicate_string(tmp1name);
             }
@@ -755,7 +754,7 @@ static variable_definition_list* define_variables(char* var_def_type,
         var_def->the_variable = added_var;
         var_def->md_def = mdd;
 
-        if(deflist)	/* whether we have a definition for this variable. if yes, we need to populate a definition_list */
+        if(deflist)    /* whether we have a definition for this variable. if yes, we need to populate a definition_list */
         {
             expression_tree* var_def_node = new_expression_tree(expwloc);
             build_expr_tree(deflist, var_def_node, the_method, orig_expr, cc, result, expwloc);
@@ -813,7 +812,7 @@ static variable_template_reference* handle_variable_template_call(char *expr_tri
     *strchr(pos_op_pas, C_PAR_CL) = 0;
     string_list* pars = string_list_create_bsep(pos_op_pas, C_COMMA), *q;
     q = pars;
-    parameter_list* templ_pars = NULL, *q1 = NULL;	/* this will hold the lis of template parameters thatwill be returned*/
+    parameter_list* templ_pars = NULL, *q1 = NULL;    /* this will hold the lis of template parameters thatwill be returned*/
     while(q)
     {
         expression_tree* cur_par_expr = NULL;
@@ -869,19 +868,19 @@ static call_frame_entry* handle_function_call(char *expr_trim, int expr_len, exp
     call_frame_entry* cfe = NULL;
     strcpy(params_body, expr_trim + strlen(func_call->name) + 1); /* here this is supposed to copy the body of the parameters without the open/close paranthesis */
     while(is_whitespace(*params_body)) params_body ++;
-    if(*params_body == C_PAR_OP) params_body ++;		/* now we've skipped the opening paranthesis */
+    if(*params_body == C_PAR_OP) params_body ++;        /* now we've skipped the opening paranthesis */
 
     int pb_end = strlen(params_body);
     while(is_whitespace(params_body[pb_end]))
     {
         pb_end --;
         params_body[pb_end - 1] = 0;
-    }	/* this removed the trailing spaces */
+    }    /* this removed the trailing spaces */
 
     if(params_body[pb_end - 1] == C_PAR_CL)
     {
         params_body[pb_end - 1]=0;
-    }	/* this removed the closing paranthesis */
+    }    /* this removed the closing paranthesis */
 
 
     params_body = trim(params_body);
@@ -920,7 +919,7 @@ static call_frame_entry* handle_function_call(char *expr_trim, int expr_len, exp
 
         q=q->next;
     }
-    cfe = new_call_frame_entry(func_call, pars_list);
+    cfe = new call_frame_entry(func_call, pars_list);
     node->info = duplicate_string(func_call->name);
     node->op_type = FUNCTION_CALL + type_of_call;
     node->reference = new_envelope(cfe, FUNCTION_CALL + type_of_call);
@@ -951,7 +950,7 @@ static char* is_indexed(const char* expr_trim, int expr_len, char** index)
                 if(*p == C_PAR_CL && --level == 0) can_stop = 1;
                 if(!can_stop) *q ++ = *p ++;
             }
-            *q ++ = *p ++;	/* fetched the closing parantheses */
+            *q ++ = *p ++;    /* fetched the closing parantheses */
         } /* here p points to the first character after the closing ')'*/
         else if(*p =='"')
         {
@@ -976,16 +975,16 @@ static char* is_indexed(const char* expr_trim, int expr_len, char** index)
             if(*p)
             {
                 while(is_whitespace(*p)) p++;
-                if(!*p) return the_indexed_part;	/* we're at the end, found something before the indexes that can be returned*/
-                if(*p == C_SQPAR_OP)				/* double index: string vector's xth. element yth character*/
+                if(!*p) return the_indexed_part;    /* we're at the end, found something before the indexes that can be returned*/
+                if(*p == C_SQPAR_OP)                /* double index: string vector's xth. element yth character*/
                 {
                     strcat(the_indexed_part, "[");
-                    strcat(the_indexed_part, *index);	/* update the first part*/
+                    strcat(the_indexed_part, *index);    /* update the first part*/
                     strcat(the_indexed_part, "]");
                     int canstop2 = 0;
                     int level2 = 1;
-                    p++;							/* skip the second opening square bracket*/
-                    memset(*index, 0, strlen(*index));	/* reset the index*/
+                    p++;                            /* skip the second opening square bracket*/
+                    memset(*index, 0, strlen(*index));    /* reset the index*/
                     idx = *index;
                     while(!canstop2)
                     {
@@ -993,7 +992,7 @@ static char* is_indexed(const char* expr_trim, int expr_len, char** index)
                         if(*p == C_SQPAR_CL && --level2 == 0) canstop2 = 1;
                         if(!canstop2) *idx ++ = *p ++;
                     }
-                    p++;	/* now idx contains the new index and p points to the first character after the second index*/
+                    p++;    /* now idx contains the new index and p points to the first character after the second index*/
                     if(*p)
                     {
                         while (is_whitespace(*p)) p++;
@@ -1007,7 +1006,7 @@ static char* is_indexed(const char* expr_trim, int expr_len, char** index)
                 }
                 else
                 {
-                    return NULL;	/* here: check if we have a vector of funtions and trying to call one of them */
+                    return NULL;    /* here: check if we have a vector of funtions and trying to call one of them */
                 }
             }
             else
@@ -1098,18 +1097,18 @@ static void* deal_with_conditional_keywords( char* keyword_if, char* keyword_whi
         expression_tree* expt = new_expression_tree(expwloc);
         /* here fetch the part which is in the parentheses after the keyword and build the tree based on that*/
         char *condition = duplicate_string(expr_trim + strlen(keyw));
-        while(is_whitespace(*condition)) condition ++;	/* skip the whitespace */
-        if(*condition != C_PAR_OP)						/* next char should be '(' */
+        while(is_whitespace(*condition)) condition ++;    /* skip the whitespace */
+        if(*condition != C_PAR_OP)                        /* next char should be '(' */
         {
             throw_error(E0012_SYNTAXERR, NULL);
         }
-        char* p = ++condition;								/* skip the parenthesis */
+        char* p = ++condition;                                /* skip the parenthesis */
         char* m_cond = new_string(expr_len);
         p = trim(extract_next_enclosed_phrase(p, C_PAR_OP, C_PAR_CL, m_cond));
         build_expr_tree(m_cond, expt, the_method, orig_expr, cc, result, expwloc);
-        if(strlen(p) > 1)	/* means: there is a one lined statement after the condition*/
+        if(strlen(p) > 1)    /* means: there is a one lined statement after the condition*/
         {
-            node->info = p;	/* somehow we must tell the external world what's the next expression */
+            node->info = p;    /* somehow we must tell the external world what's the next expression */
             node->reference = new_envelope(expt, one_line_stmt);
             *result = one_line_stmt;
             node->op_type = one_line_stmt;
@@ -1129,11 +1128,11 @@ static void* deal_with_conditional_keywords( char* keyword_if, char* keyword_whi
 /**
  * This builds the tree of the expression.
  * @param expr - is the expression as a string, initially the full expression and at a later stage parts of it
- *				 which were identified by the procedure and used in a recursive call
+ *                 which were identified by the procedure and used in a recursive call
  * @param node - is the current node we are working on. at the first step it's the root of the tree, and later stages
- *				 is the current part of the expression
+ *                 is the current part of the expression
  * @param the_method - is the  method in which this expression is used. This parameter can be used to identify the
- *					    variables that might have been used in the expression
+ *                        variables that might have been used in the expression
  * @param orig_expr - is the original expression, not changed by the  method. Used for error reporting.
  * The  method builds the tree of expressions. At its first call the whole expression is sent in, after this based on
  * parantheses and operators, the expression is broken up into pieces and recursively the  method is called to continue
@@ -1152,8 +1151,8 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
     /* some variables that will be used at a later stage too */
     char* expr_trim = trim(expr);
     int expr_len = strlen(expr_trim);
-    const char* foundOperator;	/* the operator which will be identified*/
-    int zlop;					/* the index of the identified zero level operation */
+    const char* foundOperator;    /* the operator which will be identified*/
+    int zlop;                    /* the index of the identified zero level operation */
     char* var_def_type = looks_like_var_def(cc, expr_trim, expr_len);
     int func_def = looks_like_function_def(expr_trim, expr_len, node, cc);
     method* func_call = NULL; /* if this entry is a function call or or not ... */
@@ -1188,24 +1187,24 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
 
 
     /* first check: See if this expr is a string like expression, meaning in quotes. */
-    if(is_string(expr_trim, expr_len))
+    if(bt_string::is_string(expr_trim, expr_len))
     {
-        expr_trim[expr_len-1] = 0;	// removing the double quotes
+        expr_trim[expr_len-1] = 0;    // removing the double quotes
         expr_trim++;
-        bt_string* the_str = bt_string_create(expr_trim);
+        bt_string* the_str = new bt_string(expr_trim);
         node->reference = new_envelope(the_str, BASIC_TYPE_STRING);
-        node->info = duplicate_string(the_str->the_string);
+        node->info = duplicate_string(the_str->the_string());
         *result = RESULT_STRING;
         node->op_type = BASIC_TYPE_STRING;
         return expr_trim;
     }
 
     /* this is a 'statement' string, a string which is executed and the result is interpreted by the interpreter backticks: `` */
-    if(is_statement_string(expr_trim, expr_len))
+    if(bt_string::is_statement_string(expr_trim, expr_len))
     {
-        expr_trim[expr_len-1] = 0;	/* removing the double quotes */
+        expr_trim[expr_len-1] = 0;    /* removing the double quotes */
         expr_trim++;
-        node->reference = new_envelope(bt_string_create(expr_trim), BASIC_TYPE_STRING);
+        node->reference = new_envelope(new bt_string(expr_trim), BASIC_TYPE_STRING);
         node->info = duplicate_string(expr_trim);
         *result = BACKQUOTE_STRING;
         return expr_trim;
@@ -1269,12 +1268,12 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
         node->op_type = RETURN_STATEMENT;
         return node->reference;
     }
-    if(!strcmp(expr_trim, STR_BREAK))	/* the break keyword */
+    if(!strcmp(expr_trim, STR_BREAK))    /* the break keyword */
     {
         return deal_with_one_word_keyword(cc, node, result, STR_BREAK, STATEMENT_BREAK);
     }
 
-    if(!strcmp(expr_trim, STR_CONTINUE))	/* the continue keyword */
+    if(!strcmp(expr_trim, STR_CONTINUE))    /* the continue keyword */
     {
         return deal_with_one_word_keyword(cc, node, result, STR_CONTINUE, STATEMENT_CONTINUE);
     }
@@ -1317,13 +1316,13 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
         {
             throw_error(E0012_SYNTAXERR);
         }
-        char* init_stmt = content->str;				/* the init statement */
+        char* init_stmt = content->str;                /* the init statement */
         if(! content->next)
         {
             throw_error(E0012_SYNTAXERR);
         }
         string_list *q = content->next;
-        char* cond_stmt = q->str;					/* the condition */
+        char* cond_stmt = q->str;                    /* the condition */
         if(!q->next)
         {
             throw_error(E0012_SYNTAXERR);
@@ -1347,18 +1346,18 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
 
         node->info = duplicate_string(STR_FOR);
 
-        char *condition = duplicate_string(expr_trim + strlen(STR_FOR));	/* not actually condition, but the for's three statements: init, cond, expr*/
-        while(is_whitespace(*condition)) condition ++;	/* skip the whitespace */
-        if(*condition != C_PAR_OP)						/* next char should be '(' */
+        char *condition = duplicate_string(expr_trim + strlen(STR_FOR));    /* not actually condition, but the for's three statements: init, cond, expr*/
+        while(is_whitespace(*condition)) condition ++;    /* skip the whitespace */
+        if(*condition != C_PAR_OP)                        /* next char should be '(' */
         {
             throw_error(E0012_SYNTAXERR, NULL);
         }
-        char* p = ++condition;								/* skip the parenthesis */
+        char* p = ++condition;                                /* skip the parenthesis */
         char* m_cond = new_string(expr_len);
         p = trim(extract_next_enclosed_phrase(p, C_PAR_OP, C_PAR_CL, m_cond));
-        if(strlen(p) > 1)	/* means: there is a one lined statement after the condition*/
+        if(strlen(p) > 1)    /* means: there is a one lined statement after the condition*/
         {
-            node->info = p;	/* somehow we must tell the external world what's the next expression */
+            node->info = p;    /* somehow we must tell the external world what's the next expression */
             node->reference = new_envelope(rswfor, STATEMENT_FOR_1L);
             *result = STATEMENT_FOR_1L;
             node->op_type = STATEMENT_FOR_1L;
@@ -1374,11 +1373,11 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
 
     /* now: find the operators and just play with them */
     foundOperator = NULL;
-    int ntype = NO_OPERATOR;					/* the type number of the node, firstly let's assume the node contains nothing like an operator */
-    zlop = get_operator(expr_trim, &foundOperator, &ntype);	/* zlop will contain the index of the zeroth level operator */
+    int ntype = NO_OPERATOR;                    /* the type number of the node, firstly let's assume the node contains nothing like an operator */
+    zlop = get_operator(expr_trim, &foundOperator, &ntype);    /* zlop will contain the index of the zeroth level operator */
     /* ok, here start checking what we have gathered till now */
 
-    if(zlop!=-1)	/* we have found an operator on the zero.th level */
+    if(zlop!=-1)    /* we have found an operator on the zero.th level */
     {
         char *beforer = trim(before(zlop, expr_trim));
         if(strlen(beforer) == 0)
@@ -1409,7 +1408,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                     zlop = -1;
                 }
             }
-            else	/* right now we are not dealing with more unary operators */
+            else    /* right now we are not dealing with more unary operators */
             {
                 throw_error(E0012_SYNTAXERR, expr, NULL);
             }
@@ -1533,14 +1532,14 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
 
             /* now add the  variable to the tree... */
             node->left = new_expression_tree_with_father(node, expwloc);
-            expr_trim[expr_len - 2] = 0;	/* this is to cut down the two ++ or -- signs ... */
+            expr_trim[expr_len - 2] = 0;    /* this is to cut down the two ++ or -- signs ... */
             build_expr_tree(expr_trim, node->left, the_method, orig_expr, cc, result, expwloc);
         }
         else if( C_PAR_OP == expr_trim[0] ) /* if this is enclosed in a paranthesis */
         {
             if(expr_len > 1 && C_PAR_CL == expr_trim[expr_len - 1])
             {
-                expr_trim[expr_len-1]=0;		/* here we have removed the trailing parantheses */
+                expr_trim[expr_len-1]=0;        /* here we have removed the trailing parantheses */
                 expr_trim ++;
                 expr_trim = trim(expr_trim);
                 if(strlen(expr_trim)==0)
@@ -1557,7 +1556,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                 throw_error(E0009_PARAMISM, expr_trim, NULL);
             }
         }
-        else if(indexed_elem)	/* if this is something indexed */
+        else if(indexed_elem)    /* if this is something indexed */
         {   /* here we should grab from the end the first set of square parantheses and pass the stuff before it to the indexed, the stuff in it to the index...*/
             string_list* entries = string_list_create_bsep(index, C_COMMA);
             string_list* q = entries;
@@ -1567,7 +1566,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
             node->info = duplicate_string(STR_IDXID);
             node->left = new_expression_tree_with_father(node, expwloc);
             node->right = new_expression_tree_with_father(node, expwloc);
-            build_expr_tree(indexed_elem, node->left, the_method, orig_expr, cc, result, expwloc);	/* to discover the indexed element */
+            build_expr_tree(indexed_elem, node->left, the_method, orig_expr, cc, result, expwloc);    /* to discover the indexed element */
 
             /* and now identify the indexes and work on them*/
 
@@ -1604,7 +1603,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                 node->op_type = ENVIRONMENT_VARIABLE;
                 envl = new_envelope(t, ENVIRONMENT_VARIABLE);
             }
-            if(var)	/* if this is a variable */
+            if(var)    /* if this is a variable */
             {
                 if(templated)
                 {
@@ -1642,9 +1641,9 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
 
             if(isnumber(t))
             {
-                number* nr = new_number_str(t);
-                envl = new_envelope(nr, nr->type);
-                node->op_type = nr->type;
+                number* nr = new number(t);
+                envl = new_envelope(nr, nr->type());
+                node->op_type = nr->type();
             }
             else
             if(!strcmp(t, "true"))
@@ -1724,6 +1723,6 @@ void validate( expression_tree* node)
     number_of_operators(node, STR_EQUAL);
     if(num_op > 1)
     {
-//		throw_error(E0017_CHAINASSIGN, NULL);
+//        throw_error(E0017_CHAINASSIGN, NULL);
     }
 }

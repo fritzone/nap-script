@@ -4,40 +4,86 @@
 #include "parser.h"
 #include "common_structs.h"
 
-
 /**
- * Creates a new call frame entry
+ * This structure defines a variable. The following things are characterizing a struct variable:
+ * . their name
+ * . their type as a string
+ * . their dimension, meaning, they can be a vector, or a single struct variable
+ * . their type as an int, from the famous BASIC_TYPE... list
+ *
+ * A variable can be bound together with a C/C++ variable of type long, double and with any dimensions
+ * suitable. When binding with multi dimensions, each variable's number* to_interpret's location will
+ * point to the specific index in the array passed in.
  */
-struct call_frame_entry* new_call_frame_entry(struct method* the_method, struct parameter_list* pars);
+struct variable
+{
+    /**
+     * @brief variable create a new variable
+     * @param dimension
+     * @param type
+     */
+    variable(int dimension, int type);
+
+    /* the name of the variable */
+    char *name;
+
+    /* the size of the variable (ie. dimension) */
+    int dimension;
+
+    /* the type of the variable */
+    char *c_type;
+
+    /* the type of the variable */
+    int i_type;
+
+    /* the dimension definition of this variable */
+    struct multi_dimension_def *mult_dim_def;
+
+    /* the number of indexes if this is a multi-dim variable */
+    int multi_dim_count;
+
+    /* populated with NULL if this is not a function parameter, or the actual function parameter if it is */
+    struct parameter *func_par;
+
+    /* the template parameters of the variable if any */
+    struct parameter_list *templ_parameters;
+
+    /* used by the templ_parameters above */
+    std::vector<variable*> templ_variables;
+
+    /* whether this variable is static or not*/
+    char static_var;
+
+    /* whether this variable represents an environment variable or not */
+    char environment_variable;
+
+    /* 1 if this variable has dynamic dimensions, 0 if not*/
+    char dynamic_dimension;
+
+    /* the call context in which this variable is to be found */
+    call_context *cc;
+};
 
 /**
  * Creates a new multi dimension index
+ * @param indx_id - is the actual index
+ * @return a new structure with this index in it
  */
-struct multi_dimension_index* new_multi_dimension_index(const char*);
-
+multi_dimension_index* new_multi_dimension_index(const char* indx_id);
 
 /**
  * Creates a new templated variable reference for the give variable
  * and parameters
  */
-struct variable_template_reference* new_variable_template_reference(variable* var, parameter_list* pars);
+variable_template_reference* new_variable_template_reference(variable* var, parameter_list* pars);
 
 /**
- * Creates a new struct variable and returns it.
- * @param dimension - the dimension of the variable
- * @param type - the type of the variable
- * @return a newly initialized variable, with dimension and type initialized
+ * @brief variable_resolve_templates Resolves the templates of the given variable
+ * @param the_variable - this is the variable
+ * @param the_method - the method in which this variable is
+ * @param cc - the "closer" call context of the variable
+ * @param expwloc - the expression with location object
  */
-struct variable* new_variable(int dimension, int type);
-
-/**
- * Returns the basic type ofthe variable
- */
-int variable_get_basic_type(const variable* const var);
-
-/**
- * Resolves the templates of the given variable
- */
-void variable_resolve_templates(struct variable* the_variable, struct method* the_method, struct call_context* cc, const expression_with_location* expwloc);
+void variable_resolve_templates(variable* the_variable, method* the_method, call_context* cc, const expression_with_location* expwloc);
 
 #endif

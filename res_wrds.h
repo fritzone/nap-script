@@ -13,54 +13,45 @@
  */
 struct resw_if
 {
-	/* holds the logical expression that will be evaluated when the 'if' is evaluated */
-	expression_tree* logical_expr;
+    /* holds the logical expression that will be evaluated when the 'if' is evaluated */
+    expression_tree* logical_expr;
 
-	/* the call context of the 'if' branch*/
-	call_context* if_branch;
+    /* the call context of the 'if' branch*/
+    call_context* if_branch;
 
-	/* the call context of the 'else' branch */
-	call_context* else_branch;
+    /* the call context of the 'else' branch */
+    call_context* else_branch;
 };
 
-/**
- * Creates a new structure for handling the 'if' reserved word
- */
-resw_if* new_resw_if();
 
 /**
  * Structure associated with the while statements
  */
 struct resw_while
 {
-	/* the logical expression that will be evaluated when checking if the while's body must be xecuted once more*/
-	struct expression_tree* logical_expr;
+    /* the logical expression that will be evaluated when checking if the while's body must be xecuted once more*/
+    expression_tree* logical_expr;
 
-	/* these are the operations that will be executed */
-	struct call_context* operations;
+    /* these are the operations that will be executed */
+    call_context* operations;
 
-	struct bytecode_label* break_label;
+    bytecode_label* break_label;
 };
-
-/**
- * Creates a new resw_while structure, and returns it
- */
-resw_while* new_resw_while();
 
 /**
  * This structure holds the internal data for a 'for' keyword.
  */
 struct resw_for
 {
-	char* init_stmt;
-	char* condition;
-	char* expr;
+    char* init_stmt;
+    char* condition;
+    char* expr;
 
-	expression_tree* tree_init_stmt;
-	expression_tree* tree_condition;
-	expression_tree* tree_expr;
+    expression_tree* tree_init_stmt;
+    expression_tree* tree_condition;
+    expression_tree* tree_expr;
 
-	call_context* operations;
+    call_context* operations;
 
     const char* unique_hash;
 };

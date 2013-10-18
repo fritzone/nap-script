@@ -3,12 +3,10 @@
 #include "call_ctx.h"
 #include "tree.h"
 #include "interpreter.h"
-#include "preverify.h"
 #include "number.h"
 #include "consts.h"
 #include "envelope.h"
 #include "throw_error.h"
-#include "is.h"
 #include "bt_string.h"
 #include "parametr.h"
 #include "type.h"
@@ -105,29 +103,7 @@ char* new_name = trim(name);
     {
         throw_error(E0018_INVIDENT, name, NULL);
     }
-    return variable_list_add_variable(new_name, type, dimension, &the_method->variables, the_method, the_method->main_cc, expwloc);
-}
-
-/**
- * Creates a new call frame entry
- */
-call_frame_entry* new_call_frame_entry(method* the_method, parameter_list* pars)
-{
-call_frame_entry *cfe = alloc_mem(call_frame_entry,1);
-    cfe->parameters = pars;
-    cfe->the_method = the_method;
-    cfe->previous_cf = the_method->cur_cf;
-    return cfe;
-}
-
-/**
- * Creates a new object
- */
-call_frame_list* new_call_frame_list(call_frame_entry* entry)
-{
-call_frame_list* elem = alloc_mem(call_frame_list,1);
-    elem->entry = entry;
-    return elem;
+    return variable_list_add_variable(new_name, type, dimension, the_method->variables, the_method, the_method->main_cc, expwloc);
 }
 
 /**
@@ -140,41 +116,34 @@ call_frame_list* elem = alloc_mem(call_frame_list,1);
  variable* method_has_variable(method* the_method, call_context* cc, char* varname, int* templed, int* env_var)
 {
     //printf("\t[MGV]: Variable [%s] in method [%s]\n", varname, the_method?the_method->name:"global");
-    if(varname[0] == C_DOLLAR)		/* is this an enviornment variable? */
+    if(varname[0] == C_DOLLAR)        /* is this an enviornment variable? */
     {
         *env_var = 1;
         return NULL;
     }
 
-    if(strchr(varname, C_PAR_OP))	/* this is a templated variable */
+    if(strchr(varname, C_PAR_OP))    /* this is a templated variable */
     {
         *templed = 1;
         *strchr(varname, C_PAR_OP) = 0;
     }
 
- variable_list* location = NULL;
-
-    /* firstly: variable defined in the very cc we are working in */
-    location = variable_list_has_variable(varname, cc->variables);
-    if(location)
+    std::vector<variable*>::const_iterator location = variable_list_has_variable(varname, cc->variables);
+    if(location != cc->variables.end())
     {
-        //if(!location->var->templ_parameters && *templed)	/* variable accessed as templated but in fact has no templates */
-        //{
-        //    throw_error(E0020_ACCTNOTP, location->var->name, NULL);
-        //}
-        return location->var;
+        return *location;
     }
 
-    if(the_method) 		/* after this, whether this is a parameter ? */
+    if(the_method)         /* after this, whether this is a parameter ? */
     {
         location = variable_list_has_variable(varname, the_method->variables);
-        if(location)
+        if(location != the_method->variables.end())
         {
-            if(!location->var->templ_parameters && *templed)	/* variable accessed as templated but in fact has no templates */
+            if(!(*location)->templ_parameters && *templed)    /* variable accessed as templated but in fact has no templates */
             {
-                throw_error(E0020_ACCTNOTP, location->var->name, NULL);
+                throw_error(E0020_ACCTNOTP, (*location)->name, NULL);
             }
-            return location->var;
+            return *location;
         }
 
         /* parameter as a $sign? */
@@ -182,14 +151,15 @@ call_frame_list* elem = alloc_mem(call_frame_list,1);
         {
             varname++;
             int varc = atoi(varname);
-            location = variable_list_get_at(the_method->variables, varc);
-            if(location)
+            variable* v = the_method->variables[varc];
+
+            if(v)
             {
-                if(!location->var->templ_parameters && *templed)	/* variable accessed as templated but in fact has no templates */
+                if(!v->templ_parameters && *templed)    /* variable accessed as templated but in fact has no templates */
                 {
-                    throw_error(E0020_ACCTNOTP, location->var->name, NULL);
+                    throw_error(E0020_ACCTNOTP, v->name, NULL);
                 }
-                return location->var;
+                return v;
             }
         }
     }
@@ -199,13 +169,13 @@ call_frame_list* elem = alloc_mem(call_frame_list,1);
     while(cc)
     {
         location = variable_list_has_variable(varname, cc->variables);
-        if(location)
+        if(location != cc->variables.end())
         {
-            if(!location->var->templ_parameters && *templed)	/* variable accessed as templated but in fact has no templates */
+            if(!(*location)->templ_parameters && *templed)    /* variable accessed as templated but in fact has no templates */
             {
-                throw_error(E0020_ACCTNOTP, location->var->name, NULL);
+                throw_error(E0020_ACCTNOTP, (*location)->name, NULL);
             }
-            return location->var;
+            return *location;
         }
         cc = cc->father;
     }
@@ -258,35 +228,29 @@ parameter_list* flist = NULL, *q = NULL;
     return func_par;
 }
 
-struct parameter* method_get_parameter(struct method* the_method, int i)
+struct parameter* method_get_parameter(method* the_method, int i)
 {
-    variable_list* location = NULL;
-
     if(the_method)
     {
-        location = variable_list_get_at(the_method->variables, i+1);
-        if(location && location->var)
-        {
-            return location->var->func_par;
-        }
+        return the_method->variables[i + 1]->func_par;
     }
     return 0;
 }
 
-struct parameter* method_get_parameter(struct method* the_method, const char* varname)
+struct parameter* method_get_parameter(method* the_method, const char* varname)
 {
-    variable_list* location = NULL;
+    std::vector<variable*>::const_iterator location;
 
     if(the_method)
     {
         location = variable_list_has_variable(varname, the_method->variables);
-        if(location)
+        if(location != the_method->variables.end())
         {
-            if(!location->var->templ_parameters)	/* variable accessed as templated but in fact has no templates */
+            if(!(*location)->templ_parameters)    /* variable accessed as templated but in fact has no templates */
             {
-                throw_error(E0020_ACCTNOTP, location->var->name, NULL);
+                throw_error(E0020_ACCTNOTP, (*location)->name, NULL);
             }
-            return location->var->func_par;
+            return (*location)->func_par;
         }
 
         /* parameter as a $sign? */
@@ -294,14 +258,14 @@ struct parameter* method_get_parameter(struct method* the_method, const char* va
         {
             varname++;
             int varc = atoi(varname);
-            location = variable_list_get_at(the_method->variables, varc);
-            if(location)
+            variable* var = the_method->variables[varc];
+            if(var)
             {
-                if(!location->var->templ_parameters)	/* variable accessed as templated but in fact has no templates */
+                if(!var->templ_parameters)    /* variable accessed as templated but in fact has no templates */
                 {
-                    throw_error(E0020_ACCTNOTP, location->var->name, NULL);
+                    throw_error(E0020_ACCTNOTP, var->name, NULL);
                 }
-                return location->var->func_par;
+                return var->func_par;
             }
         }
     }

@@ -4,7 +4,7 @@
 /* 
  * This header file contains the definition of a debug breakpoint
  */
-#define BREAKPOINT 		_asm { int 3; }			
+#define BREAKPOINT         _asm { int 3; }            
 
 
 #endif

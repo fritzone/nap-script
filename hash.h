@@ -7,7 +7,8 @@ struct variable;
 struct method;
 struct call_context;
 struct expression_with_location;
-struct variable_list;
+
+#include <vector>
 
 /**
  * Adds a new hash  variable to the variable list. Creates a variable object and adds that to the list
@@ -22,7 +23,7 @@ struct variable_list;
 variable* variable_list_add_variable(const char *var_name, 
                                      const char* var_type,
                                      int var_size, 
-                                     variable_list** first,
+                                     std::vector<variable *> &first,
                                      method* the_method, 
                                      call_context* cc, 
                                      const expression_with_location* expwloc);
@@ -32,8 +33,8 @@ variable* variable_list_add_variable(const char *var_name,
  * @param s - the name of the variable
  * @param first - the list we're searching
  */
-variable_list* variable_list_has_variable(const char *s, 
-                                          variable_list* first);
+std::vector<variable*>::const_iterator variable_list_has_variable(const char *s,
+                                          const std::vector<variable *> &first);
  
 /**
  * Creates a new string list from the instr which is separated by the given separator
@@ -41,12 +42,5 @@ variable_list* variable_list_has_variable(const char *s,
  * @param sep - the expected separator
  */
 string_list* string_list_create_bsep(const char* instr, char sep);
-
-/**
- * Returns the element from the given variable list from the given position (if any)
- * @param first - is the variable list we're searching
- * @param idx - the index of the element
- */
-variable_list *variable_list_get_at(struct variable_list* first, int idx);
 
 #endif
