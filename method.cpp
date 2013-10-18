@@ -20,76 +20,39 @@
 #include <ctype.h>
 #include <stdio.h>
 
-method_list* method_list_insert( method_list** list, method* meth)
-{
-    method_list *tmp, *q;
-    if(!list)
-    {
-        throw_error("Internal - cannot insert into NULL method list", NULL);
-    }
-    if(!*list) /* new list */
-    {
-        *list = alloc_mem(method_list,1);
-        (*list)->the_method = meth;
-        return *list;
-    }
-
-    tmp = alloc_mem(method_list,1);
-    tmp->the_method = meth;
-    q = *list;
-
-    while(q->next) q=q->next;
-    q->next = tmp;
-    return tmp;
-}
-
-constructor_call* new_constructor_call(char* name, call_context* cc)
-{
-    constructor_call* tmp = alloc_mem(constructor_call, 1);
-    call_context* method_main_cc = NULL;
-    char* constructor_cc_name = new_string(2 * strlen(name)  + 3); /* will contain: parent_name::function_name*/
-    strcpy(constructor_cc_name, name);
-    strcat(constructor_cc_name, STR_CALL_CONTEXT_SEPARATOR );
-    strcat(constructor_cc_name, name);
-    memset(tmp, 0, sizeof( method));
-    tmp->name = duplicate_string(name);
-    tmp->return_type = new_string(0);
-    method_main_cc = call_context_create(CALL_CONTEXT_TYPE_METHOD_MAIN, constructor_cc_name, tmp, cc);
-    tmp->main_cc = method_main_cc;
-    tmp->the_class = call_context_get_class_declaration(cc, name);
-
-    return tmp;
-}
-
 /**
  * Creates a new method
  */
-method* new_method(char* name, char* return_type, call_context* cc)
+method::method(char* name, char* return_type, call_context* cc)
 {
-method* tmp = alloc_mem(method,1);
-call_context* method_main_cc = NULL;
-char* method_main_cc_name = new_string(strlen(name) + strlen(cc->name) + 3); /* will contain: parent_name::function_name*/
+    call_context* method_main_cc = NULL;
+    char* method_main_cc_name = new_string(strlen(name) + strlen(cc->name) + 3); /* will contain: parent_name::function_name*/
     strcpy(method_main_cc_name, cc->name);
     strcat(method_main_cc_name, STR_CALL_CONTEXT_SEPARATOR);
     strcat(method_main_cc_name, name);
-    memset(tmp, 0, sizeof( method));
-    tmp->name = duplicate_string(name);
-    if(strstr(return_type, "extern"))
+
+    name = duplicate_string(name);
+    if(return_type && strstr(return_type, "extern"))
     {
         /* if this method is a method defined somewhere else ... such as your C++ application */
-    char* after_ext = return_type + 6;
+        char* after_ext = return_type + 6;
         after_ext = trim(after_ext);
-        tmp->return_type = duplicate_string(after_ext);
-        tmp->def_loc = DEF_EXTERN;
+        return_type = duplicate_string(after_ext);
+        def_loc = DEF_EXTERN;
     }
     else
+    if(return_type)
     {
-        tmp->return_type = duplicate_string(return_type);
+        return_type = duplicate_string(return_type);
     }
-    method_main_cc = call_context_create(CALL_CONTEXT_TYPE_METHOD_MAIN, method_main_cc_name, tmp, cc);
-    tmp->main_cc = method_main_cc;
+    method_main_cc = call_context_create(CALL_CONTEXT_TYPE_METHOD_MAIN, method_main_cc_name, this, cc);
+    main_cc = method_main_cc;
+}
 
-    return tmp;
+constructor_call::constructor_call(char* name, call_context* cc) : method(name, 0, cc)
+{
+    return_type = 0;
+    the_class = call_context_get_class_declaration(cc, name);
 }
 
 /**

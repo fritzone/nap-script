@@ -287,105 +287,6 @@ struct variable_template_reference
     struct parameter_list *templ_pars;
 };
 
-
-class variable;
-/**
- * Contains the definition of a method
- */
-struct method
-{
-    /* the name of the method */
-    char *name;
-
-    /* the return type of the function */
-    char *return_type;
-
-    /* the list of struct variables that are defined in the method. This list is used in two situations:
-     * 1. in the interpret phase, when the code is built up, this is used as references to find the variables.
-     * 2. in the running phase, but only for static variables.
-     */
-    std::vector<variable*> variables;
-
-    /* the parameters of the method */
-    parameter_list *parameters;
-
-    /* the call contexts this method is taking part from */
-    call_context_list *contained_ins;
-
-    /* this is the call context of the method, created when the method is created */
-    call_context *main_cc;
-
-    /* the current call frame. stores all the variables of the method which are not static. At each calling of a method
-     * this variable gets populated with the call frame that has been constructed for the current stage
-     */
-    call_frame_entry *cur_cf;
-
-    /* the definition location 0 - normal, 1 - extern*/
-    int def_loc;
-
-    int ret_type;
-};
-
-
-/**
- * The call frame structure represents the "stack" way the functions are being called.
- * Each time a function is called it puts it "signature" (the address of the_method)
- * and the parameters onto a global call_frame variable. There is always required to be
- * at least one element on the global call_frame stack (the main application).
- * Also this structure holds the variable of the method being called at the current stage.
- * If the main application exits then the call_frame will be empty.
- * (The best of all: This can be used at a (very) later stage when developing threading. Each
- * thread like object will have its own call frame, and they'll be free to run independently)
- */
-struct call_frame_entry
-{
-
-    /* this is the method that was called */
-    method *the_method;
-
-    /* this are the parameters passed to the method */
-    parameter_list *parameters;
-
-    /* holds the previous call frame of the method... just in case*/
-    call_frame_entry *previous_cf;
-
-    call_frame_entry(method *the_method, parameter_list *pars)
-    {
-        parameters = pars;
-        the_method = the_method;
-        previous_cf = the_method->cur_cf;
-    }
-};
-
-/**
- * A constructor call structure for the "new" keyword
- **/
-struct constructor_call : public method
-{
-    class_declaration *the_class;
-};
-
-/**
- * Contains a list of methods accessible from a given context
- */
-struct method_list
-{
-    /* link to the next element */
-    method_list *next;
-
-    /* the actual method*/
-    method *the_method;
-};
-
-
-
-/**
- * Inserts in the given method list a new method
- * @param list - the address of the list we're inserting into
- * @param meth - the method
- */
-method_list *method_list_insert(method_list **list, method *meth);
-
 /*
  * List for holding a list of strings
  */
@@ -470,16 +371,13 @@ struct call_context
     char *name;
 
     /* the methods of this call context */
-    struct method_list *methods;
+    std::vector<method*> methods;
 
     /* the list of variable that have been defined in this call context */
     std::vector<variable*> variables;
 
     /* contains the list of expressions */
     struct expression_tree_list *expressions;
-
-    /* these are the child call contexts */
-    struct call_context_list *child_call_contexts;
 
     /* the father call context of this */
     struct call_context *father;

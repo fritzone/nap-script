@@ -293,7 +293,6 @@ void load_next_block(parsed_file* pf, method* the_method, call_context* par_cc, 
                     char* new_cc_name = new_string(strlen(cc->name) + 10);
                     sprintf(new_cc_name, "%s%s%s", cc->name, STR_CALL_CONTEXT_SEPARATOR, STR_UNNAMED_CC);
                     call_context* child_cc = call_context_create(CALL_CONTEXT_TYPE_UNNAMED, new_cc_name, the_method, cc);
-                    call_context_add_child_call_context(cc, child_cc);
                     expression_tree* new_node = call_context_add_new_expression(cc, STR_OPEN_BLOCK, expwloc);
                     //todo: add a new expression in the current call CONTEXT to start executing the next call context.
                     new_node->reference = new_envelope(child_cc, ENV_TYPE_CC);
