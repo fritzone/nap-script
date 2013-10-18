@@ -51,10 +51,9 @@ struct class_declaration* class_declaration_create(const char* name, call_contex
 /**
  * Adds a method to the given call context
  */
-method_list* call_context_add_method(call_context* cc,  method* the_method)
+void call_context_add_method(call_context* cc,  method* the_method)
 {
-    method_list* q = method_list_insert(&cc->methods, the_method);
-    return q;
+    cc->methods.push_back(the_method);
 }
 
 /**
@@ -92,14 +91,14 @@ variable* call_context_add_variable(call_context* cc, const char* name, const ch
  */
 method* call_context_get_method(call_context* cc, const char* name)
 {
-    method_list* q = cc->methods;
-    while(q)
+    std::vector<method*>::const_iterator q = cc->methods.begin();
+    while(q != cc->methods.end())
     {
-        if(!strcmp(q->the_method->name, name))
+        if(!strcmp((*q)->name, name))
         {
-            return q->the_method;
+            return *q;
         }
-        q=q->next;
+        q ++;
     }
     if(cc->father)
     {
@@ -177,31 +176,31 @@ void call_context_compile(call_context* cc)
 
     {
     // and now the functions
-    method_list* ccs_methods = cc->methods;
-    while(ccs_methods)
+    std::vector<method*>::iterator ccs_methods = cc->methods.begin();
+    while(ccs_methods != cc->methods.end())
     {
-        code_stream() << NEWLINE << fully_qualified_label(std::string(std::string(ccs_methods->the_method->main_cc->father->name) +'.' + ccs_methods->the_method->name).c_str()) << NEWLINE;
+        code_stream() << NEWLINE << fully_qualified_label(std::string(std::string((*ccs_methods)->main_cc->father->name) +
+                                                                      '.' +
+                                                                      (*ccs_methods)->name).c_str()) << NEWLINE;
         // now pop off the variables from the stack
-        std::vector<variable*>::const_iterator vlist = ccs_methods->the_method->variables.begin();
+        std::vector<variable*>::const_iterator vlist = (*ccs_methods)->variables.begin();
         int pctr = 0;
-        while(vlist != ccs_methods->the_method->variables.end())
+        while(vlist != (*ccs_methods)->variables.end())
         {
-            peek(ccs_methods->the_method->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name);
+            peek((*ccs_methods)->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name);
             vlist ++;
         }
 
         std::string fun_hash = generate_unique_hash();
         push_cc_start_marker(fun_hash.c_str());
-        expression_tree_list* q1 = ccs_methods->the_method->main_cc->expressions;
+        expression_tree_list* q1 = (*ccs_methods)->main_cc->expressions;
         while(q1)
         {
             int unknown_type = -1;
-            compile(q1->root, ccs_methods->the_method,
-                    ccs_methods->the_method->main_cc,
-                    0, unknown_type, 0);
+            compile(q1->root, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0);
             q1=q1->next;
         }
-        ccs_methods = ccs_methods->next;
+        ccs_methods ++;
         push_cc_end_marker(fun_hash.c_str());
         code_stream() << "return" << NEWLINE;
     }
@@ -212,34 +211,31 @@ void call_context_compile(call_context* cc)
     for(unsigned int i=0; i<cc->classes->size(); i++)
     {
         class_declaration* cd = cc->classes->at(i);
-        method_list* ccs_methods = cd->methods;
+        std::vector<method*>::iterator ccs_methods = cd->methods.begin();
         code_stream() << '@' << cd->name << NEWLINE;
-        while(ccs_methods)
+        while(ccs_methods != cd->methods.end())
         {
-            code_stream() <<  fully_qualified_label( (std::string(cd->name) + STR_DOT + ccs_methods->the_method->name).c_str() ) << NEWLINE;
+            code_stream() <<  fully_qualified_label( (std::string(cd->name) + STR_DOT + (*ccs_methods)->name).c_str() ) << NEWLINE;
             // now pop off the variables from the stack
-            std::vector<variable*>::const_iterator vlist = ccs_methods->the_method->variables.begin();
+            std::vector<variable*>::const_iterator vlist = (*ccs_methods)->variables.begin();
             int pctr = 0;
-            while(vlist != ccs_methods->the_method->variables.end())
+            while(vlist != (*ccs_methods)->variables.end())
             {
-                peek(ccs_methods->the_method->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name);
+                peek((*ccs_methods)->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name);
                 vlist ++;
             }
             std::string class_fun_hash = generate_unique_hash();
 
             push_cc_start_marker(class_fun_hash.c_str());
-            expression_tree_list* q1 = ccs_methods->the_method->main_cc->expressions;
-                while(q1)
-                {
-                    int unknown_type = -1;
-                    compile(q1->root, ccs_methods->the_method,
-                            ccs_methods->the_method->main_cc,
-                            0, unknown_type, 0);
-                    q1=q1->next;
-                }
+            expression_tree_list* q1 = (*ccs_methods)->main_cc->expressions;
+            while(q1)
+            {
+                int unknown_type = -1;
+                compile(q1->root, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0);
+                q1=q1->next;
+            }
 
-
-            ccs_methods = ccs_methods->next;
+            ccs_methods ++;
             push_cc_end_marker(class_fun_hash.c_str());
             code_stream() << "return" << NEWLINE;
         }
@@ -260,24 +256,6 @@ void call_context_run_inner(call_context* cc, int level, int reqd_type, int forc
         compile(q->root, cc->ccs_method, cc, level, reqd_type, forced_mov);
         q=q->next;
     }
-}
-
-
-/**
- * Adds a child call context to this
- */
-void call_context_add_child_call_context(call_context* father,  call_context* child)
-{
-call_context_list* tmp = alloc_mem(call_context_list,1), *q;
-    tmp->ctx = child;
-    if(NULL == father->child_call_contexts)
-    {
-        father->child_call_contexts = tmp;
-        return;
-    }
-    q=father->child_call_contexts;
-    while(q->next) q=q->next;
-    q->next = tmp;
 }
 
 struct bytecode_label* call_context_provide_label(call_context* cc)

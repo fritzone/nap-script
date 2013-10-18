@@ -36,7 +36,7 @@ class_declaration *class_declaration_create(const char *name,
  * @param the_method - the method which is to be added
  * @return the location in the list of the inserted method
  */
-method_list *call_context_add_method(call_context *cc, method *the_method);
+void call_context_add_method(call_context *cc, method *the_method);
 
 /**
  * @brief call_context_get_method returns a method from the call context
@@ -131,11 +131,6 @@ struct envelope *call_context_run_complete(call_context *cc);
  * Runs this call context, the call context is supposed to be an "inner" call cotnext (mostly nameless call cotnext)
  */
 void call_context_run_inner(call_context *cc, int level, int reqd_type, int forced_mov);
-
-/**
- * Adds a new call context to the list of child call contexts
- */
-void call_context_add_child_call_context(call_context *father, call_context *child);
 
 /**
  * Returns the given variable object from the call_context, or NULL if nothing found

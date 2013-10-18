@@ -569,7 +569,7 @@ static method* define_method(const char* expr, int expr_len, expression_tree* no
     {
         throw_error(E0010_INVFNCDF, expr, NULL);
     }
-    created_method = new_method(func_name, ret_type, cc);
+    created_method = new method(func_name, ret_type, cc);
     method_feed_parameter_list(created_method, trim(parameters), expwloc);
 
     if(!strcmp(ret_type, "int")) created_method->ret_type = BASIC_TYPE_INT;
