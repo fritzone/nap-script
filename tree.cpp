@@ -15,10 +15,10 @@
 expression_tree* new_expression_tree(const expression_with_location* expwloc)
 {
 expression_tree* tmp = alloc_mem(expression_tree,1);
-	tmp->v_type = BASIC_TYPE_DONTCARE;
-	tmp->op_type = NO_OPERATOR;
-	tmp->expwloc = expwloc;
-	return tmp;
+    tmp->v_type = BASIC_TYPE_DONTCARE;
+    tmp->op_type = NO_OPERATOR;
+    tmp->expwloc = expwloc;
+    return tmp;
 }
 
 /**
@@ -27,8 +27,8 @@ expression_tree* tmp = alloc_mem(expression_tree,1);
 expression_tree* new_expression_tree_with_father(expression_tree* father, const expression_with_location* expwloc)
 {
  expression_tree* tmp = new_expression_tree(expwloc);
-	tmp->father = father;
-	return tmp;
+    tmp->father = father;
+    return tmp;
 }
 
 
@@ -38,24 +38,24 @@ expression_tree* new_expression_tree_with_father(expression_tree* father, const 
 expression_tree_list* expression_tree_list_add_new_expression(const struct expression_tree* expression, struct expression_tree_list** first, const char* text_expr)
 {
 expression_tree_list *q , *tmp;
-	if(NULL == first)
-	{
-		throw_error("Internal: an expression tree list's address is 0", NULL);
-	}
-	//printf("[TreeListExpr:Add] %s\n", text_expr);
-	q= *first; 
+    if(NULL == first)
+    {
+        throw_error("Internal: an expression tree list's address is 0", NULL);
+    }
+    //printf("[TreeListExpr:Add] %s\n", text_expr);
+    q= *first; 
 
-	if(NULL == *first)
-	{
-		*first = alloc_mem(expression_tree_list,1);
-		(*first)->root = expression;
-		(*first)->text_expression = duplicate_string(text_expr);
-		return *first;
-	}
-	while(q->next) {q=q->next;}
-	tmp = alloc_mem(expression_tree_list,1);
-	tmp->root = expression;
-	tmp->text_expression = duplicate_string(text_expr);
-	q->next = tmp;
-	return tmp;
+    if(NULL == *first)
+    {
+        *first = alloc_mem(expression_tree_list,1);
+        (*first)->root = expression;
+        (*first)->text_expression = duplicate_string(text_expr);
+        return *first;
+    }
+    while(q->next) {q=q->next;}
+    tmp = alloc_mem(expression_tree_list,1);
+    tmp->root = expression;
+    tmp->text_expression = duplicate_string(text_expr);
+    q->next = tmp;
+    return tmp;
 }

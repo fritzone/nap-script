@@ -2,7 +2,6 @@
 #include "number.h"
 #include "bt_string.h"
 #include "type.h"
-#include "is.h"
 #include "method.h"
 #include "hash.h"
 #include "interpreter.h"
@@ -23,25 +22,17 @@
 /**
  * Creates a new  variable
  */
-variable* new_variable(int dimension, int type)
+variable::variable(int dimension, int type)
 {
     if(dimension<1)
     {
         throw_error(STR_INVALID_DIMENSION, NULL);
     }
-variable* tmp = alloc_mem(variable, 1);
-    tmp->value = alloc_mem(envelope*, dimension);
-    tmp->dimension = dimension;
-    tmp->multi_dim_count = 1;
-    tmp->i_type = type;
-    return tmp;
-}
 
-int variable_get_basic_type(const variable* const var)
-{
-    return var->i_type;
+    dimension = dimension;
+    multi_dim_count = 1;
+    i_type = type;
 }
-
 
 /**
  * Creates a new multi-dimension index object
@@ -64,7 +55,7 @@ char* new_name = trim(name);
     {
         throw_error(E0029_PARANOTALL, new_name, NULL);
     }
-    return variable_list_add_variable(new_name, type, 1, &the_variable->templ_variables, the_method, cc, expwloc);
+    return variable_list_add_variable(new_name, type, 1, the_variable->templ_variables, the_method, cc, expwloc);
 }
 
 
@@ -139,7 +130,7 @@ void variable_feed_parameter_list(variable* the_variable, char* par_list, method
     char* par_type = new_string(q->len);
     char* par_name = new_string(q->len);
     int j = 0;
-        while(i < q->len && is_identifier_char(q->str[i]))	/* & and [] are not allowed in variable templ. parameter*/
+        while(i < q->len && is_identifier_char(q->str[i]))    /* & and [] are not allowed in variable templ. parameter*/
         {
             par_type[j++] = q->str[i++];
         }
@@ -155,7 +146,7 @@ void variable_feed_parameter_list(variable* the_variable, char* par_list, method
         }
 
         j = 0;
-        while(i < q->len)	par_name[j++] = q->str[i++];
+        while(i < q->len)    par_name[j++] = q->str[i++];
     parameter* new_par_decl = variable_add_template_parameter(the_variable, trim(par_name), trim(par_type), the_method, cc, expwloc);
 
         /* here we should identify the dimension of the parameter */

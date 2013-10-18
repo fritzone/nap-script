@@ -11,8 +11,6 @@
 #include "hash.h"
 #include "tree.h"
 #include "consts.h"
-#include "preverify.h"
-#include "is.h"
 #include "variable.h"
 #include "utils.h"
 #include "interpreter.h"
@@ -42,9 +40,9 @@ static void deal_with_while_loading(call_context* cc, expression_tree* new_node,
     char* while_cc_name = new_string(strlen(cc->name) + 10);
     sprintf(while_cc_name, "%s%s%s", cc->name, STR_CALL_CONTEXT_SEPARATOR, STR_WHILE);
     call_context* while_cc = call_context_create(CALL_CONTEXT_TYPE_WHILE, while_cc_name, the_method, cc);
-    if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_WHILE)	/* normal WHILE with { }*/
+    if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_WHILE)    /* normal WHILE with { }*/
     {
-        load_next_block(pf, the_method, while_cc, current_level + 1, current_level);	/* loading the function*/
+        load_next_block(pf, the_method, while_cc, current_level + 1, current_level);    /* loading the function*/
     }
     else if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_WHILE_1L) /* while (a) if (b) if (c) { blabla; }*/
     {
@@ -58,19 +56,19 @@ static void deal_with_while_loading(call_context* cc, expression_tree* new_node,
         new_node->op_type = STATEMENT_WHILE;
         new_node->info = duplicate_string(STR_WHILE);
     }
-    else if(C_SEMC == delim && new_node->op_type == STATEMENT_WHILE_1L)			/* one lined while, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
+    else if(C_SEMC == delim && new_node->op_type == STATEMENT_WHILE_1L)            /* one lined while, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
         call_context_add_new_expression(while_cc, new_node->info, expwloc);
         new_node->op_type = STATEMENT_WHILE;
         new_node->info = duplicate_string(STR_WHILE);
     }
-    else if(C_SEMC == delim && new_node->op_type == STATEMENT_WHILE)			/* one lined while, with empty command, skip pf to the first position after the ; */
+    else if(C_SEMC == delim && new_node->op_type == STATEMENT_WHILE)            /* one lined while, with empty command, skip pf to the first position after the ; */
     {
-        while(is_whitespace(pf->content[pf->position])) pf->position++;	/* skip the whitespace */
-        if(pf->content[pf->position] == C_SEMC) pf->position ++;		/* skip the ';'*/
+        while(is_whitespace(pf->content[pf->position])) pf->position++;    /* skip the whitespace */
+        if(pf->content[pf->position] == C_SEMC) pf->position ++;        /* skip the ';'*/
     }
 
-    resw_while* while_st = new_resw_while();
+    resw_while* while_st = new resw_while;
     while_st->logical_expr = (expression_tree*)new_node->reference->to_interpret;
     while_st->operations = while_cc;
     new_node->reference = new_envelope(while_st, STATEMENT_WHILE);
@@ -127,9 +125,9 @@ static void deal_with_for_loading(call_context* cc, expression_tree* new_node, m
     char* for_cc_name = new_string(strlen(cc->name) + 10);
     sprintf(for_cc_name, "%s%s%s", cc->name, STR_CALL_CONTEXT_SEPARATOR, STR_FOR);
     call_context* for_cc = call_context_create(CALL_CONTEXT_TYPE_FOR, for_cc_name, the_method, cc);
-    if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR)	/* normal FOR with { }*/
+    if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR)    /* normal FOR with { }*/
     {
-        load_next_block(pf, the_method, for_cc, current_level + 1, current_level);	/* loading the function*/
+        load_next_block(pf, the_method, for_cc, current_level + 1, current_level);    /* loading the function*/
     }
     else if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR_1L) /* for (a) if (b) if (c) { blabla; }*/
     {
@@ -143,16 +141,16 @@ static void deal_with_for_loading(call_context* cc, expression_tree* new_node, m
         new_node->op_type = STATEMENT_FOR;
         new_node->info = duplicate_string(STR_FOR);
     }
-    else if(C_SEMC == delim && new_node->op_type == STATEMENT_FOR_1L)			/* one lined for, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
+    else if(C_SEMC == delim && new_node->op_type == STATEMENT_FOR_1L)            /* one lined for, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
         call_context_add_new_expression(for_cc, new_node->info, expwloc);
         new_node->op_type = STATEMENT_FOR;
         new_node->info = duplicate_string(STR_FOR);
     }
-    else if(C_SEMC == delim && new_node->op_type == STATEMENT_FOR)			/* one lined for, with empty command, skip pf to the first position after the ; */
+    else if(C_SEMC == delim && new_node->op_type == STATEMENT_FOR)            /* one lined for, with empty command, skip pf to the first position after the ; */
     {
-        while(is_whitespace(pf->content[pf->position])) pf->position++;	/* skip the whitespace */
-        if(pf->content[pf->position] == C_SEMC) pf->position ++;		/* skip the ';'*/
+        while(is_whitespace(pf->content[pf->position])) pf->position++;    /* skip the whitespace */
+        if(pf->content[pf->position] == C_SEMC) pf->position ++;        /* skip the ';'*/
     }
     resw_for* rsfor = (resw_for*)new_node->reference->to_interpret;
     rsfor->operations = for_cc;
@@ -168,9 +166,9 @@ static void deal_with_ifs_loading(call_context* cc, expression_tree* new_node, m
     char* if_cc_name = new_string(strlen(cc->name) + 6);
     sprintf(if_cc_name, "%s%s%s", cc->name, STR_CALL_CONTEXT_SEPARATOR, STR_IF);
     call_context* if_cc = call_context_create(CALL_CONTEXT_TYPE_IF, if_cc_name, the_method, cc);
-    if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF)	/* normal IF with { }*/
+    if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF)    /* normal IF with { }*/
     {
-        load_next_block(pf, the_method, if_cc, current_level + 1, current_level);	/* loading the function*/
+        load_next_block(pf, the_method, if_cc, current_level + 1, current_level);    /* loading the function*/
     }
     else if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF_1L) /* if (a) if (b) if (c) { blabla; }*/
     {
@@ -184,16 +182,16 @@ static void deal_with_ifs_loading(call_context* cc, expression_tree* new_node, m
         new_node->op_type = STATEMENT_IF;
         new_node->info = duplicate_string(STR_IF);
     }
-    else if(C_SEMC == delim && new_node->op_type == STATEMENT_IF_1L)			/* one lined if, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
+    else if(C_SEMC == delim && new_node->op_type == STATEMENT_IF_1L)            /* one lined if, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
         call_context_add_new_expression(if_cc, new_node->info, expwloc);
         new_node->op_type = STATEMENT_IF;
         new_node->info = duplicate_string(STR_IF);
     }
-    else if(C_SEMC == delim && new_node->op_type == STATEMENT_IF)			/* one lined if, with empty command, skip pf to the first position after the ; */
+    else if(C_SEMC == delim && new_node->op_type == STATEMENT_IF)            /* one lined if, with empty command, skip pf to the first position after the ; */
     {
-        while(is_whitespace(pf->content[pf->position])) pf->position++;	/* skip the whitespace */
-        if(pf->content[pf->position] == C_SEMC) pf->position ++;		/* skip the ';'*/
+        while(is_whitespace(pf->content[pf->position])) pf->position++;    /* skip the whitespace */
+        if(pf->content[pf->position] == C_SEMC) pf->position ++;        /* skip the ';'*/
     }
 
     /* here read the next word check if it's a plain 'else' */
@@ -228,18 +226,18 @@ static void deal_with_ifs_loading(call_context* cc, expression_tree* new_node, m
                 }
                 else
                 {
-                    throw_error("Internal 1", NULL);	/* actually we shouldn't get here at all*/
+                    throw_error("Internal 1", NULL);    /* actually we shouldn't get here at all*/
                 }
             }
             else
             {
-                pf->position ++;	/* skip the { */
-                load_next_block(pf, the_method, else_cc, current_level, current_level + 1);	/* loading the function*/
+                pf->position ++;    /* skip the { */
+                load_next_block(pf, the_method, else_cc, current_level, current_level + 1);    /* loading the function*/
             }
         }
     }
 
-    resw_if* if_st = new_resw_if();
+    resw_if* if_st = new resw_if;
     if_st->logical_expr = (expression_tree*)new_node->reference->to_interpret;
     if_st->if_branch = if_cc;
     if_st->else_branch = else_cc;
@@ -258,7 +256,7 @@ void load_next_block(parsed_file* pf, method* the_method, call_context* par_cc, 
     while(!can_stop)
     {
         char delim = 0;
-        int use_delim = 1;	/* the scope ofthis var is to check whether we need to open new unnamed code blocks. keywords which need blocks (if, while, etc) will make this zero, they are managing their own code blocks */
+        int use_delim = 1;    /* the scope ofthis var is to check whether we need to open new unnamed code blocks. keywords which need blocks (if, while, etc) will make this zero, they are managing their own code blocks */
         expression_with_location* expwloc = parser_next_phrase(pf, &delim);
         if(expwloc || (!expwloc && delim == C_OPEN_BLOCK) )
         {
@@ -301,7 +299,7 @@ void load_next_block(parsed_file* pf, method* the_method, call_context* par_cc, 
                     new_node->reference = new_envelope(child_cc, ENV_TYPE_CC);
                     cc = child_cc;
                     current_level ++;
-                    pf->position ++;	/* hack again, to skip to the next character, to not to loop on the { 4ever */
+                    pf->position ++;    /* hack again, to skip to the next character, to not to loop on the { 4ever */
                 }
                 break;
                 case C_CLOSE_BLOCK:
@@ -310,7 +308,7 @@ void load_next_block(parsed_file* pf, method* the_method, call_context* par_cc, 
                     {
                         call_context_add_new_expression(cc, STR_CLOSE_BLOCK, expwloc);
                     }
-                    cc = cc->father;	/* stepping back */
+                    cc = cc->father;    /* stepping back */
                     current_level --;
                     if(current_level == orig_level)
                     {
@@ -322,7 +320,7 @@ void load_next_block(parsed_file* pf, method* the_method, call_context* par_cc, 
                 case C_SEMC:
                     break;
                 default:
-                    can_stop = 1;	/* means: we're at the end*/
+                    can_stop = 1;    /* means: we're at the end*/
                     break;
                 }
             }
@@ -332,7 +330,7 @@ void load_next_block(parsed_file* pf, method* the_method, call_context* par_cc, 
             if(delim == C_CLOSE_BLOCK)
             {
                 call_context_add_new_expression(cc, "}", expwloc);
-                cc = cc->father;	/* stepping back */
+                cc = cc->father;    /* stepping back */
                 current_level --;
             }
             can_stop = 1;
@@ -357,17 +355,17 @@ void load_next_single_phrase(expression_with_location* expwloc, method* cur_meth
             cur_method = (method*)gen_res;
             if(cur_method->def_loc != DEF_EXTERN)
             {
-                if(*delim == C_SEMC)	/* forward declaration of method */
+                if(*delim == C_SEMC)    /* forward declaration of method */
                 {
 
                 }
-                else				/* normal declaration of method */
+                else                /* normal declaration of method */
                 {
                     int saved_level = level;
-                    level ++;	/* stepping into a method, increase the current level */
+                    level ++;    /* stepping into a method, increase the current level */
                     call_context* saved_cc = cur_cc; /* saving the current cc*/
                     cur_cc = cur_method->main_cc;
-                    load_next_block(pf, cur_method, cur_cc, level, saved_level);	/* loading the function*/
+                    load_next_block(pf, cur_method, cur_cc, level, saved_level);    /* loading the function*/
                     cur_cc = saved_cc; /* restoring the current cc */
                 }
             }

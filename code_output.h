@@ -24,8 +24,8 @@ void move_register_level_into_indexe_variable( variable* dest, int idxc, int lev
 void move_start_register_atomic_with_type( int reqd_type, int level );
 void move_register_level_register_next_level( int reqd_type, int level );
 void cmp_register_with_zero( int reqd_type, int level );
-void push_variable(call_context* cc, struct variable* var);
-void push_usertype_variable(call_context* cc, struct variable* var);
+void push_variable(call_context* cc, variable* var);
+void push_usertype_variable(call_context* cc, variable* var);
 void mov_var_into_reg(expression_tree* var_node, int reqd_type, int level, const method* the_method, call_context* cc, int forced_mov);
 void operation_on_variable(call_context* cc, int opr, variable* var );
 void operation_on_indexed( call_context* cc, int opr, const variable* var, int idxc );
@@ -46,7 +46,6 @@ void jmp(const std::string &label);
 void jlbf(const std::string &label);
 void jnlbf(const char* label);
 void mov_number_into_reg();
-
 const char* push();
 const char* ref();
 const char* mov();

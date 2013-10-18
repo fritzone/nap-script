@@ -118,34 +118,34 @@ class_declaration *call_context_get_class_declaration(const call_context *cc,
  * 2. create the global objects
  * 2. find the method int main(string[] parameters) and execute it
  */
-void call_context_compile(struct call_context *cc);
+void call_context_compile(call_context *cc);
 
 /**
  * Runs the given call context as being part of a full method run, or as a newly started call context.
  * This method of running does not run the call contexts of 'if', 'while', etc...
  * This can not (may not) deal with keywords break/continue.
  */
-struct envelope *call_context_run_complete(struct call_context *cc);
+struct envelope *call_context_run_complete(call_context *cc);
 
 /**
  * Runs this call context, the call context is supposed to be an "inner" call cotnext (mostly nameless call cotnext)
  */
-void call_context_run_inner(struct call_context *cc, int level, int reqd_type, int forced_mov);
+void call_context_run_inner(call_context *cc, int level, int reqd_type, int forced_mov);
 
 /**
  * Adds a new call context to the list of child call contexts
  */
-void call_context_add_child_call_context(struct call_context *father, struct call_context *child);
+void call_context_add_child_call_context(call_context *father, call_context *child);
 
 /**
  * Returns the given variable object from the call_context, or NULL if nothing found
  */
-variable *call_context_get_variable(struct call_context *cc, const char *v_name);
+variable *call_context_get_variable(call_context *cc, const char *v_name);
 
 /**
  * Creates a new label structure and inserts it into the vector of the bytecode labels of this call_context
  * @param break_label is 1 if the label is a destination for the break of the call context
  */
-struct bytecode_label *call_context_provide_label(struct call_context *cc);
+bytecode_label *call_context_provide_label(call_context *cc);
 
 #endif

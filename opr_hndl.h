@@ -77,7 +77,7 @@ int level_0_dot_operator(const char *expr);
  * Returns -1 if nothing is found
  * @param expr - the expression we are working on
  * @param found_operator - will be populated with the operator that was retrieved, since this method can
- *		identify more than one kind of operators
+ *        identify more than one kind of operators
  */
 int level_0_comparison_operator(const char *expr, const char** found_operator);
 
@@ -103,7 +103,7 @@ int level_0_logical_operator(const char* expr);
  * Returns -1 if nothing is found
  * @param expr - the expression we are working on
  * @param found_operator - will be populated with the operator that was retrieved, since this method can
- *		identify more than one kind of operators
+ *        identify more than one kind of operators
  */
 int level_0_sg_eq_operator(const char *expr, const char** found_operator, int* found_op_type);
 

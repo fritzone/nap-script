@@ -6,23 +6,13 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
+#include <list>
 
 struct call_context;
 struct call_context_list;
 struct method;
 struct class_declaration;
-
-/**
- * The String Basic Type
- */
-struct bt_string
-{
-        /* this is the actual string */
-        char* the_string;
-
-        /* the length of the string */
-        int len;
-};
+struct call_frame_entry;
 
 /**
  * This structure holds the information about the location of a particular expression.
@@ -32,17 +22,17 @@ struct bt_string
 struct file_location
 {
 
-        /* the location in the 'content' of the parsed_file structure */
-        long location;
+    /* the location in the 'content' of the parsed_file structure */
+    long location;
 
-        /* the first line number */
-        int start_line_number;
+    /* the first line number */
+    int start_line_number;
 
-        /* the last line number */
-        int end_line_number;
+    /* the last line number */
+    int end_line_number;
 
-        /* this is the file name */
-        const char* file_name;
+    /* this is the file name */
+    const char *file_name;
 };
 
 /**
@@ -50,11 +40,11 @@ struct file_location
  */
 struct expression_with_location
 {
-        /* this is an expression as read from the input file*/
-        char* expression;
+    /* this is an expression as read from the input file*/
+    char *expression;
 
-        /* the location of this expression in the input file */
-        file_location* location;
+    /* the location of this expression in the input file */
+    file_location *location;
 };
 
 
@@ -63,29 +53,29 @@ struct expression_with_location
  */
 struct expression_tree
 {
-        /* the left branch of the expression */
-        struct expression_tree* left;
+    /* the left branch of the expression */
+    struct expression_tree *left;
 
-        /* the right branch of the expression */
-        struct expression_tree* right;
+    /* the right branch of the expression */
+    struct expression_tree *right;
 
-        /* the info that can be found in the expression */
-        char *info;
+    /* the info that can be found in the expression */
+    char *info;
 
-        /* the reference ofthe node ... can be a struct number, a struct variable, etc ... */
-        struct envelope* reference;
+    /* the reference ofthe node ... can be a struct number, a struct variable, etc ... */
+    struct envelope *reference;
 
-        /* the type of the struct variable that can be found in this node (ie: real, integer)... used for type correct calculations */
-        int v_type;
+    /* the type of the struct variable that can be found in this node (ie: real, integer)... used for type correct calculations */
+    int v_type;
 
-        /* the type of the operator if any */
-        int op_type;
+    /* the type of the operator if any */
+    int op_type;
 
-        /* the father of this node */
-        struct expression_tree* father;
+    /* the father of this node */
+    struct expression_tree *father;
 
-        /* this is the physical location of the expression (file, line, etc)*/
-        const expression_with_location* expwloc;
+    /* this is the physical location of the expression (file, line, etc)*/
+    const expression_with_location *expwloc;
 };
 
 /**
@@ -94,30 +84,30 @@ struct expression_tree
 struct expression_tree_list
 {
     /* the link to the next */
-    struct expression_tree_list* next;
+    struct expression_tree_list *next;
 
     /* the root of the tree */
-    const expression_tree* root;
+    const expression_tree *root;
 
     /* the text representation of this expression that is interpreted in the root */
-    char* text_expression;
+    char *text_expression;
 };
 
 /**
- * The struct envelope structure is holding a data tha can be worked 
+ * The struct envelope structure is holding a data tha can be worked
  *  with using the same interface by the functions.
  * It has two members:
- * 1. the type. This can denote a struct variable, a struct number, a 
+ * 1. the type. This can denote a struct variable, a struct number, a
  *    struct indexed structure or something else
  * 2. the void* pointer, which is the actual data that needs to be interpreted
  */
 struct envelope
 {
-        /* the type */
-        int type;
+    /* the type */
+    int type;
 
-        /* what is in this struct envelope */
-        void* to_interpret;
+    /* what is in this struct envelope */
+    void *to_interpret;
 };
 
 /**
@@ -125,23 +115,11 @@ struct envelope
  **/
 struct indexed
 {
-        /* the actual index when the index is one-dimensional */
-        int idx;
+    /* the actual index when the index is one-dimensional */
+    int idx;
 
-        /* and what we are indexing. This usually is a struct variable */
-        struct envelope* base;
-};
-
-/**
- * Represents a struct number.
- */
-struct number
-{
-        /* type of the struct number */
-        m_typeid type;
-
-        /* the location of the number */
-        void* location;
+    /* and what we are indexing. This usually is a struct variable */
+    struct envelope *base;
 };
 
 /** holds the data that is used in a list of values, { A, B, C} for example
@@ -149,8 +127,8 @@ struct number
  */
 struct listv
 {
-        listv* next;
-        envelope* val;
+    listv *next;
+    envelope *val;
 };
 
 
@@ -161,41 +139,41 @@ struct listv
  */
 struct parameter
 {
-        /* 1 if the parameter was sent as a reference */
-        int modifiable;
+    /* 1 if the parameter was sent as a reference */
+    int modifiable;
 
-        /* the name of the parameter (as used on te function's side). This is not used on the client side*/
-        char* name;
+    /* the name of the parameter (as used on te function's side). This is not used on the client side*/
+    char *name;
 
-        /* the actual implementation of the parameter. it will contain a variable */
-        envelope* value;
+    /* the actual implementation of the parameter. it will contain a variable */
+    envelope *value;
 
-        /* the expression of this parameter as read from the source file. Used at function calling */
-        expression_tree* expr;
+    /* the expression of this parameter as read from the source file. Used at function calling */
+    expression_tree *expr;
 
-        /* the initial value of the parameter, like: int f (int a=10, b)*/
-        expression_tree* initial_value;
+    /* the initial value of the parameter, like: int f (int a=10, b)*/
+    expression_tree *initial_value;
 
-        /* 1 if the value is simpl (meaning, no dimensions) 0 if the value is not so simple, meaning dimensions */
-        int simple_value;
+    /* 1 if the value is simpl (meaning, no dimensions) 0 if the value is not so simple, meaning dimensions */
+    int simple_value;
 
-        /* the method in which this parameter belongs */
-        method* the_method;
+    /* the method in which this parameter belongs */
+    method *the_method;
 
     int type;
 };
 
 
-/** 
- * A list parameters  
+/**
+ * A list parameters
  */
 struct parameter_list
 {
-        /* the link to the next */
-        parameter_list* next;
+    /* the link to the next */
+    parameter_list *next;
 
-        /* the atual parameter */
-        parameter* param;
+    /* the atual parameter */
+    parameter *param;
 };
 
 
@@ -204,102 +182,45 @@ struct parameter_list
  */
 struct parsed_file
 {
-        /* name of the file */
-        const char* name;
+    /* name of the file */
+    const char *name;
 
-        /* the file pointer*/
-        FILE* fp;
+    /* the file pointer*/
+    FILE *fp;
 
-        /* this is the content of the file*/
-        char* content;
+    /* this is the content of the file*/
+    char *content;
 
-        /* the current position of the reader */
-        long position;
+    /* the current position of the reader */
+    long position;
 
-        /* the size of the file ... */
-        long content_size;
+    /* the size of the file ... */
+    long content_size;
 
-        /* the current line number */
-        long current_line;
+    /* the current line number */
+    long current_line;
 
-        /* the previous position where the parser was before reading the current expression */
-        long previous_position;
-};
-
-/**
- * This structure defines a struct variable. The following things are characterizing a struct variable:
- * . their name
- * . their type as a string
- * . their dimension, meaning, they can be a vector, or a single struct variable
- * . their value(s). The values are struct envelope objects
- * . their type as an int, from the famous BASIC_TYPE... list
- * A variable can be bound together with a C/C++ variable of type long, double and with any dimensions
- * suitable. When binding with multi dimensions, each variable's number* to_interpret's location will
- * point to the specific index in the array passed in.
- */
-struct variable
-{
-        /* the name of the variable */
-        char* name;
-
-        /* the size of the variable (ie. dimension) */
-        int dimension;
-
-        /* the value of the variable. It is an struct envelope, with all the nice properties of an struct envelope ...
-           actually a list of envelopes, for more than one dimension */
-        struct envelope** value;
-
-        /* the type of the variable */
-        char* c_type;
-
-        /* the type of the variable */
-        int i_type;
-
-        /* the dimension definition of this variable */
-        struct multi_dimension_def* mult_dim_def;
-
-        /* the number of indexes if this is a multi-dim variable */
-        int multi_dim_count;
-
-        /* populated with NULL if this is not a function parameter, or the actual function parameter if it is */
-        struct parameter* func_par;
-
-        /* the template parameters of the variable if any */
-        struct parameter_list* templ_parameters;
-
-        /* used by the templ_parameters above */
-        struct variable_list* templ_variables;
-
-        /* whether this variable is static or not*/
-        char static_var;
-
-        /* whether this variable represents an environment variable or not */
-        char environment_variable;
-
-        /* 1 if this variable has dynamic dimensions, 0 if not*/
-        char dynamic_dimension;
-    
-        /* the call context in which this variable is to be found */
-        call_context* cc;
+    /* the previous position where the parser was before reading the current expression */
+    long previous_position;
 };
 
 /**
  * Contains the definition for a multidimensional index usage, such as:
- *  x[i, i+2, 3] 
+ *  x[i, i+2, 3]
  * The index_definition is the structure from above, the index_values is the
  * list of expression_tree objects.
  * This structure is used when working with multi-dimension indexes
  */
 struct multi_dimension_index
 {
-        /* the way this dimension is defined */
-        struct multi_dimension_def* dimension_definition;
+    /* the way this dimension is defined */
+    struct multi_dimension_def *dimension_definition;
 
-        /* the values that are used to build this dimension list */
-        struct expression_tree_list* dimension_values;
+    /* the values that are used to build this dimension list */
+    struct expression_tree_list *dimension_values;
 
-        /* some id to uniquely identify this index */
-        char* id;
+    /* some id to uniquely identify this index */
+    char *id;
 };
 
 /**
@@ -311,33 +232,33 @@ struct multi_dimension_index
  */
 struct multi_dimension_def
 {
-        /* the relation to the next element */
-        struct multi_dimension_def* next;
+    /* the relation to the next element */
+    struct multi_dimension_def *next;
 
-        /* the dimension if a direct number*/
-        long dimension;
+    /* the dimension if a direct number*/
+    long dimension;
 
-        /* whether this dimension is a dynamic one or not. See how this gets initialized / evaluated */
-        char dynamic;
+    /* whether this dimension is a dynamic one or not. See how this gets initialized / evaluated */
+    char dynamic;
 
-        /* the dimension if it's an expression. In this case the evaluator will initialize the dimension*/
-        struct expression_tree* expr_def;
+    /* the dimension if it's an expression. In this case the evaluator will initialize the dimension*/
+    struct expression_tree *expr_def;
 };
 
 
-/** 
+/**
  * Contains a variable definition; to be evaluated at run time, to be created at interpretation time
  */
 struct variable_definition
 {
-        /* the variable */
-        struct variable* the_variable;
+    /* the variable */
+    struct variable *the_variable;
 
-        /* the value that will be assigned to it*/
-        struct expression_tree* the_value;
+    /* the value that will be assigned to it*/
+    struct expression_tree *the_value;
 
-        /*the multi dimension definition for this variable if any, NULL if none*/
-        struct multi_dimension_def* md_def;
+    /*the multi dimension definition for this variable if any, NULL if none*/
+    struct multi_dimension_def *md_def;
 };
 
 
@@ -346,11 +267,11 @@ struct variable_definition
  */
 struct variable_definition_list
 {
-        /* the link to the next element*/
-        struct variable_definition_list* next;
+    /* the link to the next element*/
+    struct variable_definition_list *next;
 
-        /* the definition of the variable*/
-        struct variable_definition* the_definition;
+    /* the definition of the variable*/
+    struct variable_definition *the_definition;
 };
 
 /**
@@ -359,11 +280,50 @@ struct variable_definition_list
  */
 struct variable_template_reference
 {
-        /* this is the variable we are referencing to */
-        struct variable* the_variable;
+    /* this is the variable we are referencing to */
+    struct variable *the_variable;
 
-        /* these are the parameters that the user passed in */
-        struct parameter_list* templ_pars;
+    /* these are the parameters that the user passed in */
+    struct parameter_list *templ_pars;
+};
+
+
+class variable;
+/**
+ * Contains the definition of a method
+ */
+struct method
+{
+    /* the name of the method */
+    char *name;
+
+    /* the return type of the function */
+    char *return_type;
+
+    /* the list of struct variables that are defined in the method. This list is used in two situations:
+     * 1. in the interpret phase, when the code is built up, this is used as references to find the variables.
+     * 2. in the running phase, but only for static variables.
+     */
+    std::vector<variable*> variables;
+
+    /* the parameters of the method */
+    parameter_list *parameters;
+
+    /* the call contexts this method is taking part from */
+    call_context_list *contained_ins;
+
+    /* this is the call context of the method, created when the method is created */
+    call_context *main_cc;
+
+    /* the current call frame. stores all the variables of the method which are not static. At each calling of a method
+     * this variable gets populated with the call frame that has been constructed for the current stage
+     */
+    call_frame_entry *cur_cf;
+
+    /* the definition location 0 - normal, 1 - extern*/
+    int def_loc;
+
+    int ret_type;
 };
 
 
@@ -375,55 +335,26 @@ struct variable_template_reference
  * Also this structure holds the variable of the method being called at the current stage.
  * If the main application exits then the call_frame will be empty.
  * (The best of all: This can be used at a (very) later stage when developing threading. Each
- * thread like object will have its own call frame, and they'll be free to run independently) 
+ * thread like object will have its own call frame, and they'll be free to run independently)
  */
 struct call_frame_entry
 {
-        /* this is the method that was called */
-        method* the_method;
 
-        /* this are the parameters passed to the method */
-        parameter_list* parameters;
+    /* this is the method that was called */
+    method *the_method;
 
-        /* holds the previous call frame of the method... just in case*/
-        call_frame_entry* previous_cf;
-};
+    /* this are the parameters passed to the method */
+    parameter_list *parameters;
 
-/**
- * Contains the definition of a method
- */
-struct method
-{
-        /* the name of the method */
-        char* name;
+    /* holds the previous call frame of the method... just in case*/
+    call_frame_entry *previous_cf;
 
-        /* the return type of the function */
-        char* return_type;
-
-        /* the list of struct variables that are defined in the method. This list is used in two situations:
-         * 1. in the interpret phase, when the code is built up, this is used as references to find the variables.
-         * 2. in the running phase, but only for static variables.
-         */
-        variable_list* variables;
-
-        /* the parameters of the method */
-        parameter_list* parameters;
-
-        /* the call contexts this method is taking part from */
-        call_context_list* contained_ins;
-
-        /* this is the call context of the method, created when the method is created */
-        call_context* main_cc;
-
-        /* the current call frame. stores all the variables of the method which are not static. At each calling of a method
-         * this variable gets populated with the call frame that has been constructed for the current stage
-         */
-        call_frame_entry* cur_cf;
-
-        /* the definition location 0 - normal, 1 - extern*/
-        int def_loc;
-
-    int ret_type;
+    call_frame_entry(method *the_method, parameter_list *pars)
+    {
+        parameters = pars;
+        the_method = the_method;
+        previous_cf = the_method->cur_cf;
+    }
 };
 
 /**
@@ -431,7 +362,7 @@ struct method
  **/
 struct constructor_call : public method
 {
-    class_declaration* the_class;
+    class_declaration *the_class;
 };
 
 /**
@@ -439,11 +370,11 @@ struct constructor_call : public method
  */
 struct method_list
 {
-        /* link to the next element */
-        method_list* next;
+    /* link to the next element */
+    method_list *next;
 
-        /* the actual method*/
-        method* the_method;
+    /* the actual method*/
+    method *the_method;
 };
 
 
@@ -453,44 +384,21 @@ struct method_list
  * @param list - the address of the list we're inserting into
  * @param meth - the method
  */
-method_list* method_list_insert(method_list** list, method* meth);
-
-
-/**
- * Represents the list of active call frames (Call Stack). For easier access this is a double linked list
- */
-struct call_frame_list
-{
-        struct call_frame_list* next;
-        struct call_frame_list* prev;
-        struct call_frame_entry* entry;
-};
-
-/*
- * List for holding the variables of some method
- */
-struct variable_list
-{
-        /* link to the next element */
-        variable_list *next;
-
-        /* the actual variable */
-        variable *var;
-};
+method_list *method_list_insert(method_list **list, method *meth);
 
 /*
  * List for holding a list of strings
  */
 struct string_list
 {
-        /* connection to the next element*/
-        string_list* next;
+    /* connection to the next element*/
+    string_list *next;
 
-        /* the actual string */
-        char* str;
+    /* the actual string */
+    char *str;
 
-        /* the length of the string, populated at run time*/
-        int len;
+    /* the length of the string, populated at run time*/
+    int len;
 };
 
 
@@ -507,7 +415,7 @@ struct bytecode_label
     };
 
     /* the name of the label */
-    char* name;
+    char *name;
 
     /* the location of the label in the bytecode stream */
     long bytecode_location;
@@ -544,8 +452,8 @@ struct class_declaration;
  */
 struct call_context_list
 {
-    struct call_context_list* next;
-    struct call_context* ctx;
+    struct call_context_list *next;
+    struct call_context *ctx;
 };
 
 /**
@@ -559,36 +467,36 @@ struct call_context
     int type;
 
     /* the name of the call context */
-    char* name;
+    char *name;
 
     /* the methods of this call context */
-    struct method_list* methods;
+    struct method_list *methods;
 
     /* the list of variable that have been defined in this call context */
-    struct variable_list* variables;
+    std::vector<variable*> variables;
 
     /* contains the list of expressions */
-    struct expression_tree_list* expressions;
+    struct expression_tree_list *expressions;
 
     /* these are the child call contexts */
-    struct call_context_list* child_call_contexts;
+    struct call_context_list *child_call_contexts;
 
     /* the father call context of this */
-    struct call_context* father;
+    struct call_context *father;
 
     /* if the call context is from a method this is that method */
-    struct method* ccs_method;
+    struct method *ccs_method;
 
     /* this is a vector of label locations for this*/
-    std::vector<struct bytecode_label*>* labels;
+    std::vector<struct bytecode_label *>* labels;
 
-    struct bytecode_label* break_label;
-    
+    struct bytecode_label *break_label;
+
     /* the classes that are defined in this call context */
-    std::vector<struct class_declaration*>* classes;
-    
+    std::vector<struct class_declaration *>* classes;
+
     /* the interfaces that are defined in this call context */
-    std::vector<struct class_declaration*>* interfaces;
+    std::vector<struct class_declaration *>* interfaces;
 };
 
 /**
@@ -597,8 +505,8 @@ struct call_context
  **/
 struct class_declaration : public call_context
 {
-    class_declaration* parent_class;
-    std::vector<class_declaration*> implemented_interfaces;
+    class_declaration *parent_class;
+    std::vector<class_declaration *> implemented_interfaces;
 };
 
 

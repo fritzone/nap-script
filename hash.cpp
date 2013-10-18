@@ -15,7 +15,7 @@
 variable* variable_list_add_variable(const char *var_name, 
                                      const char* var_type, 
                                      int var_size, 
-                                     variable_list** first,  
+                                     std::vector<variable*>& first,
                                      method* the_method,  
                                      call_context* cc, 
                                      const expression_with_location* expwloc)
@@ -25,11 +25,7 @@ variable* variable_list_add_variable(const char *var_name,
         throw_error("Invalid variable name", var_name, var_type);
     }
     int itype = get_typeid(var_type);
-    variable_list* tmp = alloc_mem(variable_list,1);
-    if(!tmp)
-    {
-        throw_error("Memory eror");
-    }
+
     if(itype == BASIC_TYPE_DONTCARE)
     {
         if(call_context_get_class_declaration(cc, var_type))
@@ -42,7 +38,7 @@ variable* variable_list_add_variable(const char *var_name,
         return 0;
     }
     
-variable* var = new_variable(var_size, itype);
+    variable* var = new variable(var_size, itype);
 
     var->name = duplicate_string(var_name);
     var->c_type = duplicate_string(var_type);
@@ -53,9 +49,7 @@ variable* var = new_variable(var_size, itype);
 
     variable_resolve_templates(var, the_method, cc, expwloc);
 
-    tmp->next=*first;
-    tmp->var = var;
-    *first=tmp;
+    first.push_back(var);
     return var;
 }
 
@@ -63,45 +57,19 @@ variable* var = new_variable(var_size, itype);
 /**
  * this function checks if s appears in the hashtable
  */
-variable_list *variable_list_has_variable(const char *s, variable_list* first)
+std::vector<variable*>::const_iterator variable_list_has_variable(const char *s, const std::vector<variable*>& first)
 {
- variable_list *q=first;
-    while(q && q->var)
+    std::vector<variable*>::const_iterator q = first.begin();
+    while(q != first.end())
     {
-        if(!strcmp(s, q->var->name))
+        if(!strcmp(s, (*q)->name))
         {
             return q;
         }
-        q=q->next;
+        q ++;
     }
-    return NULL;
+    return first.end();
 }
-
-/**
- * This function returns the idxth. parameter if any. idx must start from 1
- */
-variable_list *variable_list_get_at(variable_list* first, int idx)
-{
-    if(idx <= 0 || first == 0)
-    {
-        return NULL;
-    }
-variable_list *q=first;
-int i, tcc = 0;	/* total count of variables in this list */
-    while(q)
-    {
-        tcc ++;
-        q=q->next;
-    }
-    q = first;
-    for(i=tcc; i!=idx && q->next && i > 1; i--)
-    {
-        if(i!=idx) q=q->next;
-    }
-    if(i < idx) return NULL;
-    return q;
-}
-
 
 /**
  * Creates a new string list from the instr which is separated by the given separator
@@ -115,7 +83,7 @@ const char* p = instr, *frst = instr;
 char* cur_elem = NULL;
     while(*p)
     {
-        if(C_SQPAR_OP == *p)	/* for now skip the things that are between index indicators*/
+        if(C_SQPAR_OP == *p)    /* for now skip the things that are between index indicators*/
         {
         int can_stop = 0;
         int level = 0;
@@ -130,10 +98,10 @@ char* cur_elem = NULL;
             {
                 throw_error(E0009_PARAMISM, instr, NULL);
             }
-            p++;	/* to skip the last closing brace*/
+            p++;    /* to skip the last closing brace*/
         }
 
-        if(*p == C_PAR_OP)	/* for now skip the things that are between parantheses too ...*/
+        if(*p == C_PAR_OP)    /* for now skip the things that are between parantheses too ...*/
         {
             int can_stop = 0;
             int level = 0;
@@ -148,10 +116,10 @@ char* cur_elem = NULL;
             {
                 throw_error(E0009_PARAMISM, instr, NULL);
             }
-            p++;	/* to skip the last closing brace*/
+            p++;    /* to skip the last closing brace*/
         }
 
-        if(*p == '{' )	/* for now skip the things that are between curly braces too ...*/
+        if(*p == '{' )    /* for now skip the things that are between curly braces too ...*/
         {
             int can_stop = 0;
             int level = 0;
@@ -166,11 +134,11 @@ char* cur_elem = NULL;
             {
                 throw_error(E0009_PARAMISM, instr, NULL);
             }
-            p++;	/* to skip the last closing brace*/
+            p++;    /* to skip the last closing brace*/
         }
 
 
-        if(*p == C_QUOTE)	/* skip stuff between quotes*/
+        if(*p == C_QUOTE)    /* skip stuff between quotes*/
         {
         int can_stop = 0;
             p++;

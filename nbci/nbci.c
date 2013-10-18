@@ -150,7 +150,7 @@ static void read_metatable(FILE* fp, uint64_t meta_location)
         {
             uint16_t len = 0;
             char* name = NULL;
-			struct variable_entry* new_var = NULL;
+            struct variable_entry* new_var = NULL;
 
             fread(&len, sizeof(uint16_t), 1, fp);
             name = (char*)calloc(sizeof(char), len + 1);

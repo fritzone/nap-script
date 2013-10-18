@@ -8,6 +8,29 @@
 struct call_context;
 struct variable;
 
+#define BT_IS_NUMERIC(bt) (BASIC_TYPE_INT == bt || BASIC_TYPE_REAL == bt)
+
+#define BT_IS_STRING(bt) (BASIC_TYPE_STRING == bt)
+
+/**
+ * Checks if the given character is an operator or not
+ */
+int isoperator(char c);
+
+int isparanthesis(char c);
+
+int isnumber(const char *s);
+
+int is_identifier_char(char c);
+
+int is_phrase_delimiter(char c);
+
+int is_string_delimiter(char c);
+
+int is_whitespace(char c);
+
+int is_valid_variable_name(const char* name);
+
 /*
  * Utility functions
  */
@@ -37,24 +60,24 @@ char* after(int pos, const char *src);
 
 /**
  * Trims the trailing spaces, tabs, newlines from input, returns the trimmed string.
- * This struct method Modifies the input, returns the modified version.
- * This struct method does not allocate any memory.
+ * This method Modifies the input, returns the modified version.
+ * This method does not allocate any memory.
  * @param src the string to trim
  */
 char *rtrim(const char* src);
 
 /**
  * Trims the leading spaces, tabs, newlines from input, returns the trimmed string.
- * This struct method creates a new string, modifies and returns it.
- * This struct method allocates memory, the user must free.
+ * This method creates a new string, modifies and returns it.
+ * This method allocates memory, the user must free.
  * @param src the string to trim
  */
 char *ltrim(const char* src);
 
 /**
  * Trims the leading/trailing spaces, tabs, newlines from input, returns the trimmed string.
- * This struct method creates a new string, modifies and returns it.
- * This struct method allocates memory, the user must free.
+ * This method creates a new string, modifies and returns it.
+ * This method allocates memory, the user must free.
  * @param src the string to trim
  */
 char *trim(const char* src);

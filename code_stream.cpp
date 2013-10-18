@@ -1,5 +1,4 @@
 #include "code_stream.h"
-#include "is.h"
 #include "utils.h"
 #include "type.h"
 #include "opcodes.h"

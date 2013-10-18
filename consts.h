@@ -32,26 +32,26 @@ extern const char *STR_NEQ;
 /*
  * Operators as char constants
  */
-const char C_ADD			= '+';
-const char C_SUB			= '-';
-const char C_DIV			= '/';
-const char C_MUL			= '*';
-const char C_MOD			= '%';
-const char C_EQ				= '=';
-const char C_DOLLAR			= '$';
-const char C_COMMA			= ',';
-const char C_OPEN_BLOCK		= '{';
-const char C_CLOSE_BLOCK	= '}';
-const char C_SEMC			= ';';
+const char C_ADD            = '+';
+const char C_SUB            = '-';
+const char C_DIV            = '/';
+const char C_MUL            = '*';
+const char C_MOD            = '%';
+const char C_EQ                = '=';
+const char C_DOLLAR            = '$';
+const char C_COMMA            = ',';
+const char C_OPEN_BLOCK        = '{';
+const char C_CLOSE_BLOCK    = '}';
+const char C_SEMC            = ';';
 
 /*
  * Bitwise operators as characters
  */
-const char C_AND			= '&';
-const char C_OR				= '|';
-const char C_XOR			= '^';
-const char C_NOT			= '!';
-const char C_COMP			= '~';
+const char C_AND            = '&';
+const char C_OR                = '|';
+const char C_XOR            = '^';
+const char C_NOT            = '!';
+const char C_COMP            = '~';
 
 /*
  * Logical operators
@@ -73,23 +73,23 @@ extern const char *STR_SHRIGHT;
 /*
  * Parenthesis, others
  */
-const char C_PAR_OP			= '(';
-const char C_PAR_CL			= ')';
-const char C_SQPAR_OP		= '[';
-const char C_SQPAR_CL		= ']';
-const char C_LT				= '<';
-const char C_GT				= '>';
-const char C_QUOTE			= '"';
-const char C_SQUOTE			= '\'';
-const char C_BACKQUOTE		= '`';
-const char C_BACKSLASH		= '\\';
-const char C_SPACE			= ' ';
-const char C_HASH			= '#';
-const char C_SLASH			= C_DIV;
-const char C_STAR			= C_MUL;
-const char C_NEWLINE		= '\n';
-const char C_CARRET			= '\r';
-const char C_TAB			= '\t';
+const char C_PAR_OP            = '(';
+const char C_PAR_CL            = ')';
+const char C_SQPAR_OP        = '[';
+const char C_SQPAR_CL        = ']';
+const char C_LT                = '<';
+const char C_GT                = '>';
+const char C_QUOTE            = '"';
+const char C_SQUOTE            = '\'';
+const char C_BACKQUOTE        = '`';
+const char C_BACKSLASH        = '\\';
+const char C_SPACE            = ' ';
+const char C_HASH            = '#';
+const char C_SLASH            = C_DIV;
+const char C_STAR            = C_MUL;
+const char C_NEWLINE        = '\n';
+const char C_CARRET            = '\r';
+const char C_TAB            = '\t';
 const char C_UNDERLINE      = '_';
 
 /*
@@ -123,22 +123,22 @@ extern const char *STR_GLOBAL;
 /*
  * Numerical constants
  */
-const int MAX_IDENTIFIER_LENGTH			= 1024;
+const int MAX_IDENTIFIER_LENGTH            = 1024;
 
-const int CALL_CONTEXT_TYPE_GLOBAL		= 0;
-const int CALL_CONTEXT_TYPE_METHOD_MAIN	= 1;
-const int CALL_CONTEXT_TYPE_CLASS		= 2;
-const int CALL_CONTEXT_TYPE_UNNAMED		= 3;
-const int CALL_CONTEXT_TYPE_IF			= 4;
-const int CALL_CONTEXT_TYPE_ELSE		= 5;
-const int CALL_CONTEXT_TYPE_WHILE		= 6;
-const int CALL_CONTEXT_TYPE_FOR			= 7;
+const int CALL_CONTEXT_TYPE_GLOBAL        = 0;
+const int CALL_CONTEXT_TYPE_METHOD_MAIN    = 1;
+const int CALL_CONTEXT_TYPE_CLASS        = 2;
+const int CALL_CONTEXT_TYPE_UNNAMED        = 3;
+const int CALL_CONTEXT_TYPE_IF            = 4;
+const int CALL_CONTEXT_TYPE_ELSE        = 5;
+const int CALL_CONTEXT_TYPE_WHILE        = 6;
+const int CALL_CONTEXT_TYPE_FOR            = 7;
 
 
-const int DEF_EXTERN				= 1;
-const int MAX_NR_AS_STR_LEN			= 32;
+const int DEF_EXTERN                = 1;
+const int MAX_NR_AS_STR_LEN            = 32;
 
-const int NO_INDEX				= -1;
+const int NO_INDEX                = -1;
 
 /*
  * Differrent method calls
