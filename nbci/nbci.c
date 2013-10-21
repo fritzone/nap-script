@@ -1,6 +1,10 @@
 #include "opcodes.h"
+#include "strtable.h"
+#include "metatbl.h"
+#include "jmptable.h"
+#include "nbci.h"
+#include "stack.h"
 
-#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -20,378 +24,27 @@
 
 #define _NOT_IMPLEMENTED \
     fprintf(stderr, "NI: line [%d] instr [%d] opcode [%x] at %" PRIu64 " (%" PRIx64 ")\n\n", \
-            __LINE__, content[cc - 1], current_opcode, cc - 1, cc - 1); \
+            __LINE__, vm->content[vm->cc - 1], vm->current_opcode, vm->cc - 1, vm->cc - 1); \
     exit(99);
 
-/******************************************************************************/
-/*                             Registers section                              */
-/******************************************************************************/
 
-int64_t regi[256] = {0};     /* the integer registers */
-char* regs[256] = {0};       /* the string registers */
-int64_t regidx[256] = {0};   /* the register indexes */
-uint8_t lbf = 0;             /* the last boolean flag of the machine */
-
-/******************************************************************************/
-/*                             Stack section                                  */
-/******************************************************************************/
-
-#define STACK_INIT   4096                     /* initially 4096 entries  */
-
-typedef enum TStackEntryType
-{
-    STACK_ENTRY_INT = 1,                /* same as OPCODE_INT */
-    STACK_ENTRY_REAL = 2,               /* same as OPCODE_FLOAT */
-    STACK_ENTRY_STRING = 3,             /* same as OPCODE_STRING */
-    STACK_ENTRY_CHAR = 4,               /* same as OPCODE_CHAR */
-    STACK_ENTRY_MARKER = 5,
-    STACK_ENTRY_IMMEDIATE_INT = 6,
-    STACK_ENTRY_MARKER_NAME = 7
-} StackEntryType;
-
-/**
- * Structure representing a stack entry. The same structure is used in the
- * instantiation of a variable_entry
- **/
-struct stack_entry
-{
-    /* the type of the entry 0 - int, 1 - real, 2 - string, 3 - reference*/
-    StackEntryType type;
-    
-    /* the value of it. At this address usually there is:
-     * 1. for imemdiate values:
-     *     - an int64_t (STACK_ENTRY_INT)
-     *     - a double   (STACK_ENTRY_REAL)
-     *     - a null terminated char* (STACK_ENTRY_STRING)
-     *     - or an object descriptor (TODO)
-     * 2. for variables:
-     *     - a variable entry object
-     */
-    void* value;
-
-    /* if this contains a string this is the length of it */
-    uint32_t len;
-};
-
-/* variables for the stack */
-static struct stack_entry** stack = NULL;           /* in this stack */
-static uint64_t stack_size = STACK_INIT;            /* initial stack size */
-static int64_t stack_pointer = -1;                  /* the stack pointer */
-
-/* generic variables regarding teh file */
-static uint8_t file_bitsize = 0;                   /* the bit size: 0x32, 0x64*/
-
-/* variables regarding the execution flow */
-static uint8_t* content = 0;                       /* the content of the file */
-static uint64_t cc = 0;                            /* the instruction pointer */
-static uint64_t call_frames[STACK_INIT] = {0};     /* the jump back points */
-static uint32_t cfsize = 0;
-static uint8_t current_opcode = 0;                        /* the current opcode */
-/******************************************************************************/
-/*                             Metatable section                              */
-/******************************************************************************/
-
-/* forward declaration */
-struct strtable_entry;
-
-/**
- * Structure containing the definition of a variable
- **/
-struct variable_entry
-{
-    /* the index of the variable */
-    uint32_t index;
-
-    /* the name of the variable */
-    char* name;
-
-    /* the actual value of the variable */
-    struct stack_entry* instantiation;
-
-    /* in case this variable is initialized to a string this points to it */
-    struct strtable_entry* string_initialization;
-};
-
-/* variables for the meta table*/
-static struct variable_entry** metatable = NULL;    /* the variables */
-static uint64_t meta_size = 0;           /* the size of  the variables vector */
-
-/*
- * Read the metatable of the bytecode file. Exits on error.
- */
-static void read_metatable(FILE* fp, uint64_t meta_location)
-{
-    uint32_t count = 0;
-    fseek(fp, meta_location + 5, SEEK_SET); /* skip the ".meta" */
-    fread(&count, sizeof(uint32_t), 1, fp);
-    if(count == 0)
-    {
-        return;
-    }
-    meta_size = count;
-    metatable = (struct variable_entry**) calloc(meta_size + 1,
-                                               sizeof(struct variable_entry**));
-    while(1)
-    {
-        uint32_t index = 0;
-        int end_of_file = 0;
-        fread(&index, file_bitsize, 1, fp);
-        end_of_file = feof(fp);
-        if(index == 1920234286 || end_of_file) /* ".str" */
-        {
-            if(end_of_file)
-            {
-                fprintf(stderr, "wrong content: stringtable not found\n");
-                exit(2);
-            }
-            break;
-        }
-        else
-        {
-            uint16_t len = 0;
-            char* name = NULL;
-            struct variable_entry* new_var = NULL;
-
-            fread(&len, sizeof(uint16_t), 1, fp);
-            name = (char*)calloc(sizeof(char), len + 1);
-			if(name == NULL)
-			{
-			}
-            fread(name, sizeof(uint8_t), len, fp);
-            if(meta_size < index + 1)
-            { /* seems there is something wrong with the metatable size*/
-                metatable = (struct variable_entry**) realloc(metatable,
-                                   sizeof(struct variable_entry**)*(index + 1));
-            }
-            new_var = (struct variable_entry*)
-                                    calloc(1, sizeof(struct variable_entry));
-            new_var->index = index;
-            new_var->name = name;
-
-            new_var->instantiation = 0;
-            metatable[index] = new_var;
-        }
-    }
-}
-
-/******************************************************************************/
-/*                             Stringtable section                            */
-/******************************************************************************/
-
-/**
- * Structure for holding a stringtable entry.
- */
-struct strtable_entry
-{
-    /* the index of the string as referred in the btyecode */
-    uint64_t index;
-
-    /* the length of th string*/
-    uint32_t len;
-
-    /* the string itself */
-    char* string;
-};
-/* variables for the stringtable */
-static struct strtable_entry** stringtable = NULL;  /* the stringtable itself */
-static uint64_t strt_size = 0;                 /* the size of the stringtable */
-
-/*
- * Read the stringtable of the bytecode file. Exits on failure.
- */
-static void read_stringtable(FILE* fp, uint64_t stringtable_location)
-{
-    uint32_t count = 0;
-    fseek(fp, stringtable_location + 4, SEEK_SET); /* skip the ".str" */
-    fread(&count, sizeof(uint32_t), 1, fp);
-    if(count == 0)
-    {
-        return;
-    }
-    strt_size = count;
-    stringtable = (struct strtable_entry**) calloc(strt_size + 1,
-                                               sizeof(struct strtable_entry**));
-    while(1)
-    {
-        uint32_t index = 0;
-		int end_of_file = 0;
-        fread(&index, file_bitsize, 1, fp);
-        end_of_file = feof(fp);
-
-        if(index == 1886218798 || end_of_file) /* .jmp */
-        {
-            if(end_of_file)
-            {
-                fprintf(stderr, "wrong content: jumptable not found\n");
-                exit(1);
-            }
-            break;
-        }
-        else
-        {
-            uint32_t len = 0;
-			char* str = NULL;
-			struct strtable_entry* new_strentry = NULL;
-            fread(&len, sizeof(uint32_t), 1, fp);
-            str = (char*)calloc(sizeof(char), len + 1);
-            fread(str, sizeof(uint8_t), len, fp);
-            if(strt_size < index + 1)
-            {
-                stringtable = (struct strtable_entry**) realloc(stringtable,
-                                 sizeof(struct strtable_entry**) * (index + 1));
-            }
-            new_strentry = (struct strtable_entry*)calloc(1, sizeof(struct strtable_entry));
-            new_strentry->index = index;
-            new_strentry->string = str;
-            new_strentry->len = len;
-            stringtable[index] = new_strentry;
-        }
-    }
-}
-
-/******************************************************************************/
-/*                             Jumptable section                              */
-/******************************************************************************/
-
-/*
- * Structure representing an entry in the jumptable
- */
-struct jumptable_entry
-{
-    /* the location in the bytecode stream of the jump destination */
-    uint32_t location;
-};
-
-/* variables for the jumptable */
-static struct jumptable_entry** jumptable = NULL;   /* the jumptable itself */
-static uint64_t jumptable_size = 0;              /* the size of the jumptable */
-static uint32_t jmpc = 0;               /* counts the jumptable entries on loading*/
-/*
- * Read the stringtable of the bytecode file. Exits on failure.
- */
-static void read_jumptable(FILE* fp, uint64_t stringtable_location)
-{
-    uint32_t count = 0;
-    fseek(fp, stringtable_location + 4, SEEK_SET); /* skip the ".str" */
-    fread(&count, sizeof(uint32_t), 1, fp);
-    if(count == 0)
-    {
-        return;
-    }
-    jumptable_size = count;
-    jumptable = (struct jumptable_entry**) calloc(jumptable_size + 1,
-                                              sizeof(struct jumptable_entry**));
-    while(1)
-    {
-        uint32_t index = 0;
-		int end_of_file = 0;
-		struct jumptable_entry* new_jmpentry = NULL;
-        fread(&index, sizeof(uint32_t), 1, fp);
-        end_of_file = feof(fp);
-        if(end_of_file)
-        {
-            return;
-        }
+/* generic variables regarding the file */
+uint8_t file_bitsize = 0;                   /* the bit size: 0x32, 0x64*/
 
 
-        new_jmpentry = (struct jumptable_entry*)calloc(1, sizeof(struct jumptable_entry));
-        new_jmpentry->location = index;
-        jumptable[ jmpc++ ] = new_jmpentry;
-    }
-}
-
-/******************************************************************************/
-/*                             Other functions section                        */
-/******************************************************************************/
-
-/**
- * Sets the last boolean flag according to the operation found int current_opcode
- * @param reg - the registers value to check
- * @param immediate - against this value
- * @param current_opcode - the operation which is supposed to be executed
- */
-static void set_lbf_to_op_result(int64_t reg, int64_t immediate, uint8_t opcode)
-{
-    if(opcode == OPCODE_EQ)
-    {
-        lbf = (reg == immediate);
-    }
-    else
-    if(opcode == OPCODE_NEQ)
-    {
-        lbf = (reg != immediate);
-    }
-    else
-    if(opcode == OPCODE_LT)
-    {
-        lbf = (reg <  immediate);
-    }
-    else
-    if(opcode == OPCODE_GT)
-    {
-        lbf = (reg >  immediate);
-    }
-    else
-    if(opcode == OPCODE_LTE)
-    {
-        lbf = (reg <= immediate);
-    }
-    else
-    if(opcode == OPCODE_GTE)
-    {
-        lbf = (reg >= immediate);
-    }
-    else
-    {
-        _NOT_IMPLEMENTED
-    }
-}
-
-static void do_operation(int64_t* target, int64_t to_add, uint8_t opcode)
-{
-    if(opcode == OPCODE_ADD)
-    {
-        *target += to_add;
-    }
-    else
-    if(opcode == OPCODE_SUB)
-    {
-        *target -= to_add;
-    }
-    else
-    if(opcode == OPCODE_DIV)
-    {
-        *target /= to_add;
-    }
-    else
-    if(opcode == OPCODE_MUL)
-    {
-        *target *= to_add;
-    }
-    else
-    if(opcode == OPCODE_MOD)
-    {
-        *target %= to_add;
-    }
-    else
-    {
-        _NOT_IMPLEMENTED
-    }
-}
-
-static void dump(void)
+void dump(struct nap_vm* vm, FILE *fp)
 {
     uint64_t i;
     puts("");
-    for(i=0; i<meta_size; i++)
+    for(i=0; i<vm->meta_size; i++)
     {
-        if(metatable[i]->instantiation)
+        if(vm->metatable[i]->instantiation)
         {
             if(metatable[i]->instantiation->value)
             {
                 if(metatable[i]->instantiation->type == STACK_ENTRY_INT)
                 {
-                    printf("E:[%s=%" PRId64 "](%" PRIu64 "/%" PRIu64 ")\n",
+                    fprintf(fp, "E:[%s=%" PRId64 "](%" PRIu64 "/%" PRIu64 ")\n",
                            metatable[i]->name,
                            *(int64_t*)(metatable[i]->instantiation->value)
                            ,i, meta_size);
@@ -426,62 +79,6 @@ static void dump(void)
                    i, meta_size);
         }
     }
-}
-
-/**
- * Cleans the allocated memory
- */
-static void cleanup(void)
-{
-    uint64_t i;
-    int64_t tempst;
-    int64_t tempjmi;
-    dump();
-    for(i=0; i<meta_size; i++)
-    {
-        if(metatable[i]->instantiation)
-        {
-            if(metatable[i]->instantiation->value)
-            {
-                free(metatable[i]->instantiation->value);
-            }
-            free(metatable[i]->instantiation);
-        }
-    }
-    for(i=0; i<meta_size; i++)
-    {
-        free(metatable[i]->name);
-        free(metatable[i]);
-    }
-    free(metatable);
-
-    /* free the allocated stack */
-    for(tempst = stack_pointer; tempst > -1; tempst --)
-    {
-        if(stack[tempst]->type == OPCODE_INT) /* or float/string */
-        {
-            /* this wa already freed in the metatable */
-        }
-        else /* register type */
-        if(stack[tempst]->type == OPCODE_REG || stack[tempst]->type == STACK_ENTRY_MARKER_NAME)
-        {
-            free(stack[tempst]->value);
-        }
-
-        free(stack[tempst]);
-    }
-    free(stack);
-
-    /* freeing the jumptable */
-    for(tempjmi = jumptable_size - 1; tempjmi >= 0; tempjmi --)
-    {
-        free(jumptable[tempjmi]);
-    }
-
-    free(jumptable);
-
-    /* freeing the content */
-    free(content);
 }
 
 
@@ -1071,6 +668,7 @@ int main()
             {
                 if(lbf)
                 {
+                    lbf = 0;
                     cc = jumptable[*p_jmpt_index]->location;
                 }
                 else

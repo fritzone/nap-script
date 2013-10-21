@@ -29,9 +29,15 @@ add_executable(nap
     code_stream.cpp
 )
 
-set_source_files_properties(nbci.c PROPERTIES COMPILE_FLAGS -std=c90)
+set_source_files_properties(nbci/*.c PROPERTIES COMPILE_FLAGS -std=c90)
 
 add_executable(napi
     nbci/nbci.c
+    nbci/strtable.c
+    nbci/metatbl.c
+    nbci/jmptable.c
+    nbci/push.c
+    nbci/stack.c
+    nbci/nbci_impl.c
 )
 
