@@ -36,8 +36,11 @@ add_executable(napi
     nbci/strtable.c
     nbci/metatbl.c
     nbci/jmptable.c
+    nbci/jump.c
     nbci/push.c
     nbci/stack.c
     nbci/nbci_impl.c
+    nbci/comparison.c
+    nbci/mov.c
 )
 

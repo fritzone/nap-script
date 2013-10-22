@@ -42,9 +42,4 @@ struct stack_entry
     uint32_t len;
 };
 
-/* variables for the stack */
-static struct stack_entry** stack;           /* in this stack */
-static uint64_t stack_size;            /* initial stack size */
-static int64_t stack_pointer;                  /* the stack pointer */
-
 #endif

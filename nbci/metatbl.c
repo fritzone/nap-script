@@ -6,8 +6,9 @@
 /*
  * Read the metatable of the bytecode file. Exits on error.
  */
-void read_metatable(FILE* fp, uint64_t meta_location)
+void read_metatable(struct nap_vm* vm, FILE* fp)
 {
+    uint64_t meta_location = vm->meta_location;
     uint32_t count = 0;
     fseek(fp, meta_location + 5, SEEK_SET); /* skip the ".meta" */
     fread(&count, sizeof(uint32_t), 1, fp);
@@ -15,8 +16,8 @@ void read_metatable(FILE* fp, uint64_t meta_location)
     {
         return;
     }
-    meta_size = count;
-    metatable = (struct variable_entry**) calloc(meta_size + 1,
+    vm->meta_size = count;
+    vm->metatable = (struct variable_entry**) calloc(meta_size + 1,
                                                sizeof(struct variable_entry**));
     while(1)
     {
@@ -45,9 +46,9 @@ void read_metatable(FILE* fp, uint64_t meta_location)
             {
             }
             fread(name, sizeof(uint8_t), len, fp);
-            if(meta_size < index + 1)
+            if(vm->meta_size < index + 1)
             { /* seems there is something wrong with the metatable size*/
-                metatable = (struct variable_entry**) realloc(metatable,
+                vm->metatable = (struct variable_entry**) realloc(vm->metatable,
                                    sizeof(struct variable_entry**)*(index + 1));
             }
             new_var = (struct variable_entry*)
@@ -56,7 +57,7 @@ void read_metatable(FILE* fp, uint64_t meta_location)
             new_var->name = name;
 
             new_var->instantiation = 0;
-            metatable[index] = new_var;
+            vm->metatable[index] = new_var;
         }
     }
 }

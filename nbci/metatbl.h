@@ -2,6 +2,7 @@
 #define _METATBL_H_
 
 #include "strtable.h"
+#include "nbci.h"
 
 #include <stdint.h>
 
@@ -30,7 +31,7 @@ struct variable_entry
 /*
  * Read the metatable of the bytecode file. Exits on error.
  */
-void read_metatable(FILE* fp, uint64_t meta_location);
+void read_metatable(struct nap_vm*, FILE* fp);
 
 
 #endif

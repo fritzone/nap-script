@@ -5,6 +5,10 @@
 #include "nbci.h"
 #include "stack.h"
 
+#include "push.h"
+#include "comparison.h"
+#include "mov.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -22,12 +26,6 @@
 /*                             Debugging section                              */
 /******************************************************************************/
 
-#define _NOT_IMPLEMENTED \
-    fprintf(stderr, "NI: line [%d] instr [%d] opcode [%x] at %" PRIu64 " (%" PRIx64 ")\n\n", \
-            __LINE__, vm->content[vm->cc - 1], vm->current_opcode, vm->cc - 1, vm->cc - 1); \
-    exit(99);
-
-
 /* generic variables regarding the file */
 uint8_t file_bitsize = 0;                   /* the bit size: 0x32, 0x64*/
 
@@ -40,618 +38,76 @@ void dump(struct nap_vm* vm, FILE *fp)
     {
         if(vm->metatable[i]->instantiation)
         {
-            if(metatable[i]->instantiation->value)
+            if(vm->metatable[i]->instantiation->value)
             {
-                if(metatable[i]->instantiation->type == STACK_ENTRY_INT)
+                if(vm->metatable[i]->instantiation->type == STACK_ENTRY_INT)
                 {
                     fprintf(fp, "E:[%s=%" PRId64 "](%" PRIu64 "/%" PRIu64 ")\n",
-                           metatable[i]->name,
-                           *(int64_t*)(metatable[i]->instantiation->value)
-                           ,i, meta_size);
+                           vm->metatable[i]->name,
+                           *(int64_t*)(vm->metatable[i]->instantiation->value)
+                           ,i, vm->meta_size);
                 }
                 else
-                if(metatable[i]->instantiation->type == STACK_ENTRY_STRING)
+                if(vm->metatable[i]->instantiation->type == STACK_ENTRY_STRING)
                 {
                     printf("E:[%s=%s](%" PRIu64 "/%" PRIu64 ")\n",
-                           metatable[i]->name,
-                           (char*)(metatable[i]->instantiation->value)
-                           ,i, meta_size);
+                           vm->metatable[i]->name,
+                           (char*)(vm->metatable[i]->instantiation->value)
+                           ,i, vm->meta_size);
                 }
                 else
                 {
                     printf("X:[%s=%"PRId64"](%" PRIu64 "/%" PRIu64 ")\n",
-                           metatable[i]->name,
-                           *(int64_t*)(metatable[i]->instantiation->value)
-                           ,i, meta_size);
+                           vm->metatable[i]->name,
+                           *(int64_t*)(vm->metatable[i]->instantiation->value)
+                           ,i, vm->meta_size);
 
                 }
             }
             else
             {
-                printf("N:[%s=??](%" PRIu64 "/%" PRIu64 ")\n", metatable[i]->name,
-                       i, meta_size);
+                printf("N:[%s=??](%" PRIu64 "/%" PRIu64 ")\n", vm->metatable[i]->name,
+                       i, vm->meta_size);
 
             }
         }
         else
         {
-            printf("?:[%s=??](%"PRIu64"/%"PRIu64")\n", metatable[i]->name,
-                   i, meta_size);
+            printf("?:[%s=??](%"PRIu64"/%"PRIu64")\n", vm->metatable[i]->name,
+                   i, vm->meta_size);
         }
     }
 }
 
-
-/*
- * Main entry point
- */
-int main()
+void nap_vm_run(struct nap_vm *vm)
 {
-    FILE* fp = fopen("test.ncb", "rb");
-	uint64_t fsize = 0;
-    uint32_t meta_location = 0;
-    uint32_t stringtable_location = 0;
-    uint32_t jumptable_location = 0;
-    uint8_t type = 0;
-
-	if(!fp) exit(1);
-    fseek(fp, 0, SEEK_END);
-    
-    /* read in all the data in memory. Should be faster */
-    fsize = ftell(fp);
-    content = (uint8_t *) calloc(sizeof(uint8_t), fsize);
-    fseek(fp, 0, SEEK_SET);
-    fread(content, sizeof(uint8_t ), fsize, fp);
-    
-    fseek(fp, 0, SEEK_SET);
-    
-    /* create the stack */
-    stack = (struct stack_entry**) calloc( 
-                                        sizeof(struct stack_entry*), stack_size
-                                      );
-    
-    /* the format of the addresses in the file 32 or 64 bit addresses */
-    fread(&type, sizeof(uint8_t), 1, fp);
-    if(type == 0x32)
-    {
-        file_bitsize = sizeof(uint32_t);
-    }
-    else
-    {
-        file_bitsize = sizeof(uint64_t);
-    }
-
-    /* read in the important addresses from the bytecode file*/
-    fread(&meta_location, file_bitsize, 1, fp);
-    fread(&stringtable_location, file_bitsize, 1, fp);
-    fread(&jumptable_location, file_bitsize, 1, fp);
-    
-    /* prepare the meta table of the application */
-    read_metatable(fp, meta_location);
-
-    /* read the stringtable */
-    read_stringtable(fp, stringtable_location);
-
-    /* read the jumptable */
-    read_jumptable(fp, jumptable_location);
-    
-    /* done with the file */
-    fclose(fp);
-    
-    /* cc is the instruction pointer: skip the 3 addresses and the startbyte */
-    cc = 3 * file_bitsize + 1;
-    
     /* and start interpreting the code */
-    while(cc < meta_location)
+    while(vm->cc < vm->meta_location)
     {
-        current_opcode = content[cc];
-        cc ++;
+        vm->current_opcode = vm->content[vm->cc];
+        vm->cc ++;
 
         /* is this a PUSH operation? */
-        if(current_opcode == OPCODE_PUSH)
+        if(vm->current_opcode == OPCODE_PUSH)
         {
-            struct stack_entry* se = (struct stack_entry*)(
-                                        calloc(sizeof(struct stack_entry), 1));
-			se->type = (StackEntryType)content[cc ++];
-
-            if(se->type == OPCODE_INT || se->type == OPCODE_STRING) /* or float*/
-            {
-                uint8_t push_what = content[cc ++];
-
-                if(push_what == OPCODE_VAR)
-                {
-                    uint32_t* p_var_index = (uint32_t*)(content + cc);
-                    struct variable_entry* ve = metatable[*p_var_index];
-
-					cc += sizeof(uint32_t);
-
-                    ve->instantiation = (struct stack_entry*)(calloc(sizeof(struct stack_entry), 1));
-                    ve->instantiation->type = se->type; /* must match the stack entry */
-
-                    if(se->type == OPCODE_INT) /* pushing an integer */
-                    {
-                        int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
-                        *temp = 0;
-                        ve->instantiation->value = temp;
-                    }
-                    else
-                    if(se->type == OPCODE_STRING) /* pushing a string */
-                    {
-                        char* temp = (char*)calloc(1, sizeof(char));
-                        *temp = 0;
-                        ve->instantiation->value = temp;
-                    }
-
-                    /* setting the value of the stack entry */
-                    se->value = ve;
-                }
-                else
-                {
-                    fprintf(stderr, "unknown push [push int 0x%x]", push_what);
-                    exit(66);
-                }
-            }
-            else
-            if(se->type == OPCODE_REG) /* pushing a register */
-            {
-                uint8_t reg_type = content[cc ++];
-                uint8_t reg_idx = content[cc ++];
-
-                if(reg_type == OPCODE_INT) /* pushing an int register */
-                {
-                    int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
-                    *temp = regi[reg_idx];
-
-                    /* setting the value of the stack entry */
-                    se->value = temp;
-                }
-                else
-                {
-                    _NOT_IMPLEMENTED
-                }
-            }
-            else
-            {
-                fprintf(stderr, "not implemented push destination: [0x%x]\n",
-                        se->type);
-                exit(10);
-            }
-                
-            stack[++ stack_pointer] = se;
+            nap_push(vm);
         }
         else
         /* is this checking for something? */
-        if(current_opcode == OPCODE_EQ
-                || current_opcode == OPCODE_LT
-                || current_opcode == OPCODE_GT
-                || current_opcode == OPCODE_NEQ
-                || current_opcode == OPCODE_LTE
-                || current_opcode == OPCODE_GTE)
+        if(vm->current_opcode == OPCODE_EQ
+                || vm->current_opcode == OPCODE_LT
+                || vm->current_opcode == OPCODE_GT
+                || vm->current_opcode == OPCODE_NEQ
+                || vm->current_opcode == OPCODE_LTE
+                || vm->current_opcode == OPCODE_GTE)
         {
-            uint8_t mov_target = content[cc ++];   /* what to check (reg only)*/
-
-            if(mov_target == OPCODE_REG) /* do we move in a register? */
-            {
-                uint8_t register_type = content[cc ++]; /* int/string/float...*/
-
-                /* we are dealing with an INT type register */
-                if(register_type == OPCODE_INT)
-                {
-                    uint8_t register_index = content[cc ++]; /* 0, 1, 2 ...*/
-                    uint8_t move_source = content[cc ++]; /* what are we checking against*/
-
-                    if(move_source == OPCODE_IMMEDIATE) /* immediate value (1,..) */
-                    {
-                        uint8_t imm_size = content[cc ++];
-                        if(imm_size == OPCODE_BYTE)
-                        {
-                            int8_t* immediate = (int8_t*)(content + cc);
-                            set_lbf_to_op_result(regi[register_index],
-                                                    *immediate,
-                                                    current_opcode);
-                            cc ++;
-                        }
-                        else
-                        if(imm_size == OPCODE_SHORT)
-                        {
-                            int16_t* immediate = (int16_t*)(content + cc);
-                            set_lbf_to_op_result(regi[register_index],
-                                                    *immediate,
-                                                    current_opcode);
-                            cc += 2;
-                        }
-                        else
-                        if(imm_size == OPCODE_LONG)
-                        {
-                            int32_t* immediate = (int32_t*)(content + cc);
-                            set_lbf_to_op_result(regi[register_index],
-                                                    *immediate,
-                                                    current_opcode);
-                            cc += 4;
-                        }
-                        else
-                        if(imm_size == OPCODE_HUGE)
-                        {
-                            int64_t* immediate = (int64_t*)(content + cc);
-                            set_lbf_to_op_result(regi[register_index],
-                                                    *immediate,
-                                                    current_opcode);
-                            cc += 8;
-                        }
-                        else
-                        {
-                            printf("invalid immediate size [cmp]: 0x%x", imm_size);
-                            exit(12);
-                        }
-                    }
-                    else
-                    {
-                        _NOT_IMPLEMENTED
-                    }
-                }
-                else
-                {
-                    _NOT_IMPLEMENTED
-                }
-            }
-            else
-            {
-                fprintf(stderr, "eq works only on registers\n");
-                exit(8);
-            }
+            nap_comparison(vm);
         }
         else
         /* is this a MOV operation? */
-        if(current_opcode == OPCODE_MOV)
+        if(vm->current_opcode == OPCODE_MOV)
         {
-            uint8_t mov_target = content[cc ++];   /* where we move (reg, var)*/
-
-            if(mov_target == OPCODE_REG) /* do we move in a register? */
-            {
-                uint8_t register_type = content[cc ++]; /* int/string/float...*/
-
-                /* we are dealing with an INT type register */
-                if(register_type == OPCODE_INT)
-                {
-                    uint8_t register_index = content[cc ++]; /* 0, 1, 2 ...*/
-                    uint8_t move_source = content[cc ++]; /* what are we moving in*/
-
-                    if(move_source == OPCODE_IMMEDIATE) /* immediate value (1,..) */
-                    {
-                        uint8_t imm_size = content[cc ++];
-                        /* and now write the number according to the size */
-                        if(imm_size == OPCODE_BYTE)
-                        {
-                            int8_t* immediate = (int8_t*)(content + cc);
-                            regi[register_index] = *immediate;
-                            cc ++;
-                        }
-                        else
-                        if(imm_size == OPCODE_SHORT)
-                        {
-                            int16_t* immediate = (int16_t*)(content + cc);
-                            regi[register_index] = *immediate;
-                            cc += 2;
-                        }
-                        else
-                        if(imm_size == OPCODE_LONG)
-                        {
-                            int32_t* immediate = (int32_t*)(content + cc);
-                            regi[register_index] = *immediate;
-                            cc += 4;
-                        }
-                        else
-                        if(imm_size == OPCODE_HUGE)
-                        {
-                            int64_t* immediate = (int64_t*)(content + cc);
-                            regi[register_index] = *immediate;
-                            cc += 8;
-                        }
-                        else
-                        {
-                            printf("invalid immediate size [mov]: 0x%x", imm_size);
-                            exit(13);
-                        }
-                    }
-                    else
-                    if(move_source == OPCODE_VAR) /* movin a variable into reg*/
-                    {
-                        uint32_t* p_var_index = (uint32_t*)(content + cc);
-
-                        /* fetch the variable from the given index */
-                        struct variable_entry* var = metatable[*p_var_index];
-                        if(var->instantiation == 0)
-                        {
-                            fprintf(stderr,
-                                    "variable %s not initialised correctly\n",
-                                    var->name);
-                            exit(3);
-                        }
-
-                        if(var->instantiation->type != STACK_ENTRY_INT)
-                        {
-                            fprintf(stderr,
-                                    "variable %s has wrong type\n",
-                                    var->name);
-                            exit(4);
-                        }
-
-                        /* and moving the value in the regsiter itself */
-                        regi[register_index] = *(int64_t*)var->instantiation->value;
-
-                        /* forwarding the instructions pointer to next bytecode*/
-                        cc += sizeof(uint32_t);
-                    }
-                    else
-                    {
-                        _NOT_IMPLEMENTED
-                    }
-                }
-                else
-                if(register_type == OPCODE_STRING)
-                {
-                    uint8_t register_index = content[cc ++]; /* 0, 1, 2 ...*/
-                    uint8_t move_source = content[cc ++]; /* what are we moving in*/
-                    if(move_source == OPCODE_STRING) /* usually we move an immediate string intro string register*/
-                    {
-                        uint32_t* p_str_index = (uint32_t*)(content + cc);
-                        cc += sizeof(uint32_t);
-
-                        /* since this is a simple move operation we are not
-                           allocating the memory, since the stringtable
-                           should always be the same, never will be freed
-                           till we exit */
-                        regs[register_index] = stringtable[*p_str_index]->string;
-                    }
-                    else
-                    {
-                        _NOT_IMPLEMENTED
-                    }
-                }
-                else
-                if(register_type == OPCODE_IDX)
-                {
-                    uint8_t register_index = content[cc ++]; /* 0, 1, 2 ...*/
-                    uint8_t move_source = content[cc ++]; /* the index definition */
-                    if(move_source == OPCODE_IMMEDIATE) /* immediate value (1,..) */
-                    {
-                        uint8_t imm_size = content[cc ++];
-                        /* and now write the number according to the size */
-                        if(imm_size == OPCODE_BYTE)
-                        {
-                            int8_t* immediate = (int8_t*)(content + cc);
-                            regidx[register_index] = *immediate;
-                            cc ++;
-                        }
-                        else
-                        if(imm_size == OPCODE_SHORT)
-                        {
-                            int16_t* immediate = (int16_t*)(content + cc);
-                            regidx[register_index] = *immediate;
-                            cc += 2;
-                        }
-                        else
-                        if(imm_size == OPCODE_LONG)
-                        {
-                            int32_t* immediate = (int32_t*)(content + cc);
-                            regidx[register_index] = *immediate;
-                            cc += 4;
-                        }
-                        else
-                        if(imm_size == OPCODE_HUGE)
-                        {
-                            int64_t* immediate = (int64_t*)(content + cc);
-                            regidx[register_index] = *immediate;
-                            cc += 8;
-                        }
-                        else
-                        {
-                            printf("invalid immediate size [mov]: 0x%x", imm_size);
-                            exit(13);
-                        }
-                    }
-                    else
-                    {
-                        _NOT_IMPLEMENTED
-                    }
-
-                }
-                else
-                {
-                    _NOT_IMPLEMENTED
-                }
-            }
-            else
-            if(mov_target == OPCODE_VAR) /* we move into a variable */
-            {
-                uint32_t* p_var_index = (uint32_t*)(content + cc);
-                struct variable_entry* var = metatable[*p_var_index];
-				uint8_t move_source = 0;
-
-                cc += sizeof(uint32_t);
-
-                /* first time usage of this variable? */
-                if(var->instantiation == 0)
-                {
-                    fprintf(stderr,
-                            "using variable [%s] without being on stack\n",
-                            var->name);
-                    exit(6);
-                }
-
-                /* and now let's see what we move in the variable */
-                move_source = content[cc ++];
-
-                /* moving a register in a variable? */
-                if(move_source == OPCODE_REG)
-                {
-                    uint8_t register_type = content[cc ++]; /* int/string/float...*/
-                    uint8_t register_index = content[cc ++]; /* 0, 1, 2 ...*/
-
-                    /* we are dealing with an INT type register */
-                    if(register_type == OPCODE_INT)
-                    {
-                        /* to check if the variable is the same type. If not, convert */
-                        if(var->instantiation->type == OPCODE_INT)
-                        {
-                            /* perform the operation only if the values are not the same already*/
-                            if(var->instantiation->value)
-                            {
-                                if(*(int64_t*)var->instantiation->value != regi[register_index])
-                                {
-                                    int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
-                                    *temp = regi[register_index];
-                                    free(var->instantiation->value);
-                                    var->instantiation->value = temp;
-                                }
-                            }
-                            else /* allocate the memory for the value */
-                            {
-                                int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
-                                *temp = regi[register_index];
-                                var->instantiation->value = temp;
-                            }
-                        }
-                        else
-                        { /* here: convert the value to hold the requested type */
-                            _NOT_IMPLEMENTED
-                        }
-                    }
-                    else
-                    if(register_type == OPCODE_STRING)
-                    {
-                        if(var->instantiation->type == OPCODE_STRING)
-                        {
-                            /* moving a register into the string variable */
-                            if(var->instantiation->value)
-                            {
-                                /* copy only if they are not the same */
-                                if(strcmp((char*)var->instantiation->value, regs[register_index]))
-                                {
-                                    char* temp = (char*)calloc(strlen(regs[register_index]) + 1, sizeof(char));
-                                    strcpy(temp, regs[register_index]);
-                                    free(var->instantiation->value);
-                                    var->instantiation->value = temp;
-                                    var->instantiation->len = strlen(regs[register_index]);
-                                }
-                            }
-                            else /* allocate the memory for the value */
-                            {
-                                char* temp = (char*)calloc(strlen(regs[register_index]), sizeof(char));
-                                strcpy(temp, regs[register_index]);
-                                var->instantiation->value = temp;
-                                var->instantiation->len = strlen(regs[register_index]);
-                            }
-                        }
-                        else
-                        {
-                            _NOT_IMPLEMENTED
-                        }
-                    }
-                    else
-                    {
-                        _NOT_IMPLEMENTED
-                    }
-                }
-                else
-                {
-                    fprintf(stderr, "only register can be moved to var [%s]\n",
-                            var->name);
-                    exit(5);
-                }
-            }
-            else
-            if(mov_target == OPCODE_CCIDX)
-            {
-                uint8_t ccidx_target = content[cc ++];  /* should be a variable */
-                if(ccidx_target == OPCODE_VAR)
-                {
-                    uint32_t* p_var_index = (uint32_t*)(content + cc);
-                    struct variable_entry* var = metatable[*p_var_index];
-					uint8_t ctr_used_index_regs = 0;
-                    uint8_t move_src = 0;
-					cc += sizeof(uint32_t);
-
-                    /* first time usage of this variable? */
-                    if(var->instantiation == 0)
-                    {
-                        fprintf(stderr,
-                                "using variable [%s] without being on stack\n",
-                                var->name);
-                        exit(6);
-                    }
-
-                    /* now should come the index reg counter of ccidx,
-                       a simple byte since there are max 256 indexes */
-                    ctr_used_index_regs = content[cc ++];
-
-                    /* and find what is moved into this ccidx destination*/
-                    move_src = content[cc ++];
-                    if(move_src == OPCODE_REG)
-                    { /* moving a register in the indexed destination */
-                        uint8_t register_type = content[cc ++]; /* int/string/float...*/
-                        uint8_t register_index = content[cc ++]; /* 0, 1, 2 ...*/
-                        if(register_type == OPCODE_STRING)
-                        { /* moving a string register into a variable at a specific location */
-                            if(var->instantiation->type == OPCODE_STRING)
-                            { /* this is a string, accessing a character from it:
-                                 so calculate the "real" index ofthe variable based
-                                 on the regidx vector and ctr_used_index_regs
-                               */
-                                int real_index = 0;
-                                int i;
-                                for(i=0; i<ctr_used_index_regs; i++)
-                                {
-                                    /* first step: calculate the deplasation to find the "row"
-                                       this is actually the size of the "matrix".
-                                       TODO: The 1 should be replaced by something meaningful
-                                     */
-
-                                    real_index += real_index * 1;
-
-                                    /* then the column */
-                                    real_index += regidx[i];
-                                }
-
-                                if(real_index + strlen(regs[register_index]) > strlen((char*)var->instantiation->value))
-                                {
-                                    fprintf(stderr,
-                                            "Index overflow error for [%s]. Requested index: [%d] Available length: [%ld] Assumed length: [%ld]\n",
-                                            var->name, real_index, strlen((char*)var->instantiation->value), real_index + strlen(regs[register_index]));
-                                    exit(18);
-                                }
-                                /* and finally do a strcpy */
-                                strncpy((char*)var->instantiation->value + real_index,
-                                        regs[register_index],
-                                        strlen(regs[register_index]));
-
-                            }
-                            else
-                            {
-                                _NOT_IMPLEMENTED
-                            }
-                        }
-                        else
-                        {
-                            _NOT_IMPLEMENTED
-                        }
-                    }
-                    else
-                    {
-                        /* moving an immediate value/variable into an index destination */
-                        _NOT_IMPLEMENTED
-                    }
-                }
-                else
-                {
-                    /* moving into something other indexed, than a variable */
-                    _NOT_IMPLEMENTED
-                }
-            }
-            else
-            {
-                _NOT_IMPLEMENTED
-            }
+            nap_mov(vm) ;
         }
         else
         /* jumping somewhere ? */
@@ -680,8 +136,8 @@ int main()
         else
         if(current_opcode == OPCODE_MARKS_NAME)
         {
-			uint32_t* p_marker_code = NULL;
-			int32_t* temp = NULL;
+            uint32_t* p_marker_code = NULL;
+            int32_t* temp = NULL;
             struct stack_entry* marker = (struct stack_entry*)(
                         calloc(sizeof(struct stack_entry), 1));
             marker->type = STACK_ENTRY_MARKER_NAME;
@@ -746,7 +202,7 @@ int main()
             {
                 uint8_t peek_index_type = content[cc ++]; /* what are we moving in*/
                 uint32_t peek_index = 0;
-				uint8_t peek_target = 0;
+                uint8_t peek_target = 0;
 
                 if(peek_index_type == OPCODE_IMMEDIATE) /* immediate value (1,..) */
                 {
@@ -1035,7 +491,7 @@ int main()
                 uint32_t* p_var_index = (uint32_t*)(content + cc);
                 uint8_t add_source = 0;
                 struct variable_entry* var = metatable[*p_var_index];
-				cc += sizeof(uint32_t);
+                cc += sizeof(uint32_t);
 
                 /* first time usage of this variable? */
                 if(var->instantiation == 0)
@@ -1100,5 +556,20 @@ int main()
         }
     }
 
+}
+
+
+/*
+ * Main entry point
+ */
+int main()
+{
+    struct nap_vm* vm = nap_vm_load("test.ncb");
+    if(!vm)
+    {
+        exit(1);
+    }
+
     return 0;
 }
+
