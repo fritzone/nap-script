@@ -6,6 +6,11 @@
 #define REGISTER_COUNT 256                    /* number of registers in the VM*/
 #define STACK_INIT   4096                     /* initially 4096 entries  */
 
+#define _NOT_IMPLEMENTED \
+    fprintf(stderr, "NI: line [%d] instr [%d] opcode [%x] at %" PRIu64 " (%" PRIx64 ")\n\n", \
+            __LINE__, vm->content[vm->cc - 1], vm->current_opcode, vm->cc - 1, vm->cc - 1); \
+    exit(99);
+
 /* generic variables regarding the file */
 extern uint8_t file_bitsize;                  /* the bit size: 0x32, 0x64*/
 
@@ -31,10 +36,23 @@ struct nap_vm
     uint32_t cfsize;                        /* the size of the call frames vector */
     uint8_t current_opcode;                 /* the current opcode */
 
+    /* variables about the structure of the file*/
+
+    uint32_t meta_location;
+    uint32_t stringtable_location;
+    uint32_t jumptable_location;
+
+
     /* variables for the meta table*/
 
     struct variable_entry** metatable;      /* the variables */
     uint64_t meta_size;                     /* the size of  the variables vector */
+
+
+    /* variables for the stack */
+    struct stack_entry** stack;             /* in this stack */
+    uint64_t stack_size;                    /* initial stack size */
+    int64_t stack_pointer;                  /* the stack pointer */
 };
 
 /**
@@ -67,5 +85,18 @@ void cleanup(struct nap_vm* vm);
  * @param vm
  */
 void dump(struct nap_vm* vm, FILE *fp);
+
+/**
+ * Loads the given bytecode file and creates a new virtual machine
+ * @param filename - the compiled bytecode
+ * @return - the
+ */
+struct nap_vm* nap_vm_load(const char* filename);
+
+/**
+ * Starts the processing cycle of the virtual machine, executes the bytecode
+ * @param vm - the VM to run
+ */
+void nap_vm_run(struct nap_vm* vm);
 
 #endif
