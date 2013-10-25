@@ -98,6 +98,8 @@ void cleanup(struct nap_vm* vm)
             {
                 free(vm->metatable[i]->instantiation->value);
             }
+
+            printf("--- free_var: %"PRIu64"\n", i);
             free(vm->metatable[i]->instantiation);
         }
     }
@@ -111,12 +113,13 @@ void cleanup(struct nap_vm* vm)
     /* free the allocated stack */
     for(tempst = vm->stack_pointer; tempst > -1; tempst --)
     {
-        if(vm->stack[tempst]->type == OPCODE_INT) /* or float/string */
+        if(vm->stack[tempst] && vm->stack[tempst]->type == OPCODE_INT) /* or float/string */
         {
             /* this wa already freed in the metatable */
         }
         else /* register type */
-        if(vm->stack[tempst]->type == OPCODE_REG || vm->stack[tempst]->type == STACK_ENTRY_MARKER_NAME)
+        if(vm->stack[tempst] && (vm->stack[tempst]->type == OPCODE_REG
+                                 || vm->stack[tempst]->type == STACK_ENTRY_MARKER_NAME))
         {
             free(vm->stack[tempst]->value);
         }
@@ -135,6 +138,9 @@ void cleanup(struct nap_vm* vm)
 
     /* freeing the content */
     free(vm->content);
+
+    /* and the VM itself */
+    free(vm);
 }
 
 

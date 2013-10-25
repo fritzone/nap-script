@@ -203,10 +203,7 @@ void nap_mov(struct nap_vm* vm)
                     {
                         if(*(int64_t*)var->instantiation->value != vm->regi[register_index])
                         {
-                            int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
-                            *temp = vm->regi[register_index];
-                            free(var->instantiation->value);
-                            var->instantiation->value = temp;
+                            *(int64_t*)var->instantiation->value = vm->regi[register_index];
                         }
                     }
                     else /* allocate the memory for the value */

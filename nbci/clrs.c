@@ -18,7 +18,8 @@ void nap_clrs(struct nap_vm* vm)
         if(vm->stack[vm->stack_pointer]->type == OPCODE_REG
                 || vm->stack[vm->stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
         {
-            free(vm->stack[vm->stack_pointer]->value);
+            free(vm->stack[vm->stack_pointer]->value); /* this frees the stuff allocated at push */
+            vm->stack[vm->stack_pointer]->value = NULL;
         }
 
         free(vm->stack[vm->stack_pointer]);
