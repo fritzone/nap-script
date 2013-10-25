@@ -212,6 +212,7 @@ int main()
     }
 
     nap_vm_run(vm);
+    cleanup(vm);
 
     return 0;
 }

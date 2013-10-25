@@ -21,23 +21,40 @@ void nap_push(struct nap_vm *vm)
             uint32_t* p_var_index = (uint32_t*)(vm->content + vm->cc);
             struct variable_entry* ve = vm->metatable[*p_var_index];
 
+            printf("*** alloc_var: %d\n", *p_var_index);
+
             vm->cc += sizeof(uint32_t);
 
-            ve->instantiation = (struct stack_entry*)(calloc(sizeof(struct stack_entry), 1));
+            if(ve->instantiation == NULL)
+            {
+                ve->instantiation = (struct stack_entry*)(calloc(sizeof(struct stack_entry), 1));
+            }
             ve->instantiation->type = se->type; /* must match the stack entry */
 
             if(se->type == OPCODE_INT) /* pushing an integer */
             {
-                int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
-                *temp = 0;
-                ve->instantiation->value = temp;
+                if(ve->instantiation->value) /* to not to create another value if we have it*/
+                {                            /* such as variable declaration in a loop */
+                    *(int64_t*)ve->instantiation->value = 0;
+                }
+                else
+                {
+                    ve->instantiation->value = calloc(1, sizeof(int64_t));
+                    *(int64_t*)ve->instantiation->value = 0;
+                }
             }
             else
             if(se->type == OPCODE_STRING) /* pushing a string */
             {
-                char* temp = (char*)calloc(1, sizeof(char));
-                *temp = 0;
-                ve->instantiation->value = temp;
+                if(ve->instantiation->value)
+                {
+                    *(char*)ve->instantiation->value = 0;
+                }
+                else
+                {
+                    ve->instantiation->value = (char*)calloc(1, sizeof(char));
+                    *(char*)ve->instantiation->value = 0;
+                }
             }
 
             /* setting the value of the stack entry */
