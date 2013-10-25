@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+struct nap_vm;
+
 /******************************************************************************/
 /*                             Stringtable section                            */
 /******************************************************************************/
@@ -22,13 +24,11 @@ struct strtable_entry
     /* the string itself */
     char* string;
 };
-/* variables for the stringtable */
-extern struct strtable_entry** stringtable;  /* the stringtable itself */
-extern uint64_t strt_size;                 /* the size of the stringtable */
+
 
 /*
  * Read the stringtable of the bytecode file. Exits on failure.
  */
-void read_stringtable(FILE* fp, uint64_t stringtable_location);
+void read_stringtable(struct nap_vm*, FILE* fp);
 
 #endif

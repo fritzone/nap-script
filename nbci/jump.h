@@ -1,7 +1,7 @@
 #ifndef _JUMP_H_
 #define _JUMP_H_
 
-#include "nbci.h"
+struct nap_vm;
 
 /**
  * Execute a jump operation

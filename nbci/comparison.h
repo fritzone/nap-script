@@ -1,7 +1,7 @@
 #ifndef _COMPARISON_H_
 #define _COMPARISON_H_
 
-#include "nbci.h"
+struct nap_vm;
 
 /**
  * Executes a comparison operation, and updates the LBF
