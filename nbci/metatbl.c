@@ -17,13 +17,13 @@ void read_metatable(struct nap_vm* vm, FILE* fp)
         return;
     }
     vm->meta_size = count;
-    vm->metatable = (struct variable_entry**) calloc(meta_size + 1,
+    vm->metatable = (struct variable_entry**) calloc(vm->meta_size + 1,
                                                sizeof(struct variable_entry**));
     while(1)
     {
         uint32_t index = 0;
         int end_of_file = 0;
-        fread(&index, file_bitsize, 1, fp);
+        fread(&index, vm->file_bitsize, 1, fp);
         end_of_file = feof(fp);
         if(index == 1920234286 || end_of_file) /* ".str" */
         {

@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.6)
 project (nap-script)
 
-add_definitions(-Wall)
+add_definitions(-Wall -Werror)
 
 if(NOT WIN32)
   add_definitions(-Wextra)
@@ -42,5 +42,15 @@ add_executable(napi
     nbci/nbci_impl.c
     nbci/comparison.c
     nbci/mov.c
+    nbci/marks.c
+    nbci/clrs.c
+    nbci/call.c
+    nbci/peek.c
+    nbci/pop.c
+    nbci/return.c
+    nbci/inc.c
+    nbci/dec.c
+    nbci/clidx.c
+    nbci/operation.c
 )
 

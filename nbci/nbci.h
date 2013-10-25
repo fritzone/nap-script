@@ -2,14 +2,18 @@
 #define _NBCI_H_
 
 #include <stdint.h>
+#include <stdio.h>
+#include <inttypes.h>
 
 #define REGISTER_COUNT 256                    /* number of registers in the VM*/
 #define STACK_INIT   4096                     /* initially 4096 entries  */
 
 #define _NOT_IMPLEMENTED \
-    fprintf(stderr, "NI: line [%d] instr [%d] opcode [%x] at %" PRIu64 " (%" PRIx64 ")\n\n", \
+    do {\
+    fprintf(stderr, "NI: line [%d] instr [%d] opcode [%x] at %"PRIu64" (%" PRIx64 ")\n\n", \
             __LINE__, vm->content[vm->cc - 1], vm->current_opcode, vm->cc - 1, vm->cc - 1); \
-    exit(99);
+    exit(99);\
+    } while(0);
 
 /* generic variables regarding the file */
 extern uint8_t file_bitsize;                  /* the bit size: 0x32, 0x64*/
@@ -41,18 +45,26 @@ struct nap_vm
     uint32_t meta_location;
     uint32_t stringtable_location;
     uint32_t jumptable_location;
+    uint8_t file_bitsize;                   /* the bit size: 0x32, 0x64*/
 
 
     /* variables for the meta table*/
-
     struct variable_entry** metatable;      /* the variables */
     uint64_t meta_size;                     /* the size of  the variables vector */
-
 
     /* variables for the stack */
     struct stack_entry** stack;             /* in this stack */
     uint64_t stack_size;                    /* initial stack size */
     int64_t stack_pointer;                  /* the stack pointer */
+
+    /* variables for the jumptable */
+    struct jumptable_entry** jumptable;   /* the jumptable itself */
+    uint64_t jumptable_size;              /* the size of the jumptable */
+    uint32_t jmpc;               /* counts the jumptable entries on loading*/
+
+    /* variables for the stringtable */
+    struct strtable_entry** stringtable;  /* the stringtable itself */
+    uint64_t strt_size;                 /* the size of the stringtable */
 };
 
 /**
@@ -98,5 +110,10 @@ struct nap_vm* nap_vm_load(const char* filename);
  * @param vm - the VM to run
  */
 void nap_vm_run(struct nap_vm* vm);
+
+/*
+ * Read the stringtable of the bytecode file. Exits on failure.
+ */
+void read_jumptable(struct nap_vm *vm, FILE* fp);
 
 #endif

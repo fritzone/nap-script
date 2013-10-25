@@ -5,6 +5,8 @@
 #include "nbci.h"
 #include "metatbl.h"
 #include "strtable.h"
+#include "opcodes.h"
+#include "stack.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -87,49 +89,49 @@ void cleanup(struct nap_vm* vm)
     uint64_t i;
     int64_t tempst;
     int64_t tempjmi;
-    dump();
-    for(i=0; i<meta_size; i++)
+    dump(vm, stdout);
+    for(i=0; i<vm->meta_size; i++)
     {
-        if(metatable[i]->instantiation)
+        if(vm->metatable[i]->instantiation)
         {
-            if(metatable[i]->instantiation->value)
+            if(vm->metatable[i]->instantiation->value)
             {
-                free(metatable[i]->instantiation->value);
+                free(vm->metatable[i]->instantiation->value);
             }
-            free(metatable[i]->instantiation);
+            free(vm->metatable[i]->instantiation);
         }
     }
-    for(i=0; i<meta_size; i++)
+    for(i=0; i<vm->meta_size; i++)
     {
-        free(metatable[i]->name);
-        free(metatable[i]);
+        free(vm->metatable[i]->name);
+        free(vm->metatable[i]);
     }
-    free(metatable);
+    free(vm->metatable);
 
     /* free the allocated stack */
-    for(tempst = stack_pointer; tempst > -1; tempst --)
+    for(tempst = vm->stack_pointer; tempst > -1; tempst --)
     {
-        if(stack[tempst]->type == OPCODE_INT) /* or float/string */
+        if(vm->stack[tempst]->type == OPCODE_INT) /* or float/string */
         {
             /* this wa already freed in the metatable */
         }
         else /* register type */
-        if(stack[tempst]->type == OPCODE_REG || stack[tempst]->type == STACK_ENTRY_MARKER_NAME)
+        if(vm->stack[tempst]->type == OPCODE_REG || vm->stack[tempst]->type == STACK_ENTRY_MARKER_NAME)
         {
-            free(stack[tempst]->value);
+            free(vm->stack[tempst]->value);
         }
 
-        free(stack[tempst]);
+        free(vm->stack[tempst]);
     }
-    free(stack);
+    free(vm->stack);
 
     /* freeing the jumptable */
-    for(tempjmi = jumptable_size - 1; tempjmi >= 0; tempjmi --)
+    for(tempjmi = vm->jumptable_size - 1; tempjmi >= 0; tempjmi --)
     {
-        free(jumptable[tempjmi]);
+        free(vm->jumptable[tempjmi]);
     }
 
-    free(jumptable);
+    free(vm->jumptable);
 
     /* freeing the content */
     free(vm->content);
@@ -154,14 +156,21 @@ struct nap_vm *nap_vm_load(const char *filename)
     /* read in all the data in memory. Should be faster */
     fseek(fp, 0, SEEK_END);
     fsize = ftell(fp);
-    content = (uint8_t *) calloc(sizeof(uint8_t), fsize);
+    vm->content = (uint8_t *) calloc(sizeof(uint8_t), fsize);
     fseek(fp, 0, SEEK_SET);
-    fread(content, sizeof(uint8_t ), fsize, fp);
+    fread(vm->content, sizeof(uint8_t ), fsize, fp);
 
     fseek(fp, 0, SEEK_SET);
 
     /* create the stack */
-    vm->stack = (struct stack_entry**)calloc(sizeof(struct stack_entry*), stack_size);
+    vm->stack_size = STACK_INIT;
+    vm->stack_pointer = 0;
+    vm->stack = (struct stack_entry**)calloc(sizeof(struct stack_entry*), STACK_INIT);
+    if(vm->stack == NULL)
+    {
+        fprintf(stderr, "Cannot allocate stack\n");
+        exit(45);
+    }
 
     /* the format of the addresses in the file 32 or 64 bit addresses */
     fread(&type, sizeof(uint8_t), 1, fp);
@@ -175,23 +184,24 @@ struct nap_vm *nap_vm_load(const char *filename)
     }
 
     /* read in the important addresses from the bytecode file*/
-    fread(&vm->meta_location, file_bitsize, 1, fp);
-    fread(&vm->stringtable_location, file_bitsize, 1, fp);
-    fread(&vm->jumptable_location, file_bitsize, 1, fp);
+    fread(&vm->meta_location, vm->file_bitsize, 1, fp);
+    fread(&vm->stringtable_location, vm->file_bitsize, 1, fp);
+    fread(&vm->jumptable_location, vm->file_bitsize, 1, fp);
 
     /* prepare the meta table of the application */
-    read_metatable(vm, fp, vm->meta_location);
+    read_metatable(vm, fp);
 
     /* read the stringtable */
-    read_stringtable(fp, vm->stringtable_location);
+    read_stringtable(vm, fp);
 
     /* read the jumptable */
-    read_jumptable(fp, vm->jumptable_location);
+    read_jumptable(vm, fp);
 
     /* done with the file */
     fclose(fp);
 
     /* cc is the instruction pointer: skip the 3 addresses and the startbyte */
-    cc = 3 * file_bitsize + 1;
+    vm->cc = 3 * vm->file_bitsize + 1;
 
+    return vm;
 }
