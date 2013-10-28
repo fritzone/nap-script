@@ -1,10 +1,12 @@
 cmake_minimum_required (VERSION 2.6)
 project (nap-script)
 
-add_definitions(-Wall -Werror)
+add_definitions(-Wall)
 
 if(NOT WIN32)
-  add_definitions(-Wextra)
+  add_definitions(-Wextra -Werror)
+else()
+	add_definitions(/WX)
 endif()
 
 include_directories(inc)
