@@ -299,7 +299,7 @@ void nap_mov(struct nap_vm* vm)
                          so calculate the "real" index ofthe variable based
                          on the regidx vector and ctr_used_index_regs
                        */
-                        int real_index = 0;
+                        uint64_t real_index = 0;
                         int i;
                         for(i=0; i<ctr_used_index_regs; i++)
                         {

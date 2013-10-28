@@ -146,7 +146,7 @@ void cleanup(struct nap_vm* vm)
 
 struct nap_vm *nap_vm_load(const char *filename)
 {
-    uint64_t fsize = 0;
+    long fsize = 0;
     uint8_t type = 0;
     struct nap_vm* vm = NULL;
     FILE* fp = fopen(filename, "rb");

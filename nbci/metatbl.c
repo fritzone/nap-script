@@ -8,7 +8,7 @@
  */
 void read_metatable(struct nap_vm* vm, FILE* fp)
 {
-    uint64_t meta_location = vm->meta_location;
+    long meta_location = vm->meta_location;
     uint32_t count = 0;
     fseek(fp, meta_location + 5, SEEK_SET); /* skip the ".meta" */
     fread(&count, sizeof(uint32_t), 1, fp);
@@ -19,7 +19,7 @@ void read_metatable(struct nap_vm* vm, FILE* fp)
     vm->meta_size = count;
     vm->metatable = (struct variable_entry**) calloc(vm->meta_size + 1,
                                                sizeof(struct variable_entry**));
-    while(1)
+    for(;;)
     {
         uint32_t index = 0;
         int end_of_file = 0;
