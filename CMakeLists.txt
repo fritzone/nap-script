@@ -1,12 +1,12 @@
 cmake_minimum_required (VERSION 2.6)
 project (nap-script)
 
-add_definitions(-Wall)
 
 if(NOT WIN32)
-  add_definitions(-Wextra -Werror)
+  add_definitions(-Wall -Wextra -Werror)
 else()
-	add_definitions(/WX)
+	add_definitions(/W4)
+	add_definitions(/D_CRT_SECURE_NO_WARNINGS)
 endif()
 
 include_directories(inc)
@@ -40,7 +40,6 @@ add_executable(napi
     nbci/jmptable.c
     nbci/jump.c
     nbci/push.c
-    nbci/stack.c
     nbci/nbci_impl.c
     nbci/comparison.c
     nbci/mov.c

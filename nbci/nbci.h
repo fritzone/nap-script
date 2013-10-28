@@ -3,7 +3,14 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#ifdef _WINDOWS
+#define PRId64 "lld"
+#define PRIu64 "lld"
+#define PRIx64 "x"
+#else
+#define __STDC_FORMAT_MACROS
 #include <inttypes.h>
+#endif
 
 #define REGISTER_COUNT 256                    /* number of registers in the VM*/
 #define STACK_INIT   4096                     /* initially 4096 entries  */
@@ -13,7 +20,7 @@
     fprintf(stderr, "NI: line [%d] instr [%d] opcode [%x] at %"PRIu64" (%" PRIx64 ")\n\n", \
             __LINE__, vm->content[vm->cc - 1], vm->current_opcode, vm->cc - 1, vm->cc - 1); \
     exit(99);\
-    } while(0);
+    } while(0,0);
 
 /* generic variables regarding the file */
 extern uint8_t file_bitsize;                  /* the bit size: 0x32, 0x64*/
@@ -50,7 +57,7 @@ struct nap_vm
 
     /* variables for the meta table*/
     struct variable_entry** metatable;      /* the variables */
-    uint64_t meta_size;                     /* the size of  the variables vector */
+    size_t meta_size;                       /* the size of  the variables vector */
 
     /* variables for the stack */
     struct stack_entry** stack;             /* in this stack */
@@ -59,7 +66,7 @@ struct nap_vm
 
     /* variables for the jumptable */
     struct jumptable_entry** jumptable;   /* the jumptable itself */
-    uint64_t jumptable_size;              /* the size of the jumptable */
+    size_t jumptable_size;              /* the size of the jumptable */
     uint32_t jmpc;               /* counts the jumptable entries on loading*/
 
     /* variables for the stringtable */

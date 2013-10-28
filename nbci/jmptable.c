@@ -8,8 +8,8 @@
  */
 void read_jumptable(struct nap_vm* vm, FILE* fp)
 {
-    uint32_t count = 0;
-    uint32_t jmpc = 0;
+    size_t count = 0;
+    size_t jmpc = 0;
 
     fseek(fp, vm->jumptable_location + 4, SEEK_SET); /* skip the ".str" */
     fread(&count, sizeof(uint32_t), 1, fp);
@@ -20,7 +20,7 @@ void read_jumptable(struct nap_vm* vm, FILE* fp)
     vm->jumptable_size = count;
     vm->jumptable = (struct jumptable_entry**) calloc(vm->jumptable_size + 1,
                                               sizeof(struct jumptable_entry**));
-    while(1)
+    for(;;)
     {
         uint32_t index = 0;
         int end_of_file = 0;

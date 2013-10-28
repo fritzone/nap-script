@@ -20,7 +20,7 @@ void read_stringtable(struct nap_vm *vm, FILE* fp)
     strt_size = count;
     vm->stringtable = (struct strtable_entry**) calloc(strt_size + 1,
                                                sizeof(struct strtable_entry**));
-    while(1)
+    for(;;) 
     {
         uint32_t index = 0;
         int end_of_file = 0;

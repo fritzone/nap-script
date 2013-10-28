@@ -24,14 +24,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define __STDC_FORMAT_MACROS
-#ifndef _WIN32
-#include <inttypes.h>
-#else
-#define PRId64 "lld"
-#define PRIu64 "lld"
-#define PRIx64 "x"
-#endif
 
 /******************************************************************************/
 /*                             Debugging section                              */
