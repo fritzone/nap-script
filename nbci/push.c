@@ -18,12 +18,8 @@ void nap_push(struct nap_vm *vm)
 
         if(push_what == OPCODE_VAR)
         {
-            uint32_t* p_var_index = (uint32_t*)(vm->content + vm->cc);
-            struct variable_entry* ve = vm->metatable[*p_var_index];
-
-            printf("*** alloc_var: %d\n", *p_var_index);
-
-            vm->cc += sizeof(uint32_t);
+            nap_index_t var_index = nap_fetch_index(vm);
+            struct variable_entry* ve = vm->metatable[var_index];
 
             if(ve->instantiation == NULL)
             {

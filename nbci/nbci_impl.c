@@ -211,3 +211,25 @@ struct nap_vm *nap_vm_load(const char *filename)
 
     return vm;
 }
+
+nap_addr_t nap_fetch_address(struct nap_vm *vm)
+{
+    nap_addr_t* p_addr = (nap_addr_t*)(vm->content + vm->cc);
+    vm->cc += sizeof(nap_addr_t);
+    return *p_addr;
+}
+
+nap_mark_t nap_fetch_mark(struct nap_vm* vm)
+{
+    nap_mark_t* p_marker_code = (nap_mark_t*)(vm->content + vm->cc);
+    vm->cc += sizeof(nap_mark_t);
+    return *p_marker_code;
+}
+
+nap_index_t nap_fetch_index(struct nap_vm* vm)
+{
+    nap_index_t* p_var_index = (nap_index_t*)(vm->content + vm->cc);
+    vm->cc += sizeof(nap_index_t);
+    return *p_var_index;
+}
+

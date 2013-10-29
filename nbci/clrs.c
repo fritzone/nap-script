@@ -7,13 +7,12 @@
 
 void nap_clrs(struct nap_vm* vm)
 {
-    uint32_t* p_marker_code = (uint32_t*)(vm->content + vm->cc);
-    vm->cc += sizeof(uint32_t);
+    nap_mark_t marker = nap_fetch_mark(vm);
 
     while(vm->stack_pointer > -1
           && vm->stack[vm->stack_pointer]->type != STACK_ENTRY_MARKER_NAME
           && vm->stack[vm->stack_pointer]->value
-          && *(uint32_t*)(vm->stack[vm->stack_pointer]->value) != *p_marker_code)
+          && *(nap_mark_t*)(vm->stack[vm->stack_pointer]->value) != marker)
     {
         if(vm->stack[vm->stack_pointer]->type == OPCODE_REG
                 || vm->stack[vm->stack_pointer]->type == STACK_ENTRY_MARKER_NAME)

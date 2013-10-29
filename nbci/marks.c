@@ -6,18 +6,13 @@
 
 void nap_marks(struct nap_vm *vm)
 {
-    uint32_t* p_marker_code = NULL;
-    int32_t* temp = NULL;
-    struct stack_entry* marker = (struct stack_entry*)(
-                calloc(sizeof(struct stack_entry), 1));
+    nap_mark_t marker_code = nap_fetch_mark(vm);
+    nap_mark_t* temp = temp = (nap_mark_t*)calloc(1, sizeof(int32_t));
+    struct stack_entry* marker = (struct stack_entry*)(calloc(sizeof(struct stack_entry), 1));
+
+    *temp = marker_code;
+
     marker->type = STACK_ENTRY_MARKER_NAME;
-
-    p_marker_code = (uint32_t*)(vm->content + vm->cc);
-    vm->cc += sizeof(uint32_t);
-
-    temp = (int32_t*)calloc(1, sizeof(int32_t));
-    *temp = *p_marker_code;
-
     marker->value = temp;
 
     vm->stack[++ vm->stack_pointer] = marker;

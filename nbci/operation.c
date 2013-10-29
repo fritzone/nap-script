@@ -59,10 +59,9 @@ void nap_operation(struct nap_vm* vm)
             else
             if(add_source == OPCODE_VAR) /* adding a variable to a reg*/
             {
-                uint32_t* p_var_index = (uint32_t*)(vm->content + vm->cc);
+                nap_index_t var_index = nap_fetch_index(vm);
+                struct variable_entry* var = vm->metatable[var_index];
 
-                /* fetch the variable from the given index */
-                struct variable_entry* var = vm->metatable[*p_var_index];
                 if(var->instantiation == 0)
                 {
                     fprintf(stderr,
@@ -81,9 +80,6 @@ void nap_operation(struct nap_vm* vm)
 
                 /* and moving the value in the regsiter itself */
                 do_operation(vm, &vm->regi[register_index], *(int64_t*)var->instantiation->value, vm->current_opcode);
-
-                /* forwarding the instructions pointer to next bytecode*/
-                vm->cc += sizeof(uint32_t);
             }
             else
             {
@@ -98,10 +94,9 @@ void nap_operation(struct nap_vm* vm)
     else
     if(add_target == OPCODE_VAR) /* we move into a variable */
     {
-        uint32_t* p_var_index = (uint32_t*)(vm->content + vm->cc);
+        nap_index_t var_index = nap_fetch_index(vm);
+        struct variable_entry* var = vm->metatable[var_index];
         uint8_t add_source = 0;
-        struct variable_entry* var = vm->metatable[*p_var_index];
-        vm->cc += sizeof(uint32_t);
 
         /* first time usage of this variable? */
         if(var->instantiation == 0)
