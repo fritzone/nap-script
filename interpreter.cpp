@@ -1682,6 +1682,14 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                 node->op_type = CLASS_DECLARATION;
                 *result = CLASS_DECLARATION;
             }
+
+            if(!strcmp(expr, "asm"))
+            {
+                *result = ASM_BLOCK;
+                envl = new_envelope(0, ASM_BLOCK);
+                node->op_type = ASM_BLOCK;
+            }
+
             if(!envl)
             {
                 build_expr_tree(t, node, the_method, orig_expr, cc, result, expwloc);

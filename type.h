@@ -56,6 +56,7 @@ static const int LIST_VALUE                    = 290;
 static const int LIST_ELEMENT                = 300;
 static const int STATEMENT_DO                = 310;
 static const int CLASS_DECLARATION            = 320;
+static const int ASM_BLOCK            = 321;
 static const int STATEMENT_NEW              = 330;
 static const int KEYWORD_TRUE               = 340;
 static const int KEYWORD_FALSE              = 350;
