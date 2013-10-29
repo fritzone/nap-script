@@ -4,10 +4,10 @@
 
 void nap_call(struct nap_vm *vm)
 {
-    uint32_t* p_jmpt_index = (uint32_t*)(vm->content + vm->cc);
-    vm->cc += sizeof(uint32_t);
+    nap_addr_t jmpt_index = nap_fetch_address(vm);
+
     vm->call_frames[vm->cfsize ++] = vm->cc;
 
     /* and simply set cc to be where we need to go */
-    vm->cc = vm->jumptable[*p_jmpt_index]->location;
+    vm->cc = vm->jumptable[jmpt_index]->location;
 }

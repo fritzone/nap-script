@@ -20,10 +20,13 @@
     fprintf(stderr, "NI: line [%d] instr [%d] opcode [%x] at %"PRIu64" (%" PRIx64 ")\n\n", \
             __LINE__, vm->content[vm->cc - 1], vm->current_opcode, vm->cc - 1, vm->cc - 1); \
     exit(99);\
-    } while(0,0);
+    } while(0);
 
-/* generic variables regarding the file */
-extern uint8_t file_bitsize;                  /* the bit size: 0x32, 0x64*/
+/* types for manipulating the addresses, indexes, etc */
+typedef uint32_t nap_addr_t;
+typedef uint32_t nap_mark_t;
+typedef uint32_t nap_index_t;
+typedef int64_t nap_number_t;
 
 /**
  * @brief The TNapVM struct represents an instance of a virtual machine.
@@ -43,7 +46,7 @@ struct nap_vm
 
     uint8_t* content;                       /* the content of the file (ie the bytecodes)*/
     uint64_t cc;                            /* the instruction pointer */
-    uint64_t call_frames[STACK_INIT];       /* the jump back points */
+    uint64_t call_frames[STACK_INIT];       /* the jump back points, the first address after the calls' index */
     uint32_t cfsize;                        /* the size of the call frames vector */
     uint8_t current_opcode;                 /* the current opcode */
 
@@ -122,5 +125,26 @@ void nap_vm_run(struct nap_vm* vm);
  * Read the stringtable of the bytecode file. Exits on failure.
  */
 void read_jumptable(struct nap_vm *vm, FILE* fp);
+
+/**
+ * Fetches the address at the current location in the bytecode stream
+ * @param vm
+ * @return
+ */
+nap_addr_t nap_fetch_address(struct nap_vm *vm);
+
+/**
+ * Fetch a marker from the bytecode stream
+ * @param vm
+ * @return
+ */
+nap_mark_t nap_fetch_mark(struct nap_vm* vm);
+
+/**
+ * Fetch an index from the bytecode stream
+ * @param vm
+ * @return
+ */
+nap_index_t nap_fetch_index(struct nap_vm* vm);
 
 #endif

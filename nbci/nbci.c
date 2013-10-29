@@ -43,7 +43,7 @@ void dump(struct nap_vm* vm, FILE *fp)
                 {
                     fprintf(fp, "E:[%s=%" PRId64 "](%" PRIu64 "/%" PRIu64 ")\n",
                            vm->metatable[i]->name,
-                           *(int64_t*)(vm->metatable[i]->instantiation->value)
+                           *(nap_number_t*)(vm->metatable[i]->instantiation->value)
                            ,i, vm->meta_size);
                 }
                 else
@@ -58,7 +58,7 @@ void dump(struct nap_vm* vm, FILE *fp)
                 {
                     fprintf(fp, "X:[%s=%"PRId64"](%" PRIu64 "/%" PRIu64 ")\n",
                            vm->metatable[i]->name,
-                           *(int64_t*)(vm->metatable[i]->instantiation->value)
+                           *(nap_number_t*)(vm->metatable[i]->instantiation->value)
                            ,i, vm->meta_size);
 
                 }

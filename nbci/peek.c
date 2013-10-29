@@ -14,7 +14,7 @@ void nap_peek(struct nap_vm *vm)
     if(peek_type == OPCODE_INT)
     {
         uint8_t peek_index_type = vm->content[vm->cc ++]; /* what are we moving in*/
-        uint32_t peek_index = 0;
+        nap_index_t peek_index = 0;
         uint8_t peek_target = 0;
 
         if(peek_index_type == OPCODE_IMMEDIATE) /* immediate value (1,..) */
@@ -56,9 +56,8 @@ void nap_peek(struct nap_vm *vm)
         peek_target = vm->content[vm->cc ++];
         if(peek_target == OPCODE_VAR)
         {
-            uint32_t* p_var_index = (uint32_t*)(vm->content + vm->cc);
-            struct variable_entry* ve = vm->metatable[*p_var_index];
-            vm->cc += sizeof(uint32_t);
+            nap_index_t var_index = nap_fetch_index(vm);
+            struct variable_entry* ve = vm->metatable[var_index];
 
             /* there is no instantioation at this point for the var */
             ve->instantiation = (struct stack_entry*)(

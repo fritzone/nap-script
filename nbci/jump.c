@@ -5,7 +5,7 @@
 
 void nap_jump(struct nap_vm *vm)
 {
-    uint32_t* p_jmpt_index = (uint32_t*)(vm->content + vm->cc);
+    nap_index_t* p_jmpt_index = (nap_index_t*)(vm->content + vm->cc);
 
     /* and simply set cc to be where we need to go */
     if(vm->current_opcode == OPCODE_JMP)
@@ -21,7 +21,7 @@ void nap_jump(struct nap_vm *vm)
         }
         else
         {
-            vm->cc += sizeof(uint32_t);
+            vm->cc += sizeof(nap_index_t);
         }
     }
 }
