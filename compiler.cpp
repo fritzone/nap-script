@@ -245,6 +245,26 @@ static void deal_with_ifs_loading(call_context* cc, expression_tree* new_node, m
     new_node->reference = new_envelope(if_st, STATEMENT_IF);
 }
 
+void load_next_assembly_block(parsed_file* pf, call_context* par_cc)
+{
+    int can_stop = 0;
+    std::vector<std::string> assemblys;
+    while(!can_stop) /*read till we get '}' */
+    {
+        char delim = 0;
+        expression_with_location* expwloc = parser_next_phrase(pf, &delim);
+
+        expression_tree* tmp = alloc_mem(expression_tree,1);
+        tmp->v_type = BASIC_TYPE_DONTCARE;
+        tmp->op_type = ASM_BLOCK;
+        tmp->expwloc = expwloc;
+
+        expression_tree_list_add_new_expression(tmp, &par_cc->expressions, expwloc->expression);
+
+        if(delim == '}') can_stop = 1;
+    }
+}
+
 /**
  * Loads the body of a function from the given parsed file
  */
@@ -347,6 +367,11 @@ void load_next_single_phrase(expression_with_location* expwloc, method* cur_meth
         void* gen_res = build_expr_tree(first, cnode, cur_method, first, cur_cc, &op_res, expwloc);
         switch(op_res)
         {
+        case ASM_BLOCK: /*load the next block and directly feed in the statements to the cnode's envelope*/
+        {
+            load_next_assembly_block(pf, cur_cc);    /* loading the function*/
+            break;
+        }
         case NT_VARIABLE_DEF_LST:
             call_context_add_compiled_expression(cur_cc, cnode, first);
             break;
