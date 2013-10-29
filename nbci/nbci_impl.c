@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, int64_t reg, int64_t immediate, uint8_t opcode)
+void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_number_t reg, nap_number_t immediate, uint8_t opcode)
 {
     if(opcode == OPCODE_EQ)
     {
@@ -49,7 +49,7 @@ void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, int64_t reg, int64_t immedia
     }
 }
 
-void do_operation(struct nap_vm* vm, int64_t* target, int64_t operand, uint8_t opcode)
+void do_operation(struct nap_vm* vm, nap_number_t* target, nap_number_t operand, uint8_t opcode)
 {
     if(opcode == OPCODE_ADD)
     {
