@@ -84,7 +84,7 @@ struct nap_vm
  * @param immediate - against this value
  * @param current_opcode - the operation which is supposed to be executed
  */
-void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, int64_t reg, int64_t immediate, uint8_t opcode);
+void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_number_t reg, nap_number_t immediate, uint8_t opcode);
 
 /**
  * Perform the given operation to be found in the opcode, stores the result in target
@@ -94,7 +94,7 @@ void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, int64_t reg, int64_t immedia
  * @param opcode - the operation we perform
  * @throws a system error if the operation is division and the operand is zero
  */
-void do_operation(struct nap_vm* vm, int64_t* target, int64_t operand, uint8_t opcode);
+void do_operation(struct nap_vm* vm, nap_number_t *target, nap_number_t operand, uint8_t opcode);
 
 /**
  * Does a system cleanup of the virtual machine (free memory, etc...)
