@@ -99,14 +99,20 @@ void cleanup(struct nap_vm* vm)
                 free(vm->metatable[i]->instantiation->value);
             }
 
-            printf("--- free_var: %"PRIu64"\n", i);
             free(vm->metatable[i]->instantiation);
         }
     }
     for(i=0; i<vm->meta_size; i++)
     {
-        free(vm->metatable[i]->name);
-        free(vm->metatable[i]);
+        if(vm->metatable[i]->name)
+        {
+            free(vm->metatable[i]->name);
+        }
+
+        if(vm->metatable[i])
+        {
+            free(vm->metatable[i]);
+        }
     }
     free(vm->metatable);
 

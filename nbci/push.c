@@ -52,6 +52,10 @@ void nap_push(struct nap_vm *vm)
                     *(char*)ve->instantiation->value = 0;
                 }
             }
+            else
+            {
+                _NOT_IMPLEMENTED
+            }
 
             /* setting the value of the stack entry */
             se->value = ve;
@@ -70,7 +74,7 @@ void nap_push(struct nap_vm *vm)
 
         if(reg_type == OPCODE_INT) /* pushing an int register */
         {
-            int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
+            nap_number_t* temp = (nap_number_t*)calloc(1, sizeof(nap_number_t));
             *temp = vm->regi[reg_idx];
 
             /* setting the value of the stack entry */
@@ -82,10 +86,69 @@ void nap_push(struct nap_vm *vm)
         }
     }
     else
+    if(se->type == OPCODE_IMMEDIATE)
     {
-        fprintf(stderr, "not implemented push destination: [0x%x]\n",
-                se->type);
-        exit(10);
+        uint8_t imm_size = vm->content[vm->cc ++];
+        nap_number_t nr = 0;
+        /* and now read the number according to the size */
+        if(imm_size == OPCODE_BYTE)
+        {
+            int8_t* immediate = (int8_t*)(vm->content + vm->cc);
+            nr = *immediate;
+            vm->cc ++;
+        }
+        else
+        if(imm_size == OPCODE_SHORT)
+        {
+            int16_t* immediate = (int16_t*)(vm->content + vm->cc);
+            nr = *immediate;
+            vm->cc += 2;
+        }
+        else
+        if(imm_size == OPCODE_LONG)
+        {
+            int32_t* immediate = (int32_t*)(vm->content + vm->cc);
+            nr = *immediate;
+            vm->cc += 4;
+        }
+        else
+        if(imm_size == OPCODE_HUGE)
+        {
+            int64_t* immediate = (int64_t*)(vm->content + vm->cc);
+            nr = *immediate;
+            vm->cc += 8;
+        }
+        else
+        {
+            printf("invalid immediate size [push]: 0x%x", imm_size);
+            _NOT_IMPLEMENTED
+        }
+
+        nap_number_t* temp = (nap_number_t*)calloc(1, sizeof(nap_number_t));
+        *temp = nr;
+
+        /* setting the value of the stack entry */
+        se->value = temp;
+    }
+    else
+    if(se->type == OPCODE_VAR)
+    {
+        nap_index_t var_index = nap_fetch_index(vm);
+        struct variable_entry* ve = vm->metatable[var_index];
+        if(ve->instantiation == NULL)
+        {
+            fprintf(stderr, "invalid push of an undeclared variable [%s]\n", ve->name);
+            exit(9);
+        }
+        se->type = ve->instantiation->type; /* must match the stack entry */
+
+        /* setting the value of the stack entry, nothing else is required here */
+        se->value = ve;
+
+    }
+    else
+    {
+        _NOT_IMPLEMENTED
     }
 
     vm->stack[++ vm->stack_pointer] = se;

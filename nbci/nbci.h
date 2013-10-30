@@ -17,8 +17,8 @@
 
 #define _NOT_IMPLEMENTED \
     do {\
-    fprintf(stderr, "NI: line [%d] instr [%d] opcode [%x] at %"PRIu64" (%" PRIx64 ")\n\n", \
-            __LINE__, vm->content[vm->cc - 1], vm->current_opcode, vm->cc - 1, vm->cc - 1); \
+    fprintf(stderr, "NI: file [%s] line [%d] instr [%d] opcode [%x] at %"PRIu64" (%" PRIx64 ")\n\n", \
+            __FILE__, __LINE__, vm->content[vm->cc - 1], vm->current_opcode, vm->cc - 1, vm->cc - 1); \
     exit(99);\
     } while(0);
 
