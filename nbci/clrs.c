@@ -22,13 +22,16 @@ void nap_clrs(struct nap_vm* vm)
         }
 
         free(vm->stack[vm->stack_pointer]);
+        vm->stack[vm->stack_pointer] = NULL;
         vm->stack_pointer --;
     }
 
     if(vm->stack[vm->stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
     {
         free(vm->stack[vm->stack_pointer]->value);
+        vm->stack[vm->stack_pointer]->value = NULL;
         free(vm->stack[vm->stack_pointer]);
+        vm->stack[vm->stack_pointer] = NULL;
         vm->stack_pointer --;
     }
 

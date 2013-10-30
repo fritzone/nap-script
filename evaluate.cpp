@@ -15,6 +15,11 @@
 #include <string.h>
 #include <string>
 #include <sstream>
+#include <iostream>
+#include <algorithm>
+#include <functional>
+#include <cctype>
+#include <locale>
 
 /* forward declarations */
 void deliver_ccidx_dest(const expression_tree* node, int level, const method* the_method, call_context* cc, int reqd_type, int& idxc, const variable* var, int forced_mov);
@@ -520,6 +525,46 @@ bool is_logical_operation(expression_tree* node)
     return false;
 }
 
+
+// trim from start
+static inline std::string &ltrim(std::string &s) {
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+        return s;
+}
+
+// trim from end
+static inline std::string &rtrim(std::string &s) {
+        s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+        return s;
+}
+
+// trim from both ends
+static inline std::string &trim(std::string &s) {
+        return ltrim(rtrim(s));
+}
+
+static std::vector<std::string> chop_up(const char* s)
+{
+    const char* q = s;
+    std::vector<std::string> result;
+    while(*q)
+    {
+        std::string cpart;
+        while(*q && *q != ' ' && *q != ',' && *q != '(' && *q != ')' && *q != '\n')
+        {
+            cpart += *q;
+            q++;
+        }
+        cpart = trim(cpart);
+        if(cpart.length())
+        {
+            result.push_back(cpart);
+        }
+        if(*q) q ++;
+    }
+
+    return result;
+}
 
 /**
  * Generates bytecode for the If handling.
@@ -1034,7 +1079,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
     if( node && (node->info || node->op_type == STATEMENT_NEW_CC
                  || node->op_type == STATEMENT_CLOSE_CC
                  || node->op_type == BASIC_TYPE_VARIABLE
-                 || node->op_type == BASIC_TYPE_CLASS_VAR)
+                 || node->op_type == BASIC_TYPE_CLASS_VAR || node->op_type == ASM_BLOCK)
             )// added here to solve: int a; if(a&1) { int x = a++; } was not printing the x in the mov ...
     {
         switch(node->op_type)
@@ -1439,6 +1484,16 @@ void compile(const expression_tree* node, const method* the_method, call_context
         case KEYWORD_FALSE:
             code_stream() << "false";
             break;
+
+        case ASM_BLOCK:
+            {
+            std::vector<std::string> asm_commands = chop_up(node->expwloc->expression);
+            for(size_t i=0; i<asm_commands.size(); i++)
+            {
+                code_stream() << asm_commands[i];
+            }
+            break;
+            }
 
         default:
             printf("Something funny:%d\n", node->op_type);
