@@ -26,6 +26,12 @@ void nap_clrs(struct nap_vm* vm)
         vm->stack_pointer --;
     }
 
+    if(vm->stack_pointer == -1)
+    {
+        fprintf(stderr, "stack underflow error. exiting.\n");
+        exit(1);
+    }
+
     if(vm->stack[vm->stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
     {
         free(vm->stack[vm->stack_pointer]->value);

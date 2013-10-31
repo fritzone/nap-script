@@ -1330,7 +1330,8 @@ void compile(const expression_tree* node, const method* the_method, call_context
                         ingoing_parameters = ingoing_parameters->next;
                         pc ++;
                     }
-                    code_stream() << call() << SPACE << '$' << (std::string(cc->name) + STR_DOT + vd->name) << '@' << m->name << NEWLINE;
+                    code_stream() << call() << SPACE << '$'
+                                  << (std::string(cc->name) + STR_DOT + vd->name) << '@' << m->method_name << NEWLINE;
                     if(m->ret_type) // pop something only if the method was defined to return something
                     {
                         code_stream() << pop() << SPACE << reg() << get_reg_type(m->ret_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
@@ -1405,7 +1406,8 @@ void compile(const expression_tree* node, const method* the_method, call_context
             code_stream() << call() << SPACE << "@crea" << C_PAR_OP << m->the_class->name << C_COMMA << (std::string(cc->name) + STR_DOT + "this").c_str() << C_PAR_CL<< NEWLINE;
             code_stream() << call()
                           << SPACE
-                          << '$' << (std::string(cc->name) + STR_DOT + "this") << '@' << (std::string(m->the_class->name) +  STR_DOT + m->name).c_str()
+                          << '$' << (std::string(cc->name) + STR_DOT + "this")
+                          << '@' << (std::string(m->the_class->name) +  STR_DOT + m->method_name).c_str()
                           << NEWLINE;
             code_stream() << pop() << SPACE << reg() << 'g' << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 
@@ -1439,7 +1441,8 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 ingoing_parameters = ingoing_parameters->next;
                 pc ++;
             }
-            code_stream() << call() << SPACE << '@' << std::string(m->main_cc->father->name) +'.' + m->name << NEWLINE;
+            code_stream() << call() << SPACE
+                          << '@' << std::string(m->main_cc->father->name) +'.' + m->method_name << NEWLINE;
             if(m->ret_type) // pop something only if the method was defined to return something
             {
                 code_stream() << pop() << SPACE << reg() << get_reg_type(m->ret_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;

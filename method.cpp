@@ -31,7 +31,7 @@ method::method(char* name, char* return_type, call_context* cc)
     strcat(method_main_cc_name, STR_CALL_CONTEXT_SEPARATOR);
     strcat(method_main_cc_name, name);
 
-    name = duplicate_string(name);
+    method_name = duplicate_string(name);
     if(return_type && strstr(return_type, "extern"))
     {
         /* if this method is a method defined somewhere else ... such as your C++ application */
@@ -195,7 +195,7 @@ struct parameter* method_get_parameter(method* the_method, int i)
 {
     if(the_method)
     {
-        return the_method->variables[i + 1]->func_par;
+        return the_method->variables[i]->func_par;
     }
     return 0;
 }

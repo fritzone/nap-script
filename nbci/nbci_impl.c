@@ -239,3 +239,42 @@ nap_index_t nap_fetch_index(struct nap_vm* vm)
     return *p_var_index;
 }
 
+nap_number_t nap_read_immediate(struct nap_vm* vm)
+{
+    uint8_t imm_size = vm->content[vm->cc ++];
+    nap_number_t nr = 0;
+    /* and now read the number according to the size */
+    if(imm_size == OPCODE_BYTE)
+    {
+        int8_t* immediate = (int8_t*)(vm->content + vm->cc);
+        nr = *immediate;
+        vm->cc ++;
+    }
+    else
+    if(imm_size == OPCODE_SHORT)
+    {
+        int16_t* immediate = (int16_t*)(vm->content + vm->cc);
+        nr = *immediate;
+        vm->cc += 2;
+    }
+    else
+    if(imm_size == OPCODE_LONG)
+    {
+        int32_t* immediate = (int32_t*)(vm->content + vm->cc);
+        nr = *immediate;
+        vm->cc += 4;
+    }
+    else
+    if(imm_size == OPCODE_HUGE)
+    {
+        int64_t* immediate = (int64_t*)(vm->content + vm->cc);
+        nr = *immediate;
+        vm->cc += 8;
+    }
+    else
+    {
+        printf("invalid immediate size [push]: 0x%x", imm_size);
+        _NOT_IMPLEMENTED
+    }
+    return nr;
+}
