@@ -20,47 +20,8 @@ void nap_comparison(struct nap_vm* vm)
 
             if(move_source == OPCODE_IMMEDIATE) /* immediate value (1,..) */
             {
-                uint8_t imm_size = vm->content[vm->cc ++];
-                if(imm_size == OPCODE_BYTE)
-                {
-                    int8_t* immediate = (int8_t*)(vm->content + vm->cc);
-                    nap_vm_set_lbf_to_op_result(vm, vm->regi[register_index],
-                                            *immediate,
-                                            vm->current_opcode);
-                    vm->cc ++;
-                }
-                else
-                if(imm_size == OPCODE_SHORT)
-                {
-                    int16_t* immediate = (int16_t*)(vm->content + vm->cc);
-                    nap_vm_set_lbf_to_op_result(vm, vm->regi[register_index],
-                                            *immediate,
-                                            vm->current_opcode);
-                    vm->cc += 2;
-                }
-                else
-                if(imm_size == OPCODE_LONG)
-                {
-                    int32_t* immediate = (int32_t*)(vm->content + vm->cc);
-                    nap_vm_set_lbf_to_op_result(vm, vm->regi[register_index],
-                                            *immediate,
-                                            vm->current_opcode);
-                    vm->cc += 4;
-                }
-                else
-                if(imm_size == OPCODE_HUGE)
-                {
-                    int64_t* immediate = (int64_t*)(vm->content + vm->cc);
-                    nap_vm_set_lbf_to_op_result(vm, vm->regi[register_index],
-                                            *immediate,
-                                            vm->current_opcode);
-                    vm->cc += 8;
-                }
-                else
-                {
-                    printf("invalid immediate size [cmp]: 0x%x", imm_size);
-                    exit(12);
-                }
+                nap_number_t immediate = nap_read_immediate(vm);
+                nap_vm_set_lbf_to_op_result(vm, vm->regi[register_index], immediate, vm->current_opcode);
             }
             else
             {

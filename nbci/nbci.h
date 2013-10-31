@@ -147,4 +147,11 @@ nap_mark_t nap_fetch_mark(struct nap_vm* vm);
  */
 nap_index_t nap_fetch_index(struct nap_vm* vm);
 
+/**
+ * Read an immediate value from the bytecode stream and return it
+ * @param vm
+ * @return
+ */
+nap_number_t nap_read_immediate(struct nap_vm* vm);
+
 #endif

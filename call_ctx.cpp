@@ -94,7 +94,7 @@ method* call_context_get_method(call_context* cc, const char* name)
     std::vector<method*>::const_iterator q = cc->methods.begin();
     while(q != cc->methods.end())
     {
-        if(!strcmp((*q)->name, name))
+        if((*q)->method_name && !strcmp((*q)->method_name, name))
         {
             return *q;
         }
@@ -181,7 +181,7 @@ void call_context_compile(call_context* cc)
     {
         code_stream() << NEWLINE << fully_qualified_label(std::string(std::string((*ccs_methods)->main_cc->father->name) +
                                                                       '.' +
-                                                                      (*ccs_methods)->name).c_str()) << NEWLINE;
+                                                                      (*ccs_methods)->method_name).c_str()) << NEWLINE;
         // now pop off the variables from the stack
         std::vector<variable*>::const_iterator vlist = (*ccs_methods)->variables.begin();
         int pctr = 0;
@@ -215,7 +215,7 @@ void call_context_compile(call_context* cc)
         code_stream() << '@' << cd->name << NEWLINE;
         while(ccs_methods != cd->methods.end())
         {
-            code_stream() <<  fully_qualified_label( (std::string(cd->name) + STR_DOT + (*ccs_methods)->name).c_str() ) << NEWLINE;
+            code_stream() <<  fully_qualified_label( (std::string(cd->name) + STR_DOT + (*ccs_methods)->method_name).c_str() ) << NEWLINE;
             // now pop off the variables from the stack
             std::vector<variable*>::const_iterator vlist = (*ccs_methods)->variables.begin();
             int pctr = 0;

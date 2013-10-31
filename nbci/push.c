@@ -88,42 +88,7 @@ void nap_push(struct nap_vm *vm)
     else
     if(se->type == OPCODE_IMMEDIATE)
     {
-        uint8_t imm_size = vm->content[vm->cc ++];
-        nap_number_t nr = 0;
-        /* and now read the number according to the size */
-        if(imm_size == OPCODE_BYTE)
-        {
-            int8_t* immediate = (int8_t*)(vm->content + vm->cc);
-            nr = *immediate;
-            vm->cc ++;
-        }
-        else
-        if(imm_size == OPCODE_SHORT)
-        {
-            int16_t* immediate = (int16_t*)(vm->content + vm->cc);
-            nr = *immediate;
-            vm->cc += 2;
-        }
-        else
-        if(imm_size == OPCODE_LONG)
-        {
-            int32_t* immediate = (int32_t*)(vm->content + vm->cc);
-            nr = *immediate;
-            vm->cc += 4;
-        }
-        else
-        if(imm_size == OPCODE_HUGE)
-        {
-            int64_t* immediate = (int64_t*)(vm->content + vm->cc);
-            nr = *immediate;
-            vm->cc += 8;
-        }
-        else
-        {
-            printf("invalid immediate size [push]: 0x%x", imm_size);
-            _NOT_IMPLEMENTED
-        }
-
+        nap_number_t nr = nap_read_immediate(vm);
         nap_number_t* temp = (nap_number_t*)calloc(1, sizeof(nap_number_t));
         *temp = nr;
 

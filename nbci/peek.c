@@ -19,33 +19,7 @@ void nap_peek(struct nap_vm *vm)
 
         if(peek_index_type == OPCODE_IMMEDIATE) /* immediate value (1,..) */
         {
-            uint8_t imm_size = vm->content[vm->cc ++];
-            /* and now write the number avm->ccording to the size */
-            if(imm_size == OPCODE_BYTE)
-            {
-                int8_t* immediate = (int8_t*)(vm->content + vm->cc);
-                peek_index = *immediate;
-                vm->cc ++;
-            }
-            else
-            if(imm_size == OPCODE_SHORT)
-            {
-                int16_t* immediate = (int16_t*)(vm->content + vm->cc);
-                peek_index = *immediate;
-                vm->cc += 2;
-            }
-            else
-            if(imm_size == OPCODE_LONG)
-            {
-                int32_t* immediate = (int32_t*)(vm->content + vm->cc);
-                peek_index = *immediate;
-                vm->cc += 4;
-            }
-            else
-            {
-                printf("invalid immediate size: 0x%x", imm_size);
-                exit(14);
-            }
+            peek_index = nap_read_immediate(vm);
         }
         else
         {

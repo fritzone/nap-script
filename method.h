@@ -30,7 +30,7 @@ struct method
     method(char* name, char* return_type, call_context* cc);
 
     /* the name of the method */
-    char *name;
+    char *method_name;
 
     /* the return type of the function */
     char *return_type;

@@ -866,7 +866,7 @@ static call_frame_entry* handle_function_call(char *expr_trim, int expr_len, exp
     string_list* parameters = NULL, *q;
     parameter_list* pars_list = NULL, *q1 = NULL;
     call_frame_entry* cfe = NULL;
-    strcpy(params_body, expr_trim + strlen(func_call->name) + 1); /* here this is supposed to copy the body of the parameters without the open/close paranthesis */
+    strcpy(params_body, expr_trim + strlen(func_call->method_name) + 1); /* here this is supposed to copy the body of the parameters without the open/close paranthesis */
     while(is_whitespace(*params_body)) params_body ++;
     if(*params_body == C_PAR_OP) params_body ++;        /* now we've skipped the opening paranthesis */
 
@@ -920,9 +920,10 @@ static call_frame_entry* handle_function_call(char *expr_trim, int expr_len, exp
         q=q->next;
     }
     cfe = new call_frame_entry(func_call, pars_list);
-    node->info = duplicate_string(func_call->name);
+    node->info = duplicate_string(func_call->method_name);
     node->op_type = FUNCTION_CALL + type_of_call;
     node->reference = new_envelope(cfe, FUNCTION_CALL + type_of_call);
+    cfe->the_method = call_context_get_method(cc, func_call->method_name);
     return cfe;
 }
 
@@ -1603,6 +1604,17 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                 node->op_type = ENVIRONMENT_VARIABLE;
                 envl = new_envelope(t, ENVIRONMENT_VARIABLE);
             }
+
+            if(!var)
+            {
+                /* is this a variable from the current call context? */
+                std::vector<variable*>::const_iterator varit = variable_list_has_variable(t, cc->variables);
+                if(varit != cc->variables.end())
+                {
+                    var = *varit;
+                }
+            }
+
             if(var)    /* if this is a variable */
             {
                 if(templated)
@@ -1620,6 +1632,9 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                     node->op_type = BASIC_TYPE_VARIABLE;
                 }
             }
+
+
+
             if(node->info && !strcmp(node->info, expr))
             {
                 {
