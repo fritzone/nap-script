@@ -20,13 +20,13 @@ void nap_operation(struct nap_vm* vm)
             uint8_t register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
             uint8_t add_source = vm->content[vm->cc ++]; /* what are we adding to it*/
 
-            if(add_source == OPCODE_IMMEDIATE) /* immediate value (1,..) */
+            if(add_source == OPCODE_IMMEDIATE) /* immediate value (1,..) added to register */
             {
                 nap_number_t imm_operand = nap_read_immediate(vm);
                 do_operation(vm, &vm->regi[register_index], imm_operand, vm->current_opcode);
             }
             else
-            if(add_source == OPCODE_VAR) /* adding a variable to a reg*/
+            if(add_source == OPCODE_VAR) /* adding a variable to the reg*/
             {
                 nap_index_t var_index = nap_fetch_index(vm);
                 struct variable_entry* var = vm->metatable[var_index];
@@ -49,6 +49,21 @@ void nap_operation(struct nap_vm* vm)
 
                 /* and moving the value in the regsiter itself */
                 do_operation(vm, &vm->regi[register_index], *(int64_t*)var->instantiation->value, vm->current_opcode);
+            }
+            else
+            if(add_source == OPCODE_REG) /* adding a register to a register */
+            {
+                uint8_t second_register_type = vm->content[vm->cc ++]; /* int/string/float...*/
+                /* we are dealing with an INT type second register */
+                if(second_register_type == OPCODE_INT)
+                {
+                    uint8_t second_register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
+                    do_operation(vm, &vm->regi[register_index], vm->regi[second_register_index], vm->current_opcode);
+                }
+                else
+                {
+                    _NOT_IMPLEMENTED
+                }
             }
             else
             {

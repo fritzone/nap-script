@@ -48,6 +48,19 @@ void nap_mov(struct nap_vm* vm)
 
             }
             else
+            if(move_source == OPCODE_RV)
+            {
+                uint8_t return_type = vm->content[vm->cc ++]; /* int/string/float...*/
+                if(return_type == OPCODE_INT)
+                {
+                    vm->regi[register_index] = vm->rvi;
+                }
+                else
+                {
+                    _NOT_IMPLEMENTED
+                }
+            }
+            else
             {
                 _NOT_IMPLEMENTED
             }

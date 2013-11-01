@@ -654,13 +654,22 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
                 std::string if_hash = generate_unique_hash();
 
                 push_cc_start_marker(if_hash.c_str());                        /* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
+                int last_opcode = -1;
                 while(q)
                 {
                     int local_req = -1;
                     compile(q->root, the_method, my_if->if_branch, level + 1, local_req, forced_mov);
+                    if(q->root->op_type != STATEMENT_CLOSE_CC)
+                    {
+                        last_opcode = q->root->op_type;
+                    }
                     q=q->next;
                 }
                 push_cc_end_marker(if_hash.c_str());
+                if(last_opcode == RETURN_STATEMENT)
+                {
+                    code_stream() << "leave" << NEWLINE;
+                }
             }
         }
 
@@ -1445,7 +1454,11 @@ void compile(const expression_tree* node, const method* the_method, call_context
                           << '@' << std::string(m->main_cc->father->name) +'.' + m->method_name << NEWLINE;
             if(m->ret_type) // pop something only if the method was defined to return something
             {
-                code_stream() << pop() << SPACE << reg() << get_reg_type(m->ret_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
+                code_stream() << mov()
+                              << SPACE
+                              << reg() << get_reg_type(m->ret_type) << C_PAR_OP << level << C_PAR_CL
+                              << C_COMMA
+                              << "rv" << SPACE << get_reg_type(m->ret_type) << NEWLINE;
                 // this might also pop the stack marker. In that case leaves the stack intact
                 // this solves the problem when the function does not return anything
                 // but is required to. We might raise a runtime exception in this case
@@ -1465,17 +1478,9 @@ void compile(const expression_tree* node, const method* the_method, call_context
                     code_stream() << mov() << SPACE << reg() << get_reg_type(ret_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
                 }
                 compile(t, the_method, cc, level, ret_type, forced_mov);
-                code_stream() << NEWLINE
-                              << push()
-                              << SPACE
-                              << reg() << get_reg_type(ret_type) << C_PAR_OP << level << C_PAR_CL
-                              << NEWLINE;
+                code_stream() << NEWLINE;
+                code_stream() << "return" << SPACE << reg() << get_reg_type(ret_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 
-                code_stream() << "return" << NEWLINE;
-            }
-            else
-            {
-                code_stream() << "return" << NEWLINE;
             }
             break;
             }

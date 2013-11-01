@@ -237,9 +237,13 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "marksn") opcode = OPCODE_MARKS_NAME;
     if(expr == "clrsn") opcode = OPCODE_CLRS_NAME;
     if(expr == "return") opcode = OPCODE_RETURN;
+    if(expr == "rv") opcode = OPCODE_RV;
     if(expr == "pop") opcode = OPCODE_POP;
     if(expr == "peek") opcode = OPCODE_PEEK;
-    if(expr == "clidx")  opcode = OPCODE_CLIDX;
+    if(expr == "clidx") opcode = OPCODE_CLIDX;
+    if(expr == "leave") opcode = OPCODE_LEAVE;
+    if(expr == "pushall") opcode = OPCODE_PUSHALL;
+    if(expr == "popall") opcode = OPCODE_POPALL;
 
     if(isnumber((expr.c_str())))
     {

@@ -12,12 +12,13 @@
 #include <inttypes.h>
 #endif
 
-#define REGISTER_COUNT 256                    /* number of registers in the VM*/
-#define STACK_INIT   4096                     /* initially 4096 entries  */
+#define REGISTER_COUNT    256               /* number of registers in the VM*/
+#define STACK_INIT        4096              /* initially 4096 entries  */
+#define DEEPEST_RECURSION 4096              /* how deep we can dwelve into recursion */
 
 #define _NOT_IMPLEMENTED \
     do {\
-    fprintf(stderr, "NI: file [%s] line [%d] instr [%d] opcode [%x] at %"PRIu64" (%" PRIx64 ")\n\n", \
+    fprintf(stderr, "NI: file [%s] line [%d] instr [%x] opcode [%x] at %"PRIu64" (%" PRIx64 ")\n\n", \
             __FILE__, __LINE__, vm->content[vm->cc - 1], vm->current_opcode, vm->cc - 1, vm->cc - 1); \
     exit(99);\
     } while(0);
@@ -37,10 +38,13 @@ struct nap_vm
 {
     /* Registers section */
 
-    int64_t regi[REGISTER_COUNT];           /* the integer registers */
-    char* regs[REGISTER_COUNT];             /* the string registers */
-    int64_t regidx[REGISTER_COUNT];         /* the register indexes */
-    uint8_t lbf;                            /* the last boolean flag of the machine */
+    nap_number_t regi[REGISTER_COUNT];      /* the integer registers */
+    char*        regs[REGISTER_COUNT];      /* the string registers */
+    nap_index_t  regidx[REGISTER_COUNT];    /* the register indexes */
+    uint8_t      lbf;                       /* the last boolean flag of the machine */
+
+    /* return values */
+    nap_number_t rvi;                       /* the integer return value */
 
     /* variables regarding the execution flow */
 
@@ -153,5 +157,15 @@ nap_index_t nap_fetch_index(struct nap_vm* vm);
  * @return
  */
 nap_number_t nap_read_immediate(struct nap_vm* vm);
+
+/**
+ * Saves the registers. Happens automatically on a "call"
+ */
+void nap_save_registers(struct nap_vm*);
+
+/**
+ * Restores the registers. Happens automatically on a "leave"
+ */
+void nap_restore_registers(struct nap_vm*);
 
 #endif
