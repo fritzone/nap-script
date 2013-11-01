@@ -80,19 +80,16 @@ void dump(struct nap_vm* vm, FILE *fp)
 
 void nap_vm_run(struct nap_vm *vm)
 {
-    /* and start interpreting the code */
     while(vm->cc < vm->meta_location)
     {
         vm->current_opcode = vm->content[vm->cc];
         vm->cc ++;
 
-        /* is this a PUSH operation? */
         if(vm->current_opcode == OPCODE_PUSH)
         {
             nap_push(vm);
         }
         else
-        /* is this checking for something? */
         if(vm->current_opcode == OPCODE_EQ
                 || vm->current_opcode == OPCODE_LT
                 || vm->current_opcode == OPCODE_GT
@@ -103,13 +100,11 @@ void nap_vm_run(struct nap_vm *vm)
             nap_comparison(vm);
         }
         else
-        /* is this a MOV operation? */
         if(vm->current_opcode == OPCODE_MOV)
         {
             nap_mov(vm) ;
         }
         else
-        /* jumping somewhere ? */
         if(vm->current_opcode == OPCODE_JLBF || vm->current_opcode == OPCODE_JMP)
         {
             nap_jump(vm);
@@ -120,13 +115,11 @@ void nap_vm_run(struct nap_vm *vm)
             nap_marks(vm);
         }
         else
-        /* giving up our territory till a given name */
         if(vm->current_opcode == OPCODE_CLRS_NAME)
         {
             nap_clrs(vm);
         }
         else
-        /* calling someone */
         if(vm->current_opcode == OPCODE_CALL)
         {
             nap_call(vm);
@@ -151,7 +144,6 @@ void nap_vm_run(struct nap_vm *vm)
         {
             /* free the allocated metatable */
             cleanup(vm);
-            /* and finally leaving */
             exit(0);
         }
         else
@@ -170,7 +162,21 @@ void nap_vm_run(struct nap_vm *vm)
             nap_clidx(vm);
         }
         else
-        /* is this a mathematical operation? */
+        if(vm->current_opcode == OPCODE_LEAVE)
+        {
+            vm->cc = vm->call_frames[-- vm->cfsize];
+        }
+        else
+        if(vm->current_opcode == OPCODE_POPALL)
+        {
+            nap_restore_registers(vm);
+        }
+        else
+        if(vm->current_opcode == OPCODE_PUSHALL)
+        {
+            nap_save_registers(vm);
+        }
+        else
         if(vm->current_opcode == OPCODE_ADD
                 || vm->current_opcode == OPCODE_MUL
                 || vm->current_opcode == OPCODE_SUB

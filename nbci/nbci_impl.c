@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include "string.h"
 
 void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_number_t reg, nap_number_t immediate, uint8_t opcode)
 {
@@ -277,4 +278,23 @@ nap_number_t nap_read_immediate(struct nap_vm* vm)
         _NOT_IMPLEMENTED
     }
     return nr;
+}
+
+/* the register "stack" used to save and restore the registers */
+static nap_number_t* regi_stack[DEEPEST_RECURSION] = {0};
+static nap_index_t regi_stack_idx = 0;
+
+void nap_save_registers(struct nap_vm* vm)
+{
+    nap_number_t* tmp = calloc(REGISTER_COUNT, sizeof(nap_number_t));
+    memcpy(tmp, vm->regi, REGISTER_COUNT * sizeof(nap_number_t));
+    regi_stack[regi_stack_idx] = tmp;
+    regi_stack_idx ++;
+}
+
+void nap_restore_registers(struct nap_vm* vm)
+{
+    regi_stack_idx --;
+    memcpy(vm->regi, regi_stack[regi_stack_idx], REGISTER_COUNT * sizeof(nap_number_t));
+    free(regi_stack[regi_stack_idx]);
 }

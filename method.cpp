@@ -249,8 +249,8 @@ void method_feed_parameter_list( method* the_method, char* par_list, const expre
     char* par_name = new_string(q->len);
         if(q->len > 0)
         {
-        int j = 0;
-        int modifiable = 0;
+            int j = 0;
+            int modifiable = 0;
             while(i < q->len && (is_identifier_char(q->str[i]) || C_SQPAR_OP  == q->str[i]|| C_SQPAR_CL == q->str[i]) )
             {
                 par_type[j++] = q->str[i++];
@@ -263,7 +263,7 @@ void method_feed_parameter_list( method* the_method, char* par_list, const expre
             {
                 par_name[j++] = q->str[i++];
             }
-        parameter* new_par_decl = method_add_parameter(the_method, trim(par_name), trim(par_type), 1, modifiable, expwloc);
+            parameter* new_par_decl = method_add_parameter(the_method, trim(par_name), trim(par_type), 1, modifiable, expwloc);
             /* here we should identify the dimension of the parameter */
             if(strchr(par_type, C_SQPAR_CL) && strchr(par_type, C_SQPAR_OP))
             {

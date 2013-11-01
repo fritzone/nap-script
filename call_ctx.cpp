@@ -182,6 +182,7 @@ void call_context_compile(call_context* cc)
         code_stream() << NEWLINE << fully_qualified_label(std::string(std::string((*ccs_methods)->main_cc->father->name) +
                                                                       '.' +
                                                                       (*ccs_methods)->method_name).c_str()) << NEWLINE;
+        code_stream() << "pushall" << NEWLINE;
         // now pop off the variables from the stack
         std::vector<variable*>::const_iterator vlist = (*ccs_methods)->variables.begin();
         int pctr = 0;
@@ -202,7 +203,8 @@ void call_context_compile(call_context* cc)
         }
         ccs_methods ++;
         push_cc_end_marker(fun_hash.c_str());
-        code_stream() << "return" << NEWLINE;
+        code_stream() << "popall" << NEWLINE;
+        code_stream() << "leave" << NEWLINE;
     }
     }
 
@@ -217,6 +219,8 @@ void call_context_compile(call_context* cc)
         {
             code_stream() <<  fully_qualified_label( (std::string(cd->name) + STR_DOT + (*ccs_methods)->method_name).c_str() ) << NEWLINE;
             // now pop off the variables from the stack
+            code_stream() << "pushall" << NEWLINE;
+
             std::vector<variable*>::const_iterator vlist = (*ccs_methods)->variables.begin();
             int pctr = 0;
             while(vlist != (*ccs_methods)->variables.end())
@@ -237,7 +241,8 @@ void call_context_compile(call_context* cc)
 
             ccs_methods ++;
             push_cc_end_marker(class_fun_hash.c_str());
-            code_stream() << "return" << NEWLINE;
+            code_stream() << "popall" << NEWLINE;
+            code_stream() << "leave" << NEWLINE;
         }
     }
     }

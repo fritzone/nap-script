@@ -42,6 +42,7 @@ variable* variable_list_add_variable(const char *var_name,
 
     var->name = duplicate_string(var_name);
     var->c_type = duplicate_string(var_type);
+    var->cc = cc;
 
     var->dimension = var_size;
 
