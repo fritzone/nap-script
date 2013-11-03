@@ -44,6 +44,8 @@ void read_metatable(struct nap_vm* vm, FILE* fp)
             name = (char*)calloc(sizeof(char), len + 1);
             if(name == NULL)
             {
+				fprintf(stderr, "cannot allocate a metatable entry\n");
+				exit(1);
             }
             fread(name, sizeof(uint8_t), len, fp);
             if(vm->meta_size < index + 1)

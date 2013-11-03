@@ -10,6 +10,8 @@ void nap_clrs(struct nap_vm* vm)
     nap_mark_t marker = nap_fetch_mark(vm);
 
     while(vm->stack_pointer > -1
+		  && vm->stack
+		  && vm->stack[vm->stack_pointer]
           && vm->stack[vm->stack_pointer]->type != STACK_ENTRY_MARKER_NAME
           && vm->stack[vm->stack_pointer]->value
           && *(nap_mark_t*)(vm->stack[vm->stack_pointer]->value) != marker)

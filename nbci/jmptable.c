@@ -34,6 +34,11 @@ void read_jumptable(struct nap_vm* vm, FILE* fp)
 
 
         new_jmpentry = (struct jumptable_entry*)calloc(1, sizeof(struct jumptable_entry));
+		if(! new_jmpentry)
+		{
+			fprintf(stderr, "out of memory when creating a jmpentry\n");
+			exit(1);
+		}
         new_jmpentry->location = index;
         vm->jumptable[ jmpc++ ] = new_jmpentry;
     }
