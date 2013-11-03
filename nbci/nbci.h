@@ -7,6 +7,9 @@
 #define PRId64 "lld"
 #define PRIu64 "lld"
 #define PRIx64 "x"
+
+#pragma warning (disable : 4127)
+
 #else
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
