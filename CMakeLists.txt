@@ -11,7 +11,7 @@ endif()
 include_directories(inc)
 
 add_subdirectory(compiler)
-add_subdirectory(nbci)
+add_subdirectory(vm)
 add_subdirectory(tests)
 
 enable_testing()

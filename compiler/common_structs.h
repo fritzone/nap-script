@@ -185,9 +185,6 @@ struct parsed_file
     /* name of the file */
     const char *name;
 
-    /* the file pointer*/
-    FILE *fp;
-
     /* this is the content of the file*/
     char *content;
 

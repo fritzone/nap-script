@@ -1,7 +1,7 @@
 include_directories(../inc ..)
 
 add_executable (vmtest
-        test.c
+        test.cpp
         ../compiler/code_stream.cpp
         ../compiler/utils.cpp
         ../compiler/throw_error.cpp
