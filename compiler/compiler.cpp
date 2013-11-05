@@ -27,7 +27,6 @@
 
 static std::vector<std::string> loaded_files;
 
-
 void load_next_block(parsed_file* pf, method* the_method, call_context* par_cc, int current_level, int orig_level);
 void load_next_single_phrase(expression_with_location* expwloc, method* cur_method, call_context* cur_cc, char* delim, int level, parsed_file* pf);
 
@@ -429,7 +428,7 @@ void load_next_single_phrase(expression_with_location* expwloc, method* cur_meth
     }
 }
 
-static void load_file(call_context* cc, const char* file_name, method* cur_method)
+void load_file(call_context* cc, const char* file_name, method* cur_method)
 {
     int level = -1; /* currently we are in a global context */
     expression_with_location* expwloc = NULL;
@@ -460,17 +459,4 @@ static void load_file(call_context* cc, const char* file_name, method* cur_metho
             expwloc = parser_next_phrase(pf, &delim);
         }
     }
-}
-
-int main(int argc, char* argv[])
-{
-    call_context* cur_cc = call_context_create(0, "global", NULL, NULL) ;
-    global_cc = cur_cc;
-
-    method* cur_method = NULL;
-    const char* file_name = argc > 1?argv[1]:"test.nap";
-
-    load_file(cur_cc, file_name, cur_method);
-    call_context_compile(global_cc);
-    return 1;
 }

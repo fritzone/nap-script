@@ -1,9 +1,19 @@
+#include "nbci.h"
+
 #include <check.h>
 #include <stdlib.h>
 
 START_TEST(test_vm_push_immediate)
 {
-    ck_assert_int_eq(0, 0);
+    nap_runtime* runtime = nap_runtime_create();
+    nap_runtime_execute(runtime,
+                     "                            \
+                      int a;                      \
+                      a = 1;                      \
+                     "
+                    );
+    ck_assert_int_eq(1, runtime->get_int("a"));
+    free(runtime);
 }
 END_TEST
 

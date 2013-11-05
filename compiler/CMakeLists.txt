@@ -20,4 +20,10 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/code_stream.cpp
 )
 
-add_executable(nap ${${project}_files} )
+add_library(napcpl ${${project}_files} )
+
+add_executable(nap
+    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+)
+
+target_link_libraries(nap napcpl)
