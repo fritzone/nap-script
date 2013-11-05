@@ -60,25 +60,28 @@ parsed_file *open_file(const char *name)
     parsed_file *f = alloc_mem(parsed_file, 1);
     long size = -1;
     f->name = name;
-    f->fp = fopen(f->name, "rb");
-    if (!f->fp)
+    /* the file pointer*/
+    FILE *fp;
+
+    fp = fopen(f->name, "rb");
+    if (!fp)
     {
         free(f);
         return NULL;
     }
 
-    fseek(f->fp, 0, SEEK_END);
-    size = ftell(f->fp);
+    fseek(fp, 0, SEEK_END);
+    size = ftell(fp);
     if (size == -1)
     {
         free(f);
         return NULL;
     }
-    fseek(f->fp, 0, SEEK_SET);
+    fseek(fp, 0, SEEK_SET);
     f->content = alloc_mem(char, size);
     f->content_size = size;
-    fread(f->content, size, sizeof(char), f->fp);
-    fclose(f->fp);
+    fread(f->content, size, sizeof(char), fp);
+    fclose(fp);
     f->position = 0;
     f->current_line = 0;
     remove_comments(f);
