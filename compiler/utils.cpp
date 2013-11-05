@@ -107,7 +107,7 @@ char* trimd1 = ltrim(src);
  */
 char* duplicate_string(const char* src)
 {
-    return strdup(src);
+    return _strdup(src);
 }
 
 /**
@@ -323,7 +323,7 @@ std::string fully_qualified_label(std::string& l)
 
 int irand(int min, int max)
 {
-    return ((double)rand() / ((double)RAND_MAX + 1.0)) * (max - min + 1) + min;
+    return (int)(((double)rand() / ((double)RAND_MAX + 1.0)) * (max - min + 1) + min);
 }
 
 static std::string generate_hash_tag()

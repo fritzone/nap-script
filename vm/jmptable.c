@@ -19,7 +19,7 @@ void read_jumptable(struct nap_vm* vm, FILE* fp)
         cleanup(vm);
         exit(EXIT_FAILURE);
     }
-    read_bytes = fread(&count, sizeof(u_int32_t), 1, fp);
+    read_bytes = fread(&count, sizeof(uint32_t), 1, fp);
     if(read_bytes != 1)
     {
         fprintf(stderr, "cannot read the number of jumptable entries");
