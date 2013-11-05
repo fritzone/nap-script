@@ -4,4 +4,4 @@ add_executable(vmtest
         test.cpp
 )
 
-target_link_libraries(vmtest nbci napcpl check)
+target_link_libraries(vmtest nbci napcpl)

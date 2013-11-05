@@ -4,7 +4,7 @@ project (nap-script)
 if(NOT WIN32)
   add_definitions(-Wall -Wextra )
 else()
-  add_definitions(/W4)
+  add_definitions(/W3)
   add_definitions(/D_CRT_SECURE_NO_WARNINGS)
 endif()
 
