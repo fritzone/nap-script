@@ -15,4 +15,4 @@ add_subdirectory(nbci)
 add_subdirectory(tests)
 
 enable_testing()
-add_test(NAME nap_vm_test COMMAND test)
+add_test(NAME nap_vm_test COMMAND vmtest)

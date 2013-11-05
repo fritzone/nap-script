@@ -1,6 +1,11 @@
+include_directories(../inc ..)
 
-include_directories(../inc)
+add_executable (vmtest
+        test.c
+        ../compiler/code_stream.cpp
+        ../compiler/utils.cpp
+        ../compiler/throw_error.cpp
+        ../compiler/consts.cpp
+)
 
-add_executable (test test.c)
-
-target_link_libraries(test nbci)
+target_link_libraries(vmtest nbci check)
