@@ -61,6 +61,20 @@ void nap_mov(struct nap_vm* vm)
                 }
             }
             else
+            if(move_source == OPCODE_REG)
+            {
+                uint8_t second_register_type = vm->content[vm->cc ++]; /* int/string/float...*/
+                if(second_register_type == OPCODE_INT) /* moving a register in another register */
+                {
+                    uint8_t second_register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
+                    vm->regi[register_index] = vm->regi[second_register_index];
+                }
+                else
+                {
+                    _NOT_IMPLEMENTED
+                }
+            }
+            else
             {
                 _NOT_IMPLEMENTED
             }

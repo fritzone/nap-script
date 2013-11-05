@@ -15,38 +15,49 @@
 
 void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_number_t reg, nap_number_t immediate, uint8_t opcode)
 {
+    register uint8_t temp_lbf;
+
     if(opcode == OPCODE_EQ)
     {
-        vm->lbf = (reg == immediate);
+        temp_lbf = (reg == immediate);
     }
     else
     if(opcode == OPCODE_NEQ)
     {
-        vm->lbf = (reg != immediate);
+        temp_lbf = (reg != immediate);
     }
     else
     if(opcode == OPCODE_LT)
     {
-        vm->lbf = (reg <  immediate);
+        temp_lbf = (reg <  immediate);
     }
     else
     if(opcode == OPCODE_GT)
     {
-        vm->lbf = (reg >  immediate);
+        temp_lbf = (reg >  immediate);
     }
     else
     if(opcode == OPCODE_LTE)
     {
-        vm->lbf = (reg <= immediate);
+        temp_lbf = (reg <= immediate);
     }
     else
     if(opcode == OPCODE_GTE)
     {
-        vm->lbf = (reg >= immediate);
+        temp_lbf = (reg >= immediate);
     }
     else
     {
         _NOT_IMPLEMENTED
+    }
+
+    if(vm->lbf == UNDECIDED)
+    {
+        vm->lbf = temp_lbf;
+    }
+    else
+    {
+        vm->lbf &= temp_lbf;
     }
 }
 
@@ -200,6 +211,7 @@ struct nap_vm *nap_vm_load(const char *filename)
     fread(&vm->meta_location, vm->file_bitsize, 1, fp);
     fread(&vm->stringtable_location, vm->file_bitsize, 1, fp);
     fread(&vm->jumptable_location, vm->file_bitsize, 1, fp);
+    fread(&vm->mrc, sizeof(uint8_t), 1, fp);
 
     /* prepare the meta table of the application */
     read_metatable(vm, fp);
@@ -213,8 +225,11 @@ struct nap_vm *nap_vm_load(const char *filename)
     /* done with the file */
     fclose(fp);
 
-    /* cc is the instruction pointer: skip the 3 addresses and the startbyte */
-    vm->cc = 3 * vm->file_bitsize + 1;
+    /* cc is the instruction pointer: skip the 3 addresses and the startbyte and the regsiter count */
+    vm->cc = 3 * vm->file_bitsize + 1 + 1;
+
+    /* initially the last boolean flag is in an unknow state */
+    vm->lbf = UNDECIDED;
 
     return vm;
 }
@@ -287,14 +302,28 @@ static nap_index_t regi_stack_idx = 0;
 void nap_save_registers(struct nap_vm* vm)
 {
     nap_number_t* tmp = calloc(REGISTER_COUNT, sizeof(nap_number_t));
-    memcpy(tmp, vm->regi, REGISTER_COUNT * sizeof(nap_number_t));
+    memcpy(tmp, vm->regi, vm->mrc * sizeof(nap_number_t));
     regi_stack[regi_stack_idx] = tmp;
     regi_stack_idx ++;
+    if(regi_stack_idx == DEEPEST_RECURSION)
+    {
+        fprintf(stderr, "too deep recursion. (ie: too many pushall's)\n");
+        cleanup(vm);
+        exit(EXIT_FAILURE);
+    }
 }
 
 void nap_restore_registers(struct nap_vm* vm)
 {
+    if(regi_stack_idx == 0)
+    {
+        fprintf(stderr, "cannot popall without a pushall\n");
+        cleanup(vm);
+        exit(EXIT_FAILURE);
+    }
+
     regi_stack_idx --;
-    memcpy(vm->regi, regi_stack[regi_stack_idx], REGISTER_COUNT * sizeof(nap_number_t));
+    memcpy(vm->regi, regi_stack[regi_stack_idx], vm->mrc * sizeof(nap_number_t));
     free(regi_stack[regi_stack_idx]);
+
 }

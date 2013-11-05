@@ -22,7 +22,7 @@ struct variable
      * @param dimension
      * @param type
      */
-    variable(int dimension, int type);
+    variable(int pdimension, int type);
 
     /* the name of the variable */
     char *name;

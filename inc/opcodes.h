@@ -31,6 +31,7 @@ static const unsigned char OPCODE_POP           = (unsigned char)0xCB; /**/
 static const unsigned char OPCODE_PEEK          = (unsigned char)0xCD; /**/
 static const unsigned char OPCODE_CLIDX         = (unsigned char)0xCE;
 static const unsigned char OPCODE_POPALL        = (unsigned char)0xCF;
+static const unsigned char OPCODE_CLBF          = (unsigned char)0xD7; /**/
 static const unsigned char OPCODE_DIV           = (unsigned char)0xD8; /**/
 static const unsigned char OPCODE_EQ            = (unsigned char)0xE0; /**/
 static const unsigned char OPCODE_NEQ           = (unsigned char)0xE1; /**/

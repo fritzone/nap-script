@@ -10,13 +10,13 @@ void nap_clrs(struct nap_vm* vm)
     nap_mark_t marker = nap_fetch_mark(vm);
 
     while(vm->stack_pointer > -1
-		  && vm->stack
-		  && vm->stack[vm->stack_pointer]
+          && vm->stack != NULL
+          && vm->stack[vm->stack_pointer] != NULL
           && vm->stack[vm->stack_pointer]->type != STACK_ENTRY_MARKER_NAME
-          && vm->stack[vm->stack_pointer]->value
+          && vm->stack[vm->stack_pointer]->value != NULL
           && *(nap_mark_t*)(vm->stack[vm->stack_pointer]->value) != marker)
     {
-        if(vm->stack[vm->stack_pointer]->type == OPCODE_REG
+        if(vm->stack[vm->stack_pointer]->type == (StackEntryType)OPCODE_REG
                 || vm->stack[vm->stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
         {
             free(vm->stack[vm->stack_pointer]->value); /* this frees the stuff allocated at push */
@@ -31,10 +31,12 @@ void nap_clrs(struct nap_vm* vm)
     if(vm->stack_pointer == -1)
     {
         fprintf(stderr, "stack underflow error. exiting.\n");
-        exit(1);
+        cleanup(vm);
+        exit(EXIT_FAILURE);
     }
 
-    if(vm->stack[vm->stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
+    if(vm->stack[vm->stack_pointer] != NULL
+      && vm->stack[vm->stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
     {
         free(vm->stack[vm->stack_pointer]->value);
         vm->stack[vm->stack_pointer]->value = NULL;

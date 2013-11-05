@@ -93,10 +93,10 @@ struct call_frame_entry
     /* holds the previous call frame of the method... just in case*/
     call_frame_entry *previous_cf;
 
-    call_frame_entry(method *the_method, parameter_list *pars)
+    call_frame_entry(method *pthe_method, parameter_list *pars)
     {
         parameters = pars;
-        the_method = the_method;
+        the_method = pthe_method;
         previous_cf = the_method->cur_cf;
     }
 };
