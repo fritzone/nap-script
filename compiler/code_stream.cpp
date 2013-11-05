@@ -11,6 +11,7 @@
 
 static const char BITSIZE = 0x32;
 const char* NEWLINE = "\n";
+static uint8_t max_reg_count = 0;
 
 /**
  * the description of a method from the binary opcode file
@@ -158,8 +159,11 @@ public:
         fwrite(&meta_location, sizeof(meta_location), 1, f); // the meta location for variables
         fwrite(&strtable_location, sizeof(strtable_location), 1, f); // the stringtable location         
         fwrite(&jumptable_location, sizeof(jumptable_location), 1, f); // the jumptable location
+        fwrite(&max_reg_count, sizeof(max_reg_count), 1, f);
 
         fclose(f);
+
+        fprintf(stderr, "\nMRC:%d\n", max_reg_count);
         
     }
 };
@@ -194,11 +198,14 @@ void code_stream::output_bytecode(const char* s)
         first_entry = false;
         NUMBER_INTEGER_TYPE temp = 0;
         uint8_t type = BITSIZE;
+        uint8_t bits = 255;
 
         fwrite(&type, sizeof(type), 1, f);  // the type of the file: 32 bit
         fwrite(&temp, sizeof(temp), 1, f); // the meta location for variables
         fwrite(&temp, sizeof(temp), 1, f); // the stringtable location         
         fwrite(&temp, sizeof(temp), 1, f); // the jumptable location
+
+        fwrite(&bits, sizeof(bits), 1, f);  // the type of the file: 32 bit
     }
     else
     {
@@ -244,6 +251,7 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "leave") opcode = OPCODE_LEAVE;
     if(expr == "pushall") opcode = OPCODE_PUSHALL;
     if(expr == "popall") opcode = OPCODE_POPALL;
+    if(expr == "clbf") opcode = OPCODE_CLBF;
 
     if(isnumber((expr.c_str())))
     {
@@ -280,6 +288,15 @@ void code_stream::output_bytecode(const char* s)
             { // if this counts a register
                 uint8_t nrf = atoi(expr.c_str());
                 write_stuff_to_file(f,nrf, 1);
+                if(max_reg_count < nrf)
+                {
+                    max_reg_count = nrf;
+                    if(max_reg_count == 255)
+                    {
+                        fprintf(stderr, "a too complex operation was attempted in [%s]", g_location->expression);
+                        _exit(1);
+                    }
+                }
             }
             else
             {
@@ -290,11 +307,6 @@ void code_stream::output_bytecode(const char* s)
                 if(nr > 255) type = OPCODE_SHORT;
                 if(nr > 65535) type = OPCODE_LONG;
                 if(nr > 4294967294) type = OPCODE_HUGE;
-                
-                // if the value is signed or not
-                uint8_t sign = 0;
-                
-                sign = sign; // TODO: work this
                 
                 // if yes, switch on the first bit in the type
                 if(expr[0] == '-') type |= 0x80;

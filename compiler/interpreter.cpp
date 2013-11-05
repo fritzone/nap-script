@@ -1246,7 +1246,12 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
             throw_error("Invalid constructor: ", constructor_name);
         }
         method* called_constructor = call_context_get_method(cd, constructor_name);
-        called_constructor = (constructor_call*)realloc(called_constructor, sizeof(constructor_call));
+        constructor_call* tmp = (constructor_call*)realloc(called_constructor, sizeof(constructor_call));
+        if(tmp == NULL)
+        {
+            throw_error("Not enough memory");
+        }
+        called_constructor = tmp;
         constructor_call* ccf = (constructor_call*)called_constructor;
         ccf->the_class = cd;
         call_frame_entry* cfe = handle_function_call(keyword_new, expr_len,

@@ -186,6 +186,11 @@ void nap_vm_run(struct nap_vm *vm)
             nap_operation(vm);
         }
         else
+        if(vm->current_opcode == OPCODE_CLBF)
+        {
+            vm->lbf = UNDECIDED;
+        }
+        else
         {
             fprintf(stderr, "invalid opcode [%x] at %"PRIu64" (%"PRIx64")\n",
                     vm->current_opcode, vm->cc - 1, vm->cc - 1);

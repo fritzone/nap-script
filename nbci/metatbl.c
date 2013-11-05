@@ -18,7 +18,7 @@ void read_metatable(struct nap_vm* vm, FILE* fp)
     }
     vm->meta_size = count;
     vm->metatable = (struct variable_entry**) calloc(vm->meta_size + 1,
-                                               sizeof(struct variable_entry**));
+                                               sizeof(struct variable_entry*));
     for(;;)
     {
         uint32_t index = 0;
@@ -45,13 +45,20 @@ void read_metatable(struct nap_vm* vm, FILE* fp)
             if(name == NULL)
             {
 				fprintf(stderr, "cannot allocate a metatable entry\n");
-				exit(1);
+                exit(EXIT_FAILURE);
             }
             fread(name, sizeof(uint8_t), len, fp);
             if(vm->meta_size < index + 1)
             { /* seems there is something wrong with the metatable size*/
-                vm->metatable = (struct variable_entry**) realloc(vm->metatable,
-                                   sizeof(struct variable_entry**)*(index + 1));
+                struct variable_entry** tmp = (struct variable_entry**) realloc(vm->metatable,
+                                               sizeof(struct variable_entry**) * (index + 1));
+                if(tmp == NULL)
+                {
+                    fprintf(stderr, "cannot reallocate the metatable\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                vm->metatable = tmp;
             }
             new_var = (struct variable_entry*)
                                     calloc(1, sizeof(struct variable_entry));

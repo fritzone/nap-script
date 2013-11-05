@@ -19,6 +19,7 @@
 #define STACK_INIT        4096              /* initially 4096 entries  */
 #define DEEPEST_RECURSION 4096              /* how deep we can dwelve into recursion */
 
+/* Macro for leaving the application in case of an error */
 #define _NOT_IMPLEMENTED \
     do {\
     fprintf(stderr, "NI: file [%s] line [%d] instr [%x] opcode [%x] at %"PRIu64" (%" PRIx64 ")\n\n", \
@@ -27,13 +28,22 @@
     } while(0);
 
 /* types for manipulating the addresses, indexes, etc */
-typedef uint32_t nap_addr_t;
-typedef uint32_t nap_mark_t;
-typedef uint32_t nap_index_t;
-typedef int64_t nap_number_t;
+typedef uint32_t nap_addr_t;    /* the type of a NAP address*/
+typedef uint32_t nap_mark_t;    /* the type of a marker pushed on the stack */
+typedef uint32_t nap_index_t;   /* the type of an index */
+typedef int64_t  nap_number_t;  /* the type of a number */
+
+/* the lbf initially is undecided, the first operation sets it, and it is AND-ed with the
+   result of the next boolean operations as long as it is not cleared by a jlbf or clbf */
+enum flag_staus
+{
+    UNDECIDED = -1,
+    FALSE     =  0,
+    TRUE      =  1
+};
 
 /**
- * @brief The TNapVM struct represents an instance of a virtual machine.
+ * The TNapVM struct represents an instance of a virtual machine.
  * This structure contains all the necessary components that are used to
  * create a fully functional virtual machine.
  */
@@ -41,10 +51,11 @@ struct nap_vm
 {
     /* Registers section */
 
-    nap_number_t regi[REGISTER_COUNT];      /* the integer registers */
-    char*        regs[REGISTER_COUNT];      /* the string registers */
-    nap_index_t  regidx[REGISTER_COUNT];    /* the register indexes */
-    uint8_t      lbf;                       /* the last boolean flag of the machine */
+    nap_number_t    regi  [REGISTER_COUNT]; /* the integer registers */
+    char*           regs  [REGISTER_COUNT]; /* the string registers */
+    nap_index_t     regidx[REGISTER_COUNT]; /* the register indexes */
+    enum flag_staus lbf;                    /* the last boolean flag of the machine */
+    uint8_t         mrc;                    /* the number of registers used in this VM */
 
     /* return values */
     nap_number_t rvi;                       /* the integer return value */
@@ -55,33 +66,36 @@ struct nap_vm
     uint64_t cc;                            /* the instruction pointer */
     uint64_t call_frames[STACK_INIT];       /* the jump back points, the first address after the calls' index */
     uint32_t cfsize;                        /* the size of the call frames vector */
-    uint8_t current_opcode;                 /* the current opcode */
+    uint8_t  current_opcode;                /* the current opcode */
 
-    /* variables about the structure of the file*/
+    /* variables about the structure of the file */
 
-    uint32_t meta_location;
-    uint32_t stringtable_location;
-    uint32_t jumptable_location;
-    uint8_t file_bitsize;                   /* the bit size: 0x32, 0x64*/
+    uint32_t  meta_location;                /* the location of the metatable in the file */
+    uint32_t  stringtable_location;         /* the location of the stringtable in the file */
+    uint32_t  jumptable_location;           /* the location of the jumptable in the file */
+    uint8_t   file_bitsize;                 /* the bit size: 0x32, 0x64*/
 
+    /* variables for the meta table */
 
-    /* variables for the meta table*/
     struct variable_entry** metatable;      /* the variables */
     size_t meta_size;                       /* the size of  the variables vector */
 
     /* variables for the stack */
+
     struct stack_entry** stack;             /* in this stack */
     uint64_t stack_size;                    /* initial stack size */
     int64_t stack_pointer;                  /* the stack pointer */
 
     /* variables for the jumptable */
-    struct jumptable_entry** jumptable;   /* the jumptable itself */
-    size_t jumptable_size;              /* the size of the jumptable */
-    uint32_t jmpc;               /* counts the jumptable entries on loading*/
+
+    struct jumptable_entry** jumptable;     /* the jumptable itself */
+    size_t jumptable_size;                  /* the size of the jumptable */
+    uint32_t jmpc;                          /* counts the jumptable entries on loading*/
 
     /* variables for the stringtable */
-    struct strtable_entry** stringtable;  /* the stringtable itself */
-    uint64_t strt_size;                 /* the size of the stringtable */
+
+    struct strtable_entry** stringtable;    /* the stringtable itself */
+    uint64_t strt_size;                     /* the size of the stringtable */
 };
 
 /**

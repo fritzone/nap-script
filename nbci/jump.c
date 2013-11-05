@@ -16,7 +16,7 @@ void nap_jump(struct nap_vm *vm)
     {
         if(vm->lbf)
         {
-            vm->lbf = 0;
+            vm->lbf = UNDECIDED;
             vm->cc = vm->jumptable[*p_jmpt_index]->location;
         }
         else

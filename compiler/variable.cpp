@@ -22,14 +22,14 @@
 /**
  * Creates a new  variable
  */
-variable::variable(int dimension, int type)
+variable::variable(int pdimension, int type)
 {
-    if(dimension<1)
+    if(pdimension<1)
     {
         throw_error(STR_INVALID_DIMENSION, NULL);
     }
 
-    dimension = dimension;
+    dimension = pdimension;
     multi_dim_count = 1;
     i_type = type;
 }
