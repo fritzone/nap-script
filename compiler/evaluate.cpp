@@ -11,6 +11,7 @@
 #include "variable.h"
 #include "code_stream.h"
 #include "envelope.h"
+#include "expression_tree.h"
 
 #include <string.h>
 #include <string>

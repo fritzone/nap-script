@@ -1,7 +1,33 @@
 #ifndef _COMPILER_H_
 #define _COMPILER_H_
 
-void load_file(call_context* cc, const char* file_name, method* cur_method);
+struct call_context;
+struct method;
+struct parsed_file;
+
+#include <string>
+#include <vector>
+
+class nap_compiler
+{
+public:
+
+    nap_compiler();
+
+
+    call_context* cur_cc;
+    method* cur_method;
+
+    void load_file(call_context* cc, const char* file_name, method* cur_method);
+    void compile();
+
+private:
+
+    call_context* global_cc;
+    std::vector<std::string> loaded_files;
+
+};
+
 
 #endif
 

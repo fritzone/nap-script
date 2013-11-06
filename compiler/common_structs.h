@@ -13,6 +13,8 @@ struct call_context_list;
 struct method;
 struct class_declaration;
 struct call_frame_entry;
+struct expression_tree;
+struct expression_tree_list;
 
 /**
  * This structure holds the information about the location of a particular expression.
@@ -45,52 +47,6 @@ struct expression_with_location
 
     /* the location of this expression in the input file */
     file_location *location;
-};
-
-
-/*
- * this tree holds the interpreted form of the formula
- */
-struct expression_tree
-{
-    /* the left branch of the expression */
-    struct expression_tree *left;
-
-    /* the right branch of the expression */
-    struct expression_tree *right;
-
-    /* the info that can be found in the expression */
-    char *info;
-
-    /* the reference ofthe node ... can be a struct number, a struct variable, etc ... */
-    struct envelope *reference;
-
-    /* the type of the struct variable that can be found in this node (ie: real, integer)... used for type correct calculations */
-    int v_type;
-
-    /* the type of the operator if any */
-    int op_type;
-
-    /* the father of this node */
-    struct expression_tree *father;
-
-    /* this is the physical location of the expression (file, line, etc)*/
-    const expression_with_location *expwloc;
-};
-
-/**
- * This contains the list of expressions that can be found in a struct method
- */
-struct expression_tree_list
-{
-    /* the link to the next */
-    struct expression_tree_list *next;
-
-    /* the root of the tree */
-    const expression_tree *root;
-
-    /* the text representation of this expression that is interpreted in the root */
-    char *text_expression;
 };
 
 /**
@@ -174,31 +130,6 @@ struct parameter_list
 
     /* the atual parameter */
     parameter *param;
-};
-
-
-/**
- * The structure of a parsed file
- */
-struct parsed_file
-{
-    /* name of the file */
-    const char *name;
-
-    /* this is the content of the file*/
-    char *content;
-
-    /* the current position of the reader */
-    long position;
-
-    /* the size of the file ... */
-    long content_size;
-
-    /* the current line number */
-    long current_line;
-
-    /* the previous position where the parser was before reading the current expression */
-    long previous_position;
 };
 
 /**

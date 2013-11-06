@@ -9,13 +9,12 @@
 #include "variable.h"
 #include "utils.h"
 #include "code_stream.h"
+#include "expression_tree.h"
 #include <stdio.h>
 #include <string.h>
 #include <string>
 
 using namespace std;
-
-call_context* global_cc = NULL;
 
 /**
  * Creates a new call context object
@@ -133,7 +132,7 @@ struct bytecode_label* call_context_add_break_label(call_context* cc, long posit
  */
 void call_context_add_compiled_expression(call_context* the_cc, const struct expression_tree* co_expr, const char* expr)
 {
-expression_tree_list* tmp = expression_tree_list_add_new_expression(co_expr, &the_cc->expressions, expr);
+    expression_tree_list* tmp = expression_tree_list_add_new_expression(co_expr, &the_cc->expressions, expr);
     if(NULL == the_cc->expressions)
     {
         the_cc->expressions = tmp;
@@ -150,7 +149,6 @@ expression_tree* call_context_add_new_expression(call_context* the_cc, const cha
     int res;
     char*t = rtrim(t1);
     build_expr_tree(t, new_expression, the_cc->ccs_method, t, the_cc, &res, expwloc);
-    validate(new_expression);
     expression_tree_list_add_new_expression(new_expression, &the_cc->expressions, t);
     free(t);
     return new_expression;

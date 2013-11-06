@@ -1,7 +1,6 @@
 #ifndef _NBCI_H_
 #define _NBCI_H_
 
-#include <stdint.h>
 #include <stdio.h>
 #ifdef _WINDOWS
 #define PRId64 "lld"
@@ -27,11 +26,7 @@
     exit(99);\
     } while(0);
 
-/* types for manipulating the addresses, indexes, etc */
-typedef uint32_t nap_addr_t;    /* the type of a NAP address*/
-typedef uint32_t nap_mark_t;    /* the type of a marker pushed on the stack */
-typedef uint32_t nap_index_t;   /* the type of an index */
-typedef int64_t  nap_number_t;  /* the type of a number */
+#include "nap_types.h"
 
 /* the lbf initially is undecided, the first operation sets it, and it is AND-ed with the
    result of the next boolean operations as long as it is not cleared by a jlbf or clbf */

@@ -1,23 +1,24 @@
 #define CATCH_CONFIG_MAIN
 
-#include "nbci.h"
 #include "catch.h"
+#include "nap_runtime.h"
 #include <stdlib.h>
 
-TEST_CASE("VM is initialized", "[vm_init]")
+TEST_CASE("Variables", "[vm_variables]")
 {
-	REQUIRE(0 == 1);
-}
+	nap_runtime* runtime = nap_runtime_create(0);
+    REQUIRE(runtime != 0);
 
-/*{
-    nap_runtime* runtime = nap_runtime_create();
-    nap_runtime_execute(runtime,
+    nap_bytecode_chunk* bytecode = nap_runtime_compile(runtime, 
                      "                            \
                       int a;                      \
-                      a = 1;                      \
+                      a = 2;                      \
                      "
                     );
-    ck_assert_int_eq(1, runtime->get_int("a"));
+    REQUIRE(bytecode != 0);
+    int t = nap_runtime_execute(runtime, bytecode);
+    REQUIRE(1 == t);
+    REQUIRE(2 == nap_runtime_get_int(runtime, "a"));
     free(runtime);
 }
-*/
+

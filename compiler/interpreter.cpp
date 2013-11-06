@@ -15,6 +15,7 @@
 #include "sys_brkp.h"
 #include "res_wrds.h"
 #include "parametr.h"
+#include "expression_tree.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -1737,20 +1738,5 @@ static void number_of_operators( expression_tree* node, const char* op)
         }
         number_of_operators(node->left, op);
         number_of_operators(node->right, op);
-    }
-}
-
-/**
- * Validates the tree to contain only accepted expressions
- * 1. checks if there are two '=' nodes in the tree, meaning
- */
-void validate( expression_tree* node)
-{
-    /* firstly check the chain assignment, which is not supported in this release */
-    num_op = 0;
-    number_of_operators(node, STR_EQUAL);
-    if(num_op > 1)
-    {
-//        throw_error(E0017_CHAINASSIGN, NULL);
     }
 }
