@@ -14,9 +14,4 @@ void* build_expr_tree(const char *expr, expression_tree* node,
                       call_context* cc, int* result, 
                       const expression_with_location* location);
 
-/**
- * Validates the given node
- */
-void validate(struct expression_tree* node);
-
 #endif

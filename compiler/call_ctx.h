@@ -6,8 +6,6 @@
 
 #include <vector>
 
-extern call_context *global_cc;
-
 /**
  * Create a new call context
  * @param type - the type of the call context

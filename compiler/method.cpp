@@ -61,8 +61,8 @@ constructor_call::constructor_call(char* name, call_context* cc) : method(name, 
  */
 variable* method_add_new_variable(method* the_method, char* name, char* type, int dimension, const expression_with_location* expwloc)
 {
-char* new_name = trim(name);
-    if(strlen(name) > 0 && !is_valid_variable_name(name))
+    char* new_name = trim(name);
+    if(!is_valid_variable_name(name))
     {
         throw_error(E0018_INVIDENT, name, NULL);
     }

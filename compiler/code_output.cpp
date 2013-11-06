@@ -6,6 +6,7 @@
 #include "variable.h"
 #include "code_stream.h"
 #include "utils.h"
+#include "expression_tree.h"
 
 #include <stdio.h>
 #include <string>

@@ -107,7 +107,12 @@ char* trimd1 = ltrim(src);
  */
 char* duplicate_string(const char* src)
 {
-    return _strdup(src);
+    return
+#ifdef _WIN32
+    _strdup(src);
+#else
+    strdup(src);
+#endif
 }
 
 /**

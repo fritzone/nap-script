@@ -4,6 +4,7 @@
 #include "number.h"
 #include "type.h"
 #include "throw_error.h"
+#include "expression_tree.h"
 
 #include <string.h>
 #include <stdlib.h>
