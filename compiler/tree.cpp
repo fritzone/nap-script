@@ -50,13 +50,13 @@ expression_tree_list *q , *tmp;
     {
         *first = alloc_mem(expression_tree_list,1);
         (*first)->root = expression;
-        (*first)->text_expression = duplicate_string(text_expr);
+        (*first)->text_expression = text_expr;
         return *first;
     }
     while(q->next) {q=q->next;}
     tmp = alloc_mem(expression_tree_list,1);
     tmp->root = expression;
-    tmp->text_expression = duplicate_string(text_expr);
+    tmp->text_expression = text_expr;
     q->next = tmp;
     return tmp;
 }

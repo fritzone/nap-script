@@ -299,18 +299,33 @@ struct call_context
      * @param name - the name of the call context
      * @param the_method - the method in which this call context is
      * @param father - the father of this call cotnext
-     * @return the created call context
      **/
     call_context (int ptype,
                   const char *pname,
                   method *the_method,
                   call_context *pfather);
 
+    /**
+     * @brief call_context_add_method adds a method to the call context
+     * @param the_method - the method which is to be added
+     * @return the location in the list of the inserted method
+     */
+    void add_method(method *the_method);
+
+
+    /**
+     * @brief call_context_get_method returns a method from the call context
+     * @param name - the name of the method
+     * @return the method of found, null if not found
+     */
+    method *get_method(const char *name);
+
+
     /* the type of the call context: 0 - global, 1 - named*/
     int type;
 
     /* the name of the call context */
-    char *name;
+    std::string name;
 
     /* the methods of this call context */
     std::vector<method*> methods;

@@ -7,24 +7,6 @@
 #include <vector>
 
 
-
-
-/**
- * @brief call_context_add_method adds a method to the call context
- * @param cc - the call context into which to add the method
- * @param the_method - the method which is to be added
- * @return the location in the list of the inserted method
- */
-void call_context_add_method(call_context *cc, method *the_method);
-
-/**
- * @brief call_context_get_method returns a method from the call context
- * @param cc - the call context
- * @param name - the name of the method
- * @return the method of found, null if not found
- */
-method *call_context_get_method(call_context *cc, const char *name);
-
 /**
  * @brief call_context_add_variable adds a variable to the call context
  * @param cc - the call context

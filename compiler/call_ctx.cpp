@@ -19,12 +19,12 @@ using namespace std;
 /**
  * Creates a new call context object
  */
-call_context::call_context(int ptype, const char* pname, method* the_method, call_context* pfather)
+call_context::call_context(int ptype, const char* pname, method* the_method, call_context* pfather) : name(pname)
 {
     type = ptype;
-    name = duplicate_string(pname);
     ccs_method = the_method;
     father = pfather;
+    expressions = 0;
 }
 
 class_declaration::class_declaration(const char* pname, call_context* pfather) : call_context(CLASS_DECLARATION, pname, 0,  pfather)
@@ -37,9 +37,9 @@ class_declaration::class_declaration(const char* pname, call_context* pfather) :
 /**
  * Adds a method to the given call context
  */
-void call_context_add_method(call_context* cc,  method* the_method)
+void call_context::add_method(method* the_method)
 {
-    cc->methods.push_back(the_method);
+    methods.push_back(the_method);
 }
 
 /**
@@ -75,10 +75,10 @@ variable* call_context_add_variable(call_context* cc, const char* name, const ch
 /**
  * Retrieves the method object for the given name from the cc
  */
-method* call_context_get_method(call_context* cc, const char* name)
+method* call_context::get_method(const char* name)
 {
-    std::vector<method*>::const_iterator q = cc->methods.begin();
-    while(q != cc->methods.end())
+    std::vector<method*>::const_iterator q = methods.begin();
+    while(q != methods.end())
     {
         if((*q)->method_name && !strcmp((*q)->method_name, name))
         {
@@ -86,9 +86,9 @@ method* call_context_get_method(call_context* cc, const char* name)
         }
         q ++;
     }
-    if(cc->father)
+    if(father)
     {
-        return call_context_get_method(cc->father, name);
+        return father->get_method(name);
     }
     return NULL;
 }
@@ -250,9 +250,9 @@ void call_context_run_inner(call_context* cc, int level, int reqd_type, int forc
 
 struct bytecode_label* call_context_provide_label(call_context* cc)
 {
-    int maxlen = strlen(cc->name) + 32;
+    int maxlen = cc->name.length() + 32;
     char* label_name = alloc_mem(char, maxlen);
-    sprintf(label_name, "%s_%d", cc->name, (int)cc->labels.size());    /* generating a name for the end of the while */
+    sprintf(label_name, "%s_%d", cc->name.c_str(), (int)cc->labels.size());    /* generating a name for the end of the while */
     long idx = call_context_add_label(cc, -1, label_name);
     return cc->labels.at(idx - 1);
 }
@@ -262,7 +262,7 @@ class_declaration* call_context_get_class_declaration(const call_context* cc, co
     if(cc == NULL) return NULL;
     for(unsigned int i=0; i<cc->classes.size(); i++)
     {
-        if(!strcmp(cc->classes.at(i)->name, required_name))
+        if(cc->classes.at(i)->name == required_name)
         {
             return cc->classes.at(i);
         }

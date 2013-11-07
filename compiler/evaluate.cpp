@@ -712,8 +712,8 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
         if(my_if->else_branch)    /* but we have an else branch */
         {
             /* generating a name for the end of the 'if' */
-            char* end_label_name = alloc_mem(char, strlen(cc->name) + 32);
-            sprintf(end_label_name, "%s_%d", cc->name, (int)cc->labels.size());
+            char* end_label_name = alloc_mem(char, cc->name.length() + 32);
+            sprintf(end_label_name, "%s_%d", cc->name.c_str(), (int)cc->labels.size());
             jlbf(end_label_name);                /* jump to the end of the if, if the logical expression evaluated to true */
             expression_tree_list* q = my_if->else_branch->expressions;            /* compile the instructions in the else branch too */
             if(q && !q->next)            /* one line if, no parantheses*/
@@ -758,13 +758,13 @@ static void resolve_while_keyword(const expression_tree* node, const method* the
 
     /* as a first step we should print the label of the while start and end*/
 
-    char* end_label_name = alloc_mem(char, strlen(cc->name) + 32);
-    sprintf(end_label_name, "%s_%d", cc->name, (int)cc->labels.size());    /* generating a name for the end of the while */
+    char* end_label_name = alloc_mem(char, cc->name.length() + 32);
+    sprintf(end_label_name, "%s_%d", cc->name.c_str(), (int)cc->labels.size());    /* generating a name for the end of the while */
 
     my_while->break_label = call_context_add_break_label(my_while->operations, -1, end_label_name);    /* adding the default break label location of the while to the call context */
 
-    char* while_label_name = alloc_mem(char, strlen(my_while->operations->name) + 32);
-    sprintf(while_label_name, "%s_%d", my_while->operations->name, (int)cc->labels.size());    /* generating a name for the content */
+    char* while_label_name = alloc_mem(char, my_while->operations->name.length() + 32);
+    sprintf(while_label_name, "%s_%d", my_while->operations->name.c_str(), (int)cc->labels.size());    /* generating a name for the content */
 
     /* print the while start label */
     code_stream() << fully_qualified_label(while_label_name) << NEWLINE ;
