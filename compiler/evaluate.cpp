@@ -394,6 +394,10 @@ void resolve_assignment( const expression_tree* node, int level, const method* t
             if(is_variable(node->left))    /* assignment goes into a variable */
             {
                 dest = (variable*)(((envelope*)node->left->reference)->to_interpret);
+                if(!dest)
+                {
+                    throw_error("cannot find a variable");
+                }
                 if(node->right)
                 {
                     if(! is_post_pre_op(node->right->op_type))    /* maybe here check if the right side is logical/comparison */
@@ -616,13 +620,13 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
     {
 
         std::stringstream ss;
-        ss << my_if->if_branch->name << C_UNDERLINE << cc->labels->size() << C_UNDERLINE << generate_unique_hash();
+        ss << my_if->if_branch->name << C_UNDERLINE << cc->labels.size() << C_UNDERLINE << generate_unique_hash();
         std::string if_label_name = ss.str();
         ss.str(std::string());
 
         std::string else_label_name;
 
-        ss << cc->name << C_UNDERLINE << cc->labels->size() << C_UNDERLINE << generate_unique_hash();
+        ss << cc->name << C_UNDERLINE << cc->labels.size() << C_UNDERLINE << generate_unique_hash();
         std::string end_label_name = ss.str();
         ss.str(std::string());
 
@@ -631,7 +635,7 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
 
         if(my_if->else_branch) /* if there's an else branch */
         {
-            ss << my_if->else_branch->name << C_UNDERLINE << cc->labels->size() << C_UNDERLINE << generate_unique_hash();
+            ss << my_if->else_branch->name << C_UNDERLINE << cc->labels.size() << C_UNDERLINE << generate_unique_hash();
             else_label_name = ss.str();
             ss.str(std::string());
             jmp(else_label_name);    /* jump to the else branch if the logical operation did no evaluate to true*/
@@ -709,7 +713,7 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
         {
             /* generating a name for the end of the 'if' */
             char* end_label_name = alloc_mem(char, strlen(cc->name) + 32);
-            sprintf(end_label_name, "%s_%d", cc->name, (int)cc->labels->size());
+            sprintf(end_label_name, "%s_%d", cc->name, (int)cc->labels.size());
             jlbf(end_label_name);                /* jump to the end of the if, if the logical expression evaluated to true */
             expression_tree_list* q = my_if->else_branch->expressions;            /* compile the instructions in the else branch too */
             if(q && !q->next)            /* one line if, no parantheses*/
@@ -755,12 +759,12 @@ static void resolve_while_keyword(const expression_tree* node, const method* the
     /* as a first step we should print the label of the while start and end*/
 
     char* end_label_name = alloc_mem(char, strlen(cc->name) + 32);
-    sprintf(end_label_name, "%s_%d", cc->name, (int)cc->labels->size());    /* generating a name for the end of the while */
+    sprintf(end_label_name, "%s_%d", cc->name, (int)cc->labels.size());    /* generating a name for the end of the while */
 
     my_while->break_label = call_context_add_break_label(my_while->operations, -1, end_label_name);    /* adding the default break label location of the while to the call context */
 
     char* while_label_name = alloc_mem(char, strlen(my_while->operations->name) + 32);
-    sprintf(while_label_name, "%s_%d", my_while->operations->name, (int)cc->labels->size());    /* generating a name for the content */
+    sprintf(while_label_name, "%s_%d", my_while->operations->name, (int)cc->labels.size());    /* generating a name for the content */
 
     /* print the while start label */
     code_stream() << fully_qualified_label(while_label_name) << NEWLINE ;

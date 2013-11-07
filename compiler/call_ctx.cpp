@@ -19,33 +19,20 @@ using namespace std;
 /**
  * Creates a new call context object
  */
-call_context* call_context_create(int type, const char* name, method* the_method, call_context* father)
+call_context::call_context(int ptype, const char* pname, method* the_method, call_context* pfather)
 {
-    call_context* cc = alloc_mem(call_context,1);
-    cc->type = type;
-    cc->name = duplicate_string(name);
-    cc->ccs_method = the_method;
-    cc->father = father;
-    cc->labels = new vector<bytecode_label*>();
-    cc->classes = new vector<struct class_declaration*>();
-    cc->interfaces = new vector<struct class_declaration*>();
-    return cc;
+    type = ptype;
+    name = duplicate_string(pname);
+    ccs_method = the_method;
+    father = pfather;
 }
 
-struct class_declaration* class_declaration_create(const char* name, call_context* father)
+class_declaration::class_declaration(const char* pname, call_context* pfather) : call_context(CLASS_DECLARATION, pname, 0,  pfather)
 {
-    struct class_declaration* cc = alloc_mem(class_declaration, 1);
-    cc->type = CLASS_DECLARATION;
-    cc->name = duplicate_string(name);
-    cc->ccs_method = 0;
-    cc->father = father;
-    cc->labels = new vector<bytecode_label*>();
-    cc->parent_class = 0;
-    cc->classes = new vector<struct class_declaration*>();
-    cc->interfaces = new vector<struct class_declaration*>();
-    father->classes->push_back(cc);
-    return cc;
-};
+    ccs_method = 0;
+    parent_class = 0;
+    pfather->classes.push_back(this);
+ }
 
 /**
  * Adds a method to the given call context
@@ -112,8 +99,8 @@ long call_context_add_label(call_context* cc, long position, const std::string& 
     bl->bytecode_location = position;
     bl->name = duplicate_string(name.c_str());
     bl->type = bytecode_label::LABEL_PLAIN;
-    cc->labels->push_back(bl);
-    return cc->labels->size();
+    cc->labels.push_back(bl);
+    return cc->labels.size();
 }
 
 struct bytecode_label* call_context_add_break_label(call_context* cc, long position, const std::string& name)
@@ -123,7 +110,7 @@ struct bytecode_label* call_context_add_break_label(call_context* cc, long posit
     bl->name = duplicate_string(name.c_str());
     bl->type = bytecode_label::LABEL_BREAK;
     cc->break_label = bl;
-    cc->labels->push_back(bl);
+    cc->labels.push_back(bl);
     return bl;
 }
 
@@ -150,7 +137,7 @@ expression_tree* call_context_add_new_expression(call_context* the_cc, const cha
     char*t = rtrim(t1);
     build_expr_tree(t, new_expression, the_cc->ccs_method, t, the_cc, &res, expwloc);
     expression_tree_list_add_new_expression(new_expression, &the_cc->expressions, t);
-    free(t);
+
     return new_expression;
 }
 
@@ -208,9 +195,9 @@ void call_context_compile(call_context* cc)
 
     {
     // and now all the functions from the classes
-    for(unsigned int i=0; i<cc->classes->size(); i++)
+    for(unsigned int i=0; i<cc->classes.size(); i++)
     {
-        class_declaration* cd = cc->classes->at(i);
+        class_declaration* cd = cc->classes.at(i);
         std::vector<method*>::iterator ccs_methods = cd->methods.begin();
         code_stream() << '@' << cd->name << NEWLINE;
         while(ccs_methods != cd->methods.end())
@@ -265,19 +252,19 @@ struct bytecode_label* call_context_provide_label(call_context* cc)
 {
     int maxlen = strlen(cc->name) + 32;
     char* label_name = alloc_mem(char, maxlen);
-    sprintf(label_name, "%s_%d", cc->name, (int)cc->labels->size());    /* generating a name for the end of the while */
+    sprintf(label_name, "%s_%d", cc->name, (int)cc->labels.size());    /* generating a name for the end of the while */
     long idx = call_context_add_label(cc, -1, label_name);
-    return cc->labels->at(idx - 1);
+    return cc->labels.at(idx - 1);
 }
 
 class_declaration* call_context_get_class_declaration(const call_context* cc, const char* required_name)
 {
     if(cc == NULL) return NULL;
-    for(unsigned int i=0; i<cc->classes->size(); i++)
+    for(unsigned int i=0; i<cc->classes.size(); i++)
     {
-        if(!strcmp(cc->classes->at(i)->name, required_name))
+        if(!strcmp(cc->classes.at(i)->name, required_name))
         {
-            return cc->classes->at(i);
+            return cc->classes.at(i);
         }
     }
     return call_context_get_class_declaration(cc->father, required_name);

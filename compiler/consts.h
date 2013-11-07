@@ -134,7 +134,7 @@ const int CALL_CONTEXT_TYPE_ELSE        = 5;
 const int CALL_CONTEXT_TYPE_WHILE        = 6;
 const int CALL_CONTEXT_TYPE_FOR            = 7;
 
-
+const int DEF_INTERN = 0;
 const int DEF_EXTERN                = 1;
 const int MAX_NR_AS_STR_LEN            = 32;
 

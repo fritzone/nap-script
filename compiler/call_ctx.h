@@ -6,27 +6,8 @@
 
 #include <vector>
 
-/**
- * Create a new call context
- * @param type - the type of the call context
- * @param name - the name of the call context
- * @param the_method - the method in which this call context is
- * @param father - the father of this call cotnext
- * @return the created call context
- **/
-call_context *call_context_create(int type,
-                                  const char *name,
-                                  method *the_method,
-                                  call_context *father);
 
-/**
- * @brief class_declaration_create creates a new class declaration
- * @param name - the name of the class
- * @param father - the call context in which this is
- * @return the newly created class declaration
- */
-class_declaration *class_declaration_create(const char *name,
-        call_context *father);
+
 
 /**
  * @brief call_context_add_method adds a method to the call context

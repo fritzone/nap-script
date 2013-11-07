@@ -27,7 +27,7 @@ struct method
      * @param return_type
      * @param cc
      */
-    method(char* name, char* return_type, call_context* cc);
+    method(char* name, char* preturn_type, call_context* cc);
 
     /* the name of the method */
     char *method_name;
