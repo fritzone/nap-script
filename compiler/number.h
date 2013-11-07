@@ -3,6 +3,7 @@
 
 #include "type.h"
 #include "utils.h"
+#include "garbage_bin.h"
 
 #include <stdlib.h>
 #include <string.h>

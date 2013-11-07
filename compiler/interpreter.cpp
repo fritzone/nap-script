@@ -574,6 +574,7 @@ static method* define_method(const char* expr, int expr_len, expression_tree* no
     method_feed_parameter_list(created_method, trim(parameters), expwloc);
 
     if(!strcmp(ret_type, "int")) created_method->ret_type = BASIC_TYPE_INT;
+    // TODO: the others too
 
     call_context_add_method(cc, created_method);
 
@@ -642,7 +643,9 @@ static variable_definition_list* define_variables(char* var_def_type,
                                                   int* result, 
                                                   const expression_with_location* expwloc)
 {
-    string_list* var_names = string_list_create_bsep(expr_trim + strlen(var_def_type), ',');
+    char * copied = duplicate_string(expr_trim + strlen(var_def_type));
+
+    string_list* var_names = string_list_create_bsep(copied, ',');
     string_list* q = var_names;
     variable_definition_list* var_def_list = NULL, *q1 = NULL; /* will contain the variable definitions if any*/
     var_def_type = trim(var_def_type);
@@ -1697,7 +1700,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                     cname ++;
                 }
                 *tcname = 0;
-                class_declaration* cd = class_declaration_create(the_class_name, cc);
+                class_declaration* cd = new class_declaration(the_class_name, cc);
 
                 envl = new_envelope(cd, CLASS_DECLARATION);
                 node->op_type = CLASS_DECLARATION;

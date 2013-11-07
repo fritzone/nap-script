@@ -16,6 +16,7 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/variable.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/evaluate.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/garbage_bin.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/code_output.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/code_stream.cpp
 )

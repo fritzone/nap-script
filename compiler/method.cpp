@@ -23,7 +23,7 @@
 /**
  * Creates a new method
  */
-method::method(char* name, char* return_type, call_context* cc)
+method::method(char* name, char* preturn_type, call_context* cc)
 {
     call_context* method_main_cc = NULL;
     char* method_main_cc_name = new_string(strlen(name) + strlen(cc->name) + 3); /* will contain: parent_name::function_name*/
@@ -31,8 +31,9 @@ method::method(char* name, char* return_type, call_context* cc)
     strcat(method_main_cc_name, STR_CALL_CONTEXT_SEPARATOR);
     strcat(method_main_cc_name, name);
 
+    def_loc = DEF_INTERN;
     method_name = duplicate_string(name);
-    if(return_type && strstr(return_type, "extern"))
+    if(preturn_type && strstr(preturn_type, "extern"))
     {
         /* if this method is a method defined somewhere else ... such as your C++ application */
         char* after_ext = return_type + 6;
@@ -41,12 +42,15 @@ method::method(char* name, char* return_type, call_context* cc)
         def_loc = DEF_EXTERN;
     }
     else
-    if(return_type)
+    if(preturn_type)
     {
-        return_type = duplicate_string(return_type);
+        return_type = duplicate_string(preturn_type);
     }
-    method_main_cc = call_context_create(CALL_CONTEXT_TYPE_METHOD_MAIN, method_main_cc_name, this, cc);
+    method_main_cc = new call_context(CALL_CONTEXT_TYPE_METHOD_MAIN, method_main_cc_name, this, cc);
     main_cc = method_main_cc;
+    parameters = 0;
+    contained_ins = 0;
+    cur_cf = 0;
 }
 
 constructor_call::constructor_call(char* name, call_context* cc) : method(name, 0, cc)

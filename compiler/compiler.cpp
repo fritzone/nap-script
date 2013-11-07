@@ -1,30 +1,14 @@
 #include "compiler.h"
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <math.h>
-
 #include <vector>
 #include <string>
 #include <algorithm>
 
-#include "hash.h"
-#include "tree.h"
 #include "consts.h"
-#include "variable.h"
 #include "utils.h"
-#include "interpreter.h"
 #include "method.h"
-#include "bt_string.h"
-#include "type.h"
-#include "number.h"
 #include "call_ctx.h"
-#include "sys_brkp.h"
-#include "throw_error.h"
 #include "parser.h"
-#include "res_wrds.h"
 
 void nap_compiler::load_file(call_context* cc, const char* file_name, method* cur_method)
 {
@@ -66,7 +50,7 @@ void nap_compiler::compile()
 
 nap_compiler::nap_compiler()
 {
-    cur_cc = call_context_create(0, "global", NULL, NULL) ;
+    cur_cc = new call_context(0, "global", NULL, NULL) ;
     global_cc = cur_cc;
     cur_method = 0;
 }

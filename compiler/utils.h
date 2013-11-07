@@ -138,13 +138,12 @@ extern long mem_alloc_count;
 extern void** mem_allocation;
 
 #define alloc_mem(type,count) (type*)create(sizeof(type), count)
-#define realloc_mem(addr,new_size) reallocate(addr,new_size)
 
 /**
  * Creates count objects of the given type
  */
 void* create(int obj_size, int count);
-void* reallocate(void*, int);
+
 
 char other_par(char c);
 

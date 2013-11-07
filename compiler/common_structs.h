@@ -292,6 +292,20 @@ struct call_context_list
  */
 struct call_context
 {
+
+    /**
+     * Create a new call context
+     * @param type - the type of the call context
+     * @param name - the name of the call context
+     * @param the_method - the method in which this call context is
+     * @param father - the father of this call cotnext
+     * @return the created call context
+     **/
+    call_context (int ptype,
+                  const char *pname,
+                  method *the_method,
+                  call_context *pfather);
+
     /* the type of the call context: 0 - global, 1 - named*/
     int type;
 
@@ -314,15 +328,15 @@ struct call_context
     struct method *ccs_method;
 
     /* this is a vector of label locations for this*/
-    std::vector<struct bytecode_label *>* labels;
+    std::vector<struct bytecode_label *> labels;
 
     struct bytecode_label *break_label;
 
     /* the classes that are defined in this call context */
-    std::vector<struct class_declaration *>* classes;
+    std::vector<struct class_declaration *> classes;
 
     /* the interfaces that are defined in this call context */
-    std::vector<struct class_declaration *>* interfaces;
+    std::vector<struct class_declaration *> interfaces;
 };
 
 /**
@@ -331,6 +345,14 @@ struct call_context
  **/
 struct class_declaration : public call_context
 {
+    /**
+     * @brief class_declaration_create creates a new class declaration
+     * @param name - the name of the class
+     * @param father - the call context in which this is
+     * @return the newly created class declaration
+     */
+    class_declaration (const char *pname, call_context *pfather);
+
     class_declaration *parent_class;
     std::vector<class_declaration *> implemented_interfaces;
 };

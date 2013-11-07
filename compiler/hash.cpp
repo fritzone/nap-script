@@ -77,13 +77,14 @@ std::vector<variable*>::const_iterator variable_list_has_variable(const char *s,
  */
 string_list* string_list_create_bsep(const char* instr, char sep)
 {
-string_list* head = alloc_mem(string_list,1);
-string_list* q = head;
-string_list* tmp = NULL;
-const char* p = instr, *frst = instr;
-char* cur_elem = NULL;
+    string_list* head = alloc_mem(string_list,1);
+    string_list* q = head;
+    string_list* tmp = NULL;
+    const char* p = instr, *frst = instr;
+    char* cur_elem = NULL;
     while(*p)
     {
+        bool already_increased = false; /* when we load the expressions in parentheses we do an extra increment. This signals that this extra increment was done */
         if(C_SQPAR_OP == *p)    /* for now skip the things that are between index indicators*/
         {
         int can_stop = 0;
@@ -100,6 +101,7 @@ char* cur_elem = NULL;
                 throw_error(E0009_PARAMISM, instr, NULL);
             }
             p++;    /* to skip the last closing brace*/
+            already_increased = true;
         }
 
         if(*p == C_PAR_OP)    /* for now skip the things that are between parantheses too ...*/
@@ -118,6 +120,7 @@ char* cur_elem = NULL;
                 throw_error(E0009_PARAMISM, instr, NULL);
             }
             p++;    /* to skip the last closing brace*/
+            already_increased = true;
         }
 
         if(*p == '{' )    /* for now skip the things that are between curly braces too ...*/
@@ -136,6 +139,7 @@ char* cur_elem = NULL;
                 throw_error(E0009_PARAMISM, instr, NULL);
             }
             p++;    /* to skip the last closing brace*/
+            already_increased = true;
         }
 
 
@@ -161,7 +165,10 @@ char* cur_elem = NULL;
             q = tmp;
             frst = p + 1;
         }
-        p++;
+        if(! already_increased)
+        {
+            p++;
+        }
     }
     /* and now the last element */
     cur_elem = new_string(p - frst + 1);

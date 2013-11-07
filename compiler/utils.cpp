@@ -6,7 +6,7 @@
 #include "notimpl.h"
 #include "throw_error.h"
 #include "bt_string.h"
-
+#include "garbage_bin.h"
 #include "sys_brkp.h"
 
 #include <string.h>
@@ -107,12 +107,15 @@ char* trimd1 = ltrim(src);
  */
 char* duplicate_string(const char* src)
 {
-    return
+    char* r =
 #ifdef _WIN32
     _strdup(src);
 #else
     strdup(src);
 #endif
+
+    garbage_bin<char*>::instance().throwIn(r);
+    return r;
 }
 
 /**
@@ -120,7 +123,7 @@ char* duplicate_string(const char* src)
  */
 char* new_string(int size)
 {
-char* tmp = alloc_mem(char, size + 1);
+    char* tmp = alloc_mem(char, size + 1);
     return tmp;
 }
 
@@ -230,12 +233,7 @@ long liberc = 0;
 void* create(int obj_size, int count)
 {
     void* tmp = calloc(count , obj_size);
-    return tmp;
-}
-
-void* reallocate(void* addr, int new_size)
-{
-        void* tmp =  realloc(addr, new_size);
+    garbage_bin<void*>::instance().throwIn(tmp);
     return tmp;
 }
 
