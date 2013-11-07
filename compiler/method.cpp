@@ -26,8 +26,8 @@
 method::method(char* name, char* preturn_type, call_context* cc)
 {
     call_context* method_main_cc = NULL;
-    char* method_main_cc_name = new_string(strlen(name) + strlen(cc->name) + 3); /* will contain: parent_name::function_name*/
-    strcpy(method_main_cc_name, cc->name);
+    char* method_main_cc_name = new_string(strlen(name) + cc->name.length() + 3); /* will contain: parent_name::function_name*/
+    strcpy(method_main_cc_name, cc->name.c_str());
     strcat(method_main_cc_name, STR_CALL_CONTEXT_SEPARATOR);
     strcat(method_main_cc_name, name);
 

@@ -47,7 +47,7 @@ struct expression_tree_list
     const expression_tree *root;
 
     /* the text representation of this expression that is interpreted in the root */
-    char *text_expression;
+    std::string text_expression;
 };
 /**
  * Adds a new expression to the list

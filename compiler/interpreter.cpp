@@ -302,7 +302,7 @@ method* is_function_call(char *s,  call_context* cc)
     s2[sc2]=0;
 
     s2 = trim(s2);
-    get_method = call_context_get_method(cc, s2);
+    get_method = cc->get_method(s2);
     if(get_method) return get_method;
 
     return NULL;
@@ -369,10 +369,10 @@ static int looks_like_function_def(const char* expr, int expr_len, const express
             else
             {
                 /* TODO: check if this is a constructor definition */
-                if(strstr(expr, cc->name) == expr)
+                if(strstr(expr, cc->name.c_str()) == expr)
                 {
                     // this might be a constructor definition
-                    const char* pfinder = expr + strlen(cc->name);
+                    const char* pfinder = expr + cc->name.length();
                     while(*pfinder && is_whitespace(*pfinder)) pfinder ++;
                     if(*pfinder == '(')
                     {
@@ -576,7 +576,7 @@ static method* define_method(const char* expr, int expr_len, expression_tree* no
     if(!strcmp(ret_type, "int")) created_method->ret_type = BASIC_TYPE_INT;
     // TODO: the others too
 
-    call_context_add_method(cc, created_method);
+    cc->add_method(created_method);
 
     node->op_type = FUNCTION_DEFINITION;
     node->reference = new_envelope(created_method, FUNCTION_DEFINITION);
@@ -927,7 +927,7 @@ static call_frame_entry* handle_function_call(char *expr_trim, int expr_len, exp
     node->info = duplicate_string(func_call->method_name);
     node->op_type = FUNCTION_CALL + type_of_call;
     node->reference = new_envelope(cfe, FUNCTION_CALL + type_of_call);
-    cfe->the_method = call_context_get_method(cc, func_call->method_name);
+    cfe->the_method = cc->get_method(func_call->method_name);
     return cfe;
 }
 
@@ -1249,7 +1249,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
         {
             throw_error("Invalid constructor: ", constructor_name);
         }
-        method* called_constructor = call_context_get_method(cd, constructor_name);
+        method* called_constructor = cd->get_method(constructor_name);
         constructor_call* tmp = (constructor_call*)realloc(called_constructor, sizeof(constructor_call));
         if(tmp == NULL)
         {

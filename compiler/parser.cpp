@@ -393,8 +393,8 @@ void parsed_file::deal_with_while_loading(call_context* cc, expression_tree* new
                                           expression_with_location* expwloc)
 {
     /* firstly create a call context for it */
-    char* while_cc_name = new_string(strlen(cc->name) + 10);
-    sprintf(while_cc_name, "%s%s%s", cc->name, STR_CALL_CONTEXT_SEPARATOR, STR_WHILE);
+    char* while_cc_name = new_string(cc->name.length() + 10);
+    sprintf(while_cc_name, "%s%s%s", cc->name.c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_WHILE);
     call_context* while_cc = new call_context(CALL_CONTEXT_TYPE_WHILE, while_cc_name, the_method, cc);
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_WHILE)    /* normal WHILE with { }*/
     {
@@ -480,8 +480,8 @@ void parsed_file::deal_with_class_declaration(call_context* /*cc*/,
 void parsed_file::deal_with_for_loading(call_context* cc, expression_tree* new_node, method* the_method, char delim, int current_level, expression_with_location* expwloc)
 {
     /* firstly create a call context for it */
-    char* for_cc_name = new_string(strlen(cc->name) + 10);
-    sprintf(for_cc_name, "%s%s%s", cc->name, STR_CALL_CONTEXT_SEPARATOR, STR_FOR);
+    char* for_cc_name = new_string(cc->name.length() + 10);
+    sprintf(for_cc_name, "%s%s%s", cc->name.c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_FOR);
     call_context* for_cc = new call_context(CALL_CONTEXT_TYPE_FOR, for_cc_name, the_method, cc);
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR)    /* normal FOR with { }*/
     {
@@ -523,8 +523,8 @@ void parsed_file::deal_with_for_loading(call_context* cc, expression_tree* new_n
 void parsed_file::deal_with_ifs_loading(call_context* cc, expression_tree* new_node, method* the_method, char delim, int current_level, expression_with_location* expwloc)
 {
     /* firstly create a call context for it */
-    char* if_cc_name = new_string(strlen(cc->name) + 6);
-    sprintf(if_cc_name, "%s%s%s", cc->name, STR_CALL_CONTEXT_SEPARATOR, STR_IF);
+    char* if_cc_name = new_string(cc->name.length() + 6);
+    sprintf(if_cc_name, "%s%s%s", cc->name.c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_IF);
     call_context* if_cc = new call_context(CALL_CONTEXT_TYPE_IF, if_cc_name, the_method, cc);
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF)    /* normal IF with { }*/
     {
@@ -563,8 +563,8 @@ void parsed_file::deal_with_ifs_loading(call_context* cc, expression_tree* new_n
     call_context* else_cc = NULL;
     if(nextw && !strcmp(nextw, STR_ELSE))
     {
-        char* else_cc_name = new_string(strlen(cc->name) + 16);
-        sprintf(else_cc_name, "%s%s%s:%s", cc->name, STR_CALL_CONTEXT_SEPARATOR, STR_IF, STR_ELSE);
+        char* else_cc_name = new_string(cc->name.length() + 16);
+        sprintf(else_cc_name, "%s%s%s:%s", cc->name.c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_IF, STR_ELSE);
         else_cc = new call_context(CALL_CONTEXT_TYPE_ELSE, else_cc_name, the_method, cc);
         if(delim2 == C_SEMC)
         {
@@ -653,8 +653,8 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
                 {
                 case C_OPEN_BLOCK:
                 {
-                    char* new_cc_name = new_string(strlen(cc->name) + 10);
-                    sprintf(new_cc_name, "%s%s%s", cc->name, STR_CALL_CONTEXT_SEPARATOR, STR_UNNAMED_CC);
+                    char* new_cc_name = new_string(cc->name.length() + 10);
+                    sprintf(new_cc_name, "%s%s%s", cc->name.c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_UNNAMED_CC);
                     call_context* child_cc = new call_context(CALL_CONTEXT_TYPE_UNNAMED, new_cc_name, the_method, cc);
                     expression_tree* new_node = call_context_add_new_expression(cc, STR_OPEN_BLOCK, expwloc);
                     //todo: add a new expression in the current call CONTEXT to start executing the next call context.
