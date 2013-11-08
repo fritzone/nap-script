@@ -12,7 +12,6 @@ void garbage_bin_bin::empty()
     for(size_t i=0; i<items.size(); i++)
     {
         items[i]->empty();
-        delete items[i];
     }
 }
 
@@ -23,4 +22,18 @@ garbage_bin_bin& garbage_bin_bin::instance()
         minstance = new garbage_bin_bin();
     }
     return *minstance;
+}
+
+garbage_bin_bin::~garbage_bin_bin()
+{
+    for(size_t i=0; i<items.size(); i++)
+    {
+        delete items[i];
+    }
+}
+
+
+void garbage_bin_bin::shutdown()
+{
+    delete minstance;
 }

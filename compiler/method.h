@@ -6,11 +6,9 @@
 /* forward declaration, we need this in the method */
 
 struct call_frame_entry;
-struct parameter_list;
 struct call_context_list;
 struct call_context;
 struct call_frame_entry;
-struct variable_definition_list;
 struct variable_definition;
 struct variable;
 struct class_declaration;
@@ -29,23 +27,61 @@ struct method
      */
     method(char* name, char* preturn_type, call_context* cc);
 
+    /**
+     * Adds a new parameter to the method
+     * @param name - the name of the parameter
+     * @param type - the type of the parameter (as string)
+     * @param modifiable - if the parameter is a reference or not (C++ rulez :) )
+     */
+    parameter* add_parameter(char* pname,  char* ptype, int pdimension, const expression_with_location* pexpwloc);
+
+    /**
+     * @brief get_parameter return the parameter at the given location
+     * @param i
+     * @return
+     **/
+    parameter* get_parameter(size_t i);
+
+    /**
+     * @brief add_new_variable Adds a new variable to the method ...
+     * @param name
+     * @param type
+     * @param dimension
+     * @param expwloc
+     * @return
+     */
+    variable* add_new_variable(char* pname,  char* type, int dimension, const expression_with_location* expwloc);
+    /**
+     * @brief has_variable
+     * @param cc
+     * @param varname
+     * @param templed
+     * @param env_var
+     * @return
+     */
+    variable* has_variable(call_context* cc, char* varname, int* templed, int* env_var);
+
+    /**
+     * @brief feed_parameter_list Feeds in the given parameter list to the method for it to create its parameter structures
+     * @param par_list
+     * @param expwloc
+     */
+    void feed_parameter_list(char* par_list, const expression_with_location* expwloc);
+
+
+    const std::vector<variable*>& get_variables() const
+    {
+        return variables;
+    }
+
     /* the name of the method */
     char *method_name;
 
     /* the return type of the function */
     char *return_type;
 
-    /* the list of struct variables that are defined in the method. This list is used in two situations:
-     * 1. in the interpret phase, when the code is built up, this is used as references to find the variables.
-     * 2. in the running phase, but only for static variables.
-     */
-    std::vector<variable*> variables;
-
     /* the parameters of the method */
-    parameter_list *parameters;
-
-    /* the call contexts this method is taking part from */
-    call_context_list *contained_ins;
+    std::vector<parameter*> parameters;
 
     /* this is the call context of the method, created when the method is created */
     call_context *main_cc;
@@ -59,6 +95,14 @@ struct method
     int def_loc;
 
     int ret_type;
+
+private:
+    /* the list of struct variables that are defined in the method. This list is used in two situations:
+     * 1. in the interpret phase, when the code is built up, this is used as references to find the variables.
+     * 2. in the running phase, but only for static variables.
+     */
+    std::vector<variable*> variables;
+
 };
 
 /**
@@ -83,64 +127,15 @@ struct constructor_call : public method
  */
 struct call_frame_entry
 {
-
     /* this is the method that was called */
     method *the_method;
 
     /* this are the parameters passed to the method */
-    parameter_list *parameters;
+    std::vector<parameter*> parameters;
 
     /* holds the previous call frame of the method... just in case*/
     call_frame_entry *previous_cf;
-
-    call_frame_entry(method *pthe_method, parameter_list *pars)
-    {
-        parameters = pars;
-        the_method = pthe_method;
-        previous_cf = the_method->cur_cf;
-    }
 };
 
-/**
- * Frees the memory allocated by the given method
- */
-void method_destroy(method* the_method);
-
-/**
- * Adds a new expression to the method
- */
-struct expression_tree* method_add_new_expression(method* the_method,  char* expr, call_context* cc);
-
-/**
- * Adds a new variable to the method ...
- */
-variable* method_add_new_variable(method* the_method,  char* name,  char* type, int dimension, const expression_with_location* expwloc);
-
-/**
- * Runs the method
- */
-struct envelope* method_run_method(method* the_method, parameter_list* calling_parameters);
-
-/**
- * Adds a new parameter to the method
- * @param the_method - the method to be worked on
- * @param name - the name of the parameter
- * @param type - the type of the parameter (as string)
- * @param modifiable - if the parameter is a reference or not (C++ rulez :) )
- */
-struct parameter* method_add_parameter(method* the_method,  char* name,  char* type, int dimension, int modifiable, const expression_with_location* expwloc);
-
-/**
- * Feeds in the given parameter list to the method for it to create its parameter structures
- */
-void method_feed_parameter_list(method* the_method, char* par_list, const expression_with_location* expwloc);
-
-/**
- * Gets the variable from the method
- */
-variable* method_has_variable(method* the_method, call_context* cc, char* varname, int* templed, int* env_var);
-
-parameter* method_get_parameter(method* the_method, const char* varname);
-parameter* method_get_parameter(method* the_method, int i);
 
 #endif

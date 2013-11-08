@@ -203,19 +203,19 @@ void deliver_ccidx_dest(const expression_tree* node, int level,
                         int forced_mov)
 {
 multi_dimension_index* mdi = (multi_dimension_index*)node->right->reference->to_interpret;
-expression_tree_list* indxs = mdi->dimension_values;
+    std::vector<expression_tree*>::iterator indxs = mdi->dimension_values->begin();
     idxc = 0;
-    while(indxs)
+    while(indxs != mdi->dimension_values->end())
     {
-        if(is_atomic_type(indxs->root->op_type))    /* put the indexes into reg(current level)*/
+        if(is_atomic_type((*indxs)->op_type))    /* put the indexes into reg(current level)*/
         {
-            move_atomic_into_index_register(idxc, indxs, the_method, cc, level, forced_mov);
+            move_atomic_into_index_register(idxc, *indxs, the_method, cc, level, forced_mov);
         }
         else
         {
-            if(is_post_pre_op(indxs->root->op_type))    /* put the index in the next level, modify the variable*/
+            if(is_post_pre_op((*indxs)->op_type))    /* put the index in the next level, modify the variable*/
             {
-                deal_with_post_pre_node(indxs->root, level + 1, the_method, cc, forced_mov);    /* dealing with the post/pre operation*/
+                deal_with_post_pre_node(*indxs, level + 1, the_method, cc, forced_mov);    /* dealing with the post/pre operation*/
                 /* and here updating the current index register to hold the value from the reg(level) */
                 move_int_register_into_index_register(idxc, level);
 
@@ -223,12 +223,12 @@ expression_tree_list* indxs = mdi->dimension_values;
             else    /* compile everything in the next level and finally assign the next reg to current reg*/
             {
                 int int_type = BASIC_TYPE_INT;
-                compile(indxs->root, the_method, cc, level + 1, int_type, forced_mov);
+                compile(*indxs, the_method, cc, level + 1, int_type, forced_mov);
                 move_int_register_into_index_register(idxc, level+1);
             }
         }
         idxc ++;
-        indxs = indxs->next;
+        indxs ++;
     }
     /* now into the current register move the variable x[reg_idxi(0), reg_idxi(1), ...] */
 }
@@ -341,9 +341,10 @@ static void resolve_class_member(const expression_tree* node, int level, const m
 
 static void do_list_assignment( envelope* rvalue, variable* var, int level, const method* the_method, call_context* cc, int reqd_type )
 {
-    struct listv* lst = (struct listv*)rvalue->to_interpret;
+    std::vector<envelope*> *lstvec = (std::vector<envelope*>*)rvalue->to_interpret;
+    std::vector<envelope*>::iterator lst = lstvec->begin();
     int indxctr = 0;
-    while(lst->next)
+    while(lst != lstvec->end())
     {
         code_stream() << mov()
                       << SPACE
@@ -352,30 +353,30 @@ static void do_list_assignment( envelope* rvalue, variable* var, int level, cons
                       << indxctr
                       << NEWLINE;
         
-        if(((expression_tree*)lst->val->to_interpret)->op_type <= var->i_type)
+        if(((expression_tree*)(*lst)->to_interpret)->op_type <= var->i_type)
         {
             code_stream() << mov()
                           << SPACE
                           << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL
                           << C_COMMA;
         }
-        compile((expression_tree*)lst->val->to_interpret, the_method, cc, level + 1, reqd_type, 0);
+        compile((expression_tree*)(*lst)->to_interpret, the_method, cc, level + 1, reqd_type, 0);
 
-        if(((expression_tree*)lst->val->to_interpret)->op_type <= var->i_type)
+        if(((expression_tree*)(*lst)->to_interpret)->op_type <= var->i_type)
         {
             code_stream() << NEWLINE;
         }
         
         code_stream() << mov()
                       << SPACE
-                      << ccidx() << C_PAR_OP << (std::string(cc->name) + STR_DOT + var->name) << C_COMMA << '1' << C_PAR_CL
+                      << ccidx() << C_PAR_OP << (std::string(cc->get_name()) + STR_DOT + var->name) << C_COMMA << '1' << C_PAR_CL
                       << C_COMMA
                       << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL
                       << NEWLINE ;
 
         clidx();
 
-        lst = lst->next;
+        lst ++;
         indxctr ++;
     }
 }
@@ -571,6 +572,33 @@ static std::vector<std::string> chop_up(const char* s)
     return result;
 }
 
+
+void compile_a_block(const std::vector<expression_tree*>& container,
+                     int level,
+                     call_context* cc,
+                     const method* the_method, int forced_mov)
+{
+    std::string if_hash = generate_unique_hash();
+    std::vector<expression_tree*>::const_iterator q = container.begin();
+    push_cc_start_marker(if_hash.c_str()); /* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
+    int last_opcode = -1;
+    while(q != container.end())
+    {
+        int local_req = -1;
+        compile(*q, the_method, cc, level + 1, local_req, forced_mov);
+        if((*q)->op_type != STATEMENT_CLOSE_CC)
+        {
+            last_opcode = (*q)->op_type;
+        }
+        q ++;
+    }
+    push_cc_end_marker(if_hash.c_str());
+    if(last_opcode == RETURN_STATEMENT)
+    {
+        code_stream() << "leave" << NEWLINE;
+    }
+}
+
 /**
  * Generates bytecode for the If handling.
  * At the end the instruction flow should look like:
@@ -620,13 +648,13 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
     {
 
         std::stringstream ss;
-        ss << my_if->if_branch->name << C_UNDERLINE << cc->labels.size() << C_UNDERLINE << generate_unique_hash();
+        ss << my_if->if_branch->get_name() << C_UNDERLINE << cc->get_label_count() << C_UNDERLINE << generate_unique_hash();
         std::string if_label_name = ss.str();
         ss.str(std::string());
 
         std::string else_label_name;
 
-        ss << cc->name << C_UNDERLINE << cc->labels.size() << C_UNDERLINE << generate_unique_hash();
+        ss << cc->get_name() << C_UNDERLINE << cc->get_label_count() << C_UNDERLINE << generate_unique_hash();
         std::string end_label_name = ss.str();
         ss.str(std::string());
 
@@ -635,7 +663,7 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
 
         if(my_if->else_branch) /* if there's an else branch */
         {
-            ss << my_if->else_branch->name << C_UNDERLINE << cc->labels.size() << C_UNDERLINE << generate_unique_hash();
+            ss << my_if->else_branch->get_name() << C_UNDERLINE << cc->get_label_count() << C_UNDERLINE << generate_unique_hash();
             else_label_name = ss.str();
             ss.str(std::string());
             jmp(else_label_name);    /* jump to the else branch if the logical operation did no evaluate to true*/
@@ -646,97 +674,39 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
         }
 
         code_stream() << fully_qualified_label(if_label_name) << NEWLINE;            /* the label for the if branch */
-        call_context_add_label(cc, -1, if_label_name);    /* for now added with dummy data to the CC*/
-        expression_tree_list* q = my_if->if_branch->expressions;    /* and here compile the instructions in the 'if' branch*/
-        if(q && !q->next)            /* one line if, no parantheses*/
+        cc->add_label(-1, if_label_name);    /* for now added with dummy data to the CC*/
+        if(! my_if->if_branch->get_expressions().empty())    /*to solve: if(1); else ...*/
         {
-            compile(q->root, the_method, my_if->if_branch, level + 1, reqd_type, forced_mov);
-        }
-        else
-        {
-            if(q)    /*to solve: if(1); else ...*/
-            {
-                std::string if_hash = generate_unique_hash();
-
-                push_cc_start_marker(if_hash.c_str());                        /* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
-                int last_opcode = -1;
-                while(q)
-                {
-                    int local_req = -1;
-                    compile(q->root, the_method, my_if->if_branch, level + 1, local_req, forced_mov);
-                    if(q->root->op_type != STATEMENT_CLOSE_CC)
-                    {
-                        last_opcode = q->root->op_type;
-                    }
-                    q=q->next;
-                }
-                push_cc_end_marker(if_hash.c_str());
-                if(last_opcode == RETURN_STATEMENT)
-                {
-                    code_stream() << "leave" << NEWLINE;
-                }
-            }
+            compile_a_block(my_if->if_branch->get_expressions(), level,
+                            my_if->if_branch, the_method, forced_mov);
         }
 
-        //push_cc_end_marker;
         if(my_if->else_branch)        /* if we have an else branch */
         {
             jmp(end_label_name);    /* make sure, that after executing the 'if' branch we don't end up here */
             code_stream() << fully_qualified_label(else_label_name) << NEWLINE;    /* here place the label so the bytecode will know where to jump */
-            call_context_add_label(cc, -1, else_label_name);    /* for now added with dummy data to the CC*/
-            expression_tree_list* q = my_if->else_branch->expressions;            /* and compile the instructions in the else branch too */
-            if(q && !q->next)            /* one line if, no parantheses*/
-            {
-                compile(q->root, the_method, my_if->if_branch, level + 1, reqd_type, forced_mov);
-            }
-            else
-            {
-                std::string if_hash = generate_unique_hash();
+            cc->add_label(-1, else_label_name);    /* for now added with dummy data to the CC*/
 
-                push_cc_start_marker(if_hash.c_str());                        /* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
-                while(q)
-                {
-                    int local_req = -1;
-                    compile(q->root, the_method, my_if->if_branch, level + 1, local_req, forced_mov);
-                    q=q->next;
-                }
-                push_cc_end_marker(if_hash.c_str());
-            }
-
+            compile_a_block(my_if->else_branch->get_expressions(),
+                            level,
+                            my_if->else_branch, the_method, forced_mov);
         }
         code_stream() << fully_qualified_label(end_label_name) << NEWLINE ;        /* finally, in this case this would be the last label regarding this if */
-        call_context_add_label(cc, -1, end_label_name);    /* adding it to the call context */
+        cc->add_label(-1, end_label_name);    /* adding it to the call context */
     }
     else    /* if we don't have an if branch */
     {
         if(my_if->else_branch)    /* but we have an else branch */
         {
             /* generating a name for the end of the 'if' */
-            char* end_label_name = alloc_mem(char, cc->name.length() + 32);
-            sprintf(end_label_name, "%s_%d", cc->name.c_str(), (int)cc->labels.size());
+            char* end_label_name = alloc_mem(char, cc->get_name().length() + 32);
+            sprintf(end_label_name, "%s_%d", cc->get_name().c_str(), (int)cc->get_label_count());
             jlbf(end_label_name);                /* jump to the end of the if, if the logical expression evaluated to true */
-            expression_tree_list* q = my_if->else_branch->expressions;            /* compile the instructions in the else branch too */
-            if(q && !q->next)            /* one line if, no parantheses*/
-            {
-                compile(q->root, the_method, my_if->if_branch, level + 1, reqd_type, forced_mov);
-            }
-            else
-            {
-                std::string if_hash = generate_unique_hash();
-
-                push_cc_start_marker(if_hash.c_str());                        /* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
-                while(q)
-                {
-                    int local_req = -1;
-
-                    compile(q->root, the_method, my_if->if_branch, level + 1, local_req, forced_mov);
-                    q=q->next;
-                }
-                push_cc_end_marker(if_hash.c_str());
-            }
+            compile_a_block(my_if->else_branch->get_expressions(), level,
+                            my_if->else_branch, the_method, forced_mov);
             /* label after else */
             code_stream() << fully_qualified_label(end_label_name) << NEWLINE;
-            call_context_add_label(cc, -1, end_label_name);
+            cc->add_label(-1, end_label_name);
 
         }
     }
@@ -758,17 +728,17 @@ static void resolve_while_keyword(const expression_tree* node, const method* the
 
     /* as a first step we should print the label of the while start and end*/
 
-    char* end_label_name = alloc_mem(char, cc->name.length() + 32);
-    sprintf(end_label_name, "%s_%d", cc->name.c_str(), (int)cc->labels.size());    /* generating a name for the end of the while */
+    char* end_label_name = alloc_mem(char, cc->get_name().length() + 32);
+    sprintf(end_label_name, "%s_%d", cc->get_name().c_str(), (int)cc->get_label_count());    /* generating a name for the end of the while */
 
-    my_while->break_label = call_context_add_break_label(my_while->operations, -1, end_label_name);    /* adding the default break label location of the while to the call context */
+    my_while->break_label = my_while->operations->add_break_label(-1, end_label_name);    /* adding the default break label location of the while to the call context */
 
-    char* while_label_name = alloc_mem(char, my_while->operations->name.length() + 32);
-    sprintf(while_label_name, "%s_%d", my_while->operations->name.c_str(), (int)cc->labels.size());    /* generating a name for the content */
+    char* while_label_name = alloc_mem(char, my_while->operations->get_name().length() + 32);
+    sprintf(while_label_name, "%s_%d", my_while->operations->get_name().c_str(), (int)cc->get_label_count());    /* generating a name for the content */
 
     /* print the while start label */
     code_stream() << fully_qualified_label(while_label_name) << NEWLINE ;
-    call_context_add_label(cc, -1, while_label_name);
+    cc->add_label(-1, while_label_name);
 
     /*check if the info is a logical operation or not.
     If it's go to the else (of the if below), if it's not calculate everything on the next level, mov the result in current level and
@@ -810,34 +780,12 @@ static void resolve_while_keyword(const expression_tree* node, const method* the
 
     if(my_while->operations)    /* if we have operations in the while */
     {
-        expression_tree_list* q = my_while->operations->expressions;    /* and here compile the instructions */
-        if(q && !q->next)            /* one line while, no parantheses*/
-        {
-            compile(q->root, the_method, my_while->operations, level + 1, reqd_type, forced_mov);
-        }
-        else
-        {
-            if(q)    /*to resolve: while(1); trallala */
-            {
-                std::string while_hash = generate_unique_hash();
-
-                push_cc_start_marker(while_hash.c_str());                        /* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
-                while(q)
-                {
-                    int local_req = -1;
-
-                    compile(q->root, the_method, my_while->operations, level + 1, local_req, forced_mov);
-                    q=q->next;
-                }
-                push_cc_end_marker(while_hash.c_str());
-
-            }
-        }
+        compile_a_block(my_while->operations->get_expressions(), level, my_while->operations, the_method, forced_mov);
         jmp( while_label_name);
     }
 
     code_stream() << fully_qualified_label(end_label_name) << NEWLINE ;        /* finally, in this case this would be the last label regarding this while */
-    call_context_add_label(cc, -1, end_label_name);    /* adding it to the call context */
+    cc->add_label(-1, end_label_name);    /* adding it to the call context */
 }
 
 /**
@@ -859,37 +807,16 @@ static void resolve_for_keyword(const expression_tree* node, const method* the_m
     compile(my_for->tree_init_stmt, the_method, cc, level + 1, reqd_type, forced_mov);
 
     /* then we should print the label of the for start*/
-    struct bytecode_label* start_label = call_context_provide_label(cc);
-    struct bytecode_label* end_label = call_context_provide_label(cc);
+    struct bytecode_label* start_label = cc->provide_label();
+    struct bytecode_label* end_label = cc->provide_label();
 
     code_stream() << fully_qualified_label(start_label->name) << NEWLINE;
 
     /* Now, the statements */
     if(my_for->operations)    /* if we have operations in the body */
     {
-        call_context_add_break_label(my_for->operations, -1, end_label->name);
-
-        expression_tree_list* q = my_for->operations->expressions;    /* and here compile the instructions in the for body*/
-        if(q && !q->next)            /* one line if, no parantheses*/
-        {
-            int local_req = -1;
-
-            compile(q->root, the_method, my_for->operations, level + 1, local_req, forced_mov);
-        }
-        else
-        {
-            std::string for_hash = generate_unique_hash(); /* marker for the boyd of the loop */
-
-            push_cc_start_marker(for_hash.c_str());                        /* push a marker onto the stack so that the end of the for's body CC will know till where to delete*/
-            while(q)
-            {
-                int local_req = -1;
-
-                compile(q->root, the_method, my_for->operations, level + 1, local_req, forced_mov);
-                q=q->next;
-            }
-            push_cc_end_marker(for_hash.c_str());
-        }
+        my_for->operations->add_break_label(-1, end_label->name);
+        compile_a_block(my_for->operations->get_expressions(), level, my_for->operations, the_method, forced_mov);
     }
 
     /* now execute the for "operation" ie. usually the i++ */
@@ -934,124 +861,120 @@ static void resolve_for_keyword(const expression_tree* node, const method* the_m
  *  - add the variable to the stack (by using a push operation) In fact this will add only the envelope of the variable
  *  - in case this variable has dimensions generate code to update the dimensions of the variable
  *  - in case this is initialized generate code to initialize the variable
-
- * The generated code will be something like:
  *
  */
 void resolve_variable_definition(const expression_tree* node, const method* the_method, call_context* cc, int level, int reqd_type, int forced_mov)
 {
     {
-    variable_definition_list* vdl = (variable_definition_list*)node->reference->to_interpret;
-        while(vdl)
+        std::vector<variable_definition*>* vdlist = (std::vector<variable_definition*>*)node->reference->to_interpret;
+        if(!vdlist)
         {
-            if(vdl->the_definition)
+            return;
+        }
+
+        std::vector<variable_definition*>::const_iterator vdl = vdlist->begin();
+        while(vdl != vdlist->end())
+        {
+            variable_definition* vd = *vdl;
+            if(!vd->the_variable)
             {
-            variable_definition* vd = vdl->the_definition;
-                if(!vd->the_variable)
-                {
-                    throw_error("Internal: A variable declaration is not having an associated variable object", NULL);
-                }
+                throw_error("Internal: A variable declaration is not having an associated variable object", NULL);
+            }
 
-                /* warning!!! Only :
-                 *  1. NON static variables are being pushed.
-                 *  2. class variables are NOT pushed   
-                 *  3. UserDef variables (ie. classes) are being pushed specially
-                 */
-                if(!vd->the_variable->static_var)
+            /* warning!!! Only :
+             *  1. NON static variables are being pushed.
+             *  2. class variables are NOT pushed
+             *  3. UserDef variables (ie. classes) are being pushed specially
+             */
+            if(!vd->the_variable->static_var)
+            {
+                if(vd->the_variable->i_type  == BASIC_TYPE_USERDEF)
                 {
-                    if(vd->the_variable->i_type  == BASIC_TYPE_USERDEF)
+                    /* search if we have a definition for it too, such as: Base t = new Derived()*/
+                    if(vd->the_value)
                     {
-                        /* search if we have a definition for it too, such as: Base t = new Derived()*/
-                        if(vd->the_value)
-                        {
-                            code_stream() << push() << SPACE << ref() << SPACE << (std::string(cc->name) + STR_DOT + vd->the_variable->name) << NEWLINE;
-                            
-                            expression_tree* tempassign = alloc_mem(expression_tree, 1);
-                            expression_tree* tempvar = alloc_mem(expression_tree, 1);
-                            tempvar->left = tempvar->right = 0;
-                            tempvar->op_type = BASIC_TYPE_VARIABLE;
-                            tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE);
+                        code_stream() << push() << SPACE << ref() << SPACE << (std::string(cc->get_name()) + STR_DOT + vd->the_variable->name) << NEWLINE;
 
-                            tempassign->left = tempvar;
-                            tempassign->right = vd->the_value;
-                            resolve_assignment(tempassign, level, the_method, cc, reqd_type, forced_mov);
-                            
-                            // the constructor call is NOT pushing this
-                            // TODO: This was here ... push_cc_end_marker();
+                        expression_tree* tempassign = new expression_tree(node->expwloc);
 
-                            
-                        }
-                        else
-                        {
-                            push_usertype_variable(cc, vd->the_variable);
-                        }
+                        expression_tree* tempvar = new expression_tree(node->expwloc);
+                        tempvar->left = tempvar->right = 0;
+                        tempvar->op_type = BASIC_TYPE_VARIABLE;
+                        tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE);
+
+                        tempassign->left = tempvar;
+                        tempassign->right = vd->the_value;
+                        resolve_assignment(tempassign, level, the_method, cc, reqd_type, forced_mov);
+
+                        // the constructor call is NOT pushing this
+                        // TODO: This was here ... push_cc_end_marker();
                     }
                     else
                     {
-                        push_variable(cc, vd->the_variable);
-                        
-                        if(vd->the_value)
-                        {
-                            expression_tree* tempassign = alloc_mem(expression_tree, 1);
-                            expression_tree* tempvar = alloc_mem(expression_tree, 1);
-                            tempvar->left = tempvar->right = 0;
-                            tempvar->op_type = BASIC_TYPE_VARIABLE;
-                            tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE);
-
-                            tempassign->left = tempvar;
-                            tempassign->right = vd->the_value;
-                            resolve_assignment(tempassign, level, the_method, cc, reqd_type, forced_mov);
-                        }
+                        push_usertype_variable(cc, vd->the_variable);
                     }
-
                 }
                 else
                 {
-                    notimpl("static variables");
+                    push_variable(cc, vd->the_variable);
+
+                    if(vd->the_value)
+                    {
+                        expression_tree* tempassign = new expression_tree(node->expwloc);
+                        expression_tree* tempvar = new expression_tree(node->expwloc);
+                        tempvar->left = tempvar->right = 0;
+                        tempvar->op_type = BASIC_TYPE_VARIABLE;
+                        tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE);
+
+                        tempassign->left = tempvar;
+                        tempassign->right = vd->the_value;
+                        resolve_assignment(tempassign, level, the_method, cc, reqd_type, forced_mov);
+                    }
                 }
 
-                /* now check if there are multiple dimensions to this variable */
-                multi_dimension_def* q = NULL;
-                q = vd->md_def;
-                while(q && q->next)
-                {
-                    if(q->dimension > 0)    /* this dimension definition is a simple number */
-                    {
-                        resolve_variable_add_dimension_number(cc, vd->the_variable, q->dimension);
-                    }
-                    else
-                    {
-                        if(q->dynamic)
-                        {
-                            vd->the_variable->dynamic_dimension = 1;
-                        }
-                        else
-                        {
-                            if(!q->expr_def)
-                            {
-                                throw_error("Internal: Multi-dim initialization is not having an associated expression", NULL);
-                            }
-                            compile(q->expr_def, the_method, cc, level + 1, reqd_type, 1);
-                            resolve_variable_add_dimension_regis(cc, vd->the_variable, level + 1);
-
-                        }
-                    }
-                    q = q->next;
-                }
-                /* and see if there is a value for this variable to assign to it */
-                if(vd->the_value)
-                {
-                    // Do something about this shit ....
-                    //envelope* def = evaluate(vd->the_value, the_method, cc);
-                    //do_assignment(new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE), def, -1, -1, -1, 0, the_method, cc, reqd_type, 0);
-                }
-                
             }
             else
             {
-                throw_error("Internal: A Variable definition is not having a definition object", NULL);
+                notimpl("static variables");
             }
-            vdl = vdl->next;
+
+            /* now check if there are multiple dimensions to this variable */
+            multi_dimension_def* q = NULL;
+            q = vd->md_def;
+            while(q && q->next)
+            {
+                if(q->dimension > 0)    /* this dimension definition is a simple number */
+                {
+                    resolve_variable_add_dimension_number(cc, vd->the_variable, q->dimension);
+                }
+                else
+                {
+                    if(q->dynamic)
+                    {
+                        vd->the_variable->dynamic_dimension = 1;
+                    }
+                    else
+                    {
+                        if(!q->expr_def)
+                        {
+                            throw_error("Internal: Multi-dim initialization is not having an associated expression", NULL);
+                        }
+                        compile(q->expr_def, the_method, cc, level + 1, reqd_type, 1);
+                        resolve_variable_add_dimension_regis(cc, vd->the_variable, level + 1);
+
+                    }
+                }
+                q = q->next;
+            }
+            /* and see if there is a value for this variable to assign to it */
+            if(vd->the_value)
+            {
+                //TODO: Do something about this
+                //envelope* def = evaluate(vd->the_value, the_method, cc);
+                //do_assignment(new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE), def, -1, -1, -1, 0, the_method, cc, reqd_type, 0);
+            }
+
+            vdl ++;
         }
     }
 }
@@ -1065,16 +988,16 @@ static void resolve_break_keyword(call_context* cc)
     /* find the first while or for call context. Also consider switch statements*/
     call_context* qcc = cc;
     /* hold the number of stack rollbacks we need to put in here*/
-    while(qcc && qcc->type != CALL_CONTEXT_TYPE_WHILE && qcc->type != CALL_CONTEXT_TYPE_FOR)
+    while(qcc && qcc->get_type() != CALL_CONTEXT_TYPE_WHILE && qcc->get_type() != CALL_CONTEXT_TYPE_FOR)
     {
-        qcc = qcc->father;
+        qcc = qcc->get_father();
     }
     if(!qcc)    /* means this has reached to the highest level and the break was not placed in a for/while/switch*/
     {
         throw_error(E0012_SYNTAXERR);
     }
 
-    jmp(qcc->break_label->name);
+    jmp(qcc->get_break_label()->name);
 }
 
 /**
@@ -1303,7 +1226,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
 
                     push_cc_start_marker(cc_start_hash.c_str());
                     call_context* new_cc = (call_context*)node->reference->to_interpret;    // Here we don't get a reference ... :(
-                    call_context_run_inner(new_cc, level, reqd_type, forced_mov);
+                    new_cc->compile_standalone(level, reqd_type, forced_mov);
 
                     push_cc_end_marker(cc_start_hash.c_str());
                 }
@@ -1320,15 +1243,15 @@ void compile(const expression_tree* node, const method* the_method, call_context
                     
                     call_frame_entry* cfe = (call_frame_entry*)node->right->reference->to_interpret;
                     method* m = cfe->the_method;
-                    parameter_list* ingoing_parameters = cfe->parameters;
+                    std::vector<parameter*>::iterator ingoing_parameters = cfe->parameters.begin();
                     int pc = 0;
                     std::string dot_determiner_hash = generate_unique_hash();
 
                     push_cc_start_marker(dot_determiner_hash.c_str());
-                    while(ingoing_parameters)
+                    while(ingoing_parameters != cfe->parameters.end())
                     {
-                        parameter* p = ingoing_parameters->param;
-                        parameter* fp = method_get_parameter(m, pc);
+                        parameter* p = *ingoing_parameters;
+                        parameter* fp = m->get_parameter(pc);
                         if(!fp)
                         {
                             throw_error("parameter not found");
@@ -1341,11 +1264,11 @@ void compile(const expression_tree* node, const method* the_method, call_context
                         compile(t, the_method, cc, level, fp->type, forced_mov);
                         code_stream() << NEWLINE << push() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 
-                        ingoing_parameters = ingoing_parameters->next;
+                        ingoing_parameters ++;
                         pc ++;
                     }
                     code_stream() << call() << SPACE << '$'
-                                  << (std::string(cc->name) + STR_DOT + vd->name) << '@' << m->method_name << NEWLINE;
+                                  << (std::string(cc->get_name()) + STR_DOT + vd->name) << '@' << m->method_name << NEWLINE;
                     if(m->ret_type) // pop something only if the method was defined to return something
                     {
                         code_stream() << pop() << SPACE << reg() << get_reg_type(m->ret_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
@@ -1394,13 +1317,13 @@ void compile(const expression_tree* node, const method* the_method, call_context
         {
             call_frame_entry* cfe = (call_frame_entry*)node->reference->to_interpret;
             constructor_call* m = (constructor_call*)cfe->the_method;
-            parameter_list* ingoing_parameters = cfe->parameters;
+            std::vector<parameter*>::iterator ingoing_parameters = cfe->parameters.begin();
             int pc = 0;
 
-            while(ingoing_parameters)
+            while(ingoing_parameters != cfe->parameters.end())
             {
-                parameter* p = ingoing_parameters->param;
-                parameter* fp = method_get_parameter(m, pc);
+                parameter* p = *ingoing_parameters;
+                parameter* fp = m->get_parameter(pc);
                 if(!fp)
                 {
                     throw_error("parameter not found");
@@ -1413,15 +1336,15 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 compile(t, the_method, cc, level, fp->type, forced_mov);
                 code_stream() << NEWLINE << push() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 
-                ingoing_parameters = ingoing_parameters->next;
+                ingoing_parameters ++;
                 pc ++;
             }
-            code_stream() << push() << SPACE << ref() << SPACE << (std::string(cc->name) + STR_DOT + "this") << NEWLINE;
-            code_stream() << call() << SPACE << "@crea" << C_PAR_OP << m->the_class->name << C_COMMA << (std::string(cc->name) + STR_DOT + "this").c_str() << C_PAR_CL<< NEWLINE;
+            code_stream() << push() << SPACE << ref() << SPACE << (std::string(cc->get_name()) + STR_DOT + "this") << NEWLINE;
+            code_stream() << call() << SPACE << "@crea" << C_PAR_OP << m->the_class->get_name() << C_COMMA << (std::string(cc->get_name()) + STR_DOT + "this").c_str() << C_PAR_CL<< NEWLINE;
             code_stream() << call()
                           << SPACE
-                          << '$' << (std::string(cc->name) + STR_DOT + "this")
-                          << '@' << (std::string(m->the_class->name) +  STR_DOT + m->method_name).c_str()
+                          << '$' << (std::string(cc->get_name()) + STR_DOT + "this")
+                          << '@' << (std::string(m->the_class->get_name()) +  STR_DOT + m->method_name).c_str()
                           << NEWLINE;
             code_stream() << pop() << SPACE << reg() << 'g' << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 
@@ -1432,14 +1355,14 @@ void compile(const expression_tree* node, const method* the_method, call_context
         {
             call_frame_entry* cfe = (call_frame_entry*)node->reference->to_interpret;
             method* m = cfe->the_method;
-            parameter_list* ingoing_parameters = cfe->parameters;
+            std::vector<parameter*>::iterator ingoing_parameters = cfe->parameters.begin();
             int pc = 0;
             std::string func_call_hash = generate_unique_hash();
             push_cc_start_marker(func_call_hash.c_str());
-            while(ingoing_parameters)
+            while(ingoing_parameters != cfe->parameters.end())
             {
-                parameter* p = ingoing_parameters->param;
-                parameter* fp = method_get_parameter(m, pc);
+                parameter* p = *ingoing_parameters;
+                parameter* fp = m->get_parameter(pc);
                 if(!fp)
                 {
                     throw_error("parameter not found");
@@ -1452,11 +1375,11 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 compile(t, the_method, cc, level, fp->type, forced_mov);
                 code_stream() << NEWLINE << push() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 
-                ingoing_parameters = ingoing_parameters->next;
+                ingoing_parameters ++;
                 pc ++;
             }
             code_stream() << call() << SPACE
-                          << '@' << std::string(m->main_cc->father->name) +'.' + m->method_name << NEWLINE;
+                          << '@' << std::string(m->main_cc->get_father()->get_name()) +'.' + m->method_name << NEWLINE;
             if(m->ret_type) // pop something only if the method was defined to return something
             {
                 code_stream() << mov()

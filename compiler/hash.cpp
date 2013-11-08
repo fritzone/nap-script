@@ -28,7 +28,7 @@ variable* variable_list_add_variable(const char *var_name,
 
     if(itype == BASIC_TYPE_DONTCARE)
     {
-        if(call_context_get_class_declaration(cc, var_type))
+        if(cc->get_class_declaration(var_type))
         {
             itype = BASIC_TYPE_USERDEF;
         }
@@ -38,7 +38,7 @@ variable* variable_list_add_variable(const char *var_name,
         return 0;
     }
     
-    variable* var = new variable(var_size, itype);
+    variable* var = new_variable(var_size, itype);
 
     var->name = duplicate_string(var_name);
     var->c_type = duplicate_string(var_type);
@@ -75,11 +75,9 @@ std::vector<variable*>::const_iterator variable_list_has_variable(const char *s,
 /**
  * Creates a new string list from the instr which is separated by the given separator
  */
-string_list* string_list_create_bsep(const char* instr, char sep)
+std::vector<std::string> string_list_create_bsep(const char* instr, char sep)
 {
-    string_list* head = alloc_mem(string_list,1);
-    string_list* q = head;
-    string_list* tmp = NULL;
+    std::vector<std::string>  head;
     const char* p = instr, *frst = instr;
     char* cur_elem = NULL;
     while(*p)
@@ -158,11 +156,7 @@ string_list* string_list_create_bsep(const char* instr, char sep)
         {
             cur_elem = new_string(p - frst + 1);
             strncpy(cur_elem, frst, p - frst);
-            q->str = duplicate_string(trim(cur_elem));
-            q->len = strlen(q->str);
-            tmp = alloc_mem(string_list,1);
-            q->next = tmp;
-            q = tmp;
+            head.push_back(std::string(cur_elem));
             frst = p + 1;
         }
         if(! already_increased)
@@ -173,7 +167,6 @@ string_list* string_list_create_bsep(const char* instr, char sep)
     /* and now the last element */
     cur_elem = new_string(p - frst + 1);
     strncpy(cur_elem, frst, p - frst);
-    q->str = duplicate_string(trim(cur_elem));
-    q->len = strlen(q->str);
+    head.push_back(std::string(cur_elem));
     return head;
 }

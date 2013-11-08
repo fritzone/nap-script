@@ -12,37 +12,13 @@
 #include "envelope.h"
 #include "consts.h"
 #include "throw_error.h"
+#include "expression_tree.h"
 #include "parametr.h"
 
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
-
-/**
- * Creates a new  variable
- */
-variable::variable(int pdimension, int type)
-{
-    if(pdimension<1)
-    {
-        throw_error(STR_INVALID_DIMENSION, NULL);
-    }
-
-    dimension = pdimension;
-    multi_dim_count = 1;
-    i_type = type;
-
-    name = NULL;
-    c_type = NULL;
-    mult_dim_def = NULL;
-    func_par = NULL;
-    templ_parameters = NULL;
-    static_var = 0;
-    environment_variable = 0;
-    dynamic_dimension = 0;
-    cc = 0;
-}
 
 /**
  * Creates a new multi-dimension index object
@@ -88,13 +64,12 @@ static parameter* variable_add_template_parameter(variable* the_variable, const 
     char *name_dup = duplicate_string(name);
     char* indexOfEq = strchr(name_dup, C_EQ);
     variable* nvar = NULL;
-    parameter_list* flist = NULL, *q = NULL;
 
     if(indexOfEq)
     {
-    const char* afterEq = indexOfEq + 1;
-    int res = -1;
-        func_par->initial_value = new_expression_tree(expwloc);
+        const char* afterEq = indexOfEq + 1;
+        int res = -1;
+        func_par->initial_value = new expression_tree(expwloc);
         build_expr_tree(afterEq, func_par->initial_value, the_method, afterEq, cc, &res, expwloc);
         *indexOfEq = 0;
     }
@@ -103,22 +78,11 @@ static parameter* variable_add_template_parameter(variable* the_variable, const 
 
     nvar = variable_add_new_template_variable(the_variable, name, type, the_method, cc, expwloc);
     nvar->func_par = func_par;
-    flist = alloc_mem(parameter_list,1);
-    q = the_variable->templ_parameters;
 
     func_par->value = new_envelope(nvar, BASIC_TYPE_VARIABLE);
-    func_par->modifiable = 0;
     func_par->name = duplicate_string(name);
 
-    flist->param = func_par;
-
-    if(NULL == q)
-    {
-        the_variable->templ_parameters = flist;
-        return func_par;
-    }
-    while(q->next) q=q->next;
-    q->next = flist;
+    the_variable->templ_parameters.push_back(func_par);
     return func_par;
 }
 
@@ -132,32 +96,49 @@ static parameter* variable_add_template_parameter(variable* the_variable, const 
 void variable_feed_parameter_list(variable* the_variable, char* par_list, method* the_method, call_context* cc, const expression_with_location* expwloc)
 {
     //printf("\n\nFeeding parameter list for variable [%s] with [%s]\n\n", the_variable->name, par_list);
-    string_list* entries = string_list_create_bsep(par_list, C_COMMA), *q ;
-    q = entries;
-    while(q)
+    std::vector<std::string> entries = string_list_create_bsep(par_list, C_COMMA);
+    std::vector<std::string>::iterator q = entries.begin();
+    while(q != entries.end())
     {
-    int i=0;
-    char* par_type = new_string(q->len);
-    char* par_name = new_string(q->len);
-    int j = 0;
-        while(i < q->len && is_identifier_char(q->str[i]))    /* & and [] are not allowed in variable templ. parameter*/
+        size_t i=0;
+        char* par_type = new_string(q->length());
+        char* par_name = new_string(q->length());
+        size_t j = 0;
+        while(i < q->length() && is_identifier_char((*q)[i]))    /* & and [] are not allowed in variable templ. parameter*/
         {
-            par_type[j++] = q->str[i++];
+            par_type[j++] = (*q)[i++];
         }
+        if(i == q->length())
+        {
+            throw_error(E0009_PARAMISM, par_list);
+        }
+
         /* now par_type contains the type of the parameter */
-        while(i < q->len && is_whitespace(q->str[i])) i++;
-        if(C_AND == q->str[i])
+        while(i < q->length() && is_whitespace((*q)[i]))
+        {
+            i++;
+        }
+        if(i == q->length())
+        {
+            throw_error(E0009_PARAMISM, par_list);
+        }
+
+        if(C_AND == (*q)[i])
         {
             throw_error(E0031_NOREFHERE, the_variable->name, NULL);
         }
-        if(C_SQPAR_CL == q->str[i] || C_SQPAR_OP == q->str[i])
+        if(C_SQPAR_CL == (*q)[i] || C_SQPAR_OP == (*q)[i])
         {
             throw_error(E0032_NOARRHERE, the_variable->name, NULL);
         }
 
         j = 0;
-        while(i < q->len)    par_name[j++] = q->str[i++];
-    parameter* new_par_decl = variable_add_template_parameter(the_variable, trim(par_name), trim(par_type), the_method, cc, expwloc);
+        while(i < q->length())
+        {
+            par_name[j++] = (*q)[i++];
+        }
+
+        parameter* new_par_decl = variable_add_template_parameter(the_variable, trim(par_name), trim(par_type), the_method, cc, expwloc);
 
         /* here we should identify the dimension of the parameter */
         if(strchr(par_type, C_SQPAR_CL) && strchr(par_type, C_SQPAR_OP))
@@ -165,7 +146,7 @@ void variable_feed_parameter_list(variable* the_variable, char* par_list, method
             new_par_decl->simple_value = 0;
         }
 
-        q=q->next;
+        q ++;
     }
 }
 
@@ -192,10 +173,36 @@ int tplen = strlen(templ_pars);
 /**
  * Creates a new variable template reference object
  */
-variable_template_reference* new_variable_template_reference(variable* var, parameter_list* pars)
+variable_template_reference* new_variable_template_reference(variable* var, std::vector<parameter *> pars)
 {
 variable_template_reference* tmp = alloc_mem(variable_template_reference,1);
     tmp->templ_pars = pars;
     tmp->the_variable = var;
     return tmp;
+}
+
+
+variable *new_variable(int pdimension, int type)
+{
+    variable* v = alloc_mem(variable, 1);
+
+    if(pdimension<1)
+    {
+        throw_error(STR_INVALID_DIMENSION, NULL);
+    }
+
+    v->dimension = pdimension;
+    v->multi_dim_count = 1;
+    v->i_type = type;
+
+    v->name = NULL;
+    v->c_type = NULL;
+    v->mult_dim_def = NULL;
+    v->func_par = NULL;
+    v->static_var = 0;
+    v->environment_variable = 0;
+    v->dynamic_dimension = 0;
+    v->cc = 0;
+
+    return v;
 }

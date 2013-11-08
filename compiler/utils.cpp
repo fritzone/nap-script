@@ -99,23 +99,19 @@ char *ltrim(const char* src)
 char* trim(const char* src)
 {
 char* trimd1 = ltrim(src);
-    return rtrim(trimd1);
+char* trimd2 = rtrim(trimd1);
+    return trimd2;
 }
 
 /**
  * Duplicates src
  */
-char* duplicate_string(const char* src)
+char* duplicate_string(const char* s)
 {
-    char* r =
-#ifdef _WIN32
-    _strdup(src);
-#else
-    strdup(src);
-#endif
-
-    garbage_bin<char*>::instance().throwIn(r);
-    return r;
+    char *d = alloc_mem(char, strlen(s) + 1);   // Space for length plus nul
+    if (d == NULL) return NULL;          // No memory
+    strcpy (d,s);                        // Copy the characters
+    return d;
 }
 
 /**
@@ -230,13 +226,6 @@ int mem_loc_compare(const void* m1, const void* m2)
 void** mem_liberated = NULL;
 long liberc = 0;
 
-void* create(int obj_size, int count)
-{
-    void* tmp = calloc(count , obj_size);
-    garbage_bin<void*>::instance().throwIn(tmp);
-    return tmp;
-}
-
 char other_par(char c)
 {
     if(c == '(') return ')';
@@ -296,16 +285,16 @@ std::string fully_qualified_varname(call_context* cc, variable* v)
 {
     if(v->cc)
     {
-        return std::string(v->cc->name) + STR_DOT + v->name;
+        return std::string(v->cc->get_name()) + STR_DOT + v->name;
     }
     else
     {
-        return std::string(cc->name) + STR_DOT + v->name;
+        return std::string(cc->get_name()) + STR_DOT + v->name;
     }
 }
 std::string fully_qualified_varname(call_context* cc, const char* v)
 {
-    return std::string(cc->name) + STR_DOT + v;
+    return std::string(cc->get_name()) + STR_DOT + v;
 }
 
 std::string fully_qualified_label(const char* l)

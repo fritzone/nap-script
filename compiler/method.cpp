@@ -14,6 +14,7 @@
 #include "evaluate.h"
 #include "variable.h"
 #include "parametr.h"
+#include "expression_tree.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -26,8 +27,8 @@
 method::method(char* name, char* preturn_type, call_context* cc)
 {
     call_context* method_main_cc = NULL;
-    char* method_main_cc_name = new_string(strlen(name) + cc->name.length() + 3); /* will contain: parent_name::function_name*/
-    strcpy(method_main_cc_name, cc->name.c_str());
+    char* method_main_cc_name = new_string(strlen(name) + cc->get_name().length() + 3); /* will contain: parent_name::function_name*/
+    strcpy(method_main_cc_name, cc->get_name().c_str());
     strcat(method_main_cc_name, STR_CALL_CONTEXT_SEPARATOR);
     strcat(method_main_cc_name, name);
 
@@ -48,29 +49,28 @@ method::method(char* name, char* preturn_type, call_context* cc)
     }
     method_main_cc = new call_context(CALL_CONTEXT_TYPE_METHOD_MAIN, method_main_cc_name, this, cc);
     main_cc = method_main_cc;
-    parameters = 0;
-    contained_ins = 0;
+
     cur_cf = 0;
 }
 
 constructor_call::constructor_call(char* name, call_context* cc) : method(name, 0, cc)
 {
     return_type = 0;
-    the_class = call_context_get_class_declaration(cc, name);
+    the_class = cc->get_class_declaration(name);
 }
 
 /**
  * Adds a new variable.
  * If the dimensions is 1
  */
-variable* method_add_new_variable(method* the_method, char* name, char* type, int dimension, const expression_with_location* expwloc)
+variable* method::add_new_variable(char* pname, char* type, int dimension, const expression_with_location* expwloc)
 {
-    char* new_name = trim(name);
-    if(!is_valid_variable_name(name))
+    char* new_name = trim(pname);
+    if(!is_valid_variable_name(pname))
     {
-        throw_error(E0018_INVIDENT, name, NULL);
+        throw_error(E0018_INVIDENT, pname, NULL);
     }
-    return variable_list_add_variable(new_name, type, dimension, the_method->variables, the_method, the_method->main_cc, expwloc);
+    return variable_list_add_variable(new_name, type, dimension, variables, this, main_cc, expwloc);
 }
 
 /**
@@ -80,7 +80,7 @@ variable* method_add_new_variable(method* the_method, char* name, char* type, in
  * 3. if reached to the method's main cc find variable in all the CC's above
  * 4. find the variables of the method (meaning: parameters)
  */
- variable* method_has_variable(method* the_method, call_context* cc, char* varname, int* templed, int* env_var)
+ variable* method::has_variable(call_context* cc, char* varname, int* templed, int* env_var)
 {
     //printf("\t[MGV]: Variable [%s] in method [%s]\n", varname, the_method?the_method->name:"global");
     if(varname[0] == C_DOLLAR)        /* is this an enviornment variable? */
@@ -95,56 +95,54 @@ variable* method_add_new_variable(method* the_method, char* name, char* type, in
         *strchr(varname, C_PAR_OP) = 0;
     }
 
-    std::vector<variable*>::const_iterator location = variable_list_has_variable(varname, cc->variables);
-    if(location != cc->variables.end())
+    std::vector<variable*>::const_iterator location = variable_list_has_variable(varname, cc->get_variables());
+    if(location != cc->get_variables().end())
     {
         return *location;
     }
 
-    if(the_method)         /* after this, whether this is a parameter ? */
+    // first run_ is this variable defined in here?
+    location = variable_list_has_variable(varname, variables);
+    if(location != variables.end())
     {
-        location = variable_list_has_variable(varname, the_method->variables);
-        if(location != the_method->variables.end())
+        if((*location)->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
         {
-            if(!(*location)->templ_parameters && *templed)    /* variable accessed as templated but in fact has no templates */
-            {
-                throw_error(E0020_ACCTNOTP, (*location)->name, NULL);
-            }
-            return *location;
+            throw_error(E0020_ACCTNOTP, (*location)->name, NULL);
         }
+        return *location;
+    }
 
-        /* parameter as a $sign? */
-        if(varname[0] == C_DOLLAR)
+    /* parameter as a $sign? */
+    if(varname[0] == C_DOLLAR)
+    {
+        varname++;
+        int varc = atoi(varname);
+        variable* v = variables[varc];
+
+        if(v)
         {
-            varname++;
-            int varc = atoi(varname);
-            variable* v = the_method->variables[varc];
-
-            if(v)
+            if(v->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
             {
-                if(!v->templ_parameters && *templed)    /* variable accessed as templated but in fact has no templates */
-                {
-                    throw_error(E0020_ACCTNOTP, v->name, NULL);
-                }
-                return v;
+                throw_error(E0020_ACCTNOTP, v->name, NULL);
             }
+            return v;
         }
     }
 
     /* variable in the call contexts above our call context? */
-    cc = cc->father;
+    cc = cc->get_father();
     while(cc)
     {
-        location = variable_list_has_variable(varname, cc->variables);
-        if(location != cc->variables.end())
+        location = variable_list_has_variable(varname, cc->get_variables());
+        if(location != cc->get_variables().end())
         {
-            if(!(*location)->templ_parameters && *templed)    /* variable accessed as templated but in fact has no templates */
+            if((*location)->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
             {
                 throw_error(E0020_ACCTNOTP, (*location)->name, NULL);
             }
             return *location;
         }
-        cc = cc->father;
+        cc = cc->get_father();
     }
 
     return NULL;
@@ -152,129 +150,99 @@ variable* method_add_new_variable(method* the_method, char* name, char* type, in
 
 
 /**
- * Adds a new parameter to the method
+ * Adds a new parameter to the method. These will go in the
  */
-parameter* method_add_parameter(method* the_method, char* name, char* type, int dimension, int modifiable, const expression_with_location* expwloc)
+parameter* method::add_parameter(char* pname, char* ptype, int pdimension, const expression_with_location* pexpwloc)
 {
-parameter* func_par = new_parameter(the_method);
-char* indexOfEq = strchr(name, C_EQ);
-variable* nvar = NULL;
-parameter_list* flist = NULL, *q = NULL;
+    parameter* func_par = new_parameter(this);
+    char* indexOfEq = strchr(pname, C_EQ);
+    variable* nvar = NULL;
+
     if(indexOfEq)
     {
-    char* afterEq = indexOfEq + 1;
-    int res = -1;
-        func_par->initial_value = new_expression_tree(expwloc);
-        build_expr_tree(afterEq, func_par->initial_value, the_method, afterEq, the_method->main_cc, &res, expwloc);
+        char* afterEq = indexOfEq + 1;
+        int res = -1;
+        func_par->initial_value = new expression_tree(pexpwloc);
+        build_expr_tree(afterEq, func_par->initial_value, this, afterEq, main_cc, &res, pexpwloc);
         *indexOfEq = 0;
     }
-    nvar = method_add_new_variable(the_method, name, type, dimension, expwloc);
-    nvar->func_par = func_par;
-    flist = alloc_mem(parameter_list,1);
-    q = the_method->parameters;
+    nvar = add_new_variable(pname, ptype, pdimension, pexpwloc);
 
     func_par->value = new_envelope(nvar, BASIC_TYPE_VARIABLE);
-    func_par->modifiable = modifiable;
-    flist->param = func_par;
 
-    if(!strcmp(type, "int"))
+    nvar->func_par = func_par;
+
+    if(!strcmp(ptype, "int"))
     {
         func_par->type = BASIC_TYPE_INT;
     }
 
-    func_par->name = duplicate_string(name);
-
-    if(NULL == q)
-    {
-        the_method->parameters = flist;
-        return func_par;
-    }
-    while(q->next) q=q->next;
-    q->next = flist;
-
+    func_par->name = duplicate_string(pname);
+    parameters.push_back(func_par);
     return func_par;
 }
 
-struct parameter* method_get_parameter(method* the_method, int i)
+parameter* method::get_parameter(size_t i)
 {
-    if(the_method)
+    // TODO: This was variables[i].the_parameter ... why?
+    if(i < variables.size())
     {
-        return the_method->variables[i]->func_par;
+        return parameters[i];
     }
-    return 0;
-}
-
-struct parameter* method_get_parameter(method* the_method, const char* varname)
-{
-    std::vector<variable*>::const_iterator location;
-
-    if(the_method)
+    else
     {
-        location = variable_list_has_variable(varname, the_method->variables);
-        if(location != the_method->variables.end())
-        {
-            if(!(*location)->templ_parameters)    /* variable accessed as templated but in fact has no templates */
-            {
-                throw_error(E0020_ACCTNOTP, (*location)->name, NULL);
-            }
-            return (*location)->func_par;
-        }
-
-        /* parameter as a $sign? */
-        if(varname[0] == C_DOLLAR)
-        {
-            varname++;
-            int varc = atoi(varname);
-            variable* var = the_method->variables[varc];
-            if(var)
-            {
-                if(!var->templ_parameters)    /* variable accessed as templated but in fact has no templates */
-                {
-                    throw_error(E0020_ACCTNOTP, var->name, NULL);
-                }
-                return var->func_par;
-            }
-        }
+        return 0;
     }
-    return 0;
 }
 
 /**
  * Populates the parameters of this method with the definitions from the string
  */
-void method_feed_parameter_list( method* the_method, char* par_list, const expression_with_location* expwloc)
+void method::feed_parameter_list(char* par_list, const expression_with_location* expwloc)
 {
- string_list* entries = string_list_create_bsep(par_list, C_COMMA), *q ;
-    q = entries;
-    while(q)
+    std::vector<std::string> entries = string_list_create_bsep(par_list, C_COMMA);
+    std::vector<std::string>::iterator q = entries.begin();
+    while(q != entries.end())
     {
-    int i=0;
-    char* par_type = new_string(q->len);
-    char* par_name = new_string(q->len);
-        if(q->len > 0)
+        size_t i=0;
+        if(!q->empty() > 0)
         {
-            int j = 0;
+            char* par_type = new_string(q->length());
+            char* par_name = new_string(q->length());
+            size_t j = 0;
             int modifiable = 0;
-            while(i < q->len && (is_identifier_char(q->str[i]) || C_SQPAR_OP  == q->str[i]|| C_SQPAR_CL == q->str[i]) )
+            while(i < q->length() && (is_identifier_char((*q)[i]) || C_SQPAR_OP  == (*q)[i]|| C_SQPAR_CL == (*q)[i]) )
             {
-                par_type[j++] = q->str[i++];
+                par_type[j++] = (*q)[i++];
             }
             /* now par_type contains the type of the parameter */
-            while(i < q->len && is_whitespace(q->str[i])) i++;
-            if((modifiable = (C_AND == q->str[i]))) i++;
-            j = 0;
-            while(i < q->len)
+            while(i < q->length() && is_whitespace((*q)[i]))
             {
-                par_name[j++] = q->str[i++];
+                i++;
             }
-            parameter* new_par_decl = method_add_parameter(the_method, trim(par_name), trim(par_type), 1, modifiable, expwloc);
+            if(i == q->length())
+            {
+                throw_error(E0009_PARAMISM, par_list);
+            }
+
+            if((modifiable = (C_AND == (*q)[i])))
+            {
+                i++;
+                // TODO: There is no support for this in the bytecode yet.
+            }
+            j = 0;
+            while(i < q->length())
+            {
+                par_name[j++] = (*q)[i++];
+            }
+            parameter* new_par_decl = add_parameter(trim(par_name), trim(par_type), 1, /*modifiable, */ expwloc);
             /* here we should identify the dimension of the parameter */
             if(strchr(par_type, C_SQPAR_CL) && strchr(par_type, C_SQPAR_OP))
             {
                 new_par_decl->simple_value = 0;
             }
         }
-        q=q->next;
+        q ++;
     }
 }
 

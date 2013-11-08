@@ -13,7 +13,7 @@ class nap_compiler
 public:
 
     nap_compiler();
-
+    ~nap_compiler();
 
     call_context* cur_cc;
     method* cur_method;
@@ -23,6 +23,7 @@ public:
 
 private:
 
+    parsed_file* pf;
     call_context* global_cc;
     std::vector<std::string> loaded_files;
 
