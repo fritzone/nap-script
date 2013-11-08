@@ -821,6 +821,7 @@ static call_frame_entry* handle_function_call(char *expr_trim, int expr_len, exp
         if(q->length() > 0)
         {
             cur_par_expr = new expression_tree(expwloc);
+            garbage_bin<expression_tree*>::instance().place(cur_par_expr);
             build_expr_tree((*q).c_str(), cur_par_expr, the_method, orig_expr, cc, result, expwloc);
             
             parameter* cur_par_obj = new_parameter(the_method);
@@ -1012,6 +1013,8 @@ static void* deal_with_conditional_keywords( char* keyword_if, char* keyword_whi
     {
         node->info = duplicate_string(keyw);
         expression_tree* expt = new expression_tree(expwloc);
+        garbage_bin<expression_tree*>::instance().place(expt);
+
         /* here fetch the part which is in the parentheses after the keyword and build the tree based on that*/
         char *condition = duplicate_string(expr_trim + strlen(keyw));
         while(is_whitespace(*condition)) condition ++;    /* skip the whitespace */
@@ -1184,6 +1187,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
     {
         node->info = duplicate_string(STR_RETURN);
         expression_tree* expt = new expression_tree(expwloc);
+        garbage_bin<expression_tree*>::instance().place(expt);
         build_expr_tree(keyword_return, expt, the_method, orig_expr, cc, result, expwloc);
         node->reference = new_envelope(expt, RETURN_STATEMENT);
         *result = RETURN_STATEMENT;
@@ -1342,6 +1346,9 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
             node->op_type = ntype;
             node->left=new expression_tree(node, expwloc);
             node->right=new expression_tree(node, expwloc);
+            garbage_bin<expression_tree*>::instance().place(node->left);
+            garbage_bin<expression_tree*>::instance().place(node->right);
+
             /* the order here is important for the "." operator ... it needs to know the parent in order to identify the object to find its call_context*/
             build_expr_tree(beforer, node->left, the_method, orig_expr, cc, result, expwloc);
             build_expr_tree(afterer, node->right, the_method, orig_expr, cc, result, expwloc);
@@ -1565,6 +1572,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
             if(isnumber(t))
             {
                 number* nr = new number(t);
+                garbage_bin<number*>::instance().place(nr);
                 envl = new_envelope(nr, nr->type());
                 node->op_type = nr->type();
             }

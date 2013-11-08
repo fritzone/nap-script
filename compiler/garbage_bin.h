@@ -101,6 +101,10 @@ public:
         {
             delete [] (items->at(i).item);
         }
+        for(size_t i=0; i<singles.size(); i++)
+        {
+            delete singles[i];
+        }
     }
 
     /**
@@ -124,11 +128,18 @@ public:
         items->push_back(a);
     }
 
+    void place(T item)
+    {
+        singles.push_back(item);
+    }
+
 
 private:
 
     // this is the vector which actually contains the pointers that will be deleted at the end
     vector<location> *items;
+    vector<T> singles;
+
 };
 
 // this is here to create the instance of the garbage bin.

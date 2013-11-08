@@ -47,6 +47,9 @@ private:
         *new_long = src;
         m_type = BASIC_TYPE_INT;
         m_location = new_long;
+
+        garbage_bin<long*>::instance().place(new_long);
+
     }
 
     void number_from_double(double src)
@@ -55,6 +58,7 @@ private:
         *new_double = src;
         m_type = BASIC_TYPE_REAL;
         m_location = new_double;
+        garbage_bin<double*>::instance().place(new_double);
     }
 
     /**
