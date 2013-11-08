@@ -2,7 +2,6 @@
 #define _BSD_EXTR_H_
 
 #include <string>
-#include "envelope.h"
 #include "number.h"
 
 struct expression_with_location;
@@ -32,15 +31,6 @@ struct expression_tree
         info = 0;
         left = 0;
         right = 0;
-    }
-
-    ~expression_tree()
-    {
-        if(reference && (reference->type == BASIC_TYPE_INT || reference->type == BASIC_TYPE_REAL))
-        {
-            delete (number*)(reference->to_interpret);
-        }
-
     }
 
     /* the left branch of the expression */
