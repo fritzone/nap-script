@@ -23,11 +23,10 @@
 #include <ctype.h>
 #include <math.h>
 
-listv* listv_prepare_list(const char* src,  method* the_method, const char* orig_expr, call_context* cc, int* result, const expression_with_location* expwloc)
+std::vector<envelope*>* listv_prepare_list(const char* src,  method* the_method, const char* orig_expr, call_context* cc, int* result, const expression_with_location* expwloc)
 {
     int l = (int)strlen(src);
-    struct listv* lst = alloc_mem(listv, 1);
-    listv* head = lst;
+    std::vector<envelope*>*  lst = new std::vector<envelope*>();
     int i=0;
 
     // to skip the whitespace in front of the { (in case there's any)
@@ -67,12 +66,10 @@ listv* listv_prepare_list(const char* src,  method* the_method, const char* orig
             if(src[i] == ',')
             {
                 tmp[j] = 0;    // cause we added the ',' too :(
-                expression_tree* new_expression = new_expression_tree(expwloc);
+                expression_tree* new_expression = new expression_tree(expwloc);
                 build_expr_tree(tmp, new_expression, the_method, orig_expr, cc, result, expwloc);
                 envelope* expr_holder = new_envelope(new_expression, LIST_ELEMENT);
-                lst->val = expr_holder;
-                lst->next = alloc_mem(listv, 1);
-                lst = lst->next;
+                lst->push_back(expr_holder);
 
                 read_next = true;
                 i++;    // to skip the ','
@@ -89,7 +86,7 @@ listv* listv_prepare_list(const char* src,  method* the_method, const char* orig
             }
         }
     }
-    return head;
+    return lst;
 }
 
 /*
@@ -347,15 +344,15 @@ static int looks_like_function_def(const char* expr, int expr_len, const express
 
     if(i == -1) /* meaning, either we have defined a function with no return type or this is a function call */
     {   /* we need to analyze the parameters, if they look like definition, then it's fine, give back 1 */
-        string_list* pars = string_list_create_bsep(tmp, ',');
-        string_list* q = pars;
-        while(q)
+        std::vector<std::string> pars = string_list_create_bsep(tmp, ',');
+        std::vector<std::string>::iterator q = pars.begin();
+        while(q != pars.end())
         {
-            int j=0;    /* will go through the parameters value and see if the first word from it is a type or not*/
-            char* firstw = new_string(q->len);
-            while(j < q->len && q->str[j] != ' ')
+            size_t j=0;    /* will go through the parameters value and see if the first word from it is a type or not*/
+            char* firstw = new_string(q->length());
+            while(j < q->length() && (*q)[j] != ' ')
             {
-                firstw[j] = q->str[j];
+                firstw[j] = (*q)[j];
                 j++;
             } /* the phrase: if(int x = test() == 4) kills this ... */
             if(get_typeid(firstw) != BASIC_TYPE_DONTCARE)
@@ -369,10 +366,10 @@ static int looks_like_function_def(const char* expr, int expr_len, const express
             else
             {
                 /* TODO: check if this is a constructor definition */
-                if(strstr(expr, cc->name.c_str()) == expr)
+                if(strstr(expr, cc->get_name().c_str()) == expr)
                 {
                     // this might be a constructor definition
-                    const char* pfinder = expr + cc->name.length();
+                    const char* pfinder = expr + cc->get_name().length();
                     while(*pfinder && is_whitespace(*pfinder)) pfinder ++;
                     if(*pfinder == '(')
                     {
@@ -464,8 +461,8 @@ static int looks_like_function_def(const char* expr, int expr_len, const express
 bool is_list_value(const char* what)
 {
     int i=0;
-    char *what2 = duplicate_string(what);
-    skip_whitespace(what2, strlen(what2), &i);
+    const char *what2 = what;
+    skip_whitespace(what, strlen(what2), &i);
     if(what2[i] == '{') return true;
     return false;
 }
@@ -516,7 +513,7 @@ static char* looks_like_var_def(const call_context* cc, char* expr, int expr_len
         }
     }
 
-    if(call_context_get_class_declaration(cc, first_word))
+    if(cc->get_class_declaration(first_word))
     {
         return first_word;
     }
@@ -571,7 +568,7 @@ static method* define_method(const char* expr, int expr_len, expression_tree* no
         throw_error(E0010_INVFNCDF, expr, NULL);
     }
     created_method = new method(func_name, ret_type, cc);
-    method_feed_parameter_list(created_method, trim(parameters), expwloc);
+    created_method->feed_parameter_list(trim(parameters), expwloc);
 
     if(!strcmp(ret_type, "int")) created_method->ret_type = BASIC_TYPE_INT;
     // TODO: the others too
@@ -619,22 +616,21 @@ static int var_declaration_followed_by_initialization(const char* expr, int expr
  * - it should not start with a number
  * - it should not be a keyword
  */
-static int accepted_variable_name(const char* name)
+static int accepted_variable_name(std::string name)
 {
-    if(strlen(name) < 1) return 0;
+    if(name.length() < 1) return 0;
     if(isdigit(name[0])) return 0;
     for(unsigned int i=0; i<sizeof(keywords) / sizeof(keywords[0]); i++)
     {
-        if(!strcmp(name, keywords[i])) return 0;
+        if(name == keywords[i]) return 0;
     }
-
     return 1;
 }
 
 /**
  * Defines the variables that can be found below ...
  */
-static variable_definition_list* define_variables(char* var_def_type, 
+static std::vector<variable_definition*>* define_variables(char* var_def_type,
                                                   char* expr_trim, 
                                                   expression_tree* node, 
                                                   method* the_method, 
@@ -645,26 +641,25 @@ static variable_definition_list* define_variables(char* var_def_type,
 {
     char * copied = duplicate_string(expr_trim + strlen(var_def_type));
 
-    string_list* var_names = string_list_create_bsep(copied, ',');
-    string_list* q = var_names;
-    variable_definition_list* var_def_list = NULL, *q1 = NULL; /* will contain the variable definitions if any*/
+    std::vector<std::string> var_names = string_list_create_bsep(copied, ',');
+    std::vector<std::string>::iterator q = var_names.begin();
+    std::vector<variable_definition*>* var_def_list = new std::vector<variable_definition*>(); /* will contain the variable definitions if any*/
     var_def_type = trim(var_def_type);
-    while(q)
+    while(q != var_names.end())
     {
         multi_dimension_def* mdd = NULL, *qm;    /* will contain the dimension definitions if any */
-        char* name = q->str;
+        char* name = duplicate_string((*q).c_str());
         if(!accepted_variable_name(name))
         {
             throw_error(E0037_INV_IDENTF, name);
         }
         variable* added_var = NULL;    /* will be used if we'll need to implement the definition */
-        char* idx_def_start = strchr(name, C_SQPAR_OP);
-        char* pos_eq = strchr(name, C_EQ);
+        const char* idx_def_start = strchr(name, C_SQPAR_OP);
+        const char* pos_eq = strchr(name, C_EQ);
         if(pos_eq && idx_def_start > pos_eq) idx_def_start = NULL; /* no index definition if the first index is after an equation sign*/
         variable_definition* var_def = NULL; /* the variable definition for this variable. might contain
                                                 multi-dimension index defintion and/or value initialization
                                                 or neither of these two */
-        variable_definition_list* tmp_vdl = NULL;
         if(idx_def_start) /* index defined? */
         {
             int can_stop = 0;
@@ -683,17 +678,17 @@ static variable_definition_list* define_variables(char* var_def_type,
                 if(*idx_def_start == C_SQPAR_CL && --level == -1) can_stop = 1;
                 if(!can_stop) *index ++ = *idx_def_start ++;
             }
-            string_list* dimensions = string_list_create_bsep(index_save, C_COMMA);
-            string_list* qDimensionStrings = dimensions;    /* to walk through the dimensions */
+            std::vector<std::string> dimensions = string_list_create_bsep(index_save, C_COMMA);
+            std::vector<std::string>::iterator qDimensionStrings = dimensions.begin();    /* to walk through the dimensions */
             int countedDimensions = 0;
             mdd = alloc_mem(multi_dimension_def,1);
             qm = mdd;
-            while(qDimensionStrings)
+            while(qDimensionStrings != dimensions.end())
             {
-                expression_tree* dim_def_node = new_expression_tree(expwloc);
-                if(strlen(qDimensionStrings->str) > 0)
+                expression_tree* dim_def_node = new expression_tree(expwloc);
+                if(qDimensionStrings->length() > 0)
                 {
-                    build_expr_tree(qDimensionStrings->str, dim_def_node, the_method, orig_expr, cc, result, expwloc);
+                    build_expr_tree((*qDimensionStrings).c_str(), dim_def_node, the_method, orig_expr, cc, result, expwloc);
                 }
                 else
                 {
@@ -709,7 +704,7 @@ static variable_definition_list* define_variables(char* var_def_type,
                 qm->next = alloc_mem(multi_dimension_def,1);
                 qm = qm->next;
                 countedDimensions ++;
-                qDimensionStrings = qDimensionStrings->next;
+                qDimensionStrings ++;
             }
         }
 
@@ -745,7 +740,7 @@ static variable_definition_list* define_variables(char* var_def_type,
 
         if(cc)
         {
-            added_var = call_context_add_variable(cc, name, var_def_type, 1, expwloc);
+            added_var = cc->add_variable(name, var_def_type, 1, expwloc);
         }
 
         if(!added_var)
@@ -760,92 +755,20 @@ static variable_definition_list* define_variables(char* var_def_type,
 
         if(deflist)    /* whether we have a definition for this variable. if yes, we need to populate a definition_list */
         {
-            expression_tree* var_def_node = new_expression_tree(expwloc);
+            expression_tree* var_def_node = new expression_tree(expwloc);
             build_expr_tree(deflist, var_def_node, the_method, orig_expr, cc, result, expwloc);
             var_def->the_value = var_def_node;
         }
 
-        tmp_vdl = alloc_mem(variable_definition_list,1);
-        tmp_vdl->the_definition = var_def;
-        if(NULL == var_def_list)
-        {
-            var_def_list = tmp_vdl;
-            q1 = var_def_list;
-        }
-        else
-        {
-            q1->next = tmp_vdl;
-            q1 = q1->next;
-        }
+        var_def_list->push_back(var_def);
 
-        q=q->next;
+        q ++;
     }
 
     node->op_type = NT_VARIABLE_DEF_LST;
     node->info = expr_trim;
     node->reference = new_envelope(var_def_list, NT_VARIABLE_DEF_LST);
     return var_def_list;
-}
-
-/**
- * Handles the populating of the template parameters for the variable template
- * @param expr_trim - is the trimmed expression
- * @param expr_len - the length of the trimmed expression
- * @param the_method - this is the method in which this template call is happening
- * @param orig_expr - the original expression
- * @param cc - the call context in which this is happening
- * @param result - the result that will be returned
- * @param the_variable - this is the variable we're working with
- * @param expwloc - this is the physical file location
- */
-static variable_template_reference* handle_variable_template_call(char *expr_trim, method* the_method, const char* orig_expr,
-        call_context* cc, int* result, variable* the_variable,
-        const expression_with_location* expwloc)
-{
-    char* pos_op_pas = strchr(expr_trim, C_PAR_OP);
-    if(!pos_op_pas) throw_error("Internal error: got into a variable template call without templates", NULL);
-    while(is_whitespace(*pos_op_pas)) pos_op_pas++;
-    if(*pos_op_pas == C_PAR_OP)
-    {
-        pos_op_pas++;
-    }
-    else
-    {
-        throw_error(E0012_SYNTAXERR, expr_trim, NULL);
-    }
-    *strchr(pos_op_pas, C_PAR_CL) = 0;
-    string_list* pars = string_list_create_bsep(pos_op_pas, C_COMMA), *q;
-    q = pars;
-    parameter_list* templ_pars = NULL, *q1 = NULL;    /* this will hold the lis of template parameters thatwill be returned*/
-    while(q)
-    {
-        expression_tree* cur_par_expr = NULL;
-        if(strlen(q->str) > 0)
-        {
-            cur_par_expr = new_expression_tree(expwloc);
-            build_expr_tree(q->str, cur_par_expr, the_method, orig_expr, cc, result, expwloc);
-        }
-        parameter* cur_par_obj = new_parameter(the_method);
-        cur_par_obj->expr = cur_par_expr;
-        cur_par_obj->modifiable = -1;
-
-        parameter_list* tmp = alloc_mem(parameter_list,1);
-        tmp->next = NULL;
-        tmp->param = cur_par_obj;
-
-        if(NULL == templ_pars)
-        {
-            templ_pars = tmp;
-            q1 = templ_pars;
-        }
-        else
-        {
-            q1->next = tmp;
-            q1=q1->next;
-        }
-        q = q->next;
-    }
-    return new_variable_template_reference(the_variable, templ_pars);
 }
 
 /**
@@ -867,8 +790,8 @@ static call_frame_entry* handle_function_call(char *expr_trim, int expr_len, exp
         const expression_with_location* expwloc, int type_of_call)
 {
     char *params_body = new_string(expr_len);
-    string_list* parameters = NULL, *q;
-    parameter_list* pars_list = NULL, *q1 = NULL;
+    std::vector<std::string> parameters;
+    std::vector<parameter*> pars_list;
     call_frame_entry* cfe = NULL;
     strcpy(params_body, expr_trim + strlen(func_call->method_name) + 1); /* here this is supposed to copy the body of the parameters without the open/close paranthesis */
     while(is_whitespace(*params_body)) params_body ++;
@@ -891,39 +814,28 @@ static call_frame_entry* handle_function_call(char *expr_trim, int expr_len, exp
     //printf("Checking function call:[%s]\n", params_body);
     /* Now: To build the parameter list, and create a call_frame_entry element to insert into the tree */
     parameters = string_list_create_bsep(params_body, ',');
-    q=parameters;
-    while(q)
+    std::vector<std::string>::iterator q = parameters.begin();
+    while(q != parameters.end())
     {
         expression_tree* cur_par_expr = NULL;
-        if(strlen(q->str) > 0)
+        if(q->length() > 0)
         {
-            cur_par_expr = new_expression_tree(expwloc);
-            build_expr_tree(q->str, cur_par_expr, the_method, orig_expr, cc, result, expwloc);
+            cur_par_expr = new expression_tree(expwloc);
+            build_expr_tree((*q).c_str(), cur_par_expr, the_method, orig_expr, cc, result, expwloc);
             
             parameter* cur_par_obj = new_parameter(the_method);
             cur_par_obj->expr = cur_par_expr;
-            cur_par_obj->modifiable = -1;
 
-            parameter_list* tmp = alloc_mem(parameter_list,1);
-            tmp->next = NULL;
-            tmp->param = cur_par_obj;
-
-            if(pars_list == NULL)
-            {
-                pars_list = tmp;
-                q1 = pars_list;
-            }
-            else
-            {
-                q1->next = tmp;
-                q1=q1->next;
-            }
-                
+            pars_list.push_back(cur_par_obj);
         }
 
-        q=q->next;
+        q ++;
     }
-    cfe = new call_frame_entry(func_call, pars_list);
+    cfe = alloc_mem(call_frame_entry, 1);
+    cfe->the_method = func_call;
+    cfe->parameters = pars_list;
+    cfe->previous_cf = func_call->cur_cf;
+
     node->info = duplicate_string(func_call->method_name);
     node->op_type = FUNCTION_CALL + type_of_call;
     node->reference = new_envelope(cfe, FUNCTION_CALL + type_of_call);
@@ -1046,18 +958,18 @@ static char* is_some_statement(const char* expr_trim, const char* keyword)
  */
 static void* deal_with_one_word_keyword( call_context* cc, expression_tree* node, int* &result, const char* keyw, int statement )
 {
-    if(cc->type != CALL_CONTEXT_TYPE_WHILE && cc->type != CALL_CONTEXT_TYPE_FOR)
+    if(cc->get_type() != CALL_CONTEXT_TYPE_WHILE && cc->get_type() != CALL_CONTEXT_TYPE_FOR)
     {
         int in_iterative_cc = 0;
-        call_context* tmpcc = cc->father;
+        call_context* tmpcc = cc->get_father();
         while(tmpcc)
         {
-            if(tmpcc->type == CALL_CONTEXT_TYPE_WHILE || tmpcc->type == CALL_CONTEXT_TYPE_FOR)
+            if(tmpcc->get_type() == CALL_CONTEXT_TYPE_WHILE || tmpcc->get_type() == CALL_CONTEXT_TYPE_FOR)
             {
                 in_iterative_cc = 1;
                 break;
             }
-            tmpcc = tmpcc->father;
+            tmpcc = tmpcc->get_father();
         }
         if(!in_iterative_cc)
         {
@@ -1099,7 +1011,7 @@ static void* deal_with_conditional_keywords( char* keyword_if, char* keyword_whi
     if(keyw)
     {
         node->info = duplicate_string(keyw);
-        expression_tree* expt = new_expression_tree(expwloc);
+        expression_tree* expt = new expression_tree(expwloc);
         /* here fetch the part which is in the parentheses after the keyword and build the tree based on that*/
         char *condition = duplicate_string(expr_trim + strlen(keyw));
         while(is_whitespace(*condition)) condition ++;    /* skip the whitespace */
@@ -1184,7 +1096,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
 
     if(is_list_value(expr))
     {
-        listv* thlist = listv_prepare_list(expr, the_method, orig_expr, cc, result, expwloc);
+        std::vector<envelope*> *thlist = listv_prepare_list(expr, the_method, orig_expr, cc, result, expwloc);
         node->op_type = LIST_VALUE;
         node->reference = new_envelope(thlist, LIST_VALUE);
         return 0;
@@ -1226,7 +1138,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
     /* second check: variable definition? */
     if(var_def_type && strcmp(var_def_type, "new"))
     {
-        variable_definition_list* vdl = define_variables(var_def_type, expr_trim,
+        std::vector<variable_definition*>* vdl = define_variables(var_def_type, expr_trim,
                                                          node, the_method, cc,
                                                          orig_expr, result,
                                                          expwloc);
@@ -1244,7 +1156,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
         {
             *strchr(constructor_name, '(') = 0;
         }
-        class_declaration* cd = call_context_get_class_declaration(cc, constructor_name);
+        class_declaration* cd = cc->get_class_declaration(constructor_name);
         if(!cd)
         {
             throw_error("Invalid constructor: ", constructor_name);
@@ -1271,7 +1183,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
     if(keyword_return)
     {
         node->info = duplicate_string(STR_RETURN);
-        expression_tree* expt = new_expression_tree(expwloc);
+        expression_tree* expt = new expression_tree(expwloc);
         build_expr_tree(keyword_return, expt, the_method, orig_expr, cc, result, expwloc);
         node->reference = new_envelope(expt, RETURN_STATEMENT);
         *result = RETURN_STATEMENT;
@@ -1321,37 +1233,31 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
         {
             throw_error(E0012_SYNTAXERR);
         }
-        string_list* content = string_list_create_bsep(for_par, C_SEMC);
-        if(!content)
+        std::vector<std::string> content = string_list_create_bsep(for_par, C_SEMC);
+        if(content.empty())
         {
-            throw_error(E0012_SYNTAXERR);
+            throw_error(E0012_SYNTAXERR, for_par);
         }
-        char* init_stmt = content->str;                /* the init statement */
-        if(! content->next)
+        char* init_stmt = duplicate_string(content[0].c_str());                /* the init statement */
+        char* cond_stmt = content.size() > 1?duplicate_string(content[1].c_str()):0;                    /* the condition */
+        char* expr_stmt = content.size() == 3?duplicate_string(content[2].c_str()):0;
+        if(content.size() > 3)
         {
-            throw_error(E0012_SYNTAXERR);
+            throw_error(E0012_SYNTAXERR, for_par);
         }
-        string_list *q = content->next;
-        char* cond_stmt = q->str;                    /* the condition */
-        if(!q->next)
-        {
-            throw_error(E0012_SYNTAXERR);
-        }
-        q = q->next;
-        char* expr_stmt = q->str;
         resw_for* rswfor = alloc_mem(resw_for,1);
 
         rswfor->unique_hash = duplicate_string(generate_unique_hash().c_str());
         rswfor->init_stmt = init_stmt;
-        rswfor->tree_init_stmt = new_expression_tree(expwloc);
+        rswfor->tree_init_stmt = new expression_tree(expwloc);
         build_expr_tree(init_stmt, rswfor->tree_init_stmt, the_method, orig_expr, cc, result, expwloc);
 
         rswfor->condition = cond_stmt;
-        rswfor->tree_condition = new_expression_tree(expwloc);
+        rswfor->tree_condition = new expression_tree(expwloc);
         build_expr_tree(cond_stmt, rswfor->tree_condition, the_method, orig_expr, cc, result, expwloc);
 
         rswfor->expr = expr_stmt;
-        rswfor->tree_expr = new_expression_tree(expwloc);
+        rswfor->tree_expr = new expression_tree(expwloc);
         build_expr_tree(expr_stmt, rswfor->tree_expr, the_method, orig_expr, cc, result, expwloc);
 
         node->info = duplicate_string(STR_FOR);
@@ -1409,7 +1315,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                         ntype = OPERATOR_UNARY_MINUS;
                     }
                     node->op_type = ntype;
-                    node->left = new_expression_tree_with_father(node, expwloc);
+                    node->left = new expression_tree(node, expwloc);
                     build_expr_tree(trim(duplicate_string(expr_trim + 1)), node->left, the_method, orig_expr, cc, result, expwloc);
                     return NULL;
                 }
@@ -1434,8 +1340,8 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
             }
             node->info = duplicate_string(foundOperator);
             node->op_type = ntype;
-            node->left=new_expression_tree_with_father(node, expwloc);
-            node->right=new_expression_tree_with_father(node, expwloc);
+            node->left=new expression_tree(node, expwloc);
+            node->right=new expression_tree(node, expwloc);
             /* the order here is important for the "." operator ... it needs to know the parent in order to identify the object to find its call_context*/
             build_expr_tree(beforer, node->left, the_method, orig_expr, cc, result, expwloc);
             build_expr_tree(afterer, node->right, the_method, orig_expr, cc, result, expwloc);
@@ -1466,7 +1372,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
             if(node->father->left->op_type == BASIC_TYPE_VARIABLE)  // to solve: a.func()
             {
                 variable* v = (variable*)(node->father->left->reference->to_interpret);
-                class_declaration* cd = call_context_get_class_declaration(v->cc, v->c_type);
+                class_declaration* cd = v->cc->get_class_declaration(v->c_type);
                 if(!cd)
                 {
                     // see if this is a string or not
@@ -1492,10 +1398,10 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                 }
 
                 // now see if this is a class variable: a.b = 4
-                int templated = 0;
-                int env_var = 0;
-                if(variable* var = method_has_variable(0, cd, expr_trim, &templated, &env_var))
+                std::vector<variable*>::const_iterator it = variable_list_has_variable(expr_trim, cd->get_variables());
+                if(it != cd->get_variables().end())
                 {
+                    variable* var = *it;
                     *result = MEMBER_ACCESS_OF_OBJECT;
                     envelope* envl = new_envelope(var, BASIC_TYPE_VARIABLE);
                     node->op_type = MEMBER_ACCESS_OF_OBJECT;
@@ -1523,7 +1429,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
         }
         node->info = duplicate_string(p);
         node->op_type = ntype;
-        node->left = new_expression_tree_with_father(node, expwloc);
+        node->left = new expression_tree(node, expwloc);
         build_expr_tree(expr_trim + 2, node->left, the_method, orig_expr, cc, result, expwloc);
     }
     else
@@ -1541,7 +1447,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
             node->op_type = ntype;
 
             /* now add the  variable to the tree... */
-            node->left = new_expression_tree_with_father(node, expwloc);
+            node->left = new expression_tree(node, expwloc);
             expr_trim[expr_len - 2] = 0;    /* this is to cut down the two ++ or -- signs ... */
             build_expr_tree(expr_trim, node->left, the_method, orig_expr, cc, result, expwloc);
         }
@@ -1568,29 +1474,25 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
         }
         else if(indexed_elem)    /* if this is something indexed */
         {   /* here we should grab from the end the first set of square parantheses and pass the stuff before it to the indexed, the stuff in it to the index...*/
-            string_list* entries = string_list_create_bsep(index, C_COMMA);
-            string_list* q = entries;
-            expression_tree_list* index_list = NULL;
+            std::vector<std::string> entries = string_list_create_bsep(index, C_COMMA);
+            std::vector<std::string>::iterator q = entries.begin();
+            std::vector<expression_tree*>* index_list = new std::vector<expression_tree*>();
             multi_dimension_index* dim = new_multi_dimension_index(expr_trim);
 
             node->info = duplicate_string(STR_IDXID);
-            node->left = new_expression_tree_with_father(node, expwloc);
-            node->right = new_expression_tree_with_father(node, expwloc);
+            node->left = new expression_tree(node, expwloc);
+            node->right = new expression_tree(node, expwloc);
             build_expr_tree(indexed_elem, node->left, the_method, orig_expr, cc, result, expwloc);    /* to discover the indexed element */
 
             /* and now identify the indexes and work on them*/
 
             int indx_cnt = 0;
-            while(q)
+            while(q != entries.end())
             {
-                expression_tree* cur_indx = new_expression_tree(expwloc);
-                build_expr_tree(q->str, cur_indx, the_method, orig_expr, cc, result, expwloc);
-                expression_tree_list* tmp = expression_tree_list_add_new_expression(cur_indx, &index_list, q->str);
-                if(NULL == index_list)
-                {
-                    index_list = tmp;
-                }
-                q = q->next;
+                expression_tree* cur_indx = new expression_tree(expwloc);
+                build_expr_tree(q->c_str(), cur_indx, the_method, orig_expr, cc, result, expwloc);
+                index_list->push_back(cur_indx);
+                q ++;
                 indx_cnt ++;
             }
             dim->dimension_values = index_list;
@@ -1607,7 +1509,15 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
             int tlen = strlen(t);
             int templated = 0;
             int env_var = 0;
-            variable* var = method_has_variable(the_method, cc, t, &templated, &env_var);
+
+            variable* var = 0;
+            if(the_method)
+            {
+                /* is t a variable from the method we are running in?
+                   (or from the call context ofthe method if any )*/
+                var = the_method->has_variable(cc, t, &templated, &env_var);
+            }
+
             if(env_var)
             {
                 node->op_type = ENVIRONMENT_VARIABLE;
@@ -1617,8 +1527,8 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
             if(!var)
             {
                 /* is this a variable from the current call context? */
-                std::vector<variable*>::const_iterator varit = variable_list_has_variable(t, cc->variables);
-                if(varit != cc->variables.end())
+                std::vector<variable*>::const_iterator varit = variable_list_has_variable(t, cc->get_variables());
+                if(varit != cc->get_variables().end())
                 {
                     var = *varit;
                 }
@@ -1626,20 +1536,9 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
 
             if(var)    /* if this is a variable */
             {
-                if(templated)
-                {
-                    variable_template_reference* vtr = handle_variable_template_call(expr_trim,
-                                                                                     the_method, orig_expr,
-                                                                                     cc, result, var, expwloc);
-                    envl = new_envelope(vtr, TEMPLATED_VARIABLE);
-                    node->op_type = TEMPLATED_VARIABLE;
-                }
-                else
-                {
-                    // TODO: Check if this is a class variable
-                    envl = new_envelope(var, BASIC_TYPE_VARIABLE);
-                    node->op_type = BASIC_TYPE_VARIABLE;
-                }
+                // TODO: Check if this is a class variable
+                envl = new_envelope(var, BASIC_TYPE_VARIABLE);
+                node->op_type = BASIC_TYPE_VARIABLE;
             }
 
 
@@ -1723,8 +1622,6 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
 
     return NULL;
 }
-
-
 
 /* the global  variable of equal signs */
 static int num_op = 0;

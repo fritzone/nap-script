@@ -2,14 +2,13 @@
 #define _HASH_H_
 
 struct expr_tree_list;
-struct string_list;
 struct variable;
 struct method;
 struct call_context;
 struct expression_with_location;
 
 #include <vector>
-
+#include <string>
 /**
  * Adds a new hash  variable to the variable list. Creates a variable object and adds that to the list
  * @param var_name - the name of the variable
@@ -41,6 +40,6 @@ std::vector<variable*>::const_iterator variable_list_has_variable(const char *s,
  * @param instr - the input string
  * @param sep - the expected separator
  */
-string_list* string_list_create_bsep(const char* instr, char sep);
+std::vector<std::string> string_list_create_bsep(const char* instr, char sep);
 
 #endif

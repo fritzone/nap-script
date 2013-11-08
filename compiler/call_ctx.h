@@ -6,102 +6,222 @@
 
 #include <vector>
 
+/*
+ * The call context is something like a namespace and/or code-block ... See the code
+ * below, to understand:
+ *
+ * // by default a 'global' namespace starts here, with name 'global'.
+ *
+ * int myGlobalWarming;         // global variable, will be visible everywhere in the program
+ * {                            // new call context starts here
+ * int x;
+ * int func()
+ * {                            // another call context, which can see the x from above
+ * int a;
+ *     {                        // just a local nameless call context
+ *     int b;                   // b is a local variable, a still visible above
+ *     }                        // b is not visible anymore, it was destroyed at the end of the nameless call context
+ * }
+ * }                            // x is destroyed here by default
+ */
+
 
 /**
- * @brief call_context_add_variable adds a variable to the call context
- * @param cc - the call context
- * @param name - the name of the variable
- * @param type - the tye of the variable
- * @param dimension - the dimension of the variable
- * @param expwloc - the location of the piece of code for this
- * @return - the newly created variable
+ * The call context is something like a namespace, or a class... basically its role is to group the methods
+ * that belong to the same call context, and makes visible to each other. There is always a 'global' call context.
+ * Variables by default belong to a call cotnext and they are destroyed when the call context ends
  */
-variable *call_context_add_variable(call_context *cc,
-                                    const char *name,
-                                    const char *type,
-                                    int dimension,
-                                    const expression_with_location *expwloc);
+struct call_context
+{
+
+    /**
+     * Create a new call context
+     * @param type - the type of the call context
+     * @param name - the name of the call context
+     * @param the_method - the method in which this call context is
+     * @param father - the father of this call cotnext
+     **/
+    call_context (int ptype,
+                  const char *pname,
+                  method *the_method,
+                  call_context *pfather);
+
+    ~call_context();
+
+    /**
+     * @brief call_context_add_method adds a method to the call context
+     * @param the_method - the method which is to be added
+     * @return the location in the list of the inserted method
+     */
+    void add_method(method *the_method);
+
+
+    /**
+     * @brief call_context_get_method returns a method from the call context
+     * @param name - the name of the method
+     * @return the method of found, null if not found
+     */
+    method *get_method(const char *name);
+
+
+    /**
+     * @brief adds a variable to the call context
+     * @param name - the name of the variable
+     * @param type - the tye of the variable
+     * @param dimension - the dimension of the variable
+     * @param expwloc - the location of the piece of code for this
+     * @return - the newly created variable
+     */
+    variable *add_variable(const char *name,
+                           const char *type,
+                           int dimension,
+                           const expression_with_location *expwloc);
+
+
+    /**
+     * @brief adds a label to the call context
+     * @param position - the poisition where to add it
+     * @param name - the name of the label
+     * @return how many labels are there in this call context
+     */
+    long add_label(long position, const std::string &name);
+
+    /**
+     * @brief add a "break" label to this call context
+     * @param position - where to add the label
+     * @param name - the name of the label
+     * @return - the bytecode label object of the new label
+     */
+    bytecode_label *add_break_label(long position, const std::string &name);
+
+
+    /**
+     * Creates a new label structure and inserts it into the vector of the bytecode labels of this call_context
+     */
+    bytecode_label *provide_label();
+
+    /**
+     * @brief adds a compiled expression to the call context
+     * @param co_expr - the compiled expression
+     */
+    void add_compiled_expression(expression_tree *co_expr);
+
+    /**
+     * @brief call_context_add_new_expression add a new expression to this call context
+     * @param expr - the expression tah will be addedd
+     * @param expwloc - the location of the expression in the file
+     * @return the new expression_tree object
+     */
+    expression_tree *add_new_expression(const char *expr, const expression_with_location *expwloc);
+
+
+    /**
+     * Compile the given call context, and output the bytecode to the
+     * system bytecode stream
+     */
+    void compile();
+
+    /**
+     * Runs this call context, the call context is supposed to be an "inner" call cotnext (mostly nameless call cotnext)
+     */
+    void compile_standalone(int level, int reqd_type, int forced_mov);
+
+    /**
+     * @brief call_context_get_class_declaration return a clas declaration from the
+     * given call context if any
+     * @param required_name - the name of the call context
+     * @return
+     */
+    class_declaration *get_class_declaration(const char *required_name) const;
+
+    /**
+     * @brief add_class_declaration
+     */
+    void add_class_declaration(class_declaration*);
+
+    bytecode_label* get_break_label() const
+    {
+        return break_label;
+    }
+
+    size_t get_label_count() const
+    {
+        return labels.size();
+    }
+
+    call_context* get_father() const
+    {
+        return father;
+    }
+
+    const std::vector<expression_tree*>& get_expressions() const
+    {
+        return expressions;
+    }
+
+    const std::vector<variable*>& get_variables() const
+    {
+        return variables;
+    }
+
+    const std::string& get_name() const
+    {
+        return name;
+    }
+
+    int get_type() const
+    {
+        return type;
+    }
+
+private:
+
+    /* the type of the call context: 0 - global, 1 - named*/
+    int type;
+
+    /* the name of the call context */
+    std::string name;
+
+    /* the methods of this call context */
+    std::vector<method*> methods;
+
+    /* the list of variable that have been defined in this call context */
+    std::vector<variable*> variables;
+
+    /* the (compiled) expressions in the call context */
+    std::vector<expression_tree*> expressions;
+
+    /* the father call context of this */
+    call_context *father;
+
+    /* if the call context is from a method this is that method */
+    method *ccs_method;
+
+    /* this is a vector of label locations for this*/
+    std::vector<bytecode_label *> labels;
+
+    bytecode_label *break_label;
+
+    /* the classes that are defined in this call context */
+    std::vector<class_declaration *> classes;
+};
 
 /**
- * @brief call_context_add_compiled_expression adds a compiled expression to
- * the call context
- * @param cc - the call context
- * @param co_expr - the compiled expression
- * @param expr - the textual expression
- */
-void call_context_add_compiled_expression(call_context *cc,
-                                          const expression_tree *co_expr,
-                                          const char *expr);
+ * Class representing a class declaration with relationships to a parent class
+ * and a list of implemented interfaces
+ **/
+struct class_declaration : public call_context
+{
+    /**
+     * @brief class_declaration_create creates a new class declaration
+     * @param name - the name of the class
+     * @param father - the call context in which this is
+     * @return the newly created class declaration
+     */
+    class_declaration (const char *pname, call_context *pfather);
 
-/**
- * @brief call_context_add_label adds a label to the call context
- * @param cc - the call context
- * @param position - the poisition where to add it
- * @param name - the name of the label
- * @return how many labels are there in this call context
- */
-long call_context_add_label(call_context *cc, long position, const std::string &name);
-
-/**
- * @brief call_context_add_break_label add a "break" label to this call context
- * @param cc - the call context
- * @param position - where to add the label
- * @param name - the name of the label
- * @return - the bytecode label object of the new label
- */
-bytecode_label *call_context_add_break_label(call_context *cc,
-                                             long position,
-                                             const std::string &name);
-
-/**
- * @brief call_context_add_new_expression add a new expression to this call context
- * @param cc - the call context
- * @param expr - the expression tah will be addedd
- * @param expwloc - the location of the expression in the file
- * @return the new expression_tree object
- */
-expression_tree *call_context_add_new_expression(call_context *cc,
-                                                 const char *expr,
-                                                 const expression_with_location *expwloc);
-
-/**
- * @brief call_context_get_class_declaration return a clas declaration from the
- * given call context if any
- * @param cc - the call context
- * @param required_name - the name of the call context
- * @return
- */
-class_declaration *call_context_get_class_declaration(const call_context *cc,
-                                                      const char *required_name);
-/**
- * Runs the global call context. This is equivalent to:
- * 1. create the static objects as defined in the call context, in the order they are found (if possible)
- * 2. create the global objects
- * 2. find the method int main(string[] parameters) and execute it
- */
-void call_context_compile(call_context *cc);
-
-/**
- * Runs the given call context as being part of a full method run, or as a newly started call context.
- * This method of running does not run the call contexts of 'if', 'while', etc...
- * This can not (may not) deal with keywords break/continue.
- */
-struct envelope *call_context_run_complete(call_context *cc);
-
-/**
- * Runs this call context, the call context is supposed to be an "inner" call cotnext (mostly nameless call cotnext)
- */
-void call_context_run_inner(call_context *cc, int level, int reqd_type, int forced_mov);
-
-/**
- * Returns the given variable object from the call_context, or NULL if nothing found
- */
-variable *call_context_get_variable(call_context *cc, const char *v_name);
-
-/**
- * Creates a new label structure and inserts it into the vector of the bytecode labels of this call_context
- * @param break_label is 1 if the label is a destination for the break of the call context
- */
-bytecode_label *call_context_provide_label(call_context *cc);
+    class_declaration *parent_class;
+    std::vector<class_declaration *> implemented_interfaces;
+};
 
 #endif

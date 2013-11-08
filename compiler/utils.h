@@ -1,9 +1,10 @@
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
-#include <malloc.h>
 #include <memory.h>
 #include <string>
+
+#include "garbage_bin.h"
 
 struct call_context;
 struct variable;
@@ -86,7 +87,7 @@ char *trim(const char* src);
  * Duplicates the given string, the user is responsible for deleting the result.
  * @param src the string to duplicate
  */
-char* duplicate_string(const char* src);
+char* duplicate_string(const char* s);
 
 /**
  * Prepares a string, allcoates and zeroes the memory for it
@@ -137,13 +138,18 @@ char* extract_next_enclosed_phrase(char* input, char c_starter, char c_ender, ch
 extern long mem_alloc_count;
 extern void** mem_allocation;
 
-#define alloc_mem(type,count) (type*)create(sizeof(type), count)
+template <class T> T* allocate(size_t count, const char* f, long l)
+{
+    T* tmp = new T[count];
+    memset(tmp, 0, count * sizeof(T));
+    garbage_bin<T*>::instance().throwIn(tmp, f, l);
 
-/**
- * Creates count objects of the given type
- */
-void* create(int obj_size, int count);
+    return tmp;
+}
 
+#define alloc_mem(type,count) allocate<type>(count, __FILE__, __LINE__)
+
+//#define alloc_mem(type,count) (type*)create(sizeof(type), count)
 
 char other_par(char c);
 

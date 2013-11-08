@@ -4,17 +4,21 @@
 
 #include <vector>
 #include <stdlib.h>
+#include <iostream>
+
 using namespace std;
 
 class garbage_bin_base;
+
 
 class garbage_bin_bin {
 public:
 
     void throwIn(garbage_bin_base* rubbish) { items.push_back(rubbish); }
     void empty();
-    static void shutdown() { delete minstance;}
+    static void shutdown();
     static garbage_bin_bin& instance();
+    ~garbage_bin_bin();
 private:
     garbage_bin_bin();
     vector<garbage_bin_base*> items;
@@ -25,6 +29,7 @@ class garbage_bin_base {
 public:
     virtual void empty() = 0;
     garbage_bin_base() { garbage_bin_bin::instance().throwIn(this); }
+    virtual ~garbage_bin_base() {}
 };
 
 template <typename T>
@@ -32,12 +37,19 @@ class garbage_bin : public garbage_bin_base
 {
 private:
 
+    struct location
+    {
+        long line;
+        std::string file;
+        T item;
+    };
+
     /**
      * Constructor. Creates a new Garbage Bin object.
      */
-    garbage_bin<T>(void)
+    garbage_bin()
     {
-        items.clear();
+        items = new vector<location>();
     }
 
     // the instance
@@ -49,11 +61,11 @@ public:
     /**
      * Returns the instance of this type of garbage bin...
      */
-    static garbage_bin<T>& instance()
+    static garbage_bin& instance()
     {
         if(pinstance == NULL)
         {
-            pinstance = new garbage_bin<T>();
+            pinstance = new garbage_bin();
         }
 
         return *pinstance;
@@ -73,33 +85,50 @@ public:
     /**
      * Destructor
      */
-    ~garbage_bin<T>(void)
+    ~garbage_bin()
     {
+        items->clear();
+        delete items;
     }
 
     /**
      * Empties the garbage bin...
      */
-    void empty(void)
+    void empty()
     {
-        for(size_t i=0; i<items.size(); i++)
+        std::cout << "GBIN empty for " << items->size() << " elements" << std::endl;
+        for(size_t i=0; i<items->size(); i++)
         {
-            free (items[i]);
+            delete [] (items->at(i).item);
         }
     }
 
     /**
      * Adds an item to the garbage bin
      */
+    void throwIn(T item, const char* file, long line)
+    {
+        location a;
+        a.file = std::string(file);
+        a.line = line;
+        a.item = item;
+        items->push_back(a);
+    }
+
     void throwIn(T item)
     {
-        items.push_back(item);
+        location a;
+        a.file = "";
+        a.line = 0;
+        a.item = item;
+        items->push_back(a);
     }
+
 
 private:
 
     // this is the vector which actually contains the pointers that will be deleted at the end
-    vector<T> items;
+    vector<location> *items;
 };
 
 // this is here to create the instance of the garbage bin.

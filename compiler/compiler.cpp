@@ -15,7 +15,7 @@ void nap_compiler::load_file(call_context* cc, const char* file_name, method* cu
     int level = -1; /* currently we are in a global context */
     expression_with_location* expwloc = NULL;
     char delim;
-    parsed_file* pf = parsed_file::open_file(file_name);
+    pf = parsed_file::open_file(file_name);
     if(!pf)
     {
         return;
@@ -45,7 +45,7 @@ void nap_compiler::load_file(call_context* cc, const char* file_name, method* cu
 
 void nap_compiler::compile()
 {
-    call_context_compile(global_cc);
+    global_cc->compile();
 }
 
 nap_compiler::nap_compiler()
@@ -53,4 +53,10 @@ nap_compiler::nap_compiler()
     cur_cc = new call_context(0, "global", NULL, NULL) ;
     global_cc = cur_cc;
     cur_method = 0;
+}
+
+nap_compiler::~nap_compiler()
+{
+    delete global_cc;
+    delete pf;
 }

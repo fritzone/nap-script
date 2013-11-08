@@ -2,6 +2,8 @@
 #define _BSD_EXTR_H_
 
 #include <string>
+#include "envelope.h"
+#include "number.h"
 
 struct expression_with_location;
 
@@ -10,6 +12,37 @@ struct expression_with_location;
  */
 struct expression_tree
 {
+    expression_tree(const expression_with_location* pexpwloc)
+    {
+        v_type = BASIC_TYPE_DONTCARE;
+        op_type = NO_OPERATOR;
+        expwloc = pexpwloc;
+        father = 0;
+        info = 0;
+        left = 0;
+        right = 0;
+    }
+
+    expression_tree(expression_tree* pfather, const expression_with_location* pexpwloc)
+    {
+        v_type = BASIC_TYPE_DONTCARE;
+        op_type = NO_OPERATOR;
+        expwloc = pexpwloc;
+        father = pfather;
+        info = 0;
+        left = 0;
+        right = 0;
+    }
+
+    ~expression_tree()
+    {
+        if(reference && (reference->type == BASIC_TYPE_INT || reference->type == BASIC_TYPE_REAL))
+        {
+            delete (number*)(reference->to_interpret);
+        }
+
+    }
+
     /* the left branch of the expression */
     struct expression_tree *left;
 
@@ -34,25 +67,6 @@ struct expression_tree
     /* this is the physical location of the expression (file, line, etc)*/
     const expression_with_location *expwloc;
 };
-
-/**
- * This contains the list of expressions that can be found in a struct method
- */
-struct expression_tree_list
-{
-    /* the link to the next */
-    struct expression_tree_list *next;
-
-    /* the root of the tree */
-    const expression_tree *root;
-
-    /* the text representation of this expression that is interpreted in the root */
-    std::string text_expression;
-};
-/**
- * Adds a new expression to the list
- */
-expression_tree_list* expression_tree_list_add_new_expression(const struct expression_tree* expression, struct expression_tree_list** first, const char* text_expr);
 
 /**
  * Creates a new node, initializes all the contents to default values

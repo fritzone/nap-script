@@ -17,13 +17,6 @@
  */
 struct variable
 {
-    /**
-     * @brief variable create a new variable
-     * @param dimension
-     * @param type
-     */
-    variable(int pdimension, int type);
-
     /* the name of the variable */
     char *name;
 
@@ -46,7 +39,7 @@ struct variable
     struct parameter *func_par;
 
     /* the template parameters of the variable if any */
-    struct parameter_list *templ_parameters;
+    std::vector<parameter*> templ_parameters;
 
     /* used by the templ_parameters above */
     std::vector<variable*> templ_variables;
@@ -64,6 +57,8 @@ struct variable
     call_context *cc;
 };
 
+variable* new_variable(int pdimension, int type);
+
 /**
  * Creates a new multi dimension index
  * @param indx_id - is the actual index
@@ -75,7 +70,7 @@ multi_dimension_index* new_multi_dimension_index(const char* indx_id);
  * Creates a new templated variable reference for the give variable
  * and parameters
  */
-variable_template_reference* new_variable_template_reference(variable* var, parameter_list* pars);
+variable_template_reference* new_variable_template_reference(variable* var, std::vector<parameter*> pars);
 
 /**
  * @brief variable_resolve_templates Resolves the templates of the given variable

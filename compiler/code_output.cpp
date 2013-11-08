@@ -201,19 +201,19 @@ void operation_on_variable(call_context* cc, int opr, variable* var )
 
 void operation_on_indexed(call_context* cc, int opr, const variable* var, int idxc )
 {
-    code_stream() << get_opcode(opr) << SPACE << ccidx() << C_PAR_OP << (std::string(cc->name) +STR_DOT + var->name).c_str()
+    code_stream() << get_opcode(opr) << SPACE << ccidx() << C_PAR_OP << (std::string(cc->get_name()) +STR_DOT + var->name).c_str()
     << C_COMMA << idxc << C_PAR_CL << NEWLINE;
 }
 
 void operation_target_var_source_reg(call_context* cc, int opr, variable* var, int level )
 {
-    code_stream() << NEWLINE << get_opcode(opr) << SPACE << (std::string(cc->name) + STR_DOT  + var->name).c_str() 
+    code_stream() << NEWLINE << get_opcode(opr) << SPACE << (std::string(cc->get_name()) + STR_DOT  + var->name).c_str()
     << C_COMMA << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 }
 
 void operation_target_indexed_source_reg(call_context* cc, int opr, variable* var, int index, int level )
 {
-    code_stream() << NEWLINE << get_opcode(opr) << SPACE << ccidx() << C_PAR_OP<< (std::string(cc->name) + STR_DOT  + var->name).c_str()
+    code_stream() << NEWLINE << get_opcode(opr) << SPACE << ccidx() << C_PAR_OP<< (std::string(cc->get_name()) + STR_DOT  + var->name).c_str()
     << C_COMMA << index << C_PAR_CL << C_COMMA << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 }
 
@@ -237,7 +237,7 @@ void mov_var_into_reg(call_context* cc, variable* var, int level)
 
 void mov_indexed_into_reg(call_context* cc, variable* var, int level, int idxc )
 {
-    code_stream() << mov() << SPACE << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA << ccidx() << C_PAR_OP << (std::string(cc->name) + STR_DOT + var->name).c_str() << C_COMMA << idxc << C_PAR_CL << NEWLINE;
+    code_stream() << mov() << SPACE << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA << ccidx() << C_PAR_OP << (std::string(cc->get_name()) + STR_DOT + var->name).c_str() << C_COMMA << idxc << C_PAR_CL << NEWLINE;
 }
 
 void mov_reg(int reqd_type, int level)
@@ -289,11 +289,11 @@ void push_cc_end_marker(const char* marker_name)
 
 }
 
-void move_atomic_into_index_register( int& idxc, expression_tree_list* indxs, const method* the_method, call_context* cc, int level, int forced_mov )
+void move_atomic_into_index_register( int& idxc, expression_tree* indxs, const method* the_method, call_context* cc, int level, int forced_mov )
 {
     code_stream() << NEWLINE << mov() << SPACE << reg() << idx() << C_PAR_OP << idxc << C_PAR_CL << C_COMMA;
     int int_type = BASIC_TYPE_INT;
-    compile(indxs->root, the_method, cc, level, int_type, forced_mov);
+    compile(indxs, the_method, cc, level, int_type, forced_mov);
     code_stream() << NEWLINE;
 }
 

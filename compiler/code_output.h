@@ -14,7 +14,7 @@ void op_reg_reg(int op_type, char reg1_ty, int reg1_level, char reg2_ty, int reg
 void operation_start_register_atomic( const expression_tree* node, int reqd_type, int level );
 void operation_register_level_register_next_level( const expression_tree* node, int reqd_type, int level );
 void move_register_level_register_next_level( int reqd_type, int level );
-void move_atomic_into_index_register( int& idxc, expression_tree_list* indxs, const method* the_method, call_context* cc, int level, int forced_mov );
+void move_atomic_into_index_register(int& idxc, expression_tree *indxs, const method* the_method, call_context* cc, int level, int forced_mov );
 void move_int_register_into_index_register( int& idxc, int level );
 void move_start_register_atomic( variable* dest, int level );
 void move_reg_into_var( call_context* cc, variable* dest, int level );
