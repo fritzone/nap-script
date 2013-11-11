@@ -5,6 +5,8 @@
 #include <vector>
 #include <stdlib.h>
 #include <iostream>
+#include <typeinfo>
+#include <cxxabi.h>
 
 using namespace std;
 
@@ -96,15 +98,20 @@ public:
      */
     void empty()
     {
-        std::cout << "GBIN empty for " << items->size() << " elements" << std::endl;
+        int status;
+        char* s = abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) ;
+        std::cout << "\nGBIN [" << s << "] TIN:" << items->size() << " PLC:" <<  singles.size() << std::endl;
         for(size_t i=0; i<items->size(); i++)
         {
             delete [] (items->at(i).item);
         }
+
+
         for(size_t i=0; i<singles.size(); i++)
         {
             delete singles[i];
         }
+        free(s);
     }
 
     /**

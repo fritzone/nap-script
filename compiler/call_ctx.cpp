@@ -34,11 +34,6 @@ call_context::~call_context()
     {
         delete methods[i];
     }
-
-    for(size_t i=0 ;i<expressions.size(); i++)
-    {
-        delete expressions[i];
-    }
 }
 
 class_declaration::class_declaration(const char* pname, call_context* pfather) : call_context(CLASS_DECLARATION, pname, 0,  pfather)
@@ -125,6 +120,8 @@ void call_context::add_compiled_expression(expression_tree* co_expr)
 expression_tree* call_context::add_new_expression(const char* expr, const expression_with_location* expwloc)
 {
     expression_tree* new_expression = new expression_tree(expwloc);
+    garbage_bin<expression_tree*>::instance().place(new_expression);
+
     char *t1 = duplicate_string(expr);
     int res;
     char*t = rtrim(t1);
@@ -138,12 +135,12 @@ expression_tree* call_context::add_new_expression(const char* expr, const expres
 /**
 * Runs the given call context.
 */
-void call_context::compile_standalone(int level, int reqd_type, int forced_mov)
+void call_context::compile_standalone(nap_compiler* _compiler, int level, int reqd_type, int forced_mov)
 {
     std::vector<expression_tree*>::iterator q = expressions.begin();
     while(q != expressions.end())
     {
-        ::compile(*q, ccs_method, this, level, reqd_type, forced_mov);
+        ::compile(_compiler, *q, ccs_method, this, level, reqd_type, forced_mov);
         q ++;
     }
 }
@@ -154,17 +151,17 @@ void call_context::compile_standalone(int level, int reqd_type, int forced_mov)
  * found outside the methods.
  * Run method main
  */
-void call_context::compile()
+void call_context::compile(nap_compiler* _compiler)
 {
     {
         std::vector<expression_tree*>::iterator q = expressions.begin();
         while(q != expressions.end())
         {
             int unknown_type = -1;
-            ::compile(*q, NULL, this, 0, unknown_type, 0);
+            ::compile(_compiler, *q, NULL, this, 0, unknown_type, 0);
             q ++;
         }
-        exit_app();
+        exit_app(_compiler);
     }
 
     {
@@ -172,32 +169,32 @@ void call_context::compile()
     std::vector<method*>::iterator ccs_methods = methods.begin();
     while(ccs_methods != methods.end())
     {
-        code_stream() << NEWLINE << fully_qualified_label(std::string(std::string((*ccs_methods)->main_cc->father->name) +
+        code_stream(_compiler) << NEWLINE << fully_qualified_label(std::string(std::string((*ccs_methods)->main_cc->father->name) +
                                                                       '.' +
                                                                       (*ccs_methods)->method_name).c_str()) << NEWLINE;
-        code_stream() << "pushall" << NEWLINE;
+        code_stream(_compiler) << "pushall" << NEWLINE;
         // now pop off the variables from the stack
         std::vector<variable*>::const_iterator vlist = (*ccs_methods)->get_variables().begin();
         int pctr = 0;
         while(vlist != (*ccs_methods)->get_variables().end())
         {
-            peek((*ccs_methods)->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name);
+            peek(_compiler, (*ccs_methods)->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name);
             vlist ++;
         }
 
         std::string fun_hash = generate_unique_hash();
-        push_cc_start_marker(fun_hash.c_str());
+        push_cc_start_marker(_compiler, fun_hash.c_str());
         std::vector<expression_tree*>::const_iterator q1 = (*ccs_methods)->main_cc->get_expressions().begin();
         while(q1 != (*ccs_methods)->main_cc->get_expressions().end())
         {
             int unknown_type = -1;
-            ::compile(*q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0);
+            ::compile(_compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0);
             q1 ++;
         }
         ccs_methods ++;
-        push_cc_end_marker(fun_hash.c_str());
-        code_stream() << "popall" << NEWLINE;
-        code_stream() << "leave" << NEWLINE;
+        push_cc_end_marker(_compiler, fun_hash.c_str());
+        code_stream(_compiler) << "popall" << NEWLINE;
+        code_stream(_compiler) << "leave" << NEWLINE;
     }
     }
 
@@ -207,35 +204,35 @@ void call_context::compile()
     {
         class_declaration* cd = classes.at(i);
         std::vector<method*>::iterator ccs_methods = cd->methods.begin();
-        code_stream() << '@' << cd->name << NEWLINE;
+        code_stream(_compiler) << '@' << cd->name << NEWLINE;
         while(ccs_methods != cd->methods.end())
         {
-            code_stream() <<  fully_qualified_label( (std::string(cd->name) + STR_DOT + (*ccs_methods)->method_name).c_str() ) << NEWLINE;
+            code_stream(_compiler) <<  fully_qualified_label( (std::string(cd->name) + STR_DOT + (*ccs_methods)->method_name).c_str() ) << NEWLINE;
             // now pop off the variables from the stack
-            code_stream() << "pushall" << NEWLINE;
+            code_stream(_compiler) << "pushall" << NEWLINE;
 
             std::vector<variable*>::const_iterator vlist = (*ccs_methods)->get_variables().begin();
             int pctr = 0;
             while(vlist != (*ccs_methods)->get_variables().end())
             {
-                peek((*ccs_methods)->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name);
+                peek(_compiler, (*ccs_methods)->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name);
                 vlist ++;
             }
             std::string class_fun_hash = generate_unique_hash();
 
-            push_cc_start_marker(class_fun_hash.c_str());
+            push_cc_start_marker(_compiler, class_fun_hash.c_str());
             std::vector<expression_tree*>::const_iterator q1 = (*ccs_methods)->main_cc->get_expressions().begin();
             while(q1 != (*ccs_methods)->main_cc->get_expressions().end())
             {
                 int unknown_type = -1;
-                ::compile(*q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0);
+                ::compile(_compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0);
                 q1 ++;
             }
 
             ccs_methods ++;
-            push_cc_end_marker(class_fun_hash.c_str());
-            code_stream() << "popall" << NEWLINE;
-            code_stream() << "leave" << NEWLINE;
+            push_cc_end_marker(_compiler, class_fun_hash.c_str());
+            code_stream(_compiler) << "popall" << NEWLINE;
+            code_stream(_compiler) << "leave" << NEWLINE;
         }
     }
     }

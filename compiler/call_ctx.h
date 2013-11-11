@@ -6,6 +6,8 @@
 
 #include <vector>
 
+class nap_compiler;
+
 /*
  * The call context is something like a namespace and/or code-block ... See the code
  * below, to understand:
@@ -119,12 +121,12 @@ struct call_context
      * Compile the given call context, and output the bytecode to the
      * system bytecode stream
      */
-    void compile();
+    void compile(nap_compiler *_compiler);
 
     /**
      * Runs this call context, the call context is supposed to be an "inner" call cotnext (mostly nameless call cotnext)
      */
-    void compile_standalone(int level, int reqd_type, int forced_mov);
+    void compile_standalone(nap_compiler* _compiler, int level, int reqd_type, int forced_mov);
 
     /**
      * @brief call_context_get_class_declaration return a clas declaration from the

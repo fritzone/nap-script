@@ -644,6 +644,9 @@ static std::vector<variable_definition*>* define_variables(char* var_def_type,
     std::vector<std::string> var_names = string_list_create_bsep(copied, ',');
     std::vector<std::string>::iterator q = var_names.begin();
     std::vector<variable_definition*>* var_def_list = new std::vector<variable_definition*>(); /* will contain the variable definitions if any*/
+
+    garbage_bin<std::vector<variable_definition*>*>::instance().place(var_def_list);
+
     var_def_type = trim(var_def_type);
     while(q != var_names.end())
     {
@@ -756,6 +759,8 @@ static std::vector<variable_definition*>* define_variables(char* var_def_type,
         if(deflist)    /* whether we have a definition for this variable. if yes, we need to populate a definition_list */
         {
             expression_tree* var_def_node = new expression_tree(expwloc);
+            garbage_bin<expression_tree*>::instance().place(var_def_node);
+
             build_expr_tree(deflist, var_def_node, the_method, orig_expr, cc, result, expwloc);
             var_def->the_value = var_def_node;
         }

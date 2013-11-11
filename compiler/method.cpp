@@ -48,6 +48,7 @@ method::method(char* name, char* preturn_type, call_context* cc)
         return_type = duplicate_string(preturn_type);
     }
     method_main_cc = new call_context(CALL_CONTEXT_TYPE_METHOD_MAIN, method_main_cc_name, this, cc);
+    garbage_bin<call_context*>::instance().place(method_main_cc);
     main_cc = method_main_cc;
 
     cur_cf = 0;

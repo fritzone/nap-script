@@ -9,8 +9,9 @@
 #include "method.h"
 #include "call_ctx.h"
 #include "parser.h"
+#include "code_stream.h"
 
-void nap_compiler::load_file(call_context* cc, const char* file_name, method* cur_method)
+void nap_compiler::load_file(const char* file_name)
 {
     int level = -1; /* currently we are in a global context */
     expression_with_location* expwloc = NULL;
@@ -31,13 +32,13 @@ void nap_compiler::load_file(call_context* cc, const char* file_name, method* cu
             if(std::find(loaded_files.begin(), loaded_files.end(), file_to_load) == loaded_files.end())
             {
                 loaded_files.push_back(file_to_load);
-                load_file(cc, file_to_load, cur_method);
+                load_file(file_to_load);
                 expwloc = pf->parser_next_phrase(&delim);
             }
         }
         else
         {
-            pf->load_next_single_phrase(expwloc, cur_method, cc, &delim, level);
+            pf->load_next_single_phrase(expwloc, cur_method, cur_cc, &delim, level);
             expwloc = pf->parser_next_phrase(&delim);
         }
     }
@@ -45,7 +46,12 @@ void nap_compiler::load_file(call_context* cc, const char* file_name, method* cu
 
 void nap_compiler::compile()
 {
-    global_cc->compile();
+    global_cc->compile(this);
+}
+
+void nap_compiler::write_bytecode(const char* file_name)
+{
+    code_finalizer::finalize();
 }
 
 nap_compiler::nap_compiler()

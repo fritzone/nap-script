@@ -127,9 +127,9 @@ static const char* grow()
     return "@#grow";
 }
 
-void clidx()
+void clidx(nap_compiler* _compiler)
 {
-    code_stream() << "clidx" << NEWLINE;
+    code_stream(_compiler) << "clidx" << NEWLINE;
 }
 
 const char* push()
@@ -147,9 +147,9 @@ const char* ref()
     return "ref";
 }
 
-void op_reg_reg(int op_type, char reg1_ty, int reg1_level, char reg2_ty, int reg2_level)
+void op_reg_reg(nap_compiler* _compiler, int op_type, char reg1_ty, int reg1_level, char reg2_ty, int reg2_level)
 {
-    code_stream() << get_opcode(op_type)
+    code_stream(_compiler) << get_opcode(op_type)
                   << SPACE
                   << reg() << get_reg_type(reg1_ty) << C_PAR_OP << reg1_level << C_PAR_CL
                   << C_COMMA
@@ -157,9 +157,9 @@ void op_reg_reg(int op_type, char reg1_ty, int reg1_level, char reg2_ty, int reg
                   << NEWLINE;
 }
 
-void move_register_level_register_next_level( int reqd_type, int level )
+void move_register_level_register_next_level(nap_compiler* _compiler,  int reqd_type, int level )
 {
-    code_stream() << mov()
+    code_stream(_compiler) << mov()
                   << SPACE
                   << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL
                   << C_COMMA
@@ -167,9 +167,9 @@ void move_register_level_register_next_level( int reqd_type, int level )
                   << NEWLINE;
 }
 
-void operation_register_level_register_next_level( const expression_tree* node, int reqd_type, int level )
+void operation_register_level_register_next_level(nap_compiler* _compiler, const expression_tree* node, int reqd_type, int level )
 {
-    code_stream() << get_opcode(node->op_type)
+    code_stream(_compiler) << get_opcode(node->op_type)
                   << SPACE
                   << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL
                   << C_COMMA
@@ -177,205 +177,205 @@ void operation_register_level_register_next_level( const expression_tree* node, 
                   << NEWLINE;
 }
 
-void mov_var_into_reg(expression_tree* var_node, int reqd_type, int level,
+void mov_var_into_reg(nap_compiler* _compiler, expression_tree* var_node, int reqd_type, int level,
                       const method* the_method, call_context* cc, int forced_mov)
 {
     /* initialize the command output to move something into the register */
-    code_stream() << mov()
+    code_stream(_compiler) << mov()
                   << SPACE
                   << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL;
 
     /* put in the next register the variable*/
-    compile(var_node, the_method, cc, level, reqd_type, forced_mov);
+    compile(_compiler, var_node, the_method, cc, level, reqd_type, forced_mov);
 
-    code_stream() << NEWLINE;
+    code_stream(_compiler) << NEWLINE;
 }
 
-void operation_on_variable(call_context* cc, int opr, variable* var )
+void operation_on_variable(nap_compiler* _compiler, call_context* cc, int opr, variable* var )
 {
-    code_stream() << get_opcode(opr)
+    code_stream(_compiler) << get_opcode(opr)
                   << SPACE
                   << fully_qualified_varname(cc, var)
                   << NEWLINE;
 }
 
-void operation_on_indexed(call_context* cc, int opr, const variable* var, int idxc )
+void operation_on_indexed(nap_compiler* _compiler, call_context* cc, int opr, const variable* var, int idxc )
 {
-    code_stream() << get_opcode(opr) << SPACE << ccidx() << C_PAR_OP << (std::string(cc->get_name()) +STR_DOT + var->name).c_str()
+    code_stream(_compiler) << get_opcode(opr) << SPACE << ccidx() << C_PAR_OP << (std::string(cc->get_name()) +STR_DOT + var->name).c_str()
     << C_COMMA << idxc << C_PAR_CL << NEWLINE;
 }
 
-void operation_target_var_source_reg(call_context* cc, int opr, variable* var, int level )
+void operation_target_var_source_reg(nap_compiler* _compiler, call_context* cc, int opr, variable* var, int level )
 {
-    code_stream() << NEWLINE << get_opcode(opr) << SPACE << (std::string(cc->get_name()) + STR_DOT  + var->name).c_str()
+    code_stream(_compiler) << NEWLINE << get_opcode(opr) << SPACE << (std::string(cc->get_name()) + STR_DOT  + var->name).c_str()
     << C_COMMA << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 }
 
-void operation_target_indexed_source_reg(call_context* cc, int opr, variable* var, int index, int level )
+void operation_target_indexed_source_reg(nap_compiler* _compiler,call_context* cc, int opr, variable* var, int index, int level )
 {
-    code_stream() << NEWLINE << get_opcode(opr) << SPACE << ccidx() << C_PAR_OP<< (std::string(cc->get_name()) + STR_DOT  + var->name).c_str()
+    code_stream(_compiler) << NEWLINE << get_opcode(opr) << SPACE << ccidx() << C_PAR_OP<< (std::string(cc->get_name()) + STR_DOT  + var->name).c_str()
     << C_COMMA << index << C_PAR_CL << C_COMMA << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 }
 
-void operation_start_register_atomic( const expression_tree* node, int reqd_type, int level )
+void operation_start_register_atomic(nap_compiler* _compiler, const expression_tree* node, int reqd_type, int level )
 {
-    code_stream() << get_opcode(node->op_type) << SPACE << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
+    code_stream(_compiler) << get_opcode(node->op_type) << SPACE << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
 }
 
-void cmp_register_with_zero( int reqd_type, int level )
+void cmp_register_with_zero(nap_compiler* _compiler, int reqd_type, int level )
 {
-    code_stream() << NEWLINE << "neq" << SPACE << reg() << get_reg_type(reqd_type) << C_PAR_OP<< level << C_PAR_CL << C_COMMA << '0' << NEWLINE;
+    code_stream(_compiler) << NEWLINE << "neq" << SPACE << reg() << get_reg_type(reqd_type) << C_PAR_OP<< level << C_PAR_CL << C_COMMA << '0' << NEWLINE;
 }
 
-void mov_var_into_reg(call_context* cc, variable* var, int level)
+void mov_var_into_reg(nap_compiler* _compiler, call_context* cc, variable* var, int level)
 {
-    code_stream() << mov()
+    code_stream(_compiler) << mov()
                   << SPACE
                   << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL
                   << C_COMMA << fully_qualified_varname(cc, var) << NEWLINE;
 }
 
-void mov_indexed_into_reg(call_context* cc, variable* var, int level, int idxc )
+void mov_indexed_into_reg(nap_compiler* _compiler,call_context* cc, variable* var, int level, int idxc )
 {
-    code_stream() << mov() << SPACE << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA << ccidx() << C_PAR_OP << (std::string(cc->get_name()) + STR_DOT + var->name).c_str() << C_COMMA << idxc << C_PAR_CL << NEWLINE;
+    code_stream(_compiler) << mov() << SPACE << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA << ccidx() << C_PAR_OP << (std::string(cc->get_name()) + STR_DOT + var->name).c_str() << C_COMMA << idxc << C_PAR_CL << NEWLINE;
 }
 
-void mov_reg(int reqd_type, int level)
+void mov_reg(nap_compiler* _compiler,int reqd_type, int level)
 {
-    code_stream() <<  mov() << SPACE << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
+    code_stream(_compiler) <<  mov() << SPACE << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
 }
 
-void operation_target_reg_source_reg( int req_type_1, int level_1, int req_type_2, int level_2 )
+void operation_target_reg_source_reg(nap_compiler* _compiler, int req_type_1, int level_1, int req_type_2, int level_2 )
 {
-    code_stream() << mov() << SPACE << reg() << get_reg_type(req_type_1) << C_PAR_OP << level_1 << C_PAR_CL << reg() << get_reg_type(req_type_2) << C_PAR_OP << level_2 << C_PAR_CL << NEWLINE;
+    code_stream(_compiler) << mov() << SPACE << reg() << get_reg_type(req_type_1) << C_PAR_OP << level_1 << C_PAR_CL << reg() << get_reg_type(req_type_2) << C_PAR_OP << level_2 << C_PAR_CL << NEWLINE;
 }
 
-void resolve_variable_add_dimension_number(call_context* cc, variable* var, long dimension)
+void resolve_variable_add_dimension_number(nap_compiler* _compiler,call_context* cc, variable* var, long dimension)
 {
-    code_stream() << call() << SPACE << grow() << C_PAR_OP << fully_qualified_varname(cc, var) << C_COMMA << dimension << C_PAR_CL << NEWLINE ;
+    code_stream(_compiler) << call() << SPACE << grow() << C_PAR_OP << fully_qualified_varname(cc, var) << C_COMMA << dimension << C_PAR_CL << NEWLINE ;
 }
 
-void resolve_variable_add_dimension_regis(call_context* cc, variable* var, int level)
+void resolve_variable_add_dimension_regis(nap_compiler* _compiler,call_context* cc, variable* var, int level)
 {
-    code_stream() << call() << SPACE << grow() << C_PAR_OP << fully_qualified_varname(cc, var)<< C_COMMA  << reg() << "int" << C_PAR_OP << level << C_PAR_CL << C_PAR_CL << NEWLINE;
+    code_stream(_compiler) << call() << SPACE << grow() << C_PAR_OP << fully_qualified_varname(cc, var)<< C_COMMA  << reg() << "int" << C_PAR_OP << level << C_PAR_CL << C_PAR_CL << NEWLINE;
 }
 
-void push_cc_start_marker(const char* marker_name)
+void push_cc_start_marker(nap_compiler* _compiler,const char* marker_name)
 {
     if(marker_name)
     {
-        code_stream() << "marksn" ;
-        code_stream() << marker_name;
+        code_stream(_compiler) << "marksn" ;
+        code_stream(_compiler) << marker_name;
     }
     else
     {
-        code_stream() << "marks" ;
+        code_stream(_compiler) << "marks" ;
     }
-    code_stream() << NEWLINE;
+    code_stream(_compiler) << NEWLINE;
 }
 
-void push_cc_end_marker(const char* marker_name)
+void push_cc_end_marker(nap_compiler* _compiler,const char* marker_name)
 {
     if(marker_name)
     {
-        code_stream() << "clrsn";
-        code_stream() << marker_name;
+        code_stream(_compiler) << "clrsn";
+        code_stream(_compiler) << marker_name;
     }
     else
     {
-        code_stream() << "clrs";
+        code_stream(_compiler) << "clrs";
     }
-    code_stream() << NEWLINE;
+    code_stream(_compiler) << NEWLINE;
 
 }
 
-void move_atomic_into_index_register( int& idxc, expression_tree* indxs, const method* the_method, call_context* cc, int level, int forced_mov )
+void move_atomic_into_index_register(nap_compiler* _compiler, int& idxc, expression_tree* indxs, const method* the_method, call_context* cc, int level, int forced_mov )
 {
-    code_stream() << NEWLINE << mov() << SPACE << reg() << idx() << C_PAR_OP << idxc << C_PAR_CL << C_COMMA;
+    code_stream(_compiler) << NEWLINE << mov() << SPACE << reg() << idx() << C_PAR_OP << idxc << C_PAR_CL << C_COMMA;
     int int_type = BASIC_TYPE_INT;
-    compile(indxs, the_method, cc, level, int_type, forced_mov);
-    code_stream() << NEWLINE;
+    compile(_compiler,indxs, the_method, cc, level, int_type, forced_mov);
+    code_stream(_compiler) << NEWLINE;
 }
 
-void move_int_register_into_index_register( int& idxc, int level )
+void move_int_register_into_index_register(nap_compiler* _compiler, int& idxc, int level )
 {
-    code_stream() << mov() << SPACE << reg() << idx() << "int" << C_PAR_OP << idxc << C_PAR_CL << C_COMMA << reg() << get_reg_type(BASIC_TYPE_INT) << C_PAR_OP<< level + 1 << C_PAR_CL << NEWLINE;
+    code_stream(_compiler) << mov() << SPACE << reg() << idx() << "int" << C_PAR_OP << idxc << C_PAR_CL << C_COMMA << reg() << get_reg_type(BASIC_TYPE_INT) << C_PAR_OP<< level + 1 << C_PAR_CL << NEWLINE;
 }
 
-void move_start_register_atomic( variable* dest, int level )
+void move_start_register_atomic(nap_compiler* _compiler, variable* dest, int level )
 {
-    move_start_register_atomic_with_type(dest->i_type, level);
+    move_start_register_atomic_with_type(_compiler, dest->i_type, level);
 }
 
-void move_start_register_atomic_with_type( int reqd_type, int level )
+void move_start_register_atomic_with_type(nap_compiler* _compiler, int reqd_type, int level )
 {
-    code_stream() <<mov() << SPACE << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
+    code_stream(_compiler) <<mov() << SPACE << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
 }
 
-void move_reg_into_var(call_context* cc,  variable* dest, int level )
+void move_reg_into_var(nap_compiler* _compiler,call_context* cc,  variable* dest, int level )
 {
     if(dest->cc)
     {
-        code_stream() << mov() << SPACE << fully_qualified_varname(dest->cc, dest) << C_COMMA << reg() << get_reg_type(dest->i_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
+        code_stream(_compiler) << mov() << SPACE << fully_qualified_varname(dest->cc, dest) << C_COMMA << reg() << get_reg_type(dest->i_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
     }
     else
     {
-        code_stream() << mov() << SPACE << fully_qualified_varname(cc, dest) << C_COMMA << reg() << get_reg_type(dest->i_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
+        code_stream(_compiler) << mov() << SPACE << fully_qualified_varname(cc, dest) << C_COMMA << reg() << get_reg_type(dest->i_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
     }
 }
 
 
-void output_mov_instruction()
+void output_mov_instruction(nap_compiler* _compiler)
 {
-    code_stream() << mov() << SPACE;
+    code_stream(_compiler) << mov() << SPACE;
 }
 
-void second_operand_register_level( variable* dest, int level)
+void second_operand_register_level(nap_compiler* _compiler, variable* dest, int level)
 {
-    code_stream() <<C_COMMA <<reg() <<get_reg_type(dest->i_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
+    code_stream(_compiler) <<C_COMMA <<reg() <<get_reg_type(dest->i_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 }
 
 
-void move_register_level_into_indexe_variable( variable* dest, int idxc, int level )
+void move_register_level_into_indexe_variable(nap_compiler* _compiler, variable* dest, int idxc, int level )
 {
-    code_stream() << mov() << SPACE << ccidx() << C_PAR_OP << fully_qualified_varname(0, dest) << C_COMMA << idxc << C_PAR_CL << C_COMMA << reg() << get_reg_type(dest->i_type) <<C_PAR_OP << level << C_PAR_CL << NEWLINE ;
+    code_stream(_compiler) << mov() << SPACE << ccidx() << C_PAR_OP << fully_qualified_varname(0, dest) << C_COMMA << idxc << C_PAR_CL << C_COMMA << reg() << get_reg_type(dest->i_type) <<C_PAR_OP << level << C_PAR_CL << NEWLINE ;
 }
 
-void push_variable(call_context* cc, variable* var)
+void push_variable(nap_compiler* _compiler,call_context* cc, variable* var)
 {
-    code_stream() << push() << SPACE << var->c_type << SPACE << fully_qualified_varname(cc, var) << NEWLINE;
+    code_stream(_compiler) << push() << SPACE << var->c_type << SPACE << fully_qualified_varname(cc, var) << NEWLINE;
 }
 
-void push_usertype_variable(call_context* cc, variable* var)
+void push_usertype_variable(nap_compiler* _compiler,call_context* cc, variable* var)
 {
-    code_stream() << call() << SPACE << "@crea" << C_PAR_OP << var->c_type << C_COMMA << fully_qualified_varname(cc, var) << C_PAR_CL<< NEWLINE;
-    code_stream() << push() << SPACE << "ref" << SPACE << fully_qualified_varname(cc, var) << NEWLINE;
+    code_stream(_compiler) << call() << SPACE << "@crea" << C_PAR_OP << var->c_type << C_COMMA << fully_qualified_varname(cc, var) << C_PAR_CL<< NEWLINE;
+    code_stream(_compiler) << push() << SPACE << "ref" << SPACE << fully_qualified_varname(cc, var) << NEWLINE;
 }
 
-void exit_app()
+void exit_app(nap_compiler* _compiler)
 {
-    code_stream() <<"exit" << NEWLINE;
+    code_stream(_compiler) <<"exit" << NEWLINE;
 }
 
-void peek(call_context* cc, const char *type, int idx, const char *dest)
+void peek(nap_compiler* _compiler,call_context* cc, const char *type, int idx, const char *dest)
 {
-    code_stream() <<"peek" << type
+    code_stream(_compiler) <<"peek" << type
                  << C_PAR_OP << idx << C_PAR_CL
                  << C_COMMA
                  << SPACE << fully_qualified_varname(cc, dest) << NEWLINE;
 }
 
-void jmp(const std::string& label)
+void jmp(nap_compiler* _compiler,const std::string& label)
 {
-    code_stream() << "jmp" << SPACE <<label << NEWLINE;
+    code_stream(_compiler) << "jmp" << SPACE <<label << NEWLINE;
 }
 
-void jlbf(const std::string& label)
+void jlbf(nap_compiler* _compiler,const std::string& label)
 {
-    code_stream() << "jlbf" << SPACE << label << NEWLINE;
+    code_stream(_compiler) << "jlbf" << SPACE << label << NEWLINE;
 }
 
-void jnlbf(const char *label)
+void jnlbf(nap_compiler* _compiler,const char *label)
 {
-    code_stream() << "jnlbf" << SPACE << label << NEWLINE;
+    code_stream(_compiler) << "jnlbf" << SPACE << label << NEWLINE;
 }

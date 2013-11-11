@@ -4,7 +4,7 @@
 #include "common_structs.h"
 #include "call_ctx.h"
 
-void compile(const expression_tree* node,
+void compile(nap_compiler* _compiler, const expression_tree* node,
              const method* the_method,
              call_context* cc,
              int level,
