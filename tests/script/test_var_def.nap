@@ -1,0 +1,11 @@
+int v_int;
+real v_float;
+string v_string;
+char v_char;
+bool v_bool;
+
+int v_int_V = 1;
+real v_float_V = 1.0;
+string v_string_V = "abcd";
+char v_char_V = "a";
+bool v_bool_V = true;
