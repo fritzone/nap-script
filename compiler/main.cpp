@@ -5,10 +5,12 @@
 int main(int argc, char* argv[])
 {
     const char* file_name = argc > 1?argv[1]:"test.nap";
+    const char* bc_file_name = argc > 2?argv[2]:"test.ncb";
 
     nap_compiler c;
-    c.load_file(c.cur_cc, file_name, c.cur_method);
+    c.load_file(file_name);
     c.compile();
+    c.write_bytecode(bc_file_name);
 
     garbage_bin_bin::instance().empty();
     garbage_bin_bin::shutdown();

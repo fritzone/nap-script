@@ -5,12 +5,16 @@
 #include <string>
 #include <stdint.h>
 
+class nap_compiler;
+
 static const char SPACE = ' ';
 extern const char* NEWLINE;
 
 class code_stream
 {
 public:
+
+    code_stream(nap_compiler*) {}
 
     code_stream& operator << (const char* s)
     {
@@ -70,6 +74,12 @@ private:
     
     static unsigned char last_opcode;
         
+};
+
+class code_finalizer
+{
+public:
+   static void finalize();
 };
 
 #endif // CODE_STREAM_H

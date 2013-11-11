@@ -526,6 +526,7 @@ void parsed_file::deal_with_ifs_loading(call_context* cc, expression_tree* new_n
     char* if_cc_name = new_string(cc->get_name().length() + 6);
     sprintf(if_cc_name, "%s%s%s", cc->get_name().c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_IF);
     call_context* if_cc = new call_context(CALL_CONTEXT_TYPE_IF, if_cc_name, the_method, cc);
+    garbage_bin<call_context*>::instance().place(if_cc);
 
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF)    /* normal IF with { }*/
     {
@@ -708,6 +709,8 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
     {
         int op_res = -1;
         expression_tree* cnode = new expression_tree(expwloc);
+        garbage_bin<expression_tree*>::instance().place(cnode);
+
         void* gen_res = build_expr_tree(first, cnode, cur_method, first, cur_cc, &op_res, expwloc);
         switch(op_res)
         {

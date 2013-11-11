@@ -23,7 +23,7 @@
 #include <locale>
 
 /* forward declarations */
-void deliver_ccidx_dest(const expression_tree* node, int level, const method* the_method, call_context* cc, int reqd_type, int& idxc, const variable* var, int forced_mov);
+void deliver_ccidx_dest(nap_compiler *_compiler, const expression_tree* node, int level, const method* the_method, call_context* cc, int reqd_type, int& idxc, const variable* var, int forced_mov);
 
 /**
  * Returns true if the type that's passed in is an atomic type (string, number, variable, env.var)
@@ -75,20 +75,20 @@ static bool is_variable(expression_tree* node)
  * The result is returned in reg(level) so the callers need to be aware of this.
  * There is code generated automatically for handling the increment of the variable
  */
-static void deal_with_post_pre_node(const expression_tree* pp_node, int level, const method* the_method, call_context* cc, int forced_mov)
+static void deal_with_post_pre_node(nap_compiler* _compiler, const expression_tree* pp_node, int level, const method* the_method, call_context* cc, int forced_mov)
 {
     if(pp_node->left->op_type == BASIC_TYPE_VARIABLE || pp_node->left->op_type == BASIC_TYPE_CLASS_VAR)    /* a normal variable is being post/pre'd */
     {
         variable* var = (variable*)pp_node->left->reference->to_interpret;    /* this is the variable */
         if(pp_node->op_type == OPERATOR_POSTDEC || pp_node->op_type == OPERATOR_POSTINC) /*post increment/decrement?*/
         {
-            mov_var_into_reg(cc, var, level);                   /* post operation: firstly "use" the original value*/
-            operation_on_variable(cc, pp_node->op_type, var);    /* then update it*/
+            mov_var_into_reg(_compiler, cc, var, level);                   /* post operation: firstly "use" the original value*/
+            operation_on_variable(_compiler, cc, pp_node->op_type, var);    /* then update it*/
         }
         else    /* must be pre increment/decrement */
         {
-            operation_on_variable(cc, pp_node->op_type, var);    /* firstly update the variable*/
-            mov_var_into_reg(cc, var, level);                   /* then "use" it*/
+            operation_on_variable(_compiler, cc, pp_node->op_type, var);    /* firstly update the variable*/
+            mov_var_into_reg(_compiler, cc, var, level);                   /* then "use" it*/
         }
     }
     else
@@ -96,19 +96,19 @@ static void deal_with_post_pre_node(const expression_tree* pp_node, int level, c
     {
         int idxc = 0;
         variable* var = (variable*)(((envelope*)pp_node->left->left->reference)->to_interpret);
-        deliver_ccidx_dest(pp_node->left, level + 1, the_method, cc, var->i_type, idxc, var, forced_mov);            /* firstly initialize the "return" value */
+        deliver_ccidx_dest(_compiler,pp_node->left, level + 1, the_method, cc, var->i_type, idxc, var, forced_mov);            /* firstly initialize the "return" value */
         if(pp_node->op_type == OPERATOR_POSTDEC || pp_node->op_type == OPERATOR_POSTINC)
         {
-            mov_indexed_into_reg(cc, var, level, idxc);            /* reg(level) goes out to the caller*/
-            operation_on_indexed(cc, pp_node->op_type, var, idxc);        /* then increment it */
+            mov_indexed_into_reg(_compiler, cc, var, level, idxc);            /* reg(level) goes out to the caller*/
+            operation_on_indexed(_compiler, cc, pp_node->op_type, var, idxc);        /* then increment it */
         }
         else
         {
-            operation_on_indexed(cc, pp_node->op_type, var, idxc);        /* update it */
-            mov_indexed_into_reg(cc, var, level, idxc);            /* then initialize the return value (use it) in the caller*/
+            operation_on_indexed(_compiler, cc, pp_node->op_type, var, idxc);        /* update it */
+            mov_indexed_into_reg(_compiler, cc, var, level, idxc);            /* then initialize the return value (use it) in the caller*/
         }
 
-        clidx();                                            /* and finally liberate the indexes for the next operation*/
+        clidx(_compiler);                                            /* and finally liberate the indexes for the next operation*/
     }
     else
     {
@@ -119,7 +119,7 @@ static void deal_with_post_pre_node(const expression_tree* pp_node, int level, c
 /**
  * Deals with the += -= /= *= etc= operations.
  */
-static void resolve_op_equal(const expression_tree* node, const method* the_method, call_context* cc, int level, int reqd_type, int forced_mov)
+static void resolve_op_equal(nap_compiler* _compiler, const expression_tree* node, const method* the_method, call_context* cc, int level, int reqd_type, int forced_mov)
 {
     if(node->left)
     {
@@ -128,22 +128,22 @@ static void resolve_op_equal(const expression_tree* node, const method* the_meth
         variable* var = (variable*)node->left->reference->to_interpret;
             if(is_atomic_type(node->right->op_type))
             {
-                mov_reg(var->i_type, level);
-                compile(node->right, the_method, cc, level, var->i_type, forced_mov);    /* filled up the 'incby' */
+                mov_reg(_compiler, var->i_type, level);
+                compile(_compiler,node->right, the_method, cc, level, var->i_type, forced_mov);    /* filled up the 'incby' */
 
-                operation_target_var_source_reg(cc, node->op_type, var, level);
+                operation_target_var_source_reg(_compiler, cc, node->op_type, var, level);
             }
             else
             {
                 if(is_post_pre_op(node->right->op_type))    /* we post/pre inc/dec with "something++" */
                 {
-                    deal_with_post_pre_node(node->right, level, the_method, cc, forced_mov);
-                    operation_target_var_source_reg(cc, node->op_type, var, level);
+                    deal_with_post_pre_node(_compiler, node->right, level, the_method, cc, forced_mov);
+                    operation_target_var_source_reg(_compiler, cc, node->op_type, var, level);
                 }
                 else    /* the value with which we incr/decr is a normal "complex" operation, compile it for the current level and add (sub...) it to the variable */
                 {
-                    compile(node->right, the_method, cc, level, var->i_type, forced_mov);
-                    operation_target_var_source_reg(cc, node->op_type, var, level);
+                    compile(_compiler,node->right, the_method, cc, level, var->i_type, forced_mov);
+                    operation_target_var_source_reg(_compiler, cc, node->op_type, var, level);
                 }
             }
         }
@@ -155,29 +155,29 @@ static void resolve_op_equal(const expression_tree* node, const method* the_meth
             int index;
             if(is_atomic_type(node->right->op_type))    /* getting here with z[1] += 4*/
             {
-                deliver_ccidx_dest(node->left, level, the_method, cc, reqd_type, index, var, forced_mov);    /* fisrtly calculating the index since this might mess up the registers*/
-                mov_reg(var->i_type, level);
-                compile(node->right, the_method, cc, level, var->i_type, forced_mov);            /* printing right's content*/
-                operation_target_indexed_source_reg(cc, node->op_type, var, index, level);        /* and finally updating the indexed value*/
-                clidx();
+                deliver_ccidx_dest(_compiler, node->left, level, the_method, cc, reqd_type, index, var, forced_mov);    /* fisrtly calculating the index since this might mess up the registers*/
+                mov_reg(_compiler, var->i_type, level);
+                compile(_compiler,node->right, the_method, cc, level, var->i_type, forced_mov);            /* printing right's content*/
+                operation_target_indexed_source_reg(_compiler, cc, node->op_type, var, index, level);        /* and finally updating the indexed value*/
+                clidx(_compiler);
             }
             else
             {
                 if(is_post_pre_op(node->right->op_type))    /* we post/pre inc/dec with "something++" */
                 {
-                    deliver_ccidx_dest(node->left, level, the_method, cc, reqd_type, index, var, forced_mov);    /* firstly calculating the index since this might mess up the registers*/
-                    deal_with_post_pre_node(node->right, level, the_method, cc, forced_mov);    /* then initializing the result of the post/pre operation */
-                    operation_target_indexed_source_reg(cc, node->op_type, var, index, level);     /* and finally updating the indexed value*/
-                    clidx();                /* and clearing the indexes*/
+                    deliver_ccidx_dest(_compiler,node->left, level, the_method, cc, reqd_type, index, var, forced_mov);    /* firstly calculating the index since this might mess up the registers*/
+                    deal_with_post_pre_node(_compiler, node->right, level, the_method, cc, forced_mov);    /* then initializing the result of the post/pre operation */
+                    operation_target_indexed_source_reg(_compiler, cc, node->op_type, var, index, level);     /* and finally updating the indexed value*/
+                    clidx(_compiler);                /* and clearing the indexes*/
                 }
                 else    /* the value with which we incr/decr is a normal "complex" operation, compile it for the current level and add (sub...) it to the variable */
                 {
-                    compile(node->right, the_method, cc, level+1, var->i_type, forced_mov);
-                    operation_target_reg_source_reg(var->i_type, level, var->i_type, level + 1);
+                    compile(_compiler,node->right, the_method, cc, level+1, var->i_type, forced_mov);
+                    operation_target_reg_source_reg(_compiler, var->i_type, level, var->i_type, level + 1);
 
-                    deliver_ccidx_dest(node->left, level, the_method, cc, reqd_type, index, var, forced_mov);    /* fisrtly calculating the index since this might mess up the registers*/
-                    operation_target_indexed_source_reg(cc, node->op_type, var, index, level);     /* and finally updating the indexed value*/
-                    clidx();
+                    deliver_ccidx_dest(_compiler,node->left, level, the_method, cc, reqd_type, index, var, forced_mov);    /* fisrtly calculating the index since this might mess up the registers*/
+                    operation_target_indexed_source_reg(_compiler, cc, node->op_type, var, index, level);     /* and finally updating the indexed value*/
+                    clidx(_compiler);
                 }
             }
         }
@@ -197,7 +197,7 @@ static void resolve_op_equal(const expression_tree* node, const method* the_meth
  * @param cc - the call context in which this is happening
  * @param reqd_type - the required type
  */
-void deliver_ccidx_dest(const expression_tree* node, int level,
+void deliver_ccidx_dest(nap_compiler* _compiler, const expression_tree* node, int level,
                         const method* the_method, call_context* cc,
                         int /*reqd_type*/, int& idxc, const variable* /*var*/,
                         int forced_mov)
@@ -209,22 +209,22 @@ multi_dimension_index* mdi = (multi_dimension_index*)node->right->reference->to_
     {
         if(is_atomic_type((*indxs)->op_type))    /* put the indexes into reg(current level)*/
         {
-            move_atomic_into_index_register(idxc, *indxs, the_method, cc, level, forced_mov);
+            move_atomic_into_index_register(_compiler, idxc, *indxs, the_method, cc, level, forced_mov);
         }
         else
         {
             if(is_post_pre_op((*indxs)->op_type))    /* put the index in the next level, modify the variable*/
             {
-                deal_with_post_pre_node(*indxs, level + 1, the_method, cc, forced_mov);    /* dealing with the post/pre operation*/
+                deal_with_post_pre_node(_compiler, *indxs, level + 1, the_method, cc, forced_mov);    /* dealing with the post/pre operation*/
                 /* and here updating the current index register to hold the value from the reg(level) */
-                move_int_register_into_index_register(idxc, level);
+                move_int_register_into_index_register(_compiler, idxc, level);
 
             }
             else    /* compile everything in the next level and finally assign the next reg to current reg*/
             {
                 int int_type = BASIC_TYPE_INT;
-                compile(*indxs, the_method, cc, level + 1, int_type, forced_mov);
-                move_int_register_into_index_register(idxc, level+1);
+                compile(_compiler,*indxs, the_method, cc, level + 1, int_type, forced_mov);
+                move_int_register_into_index_register(_compiler, idxc, level+1);
             }
         }
         idxc ++;
@@ -238,7 +238,7 @@ multi_dimension_index* mdi = (multi_dimension_index*)node->right->reference->to_
 /**
  * Resolves the code generation for the operation found in the given node
  */
-void resolve_operation( const expression_tree* node, int reqd_type, int level, const method* the_method, call_context* cc, int forced_mov)
+void resolve_operation(nap_compiler* _compiler, const expression_tree* node, int reqd_type, int level, const method* the_method, call_context* cc, int forced_mov)
 {
     if(node->left)    /* the first operand is in the left node */
     {
@@ -246,29 +246,29 @@ void resolve_operation( const expression_tree* node, int reqd_type, int level, c
         {                                        /* and to this we'll add the evaluation of the right */
             if(node->right)                        /* binary operation with two sides */
             {
-                mov_reg(reqd_type, level);
-                compile(node->left, the_method, cc, level, reqd_type, forced_mov);    /* the stuff contained in the 'atomic' left branch */
+                mov_reg(_compiler, reqd_type, level);
+                compile(_compiler,node->left, the_method, cc, level, reqd_type, forced_mov);    /* the stuff contained in the 'atomic' left branch */
 
 
                 if(is_atomic_type(node->right->op_type))    /* number / variable */
                 {
-                    code_stream() << NEWLINE;
-                    operation_start_register_atomic(node, reqd_type, level);
-                    compile(node->right, the_method, cc, level, reqd_type, forced_mov);    /* make the operations with the right side*/
+                    code_stream(_compiler) << NEWLINE;
+                    operation_start_register_atomic(_compiler, node, reqd_type, level);
+                    compile(_compiler,node->right, the_method, cc, level, reqd_type, forced_mov);    /* make the operations with the right side*/
 
                 }
                 else
                 {
                     if(is_post_pre_op(node->right->op_type)) /* in case the second operand is post/pre inc/dec the handling is different*/
                     {
-                        deal_with_post_pre_node(node->right, level + 1, the_method, cc, forced_mov);
-                        operation_register_level_register_next_level(node, reqd_type, level);
+                        deal_with_post_pre_node(_compiler, node->right, level + 1, the_method, cc, forced_mov);
+                        operation_register_level_register_next_level(_compiler, node, reqd_type, level);
 
                     }
                     else    /* this is a "normal" operation or similar */
                     {
-                        compile(node->right, the_method, cc, level + 1, reqd_type, forced_mov);
-                        operation_register_level_register_next_level(node, reqd_type, level);
+                        compile(_compiler,node->right, the_method, cc, level + 1, reqd_type, forced_mov);
+                        operation_register_level_register_next_level(_compiler, node, reqd_type, level);
                     }
                 }
             }
@@ -282,33 +282,33 @@ void resolve_operation( const expression_tree* node, int reqd_type, int level, c
             /* firstly initialize the left side (first operand) to the current level variable */
             if(is_post_pre_op(node->left->op_type))    /* post/pre inc*/
             {
-                deal_with_post_pre_node(node->left, level, the_method, cc, forced_mov);    /* deals with the post/pre in the left node*/
+                deal_with_post_pre_node(_compiler, node->left, level, the_method, cc, forced_mov);    /* deals with the post/pre in the left node*/
             }
             else
             {
-                compile(node->left, the_method, cc, level + 1, reqd_type, forced_mov);
-                move_register_level_register_next_level(reqd_type, level);
+                compile(_compiler,node->left, the_method, cc, level + 1, reqd_type, forced_mov);
+                move_register_level_register_next_level(_compiler,reqd_type, level);
             }
 
             if(node->right) /* this branch will put the actual operation in the operations list with reg(level)*/
             {
                 if(is_atomic_type(node->right->op_type))
                 {
-                    operation_start_register_atomic(node, reqd_type, level);
-                    compile(node->right, the_method, cc, level, reqd_type, forced_mov);
+                    operation_start_register_atomic(_compiler, node, reqd_type, level);
+                    compile(_compiler,node->right, the_method, cc, level, reqd_type, forced_mov);
 
                 }
                 else
                 {
                     if(is_post_pre_op(node->right->op_type))
                     {
-                        deal_with_post_pre_node(node->right, level + 1, the_method, cc, forced_mov); /* initialize the next level register to the result of the post/pre operation*/
-                        operation_register_level_register_next_level(node, reqd_type, level);
+                        deal_with_post_pre_node(_compiler, node->right, level + 1, the_method, cc, forced_mov); /* initialize the next level register to the result of the post/pre operation*/
+                        operation_register_level_register_next_level(_compiler, node, reqd_type, level);
                     }
                     else
                     {
-                        compile(node->right, the_method, cc, level + 1, reqd_type, forced_mov);
-                        operation_register_level_register_next_level(node, reqd_type, level);
+                        compile(_compiler,node->right, the_method, cc, level + 1, reqd_type, forced_mov);
+                        operation_register_level_register_next_level(_compiler, node, reqd_type, level);
                     }
                 }
             }
@@ -317,7 +317,7 @@ void resolve_operation( const expression_tree* node, int reqd_type, int level, c
 }
 
 
-static void resolve_class_member(const expression_tree* node, int level, const method* the_method, call_context* cc, int forced_mov)
+static void resolve_class_member(nap_compiler* _compiler, const expression_tree* node, int level, const method* the_method, call_context* cc, int forced_mov)
 {
     variable* dest = (variable*)(((envelope*)node->left->reference)->to_interpret);
     if(node->father->right)
@@ -326,27 +326,27 @@ static void resolve_class_member(const expression_tree* node, int level, const m
         {
             if(is_atomic_type(node->father->right->op_type))
             {
-                move_start_register_atomic(dest, level);
+                move_start_register_atomic(_compiler,dest, level);
             }
-            compile(node->father->right, the_method, cc, level, dest->i_type, forced_mov);
+            compile(_compiler,node->father->right, the_method, cc, level, dest->i_type, forced_mov);
         }
         else        /* indexed = postinc/dec / preinc/dec*/
         {
-            deal_with_post_pre_node(node->right, level, the_method, cc, forced_mov);
+            deal_with_post_pre_node(_compiler, node->right, level, the_method, cc, forced_mov);
             /* when the above ended, reg(level) contains the variable I need to assign */
         }
     }
 
 }
 
-static void do_list_assignment( envelope* rvalue, variable* var, int level, const method* the_method, call_context* cc, int reqd_type )
+static void do_list_assignment(nap_compiler* _compiler, envelope* rvalue, variable* var, int level, const method* the_method, call_context* cc, int reqd_type )
 {
     std::vector<envelope*> *lstvec = (std::vector<envelope*>*)rvalue->to_interpret;
     std::vector<envelope*>::iterator lst = lstvec->begin();
     int indxctr = 0;
     while(lst != lstvec->end())
     {
-        code_stream() << mov()
+        code_stream(_compiler) << mov()
                       << SPACE
                       << reg() << "idx" << C_PAR_OP << '0' << C_PAR_CL
                       << C_COMMA
@@ -355,26 +355,26 @@ static void do_list_assignment( envelope* rvalue, variable* var, int level, cons
         
         if(((expression_tree*)(*lst)->to_interpret)->op_type <= var->i_type)
         {
-            code_stream() << mov()
+            code_stream(_compiler) << mov()
                           << SPACE
                           << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL
                           << C_COMMA;
         }
-        compile((expression_tree*)(*lst)->to_interpret, the_method, cc, level + 1, reqd_type, 0);
+        compile(_compiler,(expression_tree*)(*lst)->to_interpret, the_method, cc, level + 1, reqd_type, 0);
 
         if(((expression_tree*)(*lst)->to_interpret)->op_type <= var->i_type)
         {
-            code_stream() << NEWLINE;
+            code_stream(_compiler) << NEWLINE;
         }
         
-        code_stream() << mov()
+        code_stream(_compiler) << mov()
                       << SPACE
                       << ccidx() << C_PAR_OP << (std::string(cc->get_name()) + STR_DOT + var->name) << C_COMMA << '1' << C_PAR_CL
                       << C_COMMA
                       << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL
                       << NEWLINE ;
 
-        clidx();
+        clidx(_compiler);
 
         lst ++;
         indxctr ++;
@@ -384,7 +384,7 @@ static void do_list_assignment( envelope* rvalue, variable* var, int level, cons
 /**
  * Deals with code generation for the assignment
  */
-void resolve_assignment( const expression_tree* node, int level, const method* the_method, call_context* cc, int reqd_type , int forced_mov)
+void resolve_assignment(nap_compiler* _compiler, const expression_tree* node, int level, const method* the_method, call_context* cc, int reqd_type , int forced_mov)
 {
     /* what will be calculated will be put all the time in the register on the current level */
     if(node->left)    /* contains the destination */
@@ -405,42 +405,42 @@ void resolve_assignment( const expression_tree* node, int level, const method* t
                     {
                         if(node->right->op_type == LIST_VALUE)
                         {
-                            do_list_assignment(node->right->reference, dest, level, the_method, cc, reqd_type);
+                            do_list_assignment(_compiler, node->right->reference, dest, level, the_method, cc, reqd_type);
                         }
                         else
                         {
                             /* start a move into the current register */
                             if(is_atomic_type(node->right->op_type))
                             {
-                                move_start_register_atomic(dest, level);
+                                move_start_register_atomic(_compiler,dest, level);
                             }
-                            compile(node->right, the_method, cc, level, dest->i_type, forced_mov);
-                            code_stream() << NEWLINE;
+                            compile(_compiler,node->right, the_method, cc, level, dest->i_type, forced_mov);
+                            code_stream(_compiler) << NEWLINE;
 
                             if(dest->func_par)
                             {
-                                move_reg_into_var(dest->func_par->the_method->main_cc, dest, level);
+                                move_reg_into_var(_compiler, dest->func_par->the_method->main_cc, dest, level);
                             }
                             else
                             {
-                                move_reg_into_var(cc, dest, level);
+                                move_reg_into_var(_compiler, cc, dest, level);
                             }
                         }
                     }
                     else    /* postinc/dec / preinc/dec*/
                     {
-                        deal_with_post_pre_node(node->right, level, the_method, cc, forced_mov);
-                        output_mov_instruction();
+                        deal_with_post_pre_node(_compiler, node->right, level, the_method, cc, forced_mov);
+                        output_mov_instruction(_compiler);
                         int forced_type = -2;
-                        compile(node->left, the_method, cc, level, forced_type, forced_mov); /* this will print the "mov to dest" */
-                        second_operand_register_level(dest, level);
+                        compile(_compiler,node->left, the_method, cc, level, forced_type, forced_mov); /* this will print the "mov to dest" */
+                        second_operand_register_level(_compiler, dest, level);
                     }
                 }
             }
             else
             if(OPERATOR_DOT == node->left->op_type)      // class member access
             {
-                resolve_class_member(node->left, level, the_method, cc, forced_mov);
+                resolve_class_member(_compiler, node->left, level, the_method, cc, forced_mov);
             }
             else    /* this is indexed*/
             {
@@ -451,22 +451,22 @@ void resolve_assignment( const expression_tree* node, int level, const method* t
                     {
                         if(is_atomic_type(node->right->op_type))
                         {
-                            move_start_register_atomic(dest, level);
+                            move_start_register_atomic(_compiler,dest, level);
                         }
-                        compile(node->right, the_method, cc, level, dest->i_type, forced_mov);
+                        compile(_compiler,node->right, the_method, cc, level, dest->i_type, forced_mov);
                     }
                     else    /* indexed = postinc/dec / preinc/dec*/
                     {
-                        deal_with_post_pre_node(node->right, level, the_method, cc, forced_mov);
+                        deal_with_post_pre_node(_compiler, node->right, level, the_method, cc, forced_mov);
                         /* when the above ended, reg(level) contains the variable I need to assign */
                     }
                 }
             int idxc = 0;
-                deliver_ccidx_dest(node->left, level + 1, the_method, cc, reqd_type, idxc, dest, forced_mov);
+                deliver_ccidx_dest(_compiler,node->left, level + 1, the_method, cc, reqd_type, idxc, dest, forced_mov);
                 /* the above one prepares the ccidx*/
-                move_register_level_into_indexe_variable(dest, idxc, level);
+                move_register_level_into_indexe_variable(_compiler, dest, idxc, level);
 
-                clidx();
+                clidx(_compiler);
             }
         }
     }
@@ -573,29 +573,29 @@ static std::vector<std::string> chop_up(const char* s)
 }
 
 
-void compile_a_block(const std::vector<expression_tree*>& container,
+void compile_a_block(nap_compiler* _compiler, const std::vector<expression_tree*>& container,
                      int level,
                      call_context* cc,
                      const method* the_method, int forced_mov)
 {
     std::string if_hash = generate_unique_hash();
     std::vector<expression_tree*>::const_iterator q = container.begin();
-    push_cc_start_marker(if_hash.c_str()); /* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
+    push_cc_start_marker(_compiler, if_hash.c_str()); /* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
     int last_opcode = -1;
     while(q != container.end())
     {
         int local_req = -1;
-        compile(*q, the_method, cc, level + 1, local_req, forced_mov);
+        compile(_compiler,*q, the_method, cc, level + 1, local_req, forced_mov);
         if((*q)->op_type != STATEMENT_CLOSE_CC)
         {
             last_opcode = (*q)->op_type;
         }
         q ++;
     }
-    push_cc_end_marker(if_hash.c_str());
+    push_cc_end_marker(_compiler, if_hash.c_str());
     if(last_opcode == RETURN_STATEMENT)
     {
-        code_stream() << "leave" << NEWLINE;
+        code_stream(_compiler) << "leave" << NEWLINE;
     }
 }
 
@@ -613,7 +613,7 @@ void compile_a_block(const std::vector<expression_tree*>& container,
  * bytecodes for the else branch
  * if_end:
 */
-static void resolve_if_keyword( const expression_tree* node, const method* the_method, call_context* cc, int level, int reqd_type, int forced_mov)
+static void resolve_if_keyword(nap_compiler* _compiler, const expression_tree* node, const method* the_method, call_context* cc, int level, int reqd_type, int forced_mov)
 {
 resw_if* my_if = (resw_if*)node->reference->to_interpret;
 
@@ -629,19 +629,19 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
         }
         if(is_atomic_type(my_if->logical_expr->op_type))
         {
-            move_start_register_atomic_with_type(reqd_type, level);
-            compile(my_if->logical_expr, the_method, cc, level, reqd_type, forced_mov);
+            move_start_register_atomic_with_type(_compiler, reqd_type, level);
+            compile(_compiler,my_if->logical_expr, the_method, cc, level, reqd_type, forced_mov);
         }
         else    // this automatically deals with the post/pre inc/dec too
         {
-            compile(my_if->logical_expr, the_method, cc, level + 1, reqd_type, forced_mov);
-            move_register_level_register_next_level(reqd_type, level );
+            compile(_compiler,my_if->logical_expr, the_method, cc, level + 1, reqd_type, forced_mov);
+            move_register_level_register_next_level(_compiler,reqd_type, level );
         }
-        cmp_register_with_zero(reqd_type, level);
+        cmp_register_with_zero(_compiler, reqd_type, level);
     }
     else        /* here the logical expr contains a normal logical operation or similar, this populates automatically the last boolean flag*/
     {
-        compile(my_if->logical_expr, the_method, cc, level, reqd_type, forced_mov);    /* first step: compile the logical expression*/
+        compile(_compiler,my_if->logical_expr, the_method, cc, level, reqd_type, forced_mov);    /* first step: compile the logical expression*/
     }
 
     if(my_if->if_branch)    /* if we have an if branch*/
@@ -658,40 +658,40 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
         std::string end_label_name = ss.str();
         ss.str(std::string());
 
-        code_stream() << NEWLINE;
-        jlbf(if_label_name);                    /* jump to the 'if' call context if the logical expression evaluated to true */
+        code_stream(_compiler) << NEWLINE;
+        jlbf(_compiler, if_label_name);                    /* jump to the 'if' call context if the logical expression evaluated to true */
 
         if(my_if->else_branch) /* if there's an else branch */
         {
             ss << my_if->else_branch->get_name() << C_UNDERLINE << cc->get_label_count() << C_UNDERLINE << generate_unique_hash();
             else_label_name = ss.str();
             ss.str(std::string());
-            jmp(else_label_name);    /* jump to the else branch if the logical operation did no evaluate to true*/
+            jmp(_compiler, else_label_name);    /* jump to the else branch if the logical operation did no evaluate to true*/
         }
         else
         {
-            jmp(end_label_name);    /* if there's no else branch jump to the first operation after this is*/
+            jmp(_compiler, end_label_name);    /* if there's no else branch jump to the first operation after this is*/
         }
 
-        code_stream() << fully_qualified_label(if_label_name) << NEWLINE;            /* the label for the if branch */
+        code_stream(_compiler) << fully_qualified_label(if_label_name) << NEWLINE;            /* the label for the if branch */
         cc->add_label(-1, if_label_name);    /* for now added with dummy data to the CC*/
         if(! my_if->if_branch->get_expressions().empty())    /*to solve: if(1); else ...*/
         {
-            compile_a_block(my_if->if_branch->get_expressions(), level,
+            compile_a_block(_compiler, my_if->if_branch->get_expressions(), level,
                             my_if->if_branch, the_method, forced_mov);
         }
 
         if(my_if->else_branch)        /* if we have an else branch */
         {
-            jmp(end_label_name);    /* make sure, that after executing the 'if' branch we don't end up here */
-            code_stream() << fully_qualified_label(else_label_name) << NEWLINE;    /* here place the label so the bytecode will know where to jump */
+            jmp(_compiler, end_label_name);    /* make sure, that after executing the 'if' branch we don't end up here */
+            code_stream(_compiler) << fully_qualified_label(else_label_name) << NEWLINE;    /* here place the label so the bytecode will know where to jump */
             cc->add_label(-1, else_label_name);    /* for now added with dummy data to the CC*/
 
-            compile_a_block(my_if->else_branch->get_expressions(),
+            compile_a_block(_compiler, my_if->else_branch->get_expressions(),
                             level,
                             my_if->else_branch, the_method, forced_mov);
         }
-        code_stream() << fully_qualified_label(end_label_name) << NEWLINE ;        /* finally, in this case this would be the last label regarding this if */
+        code_stream(_compiler) << fully_qualified_label(end_label_name) << NEWLINE ;        /* finally, in this case this would be the last label regarding this if */
         cc->add_label(-1, end_label_name);    /* adding it to the call context */
     }
     else    /* if we don't have an if branch */
@@ -701,11 +701,11 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
             /* generating a name for the end of the 'if' */
             char* end_label_name = alloc_mem(char, cc->get_name().length() + 32);
             sprintf(end_label_name, "%s_%d", cc->get_name().c_str(), (int)cc->get_label_count());
-            jlbf(end_label_name);                /* jump to the end of the if, if the logical expression evaluated to true */
-            compile_a_block(my_if->else_branch->get_expressions(), level,
+            jlbf(_compiler, end_label_name);                /* jump to the end of the if, if the logical expression evaluated to true */
+            compile_a_block(_compiler, my_if->else_branch->get_expressions(), level,
                             my_if->else_branch, the_method, forced_mov);
             /* label after else */
-            code_stream() << fully_qualified_label(end_label_name) << NEWLINE;
+            code_stream(_compiler) << fully_qualified_label(end_label_name) << NEWLINE;
             cc->add_label(-1, end_label_name);
 
         }
@@ -722,7 +722,7 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
  * jmp while_start
  * while_end:
 */
-static void resolve_while_keyword(const expression_tree* node, const method* the_method, call_context* cc, int level, int reqd_type, int forced_mov)
+static void resolve_while_keyword(nap_compiler* _compiler, const expression_tree* node, const method* the_method, call_context* cc, int level, int reqd_type, int forced_mov)
 {
     resw_while* my_while = (resw_while*)node->reference->to_interpret;
 
@@ -737,7 +737,7 @@ static void resolve_while_keyword(const expression_tree* node, const method* the
     sprintf(while_label_name, "%s_%d", my_while->operations->get_name().c_str(), (int)cc->get_label_count());    /* generating a name for the content */
 
     /* print the while start label */
-    code_stream() << fully_qualified_label(while_label_name) << NEWLINE ;
+    code_stream(_compiler) << fully_qualified_label(while_label_name) << NEWLINE ;
     cc->add_label(-1, while_label_name);
 
     /*check if the info is a logical operation or not.
@@ -752,8 +752,8 @@ static void resolve_while_keyword(const expression_tree* node, const method* the
         }
         if(is_atomic_type(my_while->logical_expr->op_type))
         {
-            move_start_register_atomic_with_type(reqd_type, level);
-            compile(my_while->logical_expr, the_method, cc, level, reqd_type, forced_mov);
+            move_start_register_atomic_with_type(_compiler, reqd_type, level);
+            compile(_compiler,my_while->logical_expr, the_method, cc, level, reqd_type, forced_mov);
         }
         else    // this automatically deals with the post/pre inc/dec too
         {
@@ -763,28 +763,28 @@ static void resolve_while_keyword(const expression_tree* node, const method* the
             }
             else
             {
-                compile(my_while->logical_expr, the_method, cc, level + 1, reqd_type, forced_mov);
-                move_register_level_register_next_level(reqd_type, level );
+                compile(_compiler,my_while->logical_expr, the_method, cc, level + 1, reqd_type, forced_mov);
+                move_register_level_register_next_level(_compiler,reqd_type, level );
             }
 
         }
-        cmp_register_with_zero(reqd_type, level);
+        cmp_register_with_zero(_compiler, reqd_type, level);
     }
     else        /* here the logical expr contains a normal logical operation or similar, this populates automatically the last boolean flag*/
     {
-        compile(my_while->logical_expr, the_method, cc, level, reqd_type, forced_mov);    /* first step: compile the logical expression*/
+        compile(_compiler,my_while->logical_expr, the_method, cc, level, reqd_type, forced_mov);    /* first step: compile the logical expression*/
     }
 
     /* now print the jnlbf to the end of the while*/
-    jnlbf(end_label_name);
+    jnlbf(_compiler, end_label_name);
 
     if(my_while->operations)    /* if we have operations in the while */
     {
-        compile_a_block(my_while->operations->get_expressions(), level, my_while->operations, the_method, forced_mov);
-        jmp( while_label_name);
+        compile_a_block(_compiler, my_while->operations->get_expressions(), level, my_while->operations, the_method, forced_mov);
+        jmp(_compiler, while_label_name);
     }
 
-    code_stream() << fully_qualified_label(end_label_name) << NEWLINE ;        /* finally, in this case this would be the last label regarding this while */
+    code_stream(_compiler) << fully_qualified_label(end_label_name) << NEWLINE ;        /* finally, in this case this would be the last label regarding this while */
     cc->add_label(-1, end_label_name);    /* adding it to the call context */
 }
 
@@ -798,29 +798,29 @@ static void resolve_while_keyword(const expression_tree* node, const method* the
  * evaluate condition
  * jlbf :for_start
 */
-static void resolve_for_keyword(const expression_tree* node, const method* the_method, call_context* cc, int level, int reqd_type, int forced_mov)
+static void resolve_for_keyword(nap_compiler* _compiler, const expression_tree* node, const method* the_method, call_context* cc, int level, int reqd_type, int forced_mov)
 {
     struct resw_for* my_for = (struct resw_for*)node->reference->to_interpret;
 
-    push_cc_start_marker(my_for->unique_hash);
+    push_cc_start_marker(_compiler,my_for->unique_hash);
     /* as a first step we should compile the init statement of the for*/
-    compile(my_for->tree_init_stmt, the_method, cc, level + 1, reqd_type, forced_mov);
+    compile(_compiler,my_for->tree_init_stmt, the_method, cc, level + 1, reqd_type, forced_mov);
 
     /* then we should print the label of the for start*/
     struct bytecode_label* start_label = cc->provide_label();
     struct bytecode_label* end_label = cc->provide_label();
 
-    code_stream() << fully_qualified_label(start_label->name) << NEWLINE;
+    code_stream(_compiler) << fully_qualified_label(start_label->name) << NEWLINE;
 
     /* Now, the statements */
     if(my_for->operations)    /* if we have operations in the body */
     {
         my_for->operations->add_break_label(-1, end_label->name);
-        compile_a_block(my_for->operations->get_expressions(), level, my_for->operations, the_method, forced_mov);
+        compile_a_block(_compiler, my_for->operations->get_expressions(), level, my_for->operations, the_method, forced_mov);
     }
 
     /* now execute the for "operation" ie. usually the i++ */
-    compile(my_for->tree_expr, the_method, cc, level, reqd_type, forced_mov);    /* first step: compile the logical expression*/
+    compile(_compiler,my_for->tree_expr, the_method, cc, level, reqd_type, forced_mov);    /* first step: compile the logical expression*/
 
     /* and the condition */
     if(!is_logical_operation(my_for->tree_condition))    /* testing the 0- ness of a variable or something else that evaluates to a number */
@@ -831,27 +831,27 @@ static void resolve_for_keyword(const expression_tree* node, const method* the_m
         }
         if(is_atomic_type(my_for->tree_condition->op_type))
         {
-            move_start_register_atomic_with_type(reqd_type, level);
-            compile(my_for->tree_condition, the_method, cc, level, reqd_type, forced_mov);
+            move_start_register_atomic_with_type(_compiler,reqd_type, level);
+            compile(_compiler,my_for->tree_condition, the_method, cc, level, reqd_type, forced_mov);
         }
         else    // this automatically deals with the post/pre inc/dec too
         {
-            move_register_level_register_next_level(reqd_type, level );
+            move_register_level_register_next_level(_compiler,reqd_type, level );
         }
-        cmp_register_with_zero(reqd_type, level);
+        cmp_register_with_zero(_compiler, reqd_type, level);
     }
     else        /* here the logical expr contains a normal logical operation or similar, this populates automatically the last boolean flag*/
     {
-        compile(my_for->tree_condition, the_method, cc, level, reqd_type, forced_mov);    /* first step: compile the logical expression*/
+        compile(_compiler,my_for->tree_condition, the_method, cc, level, reqd_type, forced_mov);    /* first step: compile the logical expression*/
     }
 
-    code_stream() << NEWLINE;
+    code_stream(_compiler) << NEWLINE;
     // do we still need to loop?
 
-    jlbf(start_label->name);
-    code_stream() << fully_qualified_label(end_label->name) << NEWLINE ;
+    jlbf(_compiler,start_label->name);
+    code_stream(_compiler) << fully_qualified_label(end_label->name) << NEWLINE ;
 
-    push_cc_end_marker(my_for->unique_hash);
+    push_cc_end_marker(_compiler,my_for->unique_hash);
 }
 
 
@@ -863,7 +863,7 @@ static void resolve_for_keyword(const expression_tree* node, const method* the_m
  *  - in case this is initialized generate code to initialize the variable
  *
  */
-void resolve_variable_definition(const expression_tree* node, const method* the_method, call_context* cc, int level, int reqd_type, int forced_mov)
+void resolve_variable_definition(nap_compiler* _compiler, const expression_tree* node, const method* the_method, call_context* cc, int level, int reqd_type, int forced_mov)
 {
     {
         std::vector<variable_definition*>* vdlist = (std::vector<variable_definition*>*)node->reference->to_interpret;
@@ -893,7 +893,7 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
                     /* search if we have a definition for it too, such as: Base t = new Derived()*/
                     if(vd->the_value)
                     {
-                        code_stream() << push() << SPACE << ref() << SPACE << (std::string(cc->get_name()) + STR_DOT + vd->the_variable->name) << NEWLINE;
+                        code_stream(_compiler) << push() << SPACE << ref() << SPACE << (std::string(cc->get_name()) + STR_DOT + vd->the_variable->name) << NEWLINE;
 
                         expression_tree* tempassign = new expression_tree(node->expwloc);
 
@@ -904,31 +904,35 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
 
                         tempassign->left = tempvar;
                         tempassign->right = vd->the_value;
-                        resolve_assignment(tempassign, level, the_method, cc, reqd_type, forced_mov);
+                        resolve_assignment(_compiler, tempassign, level, the_method, cc, reqd_type, forced_mov);
 
                         // the constructor call is NOT pushing this
                         // TODO: This was here ... push_cc_end_marker();
                     }
                     else
                     {
-                        push_usertype_variable(cc, vd->the_variable);
+                        push_usertype_variable(_compiler,cc, vd->the_variable);
                     }
                 }
                 else
                 {
-                    push_variable(cc, vd->the_variable);
+                    push_variable(_compiler,cc, vd->the_variable);
 
                     if(vd->the_value)
                     {
                         expression_tree* tempassign = new expression_tree(node->expwloc);
                         expression_tree* tempvar = new expression_tree(node->expwloc);
+
+                        garbage_bin<expression_tree*>::instance().place(tempassign);
+                        garbage_bin<expression_tree*>::instance().place(tempvar);
+
                         tempvar->left = tempvar->right = 0;
                         tempvar->op_type = BASIC_TYPE_VARIABLE;
                         tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE);
 
                         tempassign->left = tempvar;
                         tempassign->right = vd->the_value;
-                        resolve_assignment(tempassign, level, the_method, cc, reqd_type, forced_mov);
+                        resolve_assignment(_compiler, tempassign, level, the_method, cc, reqd_type, forced_mov);
                     }
                 }
 
@@ -945,7 +949,7 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
             {
                 if(q->dimension > 0)    /* this dimension definition is a simple number */
                 {
-                    resolve_variable_add_dimension_number(cc, vd->the_variable, q->dimension);
+                    resolve_variable_add_dimension_number(_compiler,cc, vd->the_variable, q->dimension);
                 }
                 else
                 {
@@ -959,8 +963,8 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
                         {
                             throw_error("Internal: Multi-dim initialization is not having an associated expression", NULL);
                         }
-                        compile(q->expr_def, the_method, cc, level + 1, reqd_type, 1);
-                        resolve_variable_add_dimension_regis(cc, vd->the_variable, level + 1);
+                        compile(_compiler,q->expr_def, the_method, cc, level + 1, reqd_type, 1);
+                        resolve_variable_add_dimension_regis(_compiler,cc, vd->the_variable, level + 1);
 
                     }
                 }
@@ -983,7 +987,7 @@ void resolve_variable_definition(const expression_tree* node, const method* the_
  * This will generate code to find the location of the break label of the enclosing while/for statement and create a jump to it.
  * TODO: what to do with the stack marker ???
  */
-static void resolve_break_keyword(call_context* cc)
+static void resolve_break_keyword(nap_compiler* _compiler, call_context* cc)
 {
     /* find the first while or for call context. Also consider switch statements*/
     call_context* qcc = cc;
@@ -997,13 +1001,13 @@ static void resolve_break_keyword(call_context* cc)
         throw_error(E0012_SYNTAXERR);
     }
 
-    jmp(qcc->get_break_label()->name);
+    jmp(_compiler,qcc->get_break_label()->name);
 }
 
 /**
  * This method compiles the given node into a series of assembly opcodes / bytecode
  */
-void compile(const expression_tree* node, const method* the_method, call_context* cc, int level, int& reqd_type, int forced_mov)
+void compile(nap_compiler* _compiler, const expression_tree* node, const method* the_method, call_context* cc, int level, int& reqd_type, int forced_mov)
 {
     populate_maximal_type(node, reqd_type);
 
@@ -1025,7 +1029,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
             if(node->reference)
             {
                 bt_string* bts = (bt_string*)node->reference->to_interpret;
-                code_stream() <<std::string("\"") + bts->the_string() + "\"" ;
+                code_stream(_compiler) <<std::string("\"") + bts->the_string() + "\"" ;
             }
             break;
         case BASIC_TYPE_INT:
@@ -1034,11 +1038,11 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 number* nr = (number*)node->reference->to_interpret;
                 if(!forced_mov)
                 {
-                    code_stream() << *(NUMBER_INTEGER_TYPE*)(nr->location());
+                    code_stream(_compiler) << *(NUMBER_INTEGER_TYPE*)(nr->location());
                 }
                 else
                 {
-                    code_stream() << mov()
+                    code_stream(_compiler) << mov()
                                   << SPACE
                                   << reg() << "int" << C_PAR_OP << level << C_PAR_CL
                                   << C_COMMA
@@ -1051,7 +1055,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
             if(node->reference)
             {
             number* nr = (number*)node->reference->to_interpret;
-            code_stream() << *(NUMBER_REAL_TYPE*)nr->location();
+            code_stream(_compiler) << *(NUMBER_REAL_TYPE*)nr->location();
             }
             break;
 
@@ -1063,7 +1067,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 if(var->i_type != reqd_type && reqd_type != -2)
                 {
                     /* this is a conversion operation */
-                    code_stream() << "@c"
+                    code_stream(_compiler) << "@c"
                                   << get_reg_type(var->i_type) << get_reg_type(reqd_type)
                                   << C_PAR_OP
                                   << fully_qualified_varname(cc, var)
@@ -1071,7 +1075,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 }
                 else
                 {
-                    code_stream() << fully_qualified_varname(cc, var);
+                    code_stream(_compiler) << fully_qualified_varname(cc, var);
                 }
             }
             break;
@@ -1081,8 +1085,8 @@ void compile(const expression_tree* node, const method* the_method, call_context
             {
                 int idxc = 0;
                 variable* var = (variable*)node->left->reference->to_interpret;
-                deliver_ccidx_dest(node, level, the_method, cc, reqd_type, idxc, var, forced_mov);
-                code_stream() << mov()
+                deliver_ccidx_dest(_compiler,node, level, the_method, cc, reqd_type, idxc, var, forced_mov);
+                code_stream(_compiler) << mov()
                               << SPACE
                               << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL
                               << C_COMMA
@@ -1093,24 +1097,24 @@ void compile(const expression_tree* node, const method* the_method, call_context
                                 << idxc
                                 << C_PAR_CL
                               << NEWLINE;
-                clidx();
+                clidx(_compiler);
             }
             break;
 
         case STATEMENT_IF:
-            resolve_if_keyword(node, the_method, cc, level, reqd_type, forced_mov);
+            resolve_if_keyword(_compiler, node, the_method, cc, level, reqd_type, forced_mov);
             break;
 
         case STATEMENT_WHILE:
-            resolve_while_keyword(node, the_method, cc, level, reqd_type, forced_mov);
+            resolve_while_keyword(_compiler, node, the_method, cc, level, reqd_type, forced_mov);
             break;
 
         case STATEMENT_FOR:
-            resolve_for_keyword(node, the_method, cc, level, reqd_type, forced_mov);
+            resolve_for_keyword(_compiler, node, the_method, cc, level, reqd_type, forced_mov);
             break;
 
         case STATEMENT_BREAK:
-            resolve_break_keyword(cc);
+            resolve_break_keyword(_compiler,cc);
             break;
 
 
@@ -1130,7 +1134,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
         case OPERATOR_MODULO:
         case OPERATOR_SHIFT_LEFT:
         case OPERATOR_SHIFT_RIGHT:
-            resolve_operation(node, reqd_type, level, the_method, cc, forced_mov);
+            resolve_operation(_compiler, node, reqd_type, level, the_method, cc, forced_mov);
             break;
 
         case OPERATOR_UNARY_PLUS:
@@ -1142,31 +1146,31 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 if(is_atomic_type(node->left->op_type))
                 {
                     /* start a mov operation into the given register type*/
-                    code_stream() << mov()
+                    code_stream(_compiler) << mov()
                                   << SPACE
                                   << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL
                                   << C_COMMA;
 
                     /* compile what is after the unary operation */
-                    compile(node->left, the_method, cc, level, reqd_type, forced_mov);
+                    compile(_compiler,node->left, the_method, cc, level, reqd_type, forced_mov);
 
                     /* move from the given register */
-                    code_stream() << NEWLINE
+                    code_stream(_compiler) << NEWLINE
                                   << get_opcode(node->op_type)
                                   << SPACE
                                   << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL;
                 }
                 else    /* this automatically deals with the post/pre inc/dec too */
                 {
-                    compile(node->left, the_method, cc, level + 1, reqd_type, forced_mov);
+                    compile(_compiler,node->left, the_method, cc, level + 1, reqd_type, forced_mov);
 
-                    code_stream() << mov()
+                    code_stream(_compiler) << mov()
                                   << SPACE
                                   << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL
                                   << C_COMMA
                                   << reg() << get_reg_type(reqd_type) << C_PAR_OP << level + 1 << C_PAR_CL;
 
-                    code_stream() << NEWLINE
+                    code_stream(_compiler) << NEWLINE
                                   << get_opcode(node->op_type)
                                   << SPACE << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL;
                 }
@@ -1174,7 +1178,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
             break;
 
         case OPERATOR_ASSIGN:
-            resolve_assignment(node, level, the_method, cc, reqd_type, forced_mov);
+            resolve_assignment(_compiler, node, level, the_method, cc, reqd_type, forced_mov);
             break;
 
         case OPERATOR_POSTINC:
@@ -1185,12 +1189,12 @@ void compile(const expression_tree* node, const method* the_method, call_context
             {
                 if(node->left->op_type == BASIC_TYPE_VARIABLE || node->left->op_type == BASIC_TYPE_CLASS_VAR)
                 {
-                    deal_with_post_pre_node(node, level, the_method, cc, forced_mov);
+                    deal_with_post_pre_node(_compiler, node, level, the_method, cc, forced_mov);
                 }
                 else
                 if(node->left->op_type == MULTI_DIM_INDEX)
                 {
-                    deal_with_post_pre_node(node, level, the_method, cc, forced_mov);
+                    deal_with_post_pre_node(_compiler, node, level, the_method, cc, forced_mov);
                 }
                 else
                 {
@@ -1207,11 +1211,11 @@ void compile(const expression_tree* node, const method* the_method, call_context
         case OPERATOR_XOR_EQUAL:
         case OPERATOR_SHR_EQUAL:
         case OPERATOR_SHL_EQUAL:
-            resolve_op_equal(node, the_method, cc, level, reqd_type, forced_mov);
+            resolve_op_equal(_compiler, node, the_method, cc, level, reqd_type, forced_mov);
             break;
 
         case NT_VARIABLE_DEF_LST:
-            resolve_variable_definition(node, the_method, cc, level, reqd_type, forced_mov);
+            resolve_variable_definition(_compiler, node, the_method, cc, level, reqd_type, forced_mov);
             return;
 
         case STATEMENT_CLOSE_CC:    /* in this case put a marker on the stack to show the interpreter till which point to purge the variables on the stack when closingthe CC*/
@@ -1224,11 +1228,11 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 {
                     std::string cc_start_hash = generate_unique_hash();
 
-                    push_cc_start_marker(cc_start_hash.c_str());
+                    push_cc_start_marker(_compiler,cc_start_hash.c_str());
                     call_context* new_cc = (call_context*)node->reference->to_interpret;    // Here we don't get a reference ... :(
-                    new_cc->compile_standalone(level, reqd_type, forced_mov);
+                    new_cc->compile_standalone(_compiler, level, reqd_type, forced_mov);
 
-                    push_cc_end_marker(cc_start_hash.c_str());
+                    push_cc_end_marker(_compiler,cc_start_hash.c_str());
                 }
                 break;
             }
@@ -1247,7 +1251,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
                     int pc = 0;
                     std::string dot_determiner_hash = generate_unique_hash();
 
-                    push_cc_start_marker(dot_determiner_hash.c_str());
+                    push_cc_start_marker(_compiler,dot_determiner_hash.c_str());
                     while(ingoing_parameters != cfe->parameters.end())
                     {
                         parameter* p = *ingoing_parameters;
@@ -1259,24 +1263,24 @@ void compile(const expression_tree* node, const method* the_method, call_context
                         expression_tree* t = p->expr;
                         if(t->op_type <= BASIC_TYPE_CLASS_VAR)
                         {
-                            code_stream() << mov() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
+                            code_stream(_compiler) << mov() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
                         }
-                        compile(t, the_method, cc, level, fp->type, forced_mov);
-                        code_stream() << NEWLINE << push() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
+                        compile(_compiler,t, the_method, cc, level, fp->type, forced_mov);
+                        code_stream(_compiler) << NEWLINE << push() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 
                         ingoing_parameters ++;
                         pc ++;
                     }
-                    code_stream() << call() << SPACE << '$'
+                    code_stream(_compiler) << call() << SPACE << '$'
                                   << (std::string(cc->get_name()) + STR_DOT + vd->name) << '@' << m->method_name << NEWLINE;
                     if(m->ret_type) // pop something only if the method was defined to return something
                     {
-                        code_stream() << pop() << SPACE << reg() << get_reg_type(m->ret_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
+                        code_stream(_compiler) << pop() << SPACE << reg() << get_reg_type(m->ret_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
                         // this might also pop the stack marker. In that case leaves the stack intact
                         // this solves the problem when the function does not return anything
                         // but is required to. We might raise a runtime exception in this case
                     }
-                    push_cc_end_marker(dot_determiner_hash.c_str());
+                    push_cc_end_marker(_compiler,dot_determiner_hash.c_str());
                     break;
 
                 }
@@ -1286,22 +1290,22 @@ void compile(const expression_tree* node, const method* the_method, call_context
             {
                 variable* var_of_class = (variable*)node->right->reference->to_interpret;
                 variable* the_class_var = (variable* )node->left->reference->to_interpret;
-                code_stream() << mov() << SPACE << reg() << get_reg_type(var_of_class->i_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA ;
+                code_stream(_compiler) << mov() << SPACE << reg() << get_reg_type(var_of_class->i_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA ;
                 bool cnv = false;
                 if(var_of_class->i_type != reqd_type && reqd_type != -2)
                 {
-                    code_stream() << "@" << "#c" << get_reg_type(var_of_class->i_type) << get_reg_type(reqd_type) << C_PAR_OP ;
+                    code_stream(_compiler) << "@" << "#c" << get_reg_type(var_of_class->i_type) << get_reg_type(reqd_type) << C_PAR_OP ;
                     cnv = true;
                 }
-                code_stream() << '&' << fully_qualified_varname(cc, the_class_var) << '@' << var_of_class->name;
-                if(cnv) code_stream() << C_PAR_CL;
-                code_stream() << NEWLINE;
+                code_stream(_compiler) << '&' << fully_qualified_varname(cc, the_class_var) << '@' << var_of_class->name;
+                if(cnv) code_stream(_compiler) << C_PAR_CL;
+                code_stream(_compiler) << NEWLINE;
             }
             else
             if(node->right->op_type == FUNCTION_STRING_LEN) // this can go only in an integer register
             {
                 variable* vd = (variable* )node->left->reference->to_interpret;
-                code_stream() << mov()
+                code_stream(_compiler) << mov()
                               << SPACE
                               << reg() << get_reg_type(BASIC_TYPE_INT) << C_PAR_OP << level << C_PAR_CL
                               << C_COMMA
@@ -1331,22 +1335,22 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 expression_tree* t = p->expr;
                 if(t->op_type <= BASIC_TYPE_CLASS_VAR)
                 {
-                    code_stream() << mov() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
+                    code_stream(_compiler) << mov() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
                 }
-                compile(t, the_method, cc, level, fp->type, forced_mov);
-                code_stream() << NEWLINE << push() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
+                compile(_compiler,t, the_method, cc, level, fp->type, forced_mov);
+                code_stream(_compiler) << NEWLINE << push() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 
                 ingoing_parameters ++;
                 pc ++;
             }
-            code_stream() << push() << SPACE << ref() << SPACE << (std::string(cc->get_name()) + STR_DOT + "this") << NEWLINE;
-            code_stream() << call() << SPACE << "@crea" << C_PAR_OP << m->the_class->get_name() << C_COMMA << (std::string(cc->get_name()) + STR_DOT + "this").c_str() << C_PAR_CL<< NEWLINE;
-            code_stream() << call()
+            code_stream(_compiler) << push() << SPACE << ref() << SPACE << (std::string(cc->get_name()) + STR_DOT + "this") << NEWLINE;
+            code_stream(_compiler) << call() << SPACE << "@crea" << C_PAR_OP << m->the_class->get_name() << C_COMMA << (std::string(cc->get_name()) + STR_DOT + "this").c_str() << C_PAR_CL<< NEWLINE;
+            code_stream(_compiler) << call()
                           << SPACE
                           << '$' << (std::string(cc->get_name()) + STR_DOT + "this")
                           << '@' << (std::string(m->the_class->get_name()) +  STR_DOT + m->method_name).c_str()
                           << NEWLINE;
-            code_stream() << pop() << SPACE << reg() << 'g' << C_PAR_OP << level << C_PAR_CL << NEWLINE;
+            code_stream(_compiler) << pop() << SPACE << reg() << 'g' << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 
             break;
         }
@@ -1358,7 +1362,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
             std::vector<parameter*>::iterator ingoing_parameters = cfe->parameters.begin();
             int pc = 0;
             std::string func_call_hash = generate_unique_hash();
-            push_cc_start_marker(func_call_hash.c_str());
+            push_cc_start_marker(_compiler,func_call_hash.c_str());
             while(ingoing_parameters != cfe->parameters.end())
             {
                 parameter* p = *ingoing_parameters;
@@ -1370,19 +1374,19 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 expression_tree* t = p->expr;
                 if(t->op_type <= BASIC_TYPE_CLASS_VAR)
                 {
-                    code_stream() << mov() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
+                    code_stream(_compiler) << mov() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
                 }
-                compile(t, the_method, cc, level, fp->type, forced_mov);
-                code_stream() << NEWLINE << push() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
+                compile(_compiler,t, the_method, cc, level, fp->type, forced_mov);
+                code_stream(_compiler) << NEWLINE << push() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 
                 ingoing_parameters ++;
                 pc ++;
             }
-            code_stream() << call() << SPACE
+            code_stream(_compiler) << call() << SPACE
                           << '@' << std::string(m->main_cc->get_father()->get_name()) +'.' + m->method_name << NEWLINE;
             if(m->ret_type) // pop something only if the method was defined to return something
             {
-                code_stream() << mov()
+                code_stream(_compiler) << mov()
                               << SPACE
                               << reg() << get_reg_type(m->ret_type) << C_PAR_OP << level << C_PAR_CL
                               << C_COMMA
@@ -1391,7 +1395,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 // this solves the problem when the function does not return anything
                 // but is required to. We might raise a runtime exception in this case
             }
-            push_cc_end_marker(func_call_hash.c_str());
+            push_cc_end_marker(_compiler,func_call_hash.c_str());
             break;
         }
 
@@ -1403,22 +1407,22 @@ void compile(const expression_tree* node, const method* the_method, call_context
                 int ret_type = the_method->ret_type;
                 if(t->op_type <= BASIC_TYPE_INDEXED)
                 {
-                    code_stream() << mov() << SPACE << reg() << get_reg_type(ret_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
+                    code_stream(_compiler) << mov() << SPACE << reg() << get_reg_type(ret_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
                 }
-                compile(t, the_method, cc, level, ret_type, forced_mov);
-                code_stream() << NEWLINE;
-                code_stream() << "return" << SPACE << reg() << get_reg_type(ret_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
+                compile(_compiler,t, the_method, cc, level, ret_type, forced_mov);
+                code_stream(_compiler) << NEWLINE;
+                code_stream(_compiler) << "return" << SPACE << reg() << get_reg_type(ret_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 
             }
             break;
             }
             
         case KEYWORD_TRUE:
-            code_stream() << "true";
+            code_stream(_compiler) << "true";
             break;
             
         case KEYWORD_FALSE:
-            code_stream() << "false";
+            code_stream(_compiler) << "false";
             break;
 
         case ASM_BLOCK:
@@ -1426,7 +1430,7 @@ void compile(const expression_tree* node, const method* the_method, call_context
             std::vector<std::string> asm_commands = chop_up(node->expwloc->expression);
             for(size_t i=0; i<asm_commands.size(); i++)
             {
-                code_stream() << asm_commands[i];
+                code_stream(_compiler) << asm_commands[i];
             }
             break;
             }

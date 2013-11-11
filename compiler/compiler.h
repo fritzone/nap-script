@@ -15,17 +15,18 @@ public:
     nap_compiler();
     ~nap_compiler();
 
-    call_context* cur_cc;
-    method* cur_method;
-
-    void load_file(call_context* cc, const char* file_name, method* cur_method);
+    void load_file(const char* file_name);
     void compile();
+    void write_bytecode(const char* file_name);
 
 private:
 
+    call_context* cur_cc;
+    method* cur_method;
     parsed_file* pf;
     call_context* global_cc;
     std::vector<std::string> loaded_files;
+    std::vector<unsigned char> bytecode;
 
 };
 
