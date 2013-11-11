@@ -6,12 +6,14 @@
 #include <stdlib.h>
 #include <iostream>
 #include <typeinfo>
+
+#ifndef _WIN32
 #include <cxxabi.h>
+#endif
 
 using namespace std;
 
 class garbage_bin_base;
-
 
 class garbage_bin_bin {
 public:
@@ -98,9 +100,11 @@ public:
      */
     void empty()
     {
+#ifndef _WINDOWS
         int status;
         char* s = abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) ;
         std::cout << "\nGBIN [" << s << "] TIN:" << items->size() << " PLC:" <<  singles.size() << std::endl;
+#endif
         for(size_t i=0; i<items->size(); i++)
         {
             delete [] (items->at(i).item);
@@ -111,7 +115,9 @@ public:
         {
             delete singles[i];
         }
+#ifndef _WINDOWS
         free(s);
+#endif
     }
 
     /**
