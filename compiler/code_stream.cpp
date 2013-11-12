@@ -3,6 +3,12 @@
 #include "type.h"
 #include "opcodes.h"
 #include "throw_error.h"
+#include "compiler.h"
+
+extern "C"
+{
+#include "byte_order.h"
+}
 
 #include <string>
 #include <vector>
@@ -13,145 +19,55 @@ static const char BITSIZE = 0x32;
 const char* NEWLINE = "\n";
 static uint8_t max_reg_count = 0;
 
-/**
- * the description of a method from the binary opcode file
- */
-struct bc_method_entry
-{
-    /* the length of the name of the method */
-    uint32_t name_len;
-    
-    /* the name of the method*/
-    std::string name;
-    
-    /* the byte offset location of the method in the binary file*/
-    uint16_t location;
-    
-    /* if the location is 0 the builtin_id tells us the id of the internal 
-     * function to be called */
-    uint16_t builtin_id;
-};
-
-/**
- * the description of a variable from the binary file
- */
-struct bc_variable_entry
-{
-    NUMBER_INTEGER_TYPE meta_location;
-    std::string name;    
-};
-
-/**
- * The named marks
- */
-struct bc_named_marks
-{
-    uint32_t marker_code;
-    std::string marker_name;
-};
-
-struct label_entry
-{
-    // where this is in the bytecode stream
-    NUMBER_INTEGER_TYPE bytecode_location;
-    
-    // and the name of it
-    std::string name;
-};
-
-struct bc_string_table_entry
-{
-    NUMBER_INTEGER_TYPE index;
-    uint32_t length;
-    std::string the_string;
-};
-
-unsigned char code_stream::last_opcode = 0;
-
-// a list of variables that will be added to the "meta" section of the bytecode file
-static std::vector<bc_variable_entry*> variables;
-
-// the string table of the aplication
-static std::vector<bc_string_table_entry*> stringtable;
-
-// the table holding all the jump location in the code
-static std::vector<label_entry*> jumptable;
-
-static std::vector<bc_named_marks> namedmarks;
-
-// this counts the variables
-static NUMBER_INTEGER_TYPE var_counter = 0;
-
-// if the very first byte writte then also create the file
-static bool first_entry = true;
-
 // the name of the bytecode file
 static const std::string fname = "test.ncb";
-
-// used to build a variable name between various calls to the output_bytede mth.
-static std::string built_upvar_name = "";
-
-// the written opcodes are stored in here for later reference
-static std::vector<unsigned char> opcodes;
-
-// counts the opcodes
-static int opcode_counter = 0;
 
 class file_abstraction
 {
 public:
 
-    file_abstraction() : fp(0), last_file_pos(0)
+    file_abstraction(nap_compiler* _compiler) : mcompiler(_compiler)
     {
     }
 
-    file_abstraction(const char* f, const char* mode) : last_file_pos(0)
+
+    void write_stuff_to_file_64(uint64_t stuff, int pos = -1)
     {
-        fp = fopen(f, mode);
+        uint64_t network_order_stuff = htovm_64(stuff);
+        mcompiler->place_bytes(pos, &network_order_stuff, 8);
     }
 
-    void open(const char* f, const char* mode)
+    void write_stuff_to_file_32(uint32_t stuff, int pos = -1)
     {
-        fp = fopen(f, mode);
+        uint32_t network_order = htovm_32(stuff);
+        mcompiler->place_bytes(pos, &network_order, 4);
     }
 
-    ~file_abstraction()
+    void write_stuff_to_file_16(uint16_t stuff, int pos = -1)
     {
-        fclose(fp);
+        uint16_t network_order = htovm_16(stuff);
+        mcompiler->place_bytes(pos, &network_order, 2);
     }
 
-    template <class T> NUMBER_INTEGER_TYPE write_stuff_to_file(T stuff, int cnt)
+    void write_stuff_to_file_8(uint8_t stuff, int pos = -1)
     {
-        fwrite(&stuff, sizeof(T), cnt, fp);
-        return last_file_pos = ftell();
+        uint8_t netw = stuff;
+        mcompiler->place_bytes(pos, &netw, 1);
     }
 
-    NUMBER_INTEGER_TYPE write_string_to_file(const char* s, int cnt)
+    void write_string_to_file(const char* s, int cnt, int pos = -1)
     {
-        fwrite(s, cnt, 1, fp);
-        return last_file_pos = ftell();
+        mcompiler->place_bytes(pos, s, cnt);
     }
 
-    void seek_end()
+    uint32_t ftell()
     {
-        fseek(fp, 0, SEEK_END);
-    }
-
-    long ftell() const
-    {
-        return ::ftell(fp);
-    }
-
-    NUMBER_INTEGER_TYPE get_last_file_pos() const
-    {
-        return last_file_pos;
+        return mcompiler->last_bc_pos();
     }
 
 private:
 
-    FILE *fp;
-    NUMBER_INTEGER_TYPE last_file_pos;
-    long currentIndex;
+    nap_compiler* mcompiler;
 };
 
 /**
@@ -165,20 +81,20 @@ void code_finalizer::finalize()
     uint32_t jumptable_location ;
 
     {
-    file_abstraction f(fname.c_str(), "ab+");
+    file_abstraction f(mcompiler);
 
     meta_location = f.ftell();
     // write out the variables
     static const char METATABLE[] = ".meta";
     f.write_string_to_file(METATABLE, 5);
-    uint32_t meta_count = variables.size();
-    f.write_stuff_to_file(meta_count, 1);
+    uint32_t meta_count = mcompiler->variables().size();
+    f.write_stuff_to_file_32(meta_count);
     for(unsigned int i=0; i<meta_count; i++)
     {
-        f.write_stuff_to_file(variables[i]->meta_location, 1);
-        uint16_t var_name_length = variables[i]->name.length();
-        f.write_stuff_to_file(var_name_length, 1);
-        const char* vname = variables[i]->name.c_str();
+        f.write_stuff_to_file_32(mcompiler->variables()[i]->meta_location);
+        uint16_t var_name_length = mcompiler->variables()[i]->name.length();
+        f.write_stuff_to_file_16(var_name_length);
+        const char* vname = mcompiler->variables()[i]->name.c_str();
         f.write_string_to_file(vname, var_name_length);
     }
 
@@ -186,38 +102,38 @@ void code_finalizer::finalize()
     // write out the stringtable
     static const char STRINGTABLE[] = ".str";
     f.write_string_to_file(STRINGTABLE, 4);
-    uint32_t strtable_count = stringtable.size();
-    f.write_stuff_to_file(strtable_count, 1);
+    uint32_t strtable_count = mcompiler->stringtable().size();
+    f.write_stuff_to_file_32(strtable_count);
     for(unsigned int i=0; i<strtable_count; i++)
     {
-        f.write_stuff_to_file(stringtable[i]->index, 1);
-        f.write_stuff_to_file(stringtable[i]->length, 1);
-        const char* str = stringtable[i]->the_string.c_str();
-        f.write_string_to_file(str, stringtable[i]->length);
+        f.write_stuff_to_file_32( mcompiler->stringtable()[i]->index);
+        f.write_stuff_to_file_32( mcompiler->stringtable()[i]->length);
+        const char* str =  mcompiler->stringtable()[i]->the_string.c_str();
+        f.write_string_to_file(str,  mcompiler->stringtable()[i]->length);
     }
     jumptable_location = f.ftell();
     // write out the jumptable
     static const char JUMPTABLE[] = ".jmp";
     f.write_string_to_file(JUMPTABLE, 4);
-    uint32_t jumptable_count = jumptable.size();
-    f.write_stuff_to_file(jumptable_count, 1);
+    uint32_t jumptable_count = mcompiler->jumptable().size();
+    f.write_stuff_to_file_32(jumptable_count);
     for(unsigned int i=0; i<jumptable_count; i++)
     {
-        f.write_stuff_to_file(jumptable[i]->bytecode_location, 1);
+        f.write_stuff_to_file_32(mcompiler->jumptable()[i]->bytecode_location);
     }
 
     }
 
     {
 
-    file_abstraction f(fname.c_str(), "r+");
+    file_abstraction f(mcompiler);
 
     uint8_t type = BITSIZE;
-    f.write_stuff_to_file(type, 1);  // the type of the file: 32 bit
-    f.write_stuff_to_file(meta_location, 1); // the meta location for variables
-    f.write_stuff_to_file(strtable_location, 1); // the stringtable location
-    f.write_stuff_to_file(jumptable_location, 1); // the jumptable location
-    f.write_stuff_to_file(max_reg_count, 1);
+    f.write_stuff_to_file_8(type, 0);  // the type of the file: 32 bit
+    f.write_stuff_to_file_32(meta_location, 0 + 1); // the meta location for variables
+    f.write_stuff_to_file_32(strtable_location, 0 + 1 + 4); // the stringtable location
+    f.write_stuff_to_file_32(jumptable_location, 0 + 1 + 4 + 4); // the jumptable location
+    f.write_stuff_to_file_8(max_reg_count, 0 + 1 + 4 + 4 + 1);
     }
 }
 
@@ -233,27 +149,22 @@ void code_stream::output_bytecode(const char* s)
     printf("%s ", s);
 
 
-    file_abstraction f;
+    file_abstraction f(mcompiler);
     
-    if(first_entry)
+    if(mcompiler->mfirst_entry)
     {
-        f.open(fname.c_str(), "wb+");
-        first_entry = false;
+        mcompiler->mfirst_entry = false;
         NUMBER_INTEGER_TYPE temp = 0;
         uint8_t type = BITSIZE;
         uint8_t bits = 255;
 
-        f.write_stuff_to_file(type, 1);  // the type of the file: 32 bit
-        f.write_stuff_to_file(temp, 1); // the meta location for variables
-        f.write_stuff_to_file(temp, 1); // the stringtable location
-        f.write_stuff_to_file(temp, 1); // the jumptable location
-        f.write_stuff_to_file(bits, 1);  // extra for the max reg count
+        f.write_stuff_to_file_8(type);  // the type of the file: 32 bit
+        f.write_stuff_to_file_32(temp); // the meta location for variables
+        f.write_stuff_to_file_32(temp); // the stringtable location
+        f.write_stuff_to_file_32(temp); // the jumptable location
+        f.write_stuff_to_file_8(bits);  // extra for the max reg count
     }
-    else
-    {
-        f.open(fname.c_str(), "ab+");
-    }
-    
+
     unsigned char opcode = 0;
         
     if(expr == "push") opcode = OPCODE_PUSH;
@@ -298,10 +209,10 @@ void code_stream::output_bytecode(const char* s)
     if(isnumber((expr.c_str())))
     {
         // the method calls just output a byte counter, no number identifier
-        if(last_opcode == OPCODE_CCIDX || last_opcode == OPCODE_GROW)
+        if(mcompiler->getLastOpcode() == OPCODE_CCIDX || mcompiler->getLastOpcode() == OPCODE_GROW)
         {
             int8_t nrf = atoi(expr.c_str());
-            f.write_stuff_to_file(nrf, 1);
+            f.write_stuff_to_file_8(nrf);
             return;
         }
         else
@@ -312,24 +223,24 @@ void code_stream::output_bytecode(const char* s)
     
     if(opcode)
     {
-        if(opcode == OPCODE_IMMEDIATE && opcode_counter > 2 && opcodes[opcode_counter - 2] == OPCODE_REG)
+        if(opcode == OPCODE_IMMEDIATE && mcompiler->opcode_counter > 2 && mcompiler->opcodes()[mcompiler->opcode_counter - 2] == OPCODE_REG)
         {
             // do not write it if it counts registers
         }
         else
         {
-            f.write_stuff_to_file(opcode, 1);
+            f.write_stuff_to_file_8(opcode);
         }
-        opcodes.push_back(opcode);
-        opcode_counter ++;
-        last_opcode = opcode;
-        built_upvar_name = "";
+        mcompiler->add_opcode(opcode);
+        mcompiler->opcode_counter ++;
+        mcompiler->setLastOpcode(opcode);
+
         if(opcode == OPCODE_IMMEDIATE)
         {
-            if(opcode_counter > 3 && opcodes[opcode_counter - 3] == OPCODE_REG)
+            if(mcompiler->opcode_counter > 3 && mcompiler->opcodes()[mcompiler->opcode_counter - 3] == OPCODE_REG)
             { // if this counts a register
                 uint8_t nrf = atoi(expr.c_str());
-                f.write_stuff_to_file(nrf, 1);
+                f.write_stuff_to_file_8(nrf);
                 if(max_reg_count < nrf)
                 {
                     max_reg_count = nrf;
@@ -352,28 +263,28 @@ void code_stream::output_bytecode(const char* s)
                 
                 // if yes, switch on the first bit in the type
                 if(expr[0] == '-') type |= 0x80;
-                f.write_stuff_to_file(type, 1);
+                f.write_stuff_to_file_8(type);
                 
                 // and now write the number according to the size
                 if(type == OPCODE_BYTE)
                 {
                     int8_t nrf = atoi(expr.c_str());
-                    f.write_stuff_to_file((uint8_t)nrf, 1);
+                    f.write_stuff_to_file_8((uint8_t)nrf);
                 }
                 if(type == OPCODE_SHORT)
                 {
                     int16_t nrf = atoi(expr.c_str());
-                    f.write_stuff_to_file((uint16_t)nrf, 1);
+                    f.write_stuff_to_file_16((uint16_t)nrf);
                 }
                 if(type == OPCODE_LONG)
                 {
                     int32_t nrf = atoi(expr.c_str());
-                    f.write_stuff_to_file((uint32_t)nrf, 1);
+                    f.write_stuff_to_file_32((uint32_t)nrf);
                 }
                 if(type == OPCODE_HUGE)
                 {
                     int64_t nrf = atoi(expr.c_str());
-                    f.write_stuff_to_file((uint64_t)nrf, 1);
+                    f.write_stuff_to_file_64((uint64_t)nrf);
                 }
             }
 
@@ -385,41 +296,41 @@ void code_stream::output_bytecode(const char* s)
         {
             std::string lblName = expr.substr(1, expr.length() - 2);
             int idx = -1;
-            for(unsigned int i=0; i<jumptable.size(); i++)
+            for(unsigned int i=0; i<mcompiler->jumptable().size(); i++)
             {
-                if(!strcmp(jumptable[i]->name.c_str(), lblName.c_str()))
+                if(!strcmp(mcompiler->jumptable()[i]->name.c_str(), lblName.c_str()))
                 {
                     idx = i;
                 }
             }
             if(idx > -1) // found a label
             {
-                jumptable[idx]->bytecode_location = f.get_last_file_pos();
+                mcompiler->jumptable()[idx]->bytecode_location = f.ftell();
             }
             else /* possibly creating a label before using it */
             {
                 label_entry* le = new label_entry;
-                le->bytecode_location = f.get_last_file_pos();
+                le->bytecode_location = f.ftell();
                 le->name = lblName;
-                jumptable.push_back(le);
+                mcompiler->add_jumptable_entry(le);
             }
         }
         else
         if(s[ 0 ] == '@') // function call
         {
-            if(last_opcode == OPCODE_MOV)
+            if(mcompiler->getLastOpcode() == OPCODE_MOV)
             { // possibly a @#ccidx, @#grow
                 if(s[1] == '#') // builtin function
                 {
                     if(expr == "@#ccidx")
                     {
-                        f.write_stuff_to_file(OPCODE_CCIDX, 1);
-                        last_opcode = OPCODE_CCIDX;
+                        f.write_stuff_to_file_8(OPCODE_CCIDX);
+                        mcompiler->setLastOpcode(OPCODE_CCIDX);
                     }
                     if(expr == "@#grow")
                     {
-                        f.write_stuff_to_file(OPCODE_GROW, 1);
-                        last_opcode = OPCODE_GROW;
+                        f.write_stuff_to_file_8(OPCODE_GROW);
+                        mcompiler->setLastOpcode(OPCODE_GROW);
                     }
                 }
             }
@@ -436,23 +347,23 @@ void code_stream::output_bytecode(const char* s)
         if(s[0] == '\"') // string. Every mention of it creates a new stringtable entry
         {
             bc_string_table_entry* entry = new bc_string_table_entry;
-            entry->index = stringtable.size();
+            entry->index =  mcompiler->stringtable().size();
             entry->the_string = expr.substr(1, expr.length() - 2);
             entry->length = expr.length() - 2;
-            stringtable.push_back(entry);
-            f.write_stuff_to_file(OPCODE_STRING, 1);
-            f.write_stuff_to_file(entry->index, 1);
+            mcompiler->add_stringtable_entry(entry);
+            f.write_stuff_to_file_8(OPCODE_STRING);
+            f.write_stuff_to_file_32(entry->index);
             garbage_bin<bc_string_table_entry*>::instance().place(entry);
         }
         else
         {
-            if(last_opcode == OPCODE_MARKS_NAME || last_opcode == OPCODE_CLRS_NAME)
+            if(mcompiler->getLastOpcode() == OPCODE_MARKS_NAME || mcompiler->getLastOpcode() == OPCODE_CLRS_NAME)
             {
                 // this is a named mark
                 int idx = -1;
-                for(unsigned int i=0; i<namedmarks.size(); i++)
+                for(unsigned int i=0; i<mcompiler->namedmarks().size(); i++)
                 {
-                    if(namedmarks[i].marker_name == expr)
+                    if(mcompiler->namedmarks()[i].marker_name == expr)
                     {
                         idx = i;
                     }
@@ -460,22 +371,22 @@ void code_stream::output_bytecode(const char* s)
                 if(idx > -1) // found a named mark
                 {
                     NUMBER_INTEGER_TYPE index = idx;
-                    f.write_stuff_to_file(index, 1);
+                    f.write_stuff_to_file_32(index);
                 }
                 else // let's create a named mark
                 {
                     bc_named_marks mark;
-                    mark.marker_code = namedmarks.size();
+                    mark.marker_code = mcompiler->namedmarks().size();
                     mark.marker_name = expr;
 
-                    namedmarks.push_back(mark);
-                    NUMBER_INTEGER_TYPE index = namedmarks.size() - 1; // the real idx
-                    f.write_stuff_to_file(index, 1);
+                    mcompiler->add_mark(mark);
+                    NUMBER_INTEGER_TYPE index = mcompiler->namedmarks().size() - 1; // the real idx
+                    f.write_stuff_to_file_32(index);
                 }
 
             }
             else
-            if(last_opcode != OPCODE_JLBF && last_opcode != OPCODE_JMP && last_opcode != OPCODE_CALL)
+            if(mcompiler->getLastOpcode() != OPCODE_JLBF && mcompiler->getLastOpcode() != OPCODE_JMP && mcompiler->getLastOpcode() != OPCODE_CALL)
             { // this is a plain variable 
                 if(expr == "true")
                 {
@@ -489,9 +400,9 @@ void code_stream::output_bytecode(const char* s)
                 else
                 {
                     int idx = -1;
-                    for(unsigned int i=0; i<variables.size(); i++)
+                    for(unsigned int i=0; i<mcompiler->variables().size(); i++)
                     {
-                        if(variables[i]->name == expr)
+                        if(mcompiler->variables()[i]->name == expr)
                         {
                             idx = i;
                         }
@@ -499,18 +410,18 @@ void code_stream::output_bytecode(const char* s)
 
                     if(idx > -1)
                     {
-                        f.write_stuff_to_file(OPCODE_VAR, 1);
-                        f.write_stuff_to_file(variables[idx]->meta_location, 1);
+                        f.write_stuff_to_file_8(OPCODE_VAR);
+                        f.write_stuff_to_file_32(mcompiler->variables()[idx]->meta_location);
                     }
                     else
                     {
                         bc_variable_entry* new_var = new bc_variable_entry;
-                        new_var->meta_location = var_counter;
+                        new_var->meta_location = mcompiler->var_counter();
                         new_var->name = expr;
-                        variables.push_back(new_var);
-                        f.write_stuff_to_file(OPCODE_VAR, 1);
-                        f.write_stuff_to_file(var_counter, 1);
-                        var_counter ++;
+                        mcompiler->add_variable(new_var);
+                        f.write_stuff_to_file_8(OPCODE_VAR);
+                        f.write_stuff_to_file_32(mcompiler->var_counter());
+                        mcompiler->inc_var_counter();
                         garbage_bin<bc_variable_entry*>::instance().place(new_var);
                     }
                 }
@@ -518,9 +429,9 @@ void code_stream::output_bytecode(const char* s)
             else
             { // this is a label but also a function call (which is treated as a label)
                 int idx = -1;
-                for(unsigned int i=0; i<jumptable.size(); i++)
+                for(unsigned int i=0; i<mcompiler->jumptable().size(); i++)
                 {
-                    if(jumptable[i]->name == expr)
+                    if(mcompiler->jumptable()[i]->name == expr)
                     {
                         idx = i;
                     }
@@ -528,21 +439,20 @@ void code_stream::output_bytecode(const char* s)
                 if(idx > -1) // found a label
                 {
                     NUMBER_INTEGER_TYPE index = idx;
-                    f.write_stuff_to_file(index, 1);
+                    f.write_stuff_to_file_32(index);
                 }
                 else // let's create a label
                 {
                     label_entry* le = new label_entry;
                     le->bytecode_location = 0;
                     le->name = expr;
-                    jumptable.push_back(le);
-                    NUMBER_INTEGER_TYPE index = jumptable.size() - 1; // the real idx
-                    f.write_stuff_to_file(index, 1);
+                    mcompiler->add_jumptable_entry(le);
+                    NUMBER_INTEGER_TYPE index = mcompiler->jumptable().size() - 1; // the real idx
+                    f.write_stuff_to_file_32(index);
                     garbage_bin<label_entry*>::instance().place(le);
                 }                
             }
         }
     }    
-
 }
 

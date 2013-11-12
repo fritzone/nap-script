@@ -19,6 +19,7 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/garbage_bin.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/code_output.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/code_stream.cpp
+    ../vm/byte_order.c
 )
 
 add_library(napcpl ${${project}_files} )

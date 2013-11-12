@@ -1,5 +1,6 @@
 #include "strtable.h"
 #include "nbci.h"
+#include "byte_order.h"
 
 #include <stdlib.h>
 
@@ -13,6 +14,7 @@ void read_stringtable(struct nap_vm *vm, FILE* fp)
 
     fseek(fp, vm->stringtable_location + 4, SEEK_SET); /* skip the ".str" */
     fread(&count, sizeof(uint32_t), 1, fp);
+    count = htovm_32(count);
     if(count == 0)
     {
         return;
@@ -25,6 +27,8 @@ void read_stringtable(struct nap_vm *vm, FILE* fp)
         uint32_t index = 0;
         int end_of_file = 0;
         fread(&index, vm->file_bitsize, 1, fp);
+        index = htovm_32(index);
+
         end_of_file = feof(fp);
 
         if(index == 1886218798 || end_of_file) /* .jmp */
@@ -42,6 +46,8 @@ void read_stringtable(struct nap_vm *vm, FILE* fp)
             char* str = NULL;
             struct strtable_entry* new_strentry = NULL;
             fread(&len, sizeof(uint32_t), 1, fp);
+            len = htovm_32(len);
+
             str = (char*)calloc(sizeof(char), len + 1);
             fread(str, sizeof(uint8_t), len, fp);
             if(strt_size < index + 1)
