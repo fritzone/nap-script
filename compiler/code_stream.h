@@ -14,7 +14,7 @@ class code_stream
 {
 public:
 
-    code_stream(nap_compiler*) {}
+    code_stream(nap_compiler* _compiler) : mcompiler(_compiler) {}
 
     code_stream& operator << (const char* s)
     {
@@ -71,15 +71,18 @@ public:
 private:
     
     void output_bytecode(const char* s);
-    
-    static unsigned char last_opcode;
-        
+
+    nap_compiler* mcompiler;
+
 };
 
 class code_finalizer
 {
 public:
-   static void finalize();
+    code_finalizer(nap_compiler* _compiler) : mcompiler(_compiler) {}
+    void finalize();
+private:
+   nap_compiler* mcompiler;
 };
 
 #endif // CODE_STREAM_H

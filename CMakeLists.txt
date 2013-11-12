@@ -8,7 +8,7 @@ else()
   add_definitions(/D_CRT_SECURE_NO_WARNINGS)
 endif()
 
-include_directories(inc)
+include_directories(inc vm)
 
 add_subdirectory(compiler)
 add_subdirectory(vm)

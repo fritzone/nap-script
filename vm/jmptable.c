@@ -1,5 +1,6 @@
 #include "jmptable.h"
 #include "nbci.h"
+#include "byte_order.h"
 
 #include <stdlib.h>
 
@@ -26,6 +27,7 @@ void read_jumptable(struct nap_vm* vm, FILE* fp)
         cleanup(vm);
         exit(EXIT_FAILURE);
     }
+    count = htovm_32(count);
     if(count == 0)
     {
         return;
@@ -57,6 +59,7 @@ void read_jumptable(struct nap_vm* vm, FILE* fp)
 			fprintf(stderr, "out of memory when creating a jmpentry\n");
 			exit(1);
 		}
+        index = htovm_32(index);
         new_jmpentry->location = index;
         vm->jumptable[ jmpc++ ] = new_jmpentry;
     }

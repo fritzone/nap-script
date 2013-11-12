@@ -7,6 +7,7 @@
 #include "strtable.h"
 #include "opcodes.h"
 #include "stack.h"
+#include "byte_order.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -161,7 +162,6 @@ void cleanup(struct nap_vm* vm)
     free(vm);
 }
 
-
 struct nap_vm *nap_vm_load(const char *filename)
 {
     long fsize = 0;
@@ -212,6 +212,10 @@ struct nap_vm *nap_vm_load(const char *filename)
     fread(&vm->stringtable_location, vm->file_bitsize, 1, fp);
     fread(&vm->jumptable_location, vm->file_bitsize, 1, fp);
     fread(&vm->mrc, sizeof(uint8_t), 1, fp);
+
+    vm->meta_location = htovm_32(vm->meta_location);
+    vm->stringtable_location = htovm_32(vm->stringtable_location);
+    vm->jumptable_location = htovm_32(vm->jumptable_location);
 
     /* prepare the meta table of the application */
     read_metatable(vm, fp);
@@ -270,21 +274,25 @@ nap_number_t nap_read_immediate(struct nap_vm* vm)
     if(imm_size == OPCODE_SHORT)
     {
         int16_t* immediate = (int16_t*)(vm->content + vm->cc);
-        nr = *immediate;
+        int16_t temp_16 = htovm_16(*immediate);
+        temp_16 = temp_16;
+        nr = temp_16;
         vm->cc += 2;
     }
     else
     if(imm_size == OPCODE_LONG)
     {
         int32_t* immediate = (int32_t*)(vm->content + vm->cc);
-        nr = *immediate;
+        int32_t temp_32 = htovm_32(*immediate);
+        nr = temp_32;
         vm->cc += 4;
     }
     else
     if(imm_size == OPCODE_HUGE)
     {
         int64_t* immediate = (int64_t*)(vm->content + vm->cc);
-        nr = *immediate;
+        int64_t temp_64 = htovm_64(*immediate);
+        nr = temp_64;
         vm->cc += 8;
     }
     else
