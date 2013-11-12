@@ -1,5 +1,6 @@
 #include "metatbl.h"
 #include "nbci.h"
+#include "byte_order.h"
 
 #include <stdlib.h>
 
@@ -12,6 +13,8 @@ void read_metatable(struct nap_vm* vm, FILE* fp)
     uint32_t count = 0;
     fseek(fp, meta_location + 5, SEEK_SET); /* skip the ".meta" */
     fread(&count, sizeof(uint32_t), 1, fp);
+    count = htovm_32(count);
+
     if(count == 0)
     {
         return;
@@ -24,8 +27,10 @@ void read_metatable(struct nap_vm* vm, FILE* fp)
         uint32_t index = 0;
         int end_of_file = 0;
         fread(&index, vm->file_bitsize, 1, fp);
+        index = htovm_32(index);
+
         end_of_file = feof(fp);
-        if(index == 1920234286 || end_of_file) /* ".str" */
+        if(index == htovm_32(1920234286) || end_of_file) /* ".str" */
         {
             if(end_of_file)
             {
@@ -41,6 +46,7 @@ void read_metatable(struct nap_vm* vm, FILE* fp)
             struct variable_entry* new_var = NULL;
 
             fread(&len, sizeof(uint16_t), 1, fp);
+            len = htovm_16(len);
             name = (char*)calloc(sizeof(char), len + 1);
             if(name == NULL)
             {

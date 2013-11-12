@@ -51,10 +51,26 @@ void nap_compiler::compile()
 
 void nap_compiler::write_bytecode(const char* file_name)
 {
-    code_finalizer::finalize();
+    code_finalizer(this).finalize();
+
+    FILE* fp = fopen(file_name, "wb+");
+    void* t = bytecode.data();
+    fwrite(t, 1, bytecode.size(), fp);
+    fclose(fp);
+}
+unsigned char nap_compiler::getLastOpcode() const
+{
+    return last_opcode;
 }
 
-nap_compiler::nap_compiler()
+void nap_compiler::setLastOpcode(unsigned char value)
+{
+    last_opcode = value;
+}
+
+
+nap_compiler::nap_compiler() : opcode_counter(0),
+    mfirst_entry(true), mvar_counter(0)
 {
     cur_cc = new call_context(0, "global", NULL, NULL) ;
     global_cc = cur_cc;
@@ -65,4 +81,20 @@ nap_compiler::~nap_compiler()
 {
     delete global_cc;
     delete pf;
+}
+
+void nap_compiler::place_bytes(int pos, const void *addr, int count)
+{
+    if(pos < (int)bytecode.size() && pos != -1)
+    {
+        for(int i=0; i<count; i++)
+        {
+            bytecode[i + pos] = *((char*)addr + i) ;
+        }
+    }
+    else
+    for(int i=0; i<count; i++)
+    {
+        bytecode.push_back( *((char*)addr + i) );
+    }
 }
