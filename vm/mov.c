@@ -106,6 +106,7 @@ void nap_mov(struct nap_vm* vm)
             uint8_t move_source = vm->content[vm->cc ++]; /* the index definition */
             if(move_source == OPCODE_IMMEDIATE) /* immediate value (1,..) */
             {
+                // TODO: Implement a method to read immediate index values, returning uint32_t
                 vm->regidx[register_index] = nap_read_immediate(vm);
             }
             else
