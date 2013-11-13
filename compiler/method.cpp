@@ -206,7 +206,7 @@ void method::feed_parameter_list(char* par_list, const expression_with_location*
     while(q != entries.end())
     {
         size_t i=0;
-        if(!q->empty() > 0)
+        if(!q->empty())
         {
             char* par_type = new_string(q->length());
             char* par_name = new_string(q->length());
