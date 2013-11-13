@@ -17,6 +17,9 @@
  */
 struct variable
 {
+
+    variable(int pdimension, int type);
+
     /* the name of the variable */
     char *name;
 
@@ -56,8 +59,6 @@ struct variable
     /* the call context in which this variable is to be found */
     call_context *cc;
 };
-
-variable* new_variable(int pdimension, int type);
 
 /**
  * Creates a new multi dimension index

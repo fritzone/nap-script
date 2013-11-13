@@ -5,6 +5,8 @@ struct call_context;
 struct method;
 struct parsed_file;
 
+#include "interpreter.h"
+
 #include <string>
 #include <vector>
 
@@ -136,6 +138,11 @@ public:
         return bytecode.size();
     }
 
+    interpreter& get_interpreter()
+    {
+        return minterpreter;
+    }
+
 private:
 
     call_context* cur_cc;
@@ -165,7 +172,7 @@ private:
     // the written opcodes are stored in here for later reference
     std::vector<unsigned char> mopcodes;
 
-
+    interpreter minterpreter;
 
 };
 

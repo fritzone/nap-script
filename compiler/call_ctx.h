@@ -43,7 +43,8 @@ struct call_context
      * @param the_method - the method in which this call context is
      * @param father - the father of this call cotnext
      **/
-    call_context (int ptype,
+    call_context (nap_compiler* _compiler,
+                  int ptype,
                   const char *pname,
                   method *the_method,
                   call_context *pfather);
@@ -176,6 +177,37 @@ struct call_context
         return type;
     }
 
+    nap_compiler* compiler() const
+    {
+        return mcompiler;
+    }
+
+    // TODO: These two do not belong specially here. The method shares them too
+    /**
+     * Checks if the variable named 's' is in the hash list 'first'
+     * @param s - the name of the variable
+     * @param first - the list we're searching
+     */
+    std::vector<variable*>::const_iterator variable_list_has_variable(const char *s,
+                                              const std::vector<variable *> &first);
+
+    /**
+     * Adds a new hash  variable to the variable list. Creates a variable object and adds that to the list
+     * @param var_name - the name of the variable
+     * @param var_type - the type of the variable
+     * @param var_size - the size of the variable (as defined by the script, the 'dimension' of it)
+     * @param first - this is the variable list we're adding the new variable
+     * @param the_method - this is happening in this method
+     * @param cc - and/or in this call context
+     * @param expwloc - at this location in the script file
+     */
+    variable* variable_list_add_variable(const char *var_name,
+                                         const char* var_type,
+                                         int var_size,
+                                         std::vector<variable *> &first,
+                                         method* the_method,
+                                         call_context* cc,
+                                         const expression_with_location* expwloc);
 private:
 
     /* the type of the call context: 0 - global, 1 - named*/
@@ -206,6 +238,8 @@ private:
 
     /* the classes that are defined in this call context */
     std::vector<class_declaration *> classes;
+
+    nap_compiler* mcompiler;
 };
 
 /**
@@ -220,7 +254,7 @@ struct class_declaration : public call_context
      * @param father - the call context in which this is
      * @return the newly created class declaration
      */
-    class_declaration (const char *pname, call_context *pfather);
+    class_declaration (nap_compiler* _compiler, const char *pname, call_context *pfather);
 
     class_declaration *parent_class;
     std::vector<class_declaration *> implemented_interfaces;

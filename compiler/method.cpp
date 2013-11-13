@@ -1,7 +1,6 @@
 #include "method.h"
 #include "utils.h"
 #include "call_ctx.h"
-#include "tree.h"
 #include "interpreter.h"
 #include "number.h"
 #include "consts.h"
@@ -15,6 +14,7 @@
 #include "variable.h"
 #include "parametr.h"
 #include "expression_tree.h"
+#include "compiler.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -24,7 +24,7 @@
 /**
  * Creates a new method
  */
-method::method(char* name, char* preturn_type, call_context* cc)
+method::method(nap_compiler* _compiler, char* name, char* preturn_type, call_context* cc)
 {
     call_context* method_main_cc = NULL;
     char* method_main_cc_name = new_string(strlen(name) + cc->get_name().length() + 3); /* will contain: parent_name::function_name*/
@@ -47,14 +47,14 @@ method::method(char* name, char* preturn_type, call_context* cc)
     {
         return_type = duplicate_string(preturn_type);
     }
-    method_main_cc = new call_context(CALL_CONTEXT_TYPE_METHOD_MAIN, method_main_cc_name, this, cc);
+    method_main_cc = new call_context(_compiler, CALL_CONTEXT_TYPE_METHOD_MAIN, method_main_cc_name, this, cc);
     garbage_bin<call_context*>::instance().place(method_main_cc);
     main_cc = method_main_cc;
 
     cur_cf = 0;
 }
 
-constructor_call::constructor_call(char* name, call_context* cc) : method(name, 0, cc)
+constructor_call::constructor_call(char* name, call_context* cc) : method(cc->compiler(), name, 0, cc)
 {
     return_type = 0;
     the_class = cc->get_class_declaration(name);
@@ -71,7 +71,7 @@ variable* method::add_new_variable(char* pname, char* type, int dimension, const
     {
         throw_error(E0018_INVIDENT, pname, NULL);
     }
-    return variable_list_add_variable(new_name, type, dimension, variables, this, main_cc, expwloc);
+    return main_cc->variable_list_add_variable(new_name, type, dimension, variables, this, main_cc, expwloc);
 }
 
 /**
@@ -96,14 +96,14 @@ variable* method::add_new_variable(char* pname, char* type, int dimension, const
         *strchr(varname, C_PAR_OP) = 0;
     }
 
-    std::vector<variable*>::const_iterator location = variable_list_has_variable(varname, cc->get_variables());
+    std::vector<variable*>::const_iterator location = cc->variable_list_has_variable(varname, cc->get_variables());
     if(location != cc->get_variables().end())
     {
         return *location;
     }
 
     // first run_ is this variable defined in here?
-    location = variable_list_has_variable(varname, variables);
+    location = cc->variable_list_has_variable(varname, variables);
     if(location != variables.end())
     {
         if((*location)->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
@@ -134,7 +134,7 @@ variable* method::add_new_variable(char* pname, char* type, int dimension, const
     cc = cc->get_father();
     while(cc)
     {
-        location = variable_list_has_variable(varname, cc->get_variables());
+        location = cc->variable_list_has_variable(varname, cc->get_variables());
         if(location != cc->get_variables().end())
         {
             if((*location)->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
@@ -164,7 +164,7 @@ parameter* method::add_parameter(char* pname, char* ptype, int pdimension, const
         char* afterEq = indexOfEq + 1;
         int res = -1;
         func_par->initial_value = new expression_tree(pexpwloc);
-        build_expr_tree(afterEq, func_par->initial_value, this, afterEq, main_cc, &res, pexpwloc);
+        mcompiler->get_interpreter().build_expr_tree(afterEq, func_par->initial_value, this, afterEq, main_cc, &res, pexpwloc);
         *indexOfEq = 0;
     }
     nvar = add_new_variable(pname, ptype, pdimension, pexpwloc);

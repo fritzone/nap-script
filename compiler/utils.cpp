@@ -413,3 +413,102 @@ int is_valid_variable_name(const char* name)
     }
     return 1;
 }
+
+/**
+ * Creates a new string list from the instr which is separated by the given separator
+ */
+std::vector<std::string> string_list_create_bsep(const char* instr, char sep)
+{
+    std::vector<std::string>  head;
+    const char* p = instr, *frst = instr;
+    char* cur_elem = NULL;
+    while(*p)
+    {
+        bool already_increased = false; /* when we load the expressions in parentheses we do an extra increment. This signals that this extra increment was done */
+        if(C_SQPAR_OP == *p)    /* for now skip the things that are between index indicators*/
+        {
+        int can_stop = 0;
+        int level = 0;
+            p++;
+            while(*p && !can_stop)
+            {
+                if(*p == C_SQPAR_CL && --level == -1) can_stop = 1;
+                if(*p == C_SQPAR_OP) level ++;
+                if(!can_stop) p++;
+            }
+            if(!*p)
+            {
+                throw_error(E0009_PARAMISM, instr, NULL);
+            }
+            p++;    /* to skip the last closing brace*/
+            already_increased = true;
+        }
+
+        if(*p == C_PAR_OP)    /* for now skip the things that are between parantheses too ...*/
+        {
+            int can_stop = 0;
+            int level = 0;
+            p++;
+            while(*p && !can_stop)
+            {
+                if(*p == C_PAR_CL && --level == -1) can_stop = 1;
+                if(*p == C_PAR_OP) level ++;
+                if(!can_stop) p++;
+            }
+            if(!*p)
+            {
+                throw_error(E0009_PARAMISM, instr, NULL);
+            }
+            p++;    /* to skip the last closing brace*/
+            already_increased = true;
+        }
+
+        if(*p == '{' )    /* for now skip the things that are between curly braces too ...*/
+        {
+            int can_stop = 0;
+            int level = 0;
+            p++;
+            while(*p && !can_stop)
+            {
+                if(*p == '}' && --level == -1) can_stop = 1;
+                if(*p == '{' ) level ++;
+                if(!can_stop) p++;
+            }
+            if(!*p)
+            {
+                throw_error(E0009_PARAMISM, instr, NULL);
+            }
+            p++;    /* to skip the last closing brace*/
+            already_increased = true;
+        }
+
+
+        if(*p == C_QUOTE)    /* skip stuff between quotes*/
+        {
+        int can_stop = 0;
+            p++;
+            while(*p && !can_stop)
+            {
+                if(*p == C_QUOTE && *(p-1) != C_BACKSLASH) can_stop = 1;
+                p++;
+            }
+        }
+
+        if(*p == sep)
+        {
+            cur_elem = new_string(p - frst + 1);
+            strncpy(cur_elem, frst, p - frst);
+            head.push_back(std::string(cur_elem));
+            frst = p + 1;
+        }
+        if(! already_increased)
+        {
+            p++;
+        }
+    }
+    /* and now the last element */
+    cur_elem = new_string(p - frst + 1);
+    strncpy(cur_elem, frst, p - frst);
+    head.push_back(std::string(cur_elem));
+    return head;
+}

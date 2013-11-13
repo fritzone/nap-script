@@ -10,7 +10,6 @@
 #include "opr_hndl.h"
 #include "notimpl.h"
 #include "variable.h"
-#include "tree.h"
 #include "method.h"
 #include "sys_brkp.h"
 #include "res_wrds.h"
@@ -23,7 +22,16 @@
 #include <ctype.h>
 #include <math.h>
 
-std::vector<envelope*>* listv_prepare_list(const char* src,  method* the_method, const char* orig_expr, call_context* cc, int* result, const expression_with_location* expwloc)
+interpreter::interpreter(nap_compiler* _compiler) : mcompiler(_compiler)
+{
+}
+
+std::vector<envelope*>* interpreter::listv_prepare_list(const char* src,
+                                                        method* the_method,
+                                                        const char* orig_expr,
+                                                        call_context* cc,
+                                                        int* result,
+                                                        const expression_with_location* expwloc)
 {
     int l = (int)strlen(src);
     std::vector<envelope*>*  lst = new std::vector<envelope*>();
@@ -104,7 +112,7 @@ std::vector<envelope*>* listv_prepare_list(const char* src,  method* the_method,
  * and returns its position. The parameter foundOperator is populated with the found operator
  * and the parameter ntype gets the typeid of the operator.
  */
-static int get_operator(const char* expr, const char** foundOperator, int* ntype)
+int interpreter::get_operator(const char* expr, const char** foundOperator, int* ntype)
 {
     int zladd = level_0_add_operator(expr);                    /* the position of a +- sign on the first level */
     int zlbit = level_0_bitwise_operator(expr);                /* if any bitwise (&|~_ operators can be found on level 0 */
@@ -311,7 +319,7 @@ method* is_function_call(char *s,  call_context* cc)
  * <return_type> <function_name,[function_parameters])
  * Where return type can be any type defined or <type func_name ( pars ) > meaning this method returns a method
  */
-static int looks_like_function_def(const char* expr, int expr_len, const expression_tree* node, call_context* cc)
+int interpreter::looks_like_function_def(const char* expr, int expr_len, const expression_tree* node, call_context* cc)
 {
     if(node && node->father && node->father->op_type == OPERATOR_ASSIGN) return 0;    /* this is part of a templated variable definition */
     if(expr[expr_len - 1] != C_PAR_CL) return 0; /* not ending with ), return false*/
@@ -458,7 +466,7 @@ static int looks_like_function_def(const char* expr, int expr_len, const express
     return 0;
 }
 
-bool is_list_value(const char* what)
+bool interpreter::is_list_value(const char* what)
 {
     int i=0;
     const char *what2 = what;
@@ -471,7 +479,7 @@ bool is_list_value(const char* what)
  * Returns the type if this expression looks like a variable definition. Return NULL if not.
  * Also checks if the variable defined is a class instance. (ie: TestClass a;)
  */
-static char* looks_like_var_def(const call_context* cc, char* expr, int expr_len)
+char* interpreter::looks_like_var_def(const call_context* cc, char* expr, int expr_len)
 {
     char* first_word = new_string(expr_len);
     int flc = 0;
@@ -523,7 +531,7 @@ static char* looks_like_var_def(const call_context* cc, char* expr, int expr_len
 /**
  * Defines a method
  */
-static method* define_method(const char* expr, int expr_len, expression_tree* node, call_context* cc, const expression_with_location* expwloc)
+method* interpreter::define_method(const char* expr, int expr_len, expression_tree* node, call_context* cc, const expression_with_location* expwloc)
 {
     int i=expr_len - 2; /* the first one: to skip the paranthesys, the second one is the last character inside the parantheses*/
     int par_counter = 0;
@@ -567,7 +575,7 @@ static method* define_method(const char* expr, int expr_len, expression_tree* no
     {
         throw_error(E0010_INVFNCDF, expr, NULL);
     }
-    created_method = new method(func_name, ret_type, cc);
+    created_method = new method(mcompiler, func_name, ret_type, cc);
     created_method->feed_parameter_list(trim(parameters), expwloc);
 
     if(!strcmp(ret_type, "int")) created_method->ret_type = BASIC_TYPE_INT;
@@ -586,7 +594,7 @@ static method* define_method(const char* expr, int expr_len, expression_tree* no
  * <NAME>[white space]['(' or '=' or '[']{if ( then skip till closed}[nothing or '=']
  * @return the position of the valid = sign for the definition
  */
-static int var_declaration_followed_by_initialization(const char* expr, int expr_len)
+int interpreter::var_declaration_followed_by_initialization(const char* expr, int expr_len)
 {
     int i = 0;
     // here we can get [10] c = a; so let's skip them if any
@@ -616,7 +624,7 @@ static int var_declaration_followed_by_initialization(const char* expr, int expr
  * - it should not start with a number
  * - it should not be a keyword
  */
-static int accepted_variable_name(std::string name)
+int interpreter::accepted_variable_name(std::string name)
 {
     if(name.length() < 1) return 0;
     if(isdigit(name[0])) return 0;
@@ -630,14 +638,14 @@ static int accepted_variable_name(std::string name)
 /**
  * Defines the variables that can be found below ...
  */
-static std::vector<variable_definition*>* define_variables(char* var_def_type,
-                                                  char* expr_trim, 
-                                                  expression_tree* node, 
-                                                  method* the_method, 
-                                                  call_context* cc, 
-                                                  const char* orig_expr, 
-                                                  int* result, 
-                                                  const expression_with_location* expwloc)
+std::vector<variable_definition*>* interpreter::define_variables(char* var_def_type,
+                                                                 char* expr_trim,
+                                                                 expression_tree* node,
+                                                                 method* the_method,
+                                                                 call_context* cc,
+                                                                 const char* orig_expr,
+                                                                 int* result,
+                                                                 const expression_with_location* expwloc)
 {
     char * copied = duplicate_string(expr_trim + strlen(var_def_type));
 
@@ -789,7 +797,7 @@ static std::vector<variable_definition*>* define_variables(char* var_def_type,
  * @param type_of_call - whether this is a normal function call (0) a constructor call (1) or 
  *                       a method call from an object (2) or a static methid of a class (3)
  */
-static call_frame_entry* handle_function_call(char *expr_trim, int expr_len, expression_tree* node,
+call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_len, expression_tree* node,
         method* func_call, method* the_method,
         const char* orig_expr, call_context* cc, int* result,
         const expression_with_location* expwloc, int type_of_call)
@@ -854,7 +862,7 @@ static call_frame_entry* handle_function_call(char *expr_trim, int expr_len, exp
  * access. In case it is, returns the element that is indexed. The value of the
  * index is populated with the index
  */
-static char* is_indexed(const char* expr_trim, int expr_len, char** index)
+char* interpreter::is_indexed(const char* expr_trim, int expr_len, char** index)
 {
     const char* p = expr_trim;
     char* the_indexed_part = new_string(expr_len);
@@ -949,7 +957,7 @@ static char* is_indexed(const char* expr_trim, int expr_len, char** index)
  * Checks if the expression passed in some statement that starts with a reserved word.
  * The return value is the part after the keywords
  */
-static char* is_some_statement(const char* expr_trim, const char* keyword)
+char* interpreter::is_some_statement(const char* expr_trim, const char* keyword)
 {
     if(strstr(expr_trim, keyword) == expr_trim)
     {
@@ -962,7 +970,7 @@ static char* is_some_statement(const char* expr_trim, const char* keyword)
 /**
  * Returns the necessary structure for the break/continue statements
  */
-static void* deal_with_one_word_keyword( call_context* cc, expression_tree* node, int* &result, const char* keyw, int statement )
+void* interpreter::deal_with_one_word_keyword( call_context* cc, expression_tree* node, int* &result, const char* keyw, int statement )
 {
     if(cc->get_type() != CALL_CONTEXT_TYPE_WHILE && cc->get_type() != CALL_CONTEXT_TYPE_FOR)
     {
@@ -992,7 +1000,16 @@ static void* deal_with_one_word_keyword( call_context* cc, expression_tree* node
 /**
  * This method deals with preparing structures for the keywords if/while since these are handled quite similarly this phase
  */
-static void* deal_with_conditional_keywords( char* keyword_if, char* keyword_while, expression_tree* node, const expression_with_location* expwloc, char* expr_trim, int expr_len, method* the_method, const char* orig_expr, call_context* cc, int* &result )
+void* interpreter::deal_with_conditional_keywords(char* keyword_if,
+                                                  char* keyword_while,
+                                                  expression_tree* node,
+                                                  const expression_with_location* expwloc,
+                                                  char* expr_trim,
+                                                  int expr_len,
+                                                  method* the_method,
+                                                  const char* orig_expr,
+                                                  call_context* cc,
+                                                  int* &result )
 {
     int one_line_stmt = -1;
     int stmt = -1;
@@ -1069,7 +1086,7 @@ static void* deal_with_conditional_keywords( char* keyword_if, char* keyword_whi
  * 3. multiplication (*, /, %)
  * 4. addition (+, -)
  */
-void* build_expr_tree(const char *expr, expression_tree* node, method* the_method, const char* orig_expr, call_context* cc, int* result, const expression_with_location* expwloc)
+void* interpreter::build_expr_tree(const char *expr, expression_tree* node, method* the_method, const char* orig_expr, call_context* cc, int* result, const expression_with_location* expwloc)
 {
     set_location(expwloc);
 
@@ -1410,7 +1427,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                 }
 
                 // now see if this is a class variable: a.b = 4
-                std::vector<variable*>::const_iterator it = variable_list_has_variable(expr_trim, cd->get_variables());
+                std::vector<variable*>::const_iterator it = cd->variable_list_has_variable(expr_trim, cd->get_variables());
                 if(it != cd->get_variables().end())
                 {
                     variable* var = *it;
@@ -1539,7 +1556,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
             if(!var)
             {
                 /* is this a variable from the current call context? */
-                std::vector<variable*>::const_iterator varit = variable_list_has_variable(t, cc->get_variables());
+                std::vector<variable*>::const_iterator varit = cc->variable_list_has_variable(t, cc->get_variables());
                 if(varit != cc->get_variables().end())
                 {
                     var = *varit;
@@ -1612,7 +1629,7 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
                     cname ++;
                 }
                 *tcname = 0;
-                class_declaration* cd = new class_declaration(the_class_name, cc);
+                class_declaration* cd = new class_declaration(mcompiler, the_class_name, cc);
 
                 envl = new_envelope(cd, CLASS_DECLARATION);
                 node->op_type = CLASS_DECLARATION;
@@ -1634,22 +1651,4 @@ void* build_expr_tree(const char *expr, expression_tree* node, method* the_metho
         }
 
     return NULL;
-}
-
-/* the global  variable of equal signs */
-static int num_op = 0;
-/**
- * Checks the  number of operators present in this tree
- */
-static void number_of_operators( expression_tree* node, const char* op)
-{
-    if(node)
-    {
-        if(node->info && !strcmp(node->info, STR_EQUAL))
-        {
-            num_op ++;
-        }
-        number_of_operators(node->left, op);
-        number_of_operators(node->right, op);
-    }
 }

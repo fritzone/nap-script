@@ -70,9 +70,9 @@ void nap_compiler::setLastOpcode(unsigned char value)
 
 
 nap_compiler::nap_compiler() : opcode_counter(0),
-    mfirst_entry(true), mvar_counter(0)
+    mfirst_entry(true), mvar_counter(0), minterpreter(this)
 {
-    cur_cc = new call_context(0, "global", NULL, NULL) ;
+    cur_cc = new call_context(this, 0, "global", NULL, NULL) ;
     global_cc = cur_cc;
     cur_method = 0;
 }

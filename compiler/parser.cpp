@@ -8,6 +8,7 @@
 #include "common_structs.h"
 #include "expression_tree.h"
 #include "interpreter.h"
+#include "compiler.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -395,7 +396,7 @@ void parsed_file::deal_with_while_loading(call_context* cc, expression_tree* new
     /* firstly create a call context for it */
     char* while_cc_name = new_string(cc->get_name().length() + 10);
     sprintf(while_cc_name, "%s%s%s", cc->get_name().c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_WHILE);
-    call_context* while_cc = new call_context(CALL_CONTEXT_TYPE_WHILE, while_cc_name, the_method, cc);
+    call_context* while_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_WHILE, while_cc_name, the_method, cc);
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_WHILE)    /* normal WHILE with { }*/
     {
         load_next_block(the_method, while_cc, current_level + 1, current_level);    /* loading the function*/
@@ -482,7 +483,7 @@ void parsed_file::deal_with_for_loading(call_context* cc, expression_tree* new_n
     /* firstly create a call context for it */
     char* for_cc_name = new_string(cc->get_name().length() + 10);
     sprintf(for_cc_name, "%s%s%s", cc->get_name().c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_FOR);
-    call_context* for_cc = new call_context(CALL_CONTEXT_TYPE_FOR, for_cc_name, the_method, cc);
+    call_context* for_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_FOR, for_cc_name, the_method, cc);
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR)    /* normal FOR with { }*/
     {
         load_next_block(the_method, for_cc, current_level + 1, current_level);    /* loading the function*/
@@ -525,7 +526,7 @@ void parsed_file::deal_with_ifs_loading(call_context* cc, expression_tree* new_n
     /* firstly create a call context for it */
     char* if_cc_name = new_string(cc->get_name().length() + 6);
     sprintf(if_cc_name, "%s%s%s", cc->get_name().c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_IF);
-    call_context* if_cc = new call_context(CALL_CONTEXT_TYPE_IF, if_cc_name, the_method, cc);
+    call_context* if_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_IF, if_cc_name, the_method, cc);
     garbage_bin<call_context*>::instance().place(if_cc);
 
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF)    /* normal IF with { }*/
@@ -567,7 +568,7 @@ void parsed_file::deal_with_ifs_loading(call_context* cc, expression_tree* new_n
     {
         char* else_cc_name = new_string(cc->get_name().length() + 16);
         sprintf(else_cc_name, "%s%s%s:%s", cc->get_name().c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_IF, STR_ELSE);
-        else_cc = new call_context(CALL_CONTEXT_TYPE_ELSE, else_cc_name, the_method, cc);
+        else_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_ELSE, else_cc_name, the_method, cc);
         if(delim2 == C_SEMC)
         {
             expression_with_location* expwloc2 = parser_next_phrase(&delim);
@@ -657,7 +658,7 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
                 {
                     char* new_cc_name = new_string(cc->get_name().length() + 10);
                     sprintf(new_cc_name, "%s%s%s", cc->get_name().c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_UNNAMED_CC);
-                    call_context* child_cc = new call_context(CALL_CONTEXT_TYPE_UNNAMED, new_cc_name, the_method, cc);
+                    call_context* child_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_UNNAMED, new_cc_name, the_method, cc);
                     expression_tree* new_node = cc->add_new_expression(STR_OPEN_BLOCK, expwloc);
                     //todo: add a new expression in the current call CONTEXT to start executing the next call context.
                     new_node->reference = new_envelope(child_cc, ENV_TYPE_CC);
@@ -711,7 +712,7 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
         expression_tree* cnode = new expression_tree(expwloc);
         garbage_bin<expression_tree*>::instance().place(cnode);
 
-        void* gen_res = build_expr_tree(first, cnode, cur_method, first, cur_cc, &op_res, expwloc);
+        void* gen_res = cur_cc->compiler()->get_interpreter().build_expr_tree(first, cnode, cur_method, first, cur_cc, &op_res, expwloc);
         switch(op_res)
         {
         case ASM_BLOCK: /*load the next block and directly feed in the statements to the cnode's envelope*/

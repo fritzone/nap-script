@@ -13,6 +13,8 @@ struct variable_definition;
 struct variable;
 struct class_declaration;
 
+class nap_compiler;
+
 /**
  * Contains the definition of a method
  */
@@ -25,7 +27,7 @@ struct method
      * @param return_type
      * @param cc
      */
-    method(char* name, char* preturn_type, call_context* cc);
+    method(nap_compiler *_compiler, char* name, char* preturn_type, call_context* cc);
 
     /**
      * Adds a new parameter to the method
@@ -102,6 +104,8 @@ private:
      * 2. in the running phase, but only for static variables.
      */
     std::vector<variable*> variables;
+
+    nap_compiler* mcompiler;
 
 };
 
