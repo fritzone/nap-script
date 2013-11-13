@@ -3,7 +3,6 @@
 #include "bt_string.h"
 #include "type.h"
 #include "method.h"
-#include "hash.h"
 #include "interpreter.h"
 #include "utils.h"
 #include "parametr.h"
@@ -14,6 +13,7 @@
 #include "throw_error.h"
 #include "expression_tree.h"
 #include "parametr.h"
+#include "compiler.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -41,7 +41,7 @@ char* new_name = trim(name);
     {
         throw_error(E0029_PARANOTALL, new_name, NULL);
     }
-    return variable_list_add_variable(new_name, type, 1, the_variable->templ_variables, the_method, cc, expwloc);
+    return cc->variable_list_add_variable(new_name, type, 1, the_variable->templ_variables, the_method, cc, expwloc);
 }
 
 
@@ -70,7 +70,7 @@ static parameter* variable_add_template_parameter(variable* the_variable, const 
         const char* afterEq = indexOfEq + 1;
         int res = -1;
         func_par->initial_value = new expression_tree(expwloc);
-        build_expr_tree(afterEq, func_par->initial_value, the_method, afterEq, cc, &res, expwloc);
+        cc->compiler()->get_interpreter().build_expr_tree(afterEq, func_par->initial_value, the_method, afterEq, cc, &res, expwloc);
         *indexOfEq = 0;
     }
 
@@ -182,27 +182,24 @@ variable_template_reference* tmp = alloc_mem(variable_template_reference,1);
 }
 
 
-variable *new_variable(int pdimension, int type)
+variable::variable(int pdimension, int type)
 {
-    variable* v = alloc_mem(variable, 1);
-
     if(pdimension<1)
     {
         throw_error(STR_INVALID_DIMENSION, NULL);
     }
 
-    v->dimension = pdimension;
-    v->multi_dim_count = 1;
-    v->i_type = type;
+    dimension = pdimension;
+    multi_dim_count = 1;
+    i_type = type;
 
-    v->name = NULL;
-    v->c_type = NULL;
-    v->mult_dim_def = NULL;
-    v->func_par = NULL;
-    v->static_var = 0;
-    v->environment_variable = 0;
-    v->dynamic_dimension = 0;
-    v->cc = 0;
-
-    return v;
+    name = NULL;
+    c_type = NULL;
+    mult_dim_def = NULL;
+    func_par = NULL;
+    static_var = 0;
+    environment_variable = 0;
+    dynamic_dimension = 0;
+    cc = 0;
 }
+

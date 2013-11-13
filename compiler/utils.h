@@ -170,4 +170,11 @@ int irand(int min, int max);
 
 std::string generate_unique_hash();
 
+/**
+ * Creates a new string list from the instr which is separated by the given separator
+ * @param instr - the input string
+ * @param sep - the expected separator
+ */
+std::vector<std::string> string_list_create_bsep(const char* instr, char sep);
+
 #endif

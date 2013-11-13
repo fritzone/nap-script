@@ -2,7 +2,6 @@
 #include "consts.h"
 #include "type.h"
 #include "evaluate.h"
-#include "tree.h"
 #include "variable.h"
 #include "code_stream.h"
 #include "utils.h"

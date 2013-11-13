@@ -10,6 +10,7 @@
 #include "utils.h"
 #include "code_stream.h"
 #include "expression_tree.h"
+#include "compiler.h"
 #include <stdio.h>
 #include <string.h>
 #include <string>
@@ -19,9 +20,9 @@ using namespace std;
 /**
  * Creates a new call context object
  */
-call_context::call_context(int ptype, const char* pname,
+call_context::call_context(nap_compiler *_compiler, int ptype, const char* pname,
                            method* the_method, call_context* pfather)
-    : name(pname)
+    : name(pname), mcompiler(_compiler)
 {
     type = ptype;
     ccs_method = the_method;
@@ -36,7 +37,8 @@ call_context::~call_context()
     }
 }
 
-class_declaration::class_declaration(const char* pname, call_context* pfather) : call_context(CLASS_DECLARATION, pname, 0,  pfather)
+class_declaration::class_declaration(nap_compiler *_compiler, const char* pname, call_context* pfather) :
+    call_context(_compiler, CLASS_DECLARATION, pname, 0,  pfather)
 {
     parent_class = 0;
     pfather->add_class_declaration(this);
@@ -125,7 +127,7 @@ expression_tree* call_context::add_new_expression(const char* expr, const expres
     char *t1 = duplicate_string(expr);
     int res;
     char*t = rtrim(t1);
-    build_expr_tree(t, new_expression, ccs_method, t, this, &res, expwloc);
+    mcompiler->get_interpreter().build_expr_tree(t, new_expression, ccs_method, t, this, &res, expwloc);
     expressions.push_back(new_expression);
     return new_expression;
 }
@@ -270,4 +272,68 @@ class_declaration* call_context::get_class_declaration(const char* required_name
 void call_context::add_class_declaration(class_declaration *cd)
 {
     classes.push_back(cd);
+}
+
+
+/**
+ * this function checks if s appears in the hashtable
+ */
+std::vector<variable*>::const_iterator call_context::variable_list_has_variable(const char *s, const std::vector<variable*>& first)
+{
+    std::vector<variable*>::const_iterator q = first.begin();
+    while(q != first.end())
+    {
+        if(!strcmp(s, (*q)->name))
+        {
+            return q;
+        }
+        q ++;
+    }
+    return first.end();
+}
+
+
+/**
+ * This function adds a new  variable to the hashlist in first. Always adds the new  variable to the head of the list
+ */
+variable* call_context::variable_list_add_variable(const char *var_name,
+                                     const char* var_type,
+                                     int var_size,
+                                     std::vector<variable*>& first,
+                                     method* the_method,
+                                     call_context* cc,
+                                     const expression_with_location* expwloc)
+{
+    if(!valid_variable_name(var_name))
+    {
+        throw_error("Invalid variable name", var_name, var_type);
+    }
+    int itype = get_typeid(var_type);
+
+    if(itype == BASIC_TYPE_DONTCARE)
+    {
+        if(cc->get_class_declaration(var_type))
+        {
+            itype = BASIC_TYPE_USERDEF;
+        }
+    }
+    if(itype == BASIC_TYPE_DONTCARE)
+    {
+        return 0;
+    }
+
+    variable* var = new variable(var_size, itype);
+
+    var->name = duplicate_string(var_name);
+    var->c_type = duplicate_string(var_type);
+    var->cc = cc;
+
+    var->dimension = var_size;
+
+    /* now fix the stuff to include template parameters if any */
+
+    variable_resolve_templates(var, the_method, cc, expwloc);
+
+    first.push_back(var);
+    return var;
 }
