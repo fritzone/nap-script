@@ -48,7 +48,7 @@ struct nap_vm
 
     nap_number_t    regi  [REGISTER_COUNT]; /* the integer registers */
     char*           regs  [REGISTER_COUNT]; /* the string registers */
-    nap_index_t     regidx[REGISTER_COUNT]; /* the register indexes */
+    nap_number_t    regidx[REGISTER_COUNT]; /* the register indexes */
     enum flag_staus lbf;                    /* the last boolean flag of the machine */
     uint8_t         mrc;                    /* the number of registers used in this VM */
 
