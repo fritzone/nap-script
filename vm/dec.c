@@ -15,7 +15,7 @@ void nap_dec(struct nap_vm* vm)
         struct variable_entry* ve = vm->metatable[var_index];
         if(ve->instantiation->type == OPCODE_INT)
         {
-            (*(nap_number_t*)ve->instantiation->value) --;
+            (*(nap_int_t*)ve->instantiation->value) --;
         }
         else
         {

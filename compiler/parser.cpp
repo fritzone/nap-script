@@ -100,6 +100,23 @@ parsed_file *parsed_file::open_file(const char *name)
     return f;
 }
 
+parsed_file *parsed_file::set_source(const char *src)
+{
+    parsed_file *f = new parsed_file();
+    long size = strlen(src);
+    f->name = NULL;
+    /* the file pointer*/
+
+    f->content = alloc_mem(char, size);
+    f->content_size = size;
+    memcpy(f->content, src, size);
+
+    f->position = 0;
+    f->current_line = 0;
+    f->remove_comments();
+    return f;
+}
+
 /**
  * Reads the next phrase, returns it
  */
@@ -407,7 +424,7 @@ void parsed_file::deal_with_while_loading(call_context* cc, expression_tree* new
         char d = delim;
         expression_with_location* next_exp = alloc_mem(expression_with_location,1);
         next_exp->location = expwloc->location;
-        next_exp->expression = duplicate_string(new_node->info);
+        next_exp->expression = (duplicate_string(new_node->info.c_str()));
         //pf->position += strlen(new_node->info);
         load_next_single_phrase(next_exp, the_method, while_cc, &d, current_level + 1);
         new_node->op_type = STATEMENT_WHILE;
@@ -415,7 +432,7 @@ void parsed_file::deal_with_while_loading(call_context* cc, expression_tree* new
     }
     else if(C_SEMC == delim && new_node->op_type == STATEMENT_WHILE_1L)            /* one lined while, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
-        while_cc->add_new_expression(new_node->info, expwloc);
+        while_cc->add_new_expression(new_node->info.c_str(), expwloc);
         new_node->op_type = STATEMENT_WHILE;
         new_node->info = duplicate_string(STR_WHILE);
     }
@@ -494,7 +511,7 @@ void parsed_file::deal_with_for_loading(call_context* cc, expression_tree* new_n
         char d = delim;
         expression_with_location* next_exp = alloc_mem(expression_with_location,1);
         next_exp->location = expwloc->location;
-        next_exp->expression = duplicate_string(new_node->info);
+        next_exp->expression = duplicate_string(new_node->info.c_str());
         //pf->position += strlen(new_node->info);
         load_next_single_phrase(next_exp, the_method, for_cc, &d, current_level + 1);
         new_node->op_type = STATEMENT_FOR;
@@ -502,7 +519,7 @@ void parsed_file::deal_with_for_loading(call_context* cc, expression_tree* new_n
     }
     else if(C_SEMC == delim && new_node->op_type == STATEMENT_FOR_1L)            /* one lined for, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
-        for_cc->add_new_expression(new_node->info, expwloc);
+        for_cc->add_new_expression(new_node->info.c_str(), expwloc);
         new_node->op_type = STATEMENT_FOR;
         new_node->info = duplicate_string(STR_FOR);
     }
@@ -539,7 +556,7 @@ void parsed_file::deal_with_ifs_loading(call_context* cc, expression_tree* new_n
         char d = delim;
         expression_with_location* next_exp = alloc_mem(expression_with_location,1);
         next_exp->location = expwloc->location;
-        next_exp->expression = duplicate_string(new_node->info);
+        next_exp->expression = duplicate_string(new_node->info.c_str());
         //pf->position += strlen(new_node->info);
         load_next_single_phrase(next_exp, the_method, if_cc, &d, current_level + 1);
         new_node->op_type = STATEMENT_IF;
@@ -547,7 +564,7 @@ void parsed_file::deal_with_ifs_loading(call_context* cc, expression_tree* new_n
     }
     else if(C_SEMC == delim && new_node->op_type == STATEMENT_IF_1L)            /* one lined if, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
-        if_cc->add_new_expression(new_node->info, expwloc);
+        if_cc->add_new_expression(new_node->info.c_str(), expwloc);
         new_node->op_type = STATEMENT_IF;
         new_node->info = duplicate_string(STR_IF);
     }

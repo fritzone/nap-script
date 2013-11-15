@@ -498,7 +498,8 @@ std::vector<std::string> string_list_create_bsep(const char* instr, char sep)
         {
             cur_elem = new_string(p - frst + 1);
             strncpy(cur_elem, frst, p - frst);
-            head.push_back(std::string(cur_elem));
+            char* telem = trim(cur_elem);
+            head.push_back(std::string(telem));
             frst = p + 1;
         }
         if(! already_increased)
@@ -509,6 +510,7 @@ std::vector<std::string> string_list_create_bsep(const char* instr, char sep)
     /* and now the last element */
     cur_elem = new_string(p - frst + 1);
     strncpy(cur_elem, frst, p - frst);
-    head.push_back(std::string(cur_elem));
+    char* telem = trim(cur_elem);
+    head.push_back(std::string(telem));
     return head;
 }

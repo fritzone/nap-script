@@ -17,7 +17,6 @@ struct expression_tree
         op_type = NO_OPERATOR;
         expwloc = pexpwloc;
         father = 0;
-        info = 0;
         left = 0;
         right = 0;
     }
@@ -28,7 +27,6 @@ struct expression_tree
         op_type = NO_OPERATOR;
         expwloc = pexpwloc;
         father = pfather;
-        info = 0;
         left = 0;
         right = 0;
     }
@@ -40,7 +38,7 @@ struct expression_tree
     struct expression_tree *right;
 
     /* the info that can be found in the expression */
-    char *info;
+    std::string info;
 
     /* the reference ofthe node ... can be a struct number, a struct variable, etc ... */
     struct envelope *reference;

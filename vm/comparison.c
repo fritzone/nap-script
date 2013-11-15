@@ -23,7 +23,7 @@ void nap_comparison(struct nap_vm* vm)
 
             if(cmp_second == OPCODE_IMMEDIATE) /* comparing int register with immediate value (1,..) */
             {
-                nap_number_t immediate = nap_read_immediate(vm);
+                nap_int_t immediate = nap_read_immediate(vm);
                 nap_vm_set_lbf_to_op_result(vm, vm->regi[register_index], immediate, vm->current_opcode);
             }
             else
@@ -34,7 +34,7 @@ void nap_comparison(struct nap_vm* vm)
                 if(ve->instantiation->type == OPCODE_INT) /* comparing int register with an int variable */
                 {
                     nap_vm_set_lbf_to_op_result(vm, vm->regi[register_index],
-                                                *(nap_number_t*)ve->instantiation->value, vm->current_opcode);
+                                                *(nap_int_t*)ve->instantiation->value, vm->current_opcode);
                 }
                 else /* comparing int register with another kind of variable */
                 {
@@ -81,8 +81,8 @@ void nap_comparison(struct nap_vm* vm)
                 struct variable_entry* second_ve = vm->metatable[second_var_index];
                 if(second_ve->instantiation->type == OPCODE_INT) /* comparing int register with an int variable */
                 {
-                    nap_vm_set_lbf_to_op_result(vm, *(nap_number_t*)ve->instantiation->value,
-                                                *(nap_number_t*)second_ve->instantiation->value,
+                    nap_vm_set_lbf_to_op_result(vm, *(nap_int_t*)ve->instantiation->value,
+                                                *(nap_int_t*)second_ve->instantiation->value,
                                                 vm->current_opcode);
                 }
                 else /* comparing int variable with another kind of variable */
@@ -98,7 +98,7 @@ void nap_comparison(struct nap_vm* vm)
                 if(second_register_type == OPCODE_INT) /* comparing int reg with another INT type register */
                 {
                     uint8_t second_register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
-                    nap_vm_set_lbf_to_op_result(vm, *(nap_number_t*)ve->instantiation->value,
+                    nap_vm_set_lbf_to_op_result(vm, *(nap_int_t*)ve->instantiation->value,
                                                 vm->regi[second_register_index], vm->current_opcode);
                 }
                 else /* comparing int reg with another type register */

@@ -48,6 +48,8 @@ public:
 
     static parsed_file* open_file(const char* name);
 
+    static parsed_file* set_source(const char* src);
+
     /* TODO: make this private, create another start parsing function ...*/
     void load_next_single_phrase(expression_with_location* expwloc,
                                  method* cur_method, call_context* cur_cc,

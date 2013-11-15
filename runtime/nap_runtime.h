@@ -1,6 +1,10 @@
 #ifndef _NAP_RUNTIME_H_
 #define _NAP_RUNTIME_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "nap_types.h"
 
 /* The real runtime hidden in a data pointer  */
@@ -60,7 +64,19 @@ struct nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
 int nap_runtime_execute(struct nap_runtime* runtime, 
                         struct nap_bytecode_chunk* bytecode);
 
-nap_number_t nap_runtime_get_int(struct nap_runtime* runtime,
+nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
+                                 const char *variable_name);
+
+nap_real_t nap_runtime_get_real(struct nap_runtime* runtime,
                                  const char* variable_name);
+
+nap_string_t nap_runtime_get_string(struct nap_runtime* runtime,
+                                 const char* variable_name);
+
+void nap_runtime_shutdown(struct nap_runtime** runtime);
+
+#ifdef __cplusplus
+}
 #endif
 
+#endif

@@ -22,7 +22,7 @@ void nap_operation(struct nap_vm* vm)
 
             if(add_source == OPCODE_IMMEDIATE) /* immediate value (1,..) added to register */
             {
-                nap_number_t imm_operand = nap_read_immediate(vm);
+                nap_int_t imm_operand = nap_read_immediate(vm);
                 do_operation(vm, &vm->regi[register_index], imm_operand, vm->current_opcode);
             }
             else

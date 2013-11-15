@@ -21,6 +21,8 @@ void nap_push(struct nap_vm *vm)
             nap_index_t var_index = nap_fetch_index(vm);
             struct variable_entry* ve = vm->metatable[var_index];
 
+            /* TODO: is ve NULL? */
+
             if(ve->instantiation == NULL)
             {
                 ve->instantiation = (struct stack_entry*)(calloc(sizeof(struct stack_entry), 1));
@@ -74,7 +76,7 @@ void nap_push(struct nap_vm *vm)
 
         if(reg_type == OPCODE_INT) /* pushing an int register */
         {
-            nap_number_t* temp = (nap_number_t*)calloc(1, sizeof(nap_number_t));
+            nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
             *temp = vm->regi[reg_idx];
 
             /* setting the value of the stack entry */
@@ -88,8 +90,8 @@ void nap_push(struct nap_vm *vm)
     else
     if(se->type == OPCODE_IMMEDIATE)
     {
-        nap_number_t nr = nap_read_immediate(vm);
-        nap_number_t* temp = (nap_number_t*)calloc(1, sizeof(nap_number_t));
+        nap_int_t nr = nap_read_immediate(vm);
+        nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
         *temp = nr;
 
         /* setting the value of the stack entry */

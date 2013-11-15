@@ -11,17 +11,37 @@
 #include "parser.h"
 #include "code_stream.h"
 
-void nap_compiler::load_file(const char* file_name)
+nap_compiler::nap_compiler() : opcode_counter(0),
+    mfirst_entry(true), mvar_counter(0), minterpreter(this)
+{
+    cur_cc = new call_context(this, 0, "global", NULL, NULL) ;
+    global_cc = cur_cc;
+    cur_method = 0;
+}
+
+nap_compiler::~nap_compiler()
+{
+    delete global_cc;
+    delete mpf;
+}
+
+bool nap_compiler::set_source(const char *src)
+{
+    mpf = parsed_file::set_source(src);
+    if(!mpf)
+    {
+        return false;
+    }
+
+    parse();
+    return true;
+}
+
+void nap_compiler::parse()
 {
     int level = -1; /* currently we are in a global context */
-    expression_with_location* expwloc = NULL;
-    char delim;
-    pf = parsed_file::open_file(file_name);
-    if(!pf)
-    {
-        return;
-    }
-    expwloc = pf->parser_next_phrase(&delim);
+    char delim = 0;
+    expression_with_location* expwloc = mpf->parser_next_phrase(&delim);
     while(expwloc)
     {
         char* exp_trim = trim(duplicate_string(expwloc->expression));
@@ -33,15 +53,27 @@ void nap_compiler::load_file(const char* file_name)
             {
                 loaded_files.push_back(file_to_load);
                 load_file(file_to_load);
-                expwloc = pf->parser_next_phrase(&delim);
+                expwloc = mpf->parser_next_phrase(&delim);
             }
         }
         else
         {
-            pf->load_next_single_phrase(expwloc, cur_method, cur_cc, &delim, level);
-            expwloc = pf->parser_next_phrase(&delim);
+            mpf->load_next_single_phrase(expwloc, cur_method, cur_cc, &delim, level);
+            expwloc = mpf->parser_next_phrase(&delim);
         }
     }
+}
+
+
+void nap_compiler::load_file(const char* file_name)
+{
+    mpf = parsed_file::open_file(file_name);
+    if(!mpf)
+    {
+        return;
+    }
+
+    parse();
 }
 
 void nap_compiler::compile()
@@ -58,6 +90,16 @@ void nap_compiler::write_bytecode(const char* file_name)
     fwrite(t, 1, bytecode.size(), fp);
     fclose(fp);
 }
+
+
+void nap_compiler::deliver_bytecode(uint8_t *&location, size_t &len)
+{
+    code_finalizer(this).finalize();
+    len = bytecode.size();
+    location = (uint8_t*)calloc(len, sizeof(char));
+    memcpy(const_cast<uint8_t*>(location), bytecode.data(), len);
+}
+
 unsigned char nap_compiler::getLastOpcode() const
 {
     return last_opcode;
@@ -66,21 +108,6 @@ unsigned char nap_compiler::getLastOpcode() const
 void nap_compiler::setLastOpcode(unsigned char value)
 {
     last_opcode = value;
-}
-
-
-nap_compiler::nap_compiler() : opcode_counter(0),
-    mfirst_entry(true), mvar_counter(0), minterpreter(this)
-{
-    cur_cc = new call_context(this, 0, "global", NULL, NULL) ;
-    global_cc = cur_cc;
-    cur_method = 0;
-}
-
-nap_compiler::~nap_compiler()
-{
-    delete global_cc;
-    delete pf;
 }
 
 void nap_compiler::place_bytes(int pos, const void *addr, int count)
@@ -98,3 +125,4 @@ void nap_compiler::place_bytes(int pos, const void *addr, int count)
         bytecode.push_back( *((char*)addr + i) );
     }
 }
+

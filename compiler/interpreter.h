@@ -70,9 +70,9 @@ private:
 
      char* looks_like_var_def(const call_context* cc, char* expr, int expr_len);
 
-     int var_declaration_followed_by_initialization(const char* expr, int expr_len);
+     int var_declaration_followed_by_initialization(const std::string &pexpr);
 
-     int accepted_variable_name(std::string name);
+     int accepted_variable_name(const std::string &name);
 
      char* is_indexed(const char* expr_trim, int expr_len, char** index);
 
