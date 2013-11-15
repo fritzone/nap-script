@@ -143,11 +143,17 @@ public:
         return minterpreter;
     }
 
+    bool set_source(const char* src);
+
+    void parse();
+
+    void deliver_bytecode(uint8_t*& location, size_t& label_entry);
+
 private:
 
     call_context* cur_cc;
     method* cur_method;
-    parsed_file* pf;
+    parsed_file* mpf;
     call_context* global_cc;
     std::vector<std::string> loaded_files;
     std::vector<unsigned char> bytecode;

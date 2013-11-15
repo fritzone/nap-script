@@ -12,7 +12,7 @@
  */
 void throw_error(const char* error);
 
-void throw_error(const char* error, const char* par);
+void throw_error(const char* error, const std::string& par);
 
 void throw_error(const char* error, int id, const char* par);
 

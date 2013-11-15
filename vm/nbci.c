@@ -20,10 +20,9 @@
 #include "clidx.h"
 #include "operation.h"
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <stdlib.h>
 
 /******************************************************************************/
 /*                             Debugging section                              */
@@ -43,7 +42,7 @@ void dump(struct nap_vm* vm, FILE *fp)
                 {
                     fprintf(fp, "E:[%s=%" PRId64 "](%" PRIu64 "/%" PRIu64 ")\n",
                            vm->metatable[i]->name,
-                           *(nap_number_t*)(vm->metatable[i]->instantiation->value)
+                           *(nap_int_t*)(vm->metatable[i]->instantiation->value)
                            ,i, vm->meta_size);
                 }
                 else
@@ -58,7 +57,7 @@ void dump(struct nap_vm* vm, FILE *fp)
                 {
                     fprintf(fp, "X:[%s=%"PRId64"](%" PRIu64 "/%" PRIu64 ")\n",
                            vm->metatable[i]->name,
-                           *(nap_number_t*)(vm->metatable[i]->instantiation->value)
+                           *(nap_int_t*)(vm->metatable[i]->instantiation->value)
                            ,i, vm->meta_size);
 
                 }
@@ -78,7 +77,46 @@ void dump(struct nap_vm* vm, FILE *fp)
     }
 }
 
-void nap_vm_run(struct nap_vm *vm)
+nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found)
+{
+    uint64_t i;
+    char* finame = name;
+    const char* str_global = "global.";
+    if(strstr(name,  str_global) != name)
+    {
+        finame = (char*) calloc(strlen(name) + 1 + 7, sizeof(char));
+        strcpy(finame, str_global);
+        strcat(finame, name);
+    }
+
+    for(i=0; i<vm->meta_size; i++)
+    {
+        if(vm->metatable[i]->instantiation)
+        {
+            if(vm->metatable[i]->instantiation->value)
+            {
+                if(vm->metatable[i]->instantiation->type == STACK_ENTRY_INT)
+                {
+                    if(!strcmp(vm->metatable[i]->name, finame))
+                    {
+                        if(finame != name)
+                        {
+                            free(finame);
+                        }
+                        *found = 1;
+                        return *(nap_int_t*)(vm->metatable[i]->instantiation->value);
+                    }
+                }
+            }
+        }
+    }
+    *found = 0;
+    return 0x0BADF00D;
+}
+
+
+
+void nap_vm_run(struct nap_vm* vm)
 {
     while(vm->cc < vm->meta_location)
     {
@@ -201,22 +239,3 @@ void nap_vm_run(struct nap_vm *vm)
     }
 
 }
-
-
-/*
- * Main entry point
- */
-int main()
-{
-    struct nap_vm* vm = nap_vm_load("test.ncb");
-    if(!vm)
-    {
-        exit(1);
-    }
-
-    nap_vm_run(vm);
-    cleanup(vm);
-
-    return 0;
-}
-

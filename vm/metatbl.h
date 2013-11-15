@@ -32,6 +32,7 @@ struct variable_entry
  * Read the metatable of the bytecode file. Exits on error.
  */
 void read_metatable(struct nap_vm*, FILE* fp);
+void interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len);
 
 
 #endif

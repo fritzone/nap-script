@@ -1,6 +1,10 @@
 #ifndef _NBCI_H_
 #define _NBCI_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #ifdef _WINDOWS
 #define PRId64 "lld"
@@ -46,14 +50,14 @@ struct nap_vm
 {
     /* Registers section */
 
-    nap_number_t    regi  [REGISTER_COUNT]; /* the integer registers */
+    nap_int_t    regi  [REGISTER_COUNT]; /* the integer registers */
     char*           regs  [REGISTER_COUNT]; /* the string registers */
-    nap_number_t    regidx[REGISTER_COUNT]; /* the register indexes */
+    nap_int_t    regidx[REGISTER_COUNT]; /* the register indexes */
     enum flag_staus lbf;                    /* the last boolean flag of the machine */
     uint8_t         mrc;                    /* the number of registers used in this VM */
 
     /* return values */
-    nap_number_t rvi;                       /* the integer return value */
+    nap_int_t rvi;                       /* the integer return value */
 
     /* variables regarding the execution flow */
 
@@ -100,7 +104,7 @@ struct nap_vm
  * @param immediate - against this value
  * @param current_opcode - the operation which is supposed to be executed
  */
-void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_number_t reg, nap_number_t immediate, uint8_t opcode);
+void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_int_t reg, nap_int_t immediate, uint8_t opcode);
 
 /**
  * Perform the given operation to be found in the opcode, stores the result in target
@@ -110,7 +114,7 @@ void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_number_t reg, nap_number
  * @param opcode - the operation we perform
  * @throws a system error if the operation is division and the operand is zero
  */
-void do_operation(struct nap_vm* vm, nap_number_t *target, nap_number_t operand, uint8_t opcode);
+void do_operation(struct nap_vm* vm, nap_int_t *target, nap_int_t operand, uint8_t opcode);
 
 /**
  * Does a system cleanup of the virtual machine (free memory, etc...)
@@ -168,7 +172,7 @@ nap_index_t nap_fetch_index(struct nap_vm* vm);
  * @param vm
  * @return
  */
-nap_number_t nap_read_immediate(struct nap_vm* vm);
+nap_int_t nap_read_immediate(struct nap_vm* vm);
 
 /**
  * Saves the registers. Happens automatically on a "call"
@@ -179,5 +183,26 @@ void nap_save_registers(struct nap_vm*);
  * Restores the registers. Happens automatically on a "leave"
  */
 void nap_restore_registers(struct nap_vm*);
+
+/**
+ * @brief creates a new virtual machine and injects the given bytecode
+ * @param bytecode
+ * @param bytecode_len
+ * @return
+ */
+struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len);
+
+/**
+ * @brief nap_vm_get_int return the value of the variable called "name"
+ * @param vm - the VM in which this runs
+ * @param name - the name of the variable
+ * @param [out] found - if we found it or not. Set to 1 or 0.
+ * @return the value, or 0x0BADF00D if not found
+ */
+nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

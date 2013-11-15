@@ -247,7 +247,7 @@ void code_stream::output_bytecode(const char* s)
                     if(max_reg_count == 255)
                     {
                         fprintf(stderr, "a too complex operation was attempted in [%s]", g_location->expression);
-                        _exit(1);
+                        exit(1);
                     }
                 }
             }

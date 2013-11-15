@@ -44,7 +44,7 @@ void nap_mov(struct nap_vm* vm)
                 }
 
                 /* and moving the value in the regsiter itself */
-                vm->regi[register_index] = *(nap_number_t*)var->instantiation->value;
+                vm->regi[register_index] = *(nap_int_t*)var->instantiation->value;
 
             }
             else
@@ -154,14 +154,14 @@ void nap_mov(struct nap_vm* vm)
                     /* perform the operation only if the values are not the same already*/
                     if(var->instantiation->value)
                     {
-                        if(*(nap_number_t*)var->instantiation->value != vm->regi[register_index])
+                        if(*(nap_int_t*)var->instantiation->value != vm->regi[register_index])
                         {
-                            *(nap_number_t*)var->instantiation->value = vm->regi[register_index];
+                            *(nap_int_t*)var->instantiation->value = vm->regi[register_index];
                         }
                     }
                     else /* allocate the memory for the value */
                     {
-                        nap_number_t* temp = (nap_number_t*)calloc(1, sizeof(nap_number_t));
+                        nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
                         *temp = vm->regi[register_index];
                         var->instantiation->value = temp;
                     }

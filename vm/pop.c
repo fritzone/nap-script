@@ -73,11 +73,11 @@ void nap_pop(struct nap_vm* vm)
             {
                 if(ve->instantiation->value)
                 {
-                    *(nap_number_t*)ve->instantiation->value = 0;
+                    *(nap_int_t*)ve->instantiation->value = 0;
                 }
                 else /* allocate the memory for the value */
                 {
-                    nap_number_t* temp = (nap_number_t*)calloc(1, sizeof(nap_number_t));
+                    nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
                     *temp = 0;
                     ve->instantiation->value = temp;
                 }
@@ -97,13 +97,13 @@ void nap_pop(struct nap_vm* vm)
                 {
                     if(vm->stack[vm->stack_pointer]->type == OPCODE_IMMEDIATE)
                     {
-                        *(nap_number_t*)ve->instantiation->value = *(int64_t*)vm->stack[vm->stack_pointer]->value;
+                        *(nap_int_t*)ve->instantiation->value = *(int64_t*)vm->stack[vm->stack_pointer]->value;
                     }
                     else
                     if(vm->stack[vm->stack_pointer]->type == OPCODE_INT)
                     {
                         struct variable_entry* ve_src = vm->stack[vm->stack_pointer]->value;
-                        *(nap_number_t*)ve->instantiation->value = *(int64_t*)ve_src->instantiation->value;
+                        *(nap_int_t*)ve->instantiation->value = *(int64_t*)ve_src->instantiation->value;
                     }
                     else
                     {
@@ -112,7 +112,7 @@ void nap_pop(struct nap_vm* vm)
                 }
                 else /* allocate the memory for the value */
                 {
-                    nap_number_t* temp = (nap_number_t*)calloc(1, sizeof(nap_number_t));
+                    nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
                     if(vm->stack[vm->stack_pointer]->type == OPCODE_IMMEDIATE)
                     {
                         *temp  = *(int64_t*)vm->stack[vm->stack_pointer]->value;

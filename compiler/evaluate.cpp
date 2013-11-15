@@ -1017,7 +1017,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node, const method*
     }
 
     set_location(node->expwloc);
-    if( node && (node->info || node->op_type == STATEMENT_NEW_CC
+    if( node && (!node->info.empty() || node->op_type == STATEMENT_NEW_CC
                  || node->op_type == STATEMENT_CLOSE_CC
                  || node->op_type == BASIC_TYPE_VARIABLE
                  || node->op_type == BASIC_TYPE_CLASS_VAR || node->op_type == ASM_BLOCK)

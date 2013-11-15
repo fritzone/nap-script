@@ -594,8 +594,10 @@ method* interpreter::define_method(const char* expr, int expr_len, expression_tr
  * <NAME>[white space]['(' or '=' or '[']{if ( then skip till closed}[nothing or '=']
  * @return the position of the valid = sign for the definition
  */
-int interpreter::var_declaration_followed_by_initialization(const char* expr, int expr_len)
+int interpreter::var_declaration_followed_by_initialization(const std::string& pexpr)
 {
+    const char* expr = pexpr.c_str();
+    int expr_len = pexpr.length();
     int i = 0;
     // here we can get [10] c = a; so let's skip them if any
     skip_whitespace(expr, expr_len, &i);    // skip the leading whitespace if any
@@ -624,7 +626,7 @@ int interpreter::var_declaration_followed_by_initialization(const char* expr, in
  * - it should not start with a number
  * - it should not be a keyword
  */
-int interpreter::accepted_variable_name(std::string name)
+int interpreter::accepted_variable_name(const std::string& name)
 {
     if(name.length() < 1) return 0;
     if(isdigit(name[0])) return 0;
@@ -659,26 +661,31 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
     while(q != var_names.end())
     {
         multi_dimension_def* mdd = NULL, *qm;    /* will contain the dimension definitions if any */
-        char* name = duplicate_string((*q).c_str());
+        std::string name = *q;
+
         if(!accepted_variable_name(name))
         {
             throw_error(E0037_INV_IDENTF, name);
         }
         variable* added_var = NULL;    /* will be used if we'll need to implement the definition */
-        const char* idx_def_start = strchr(name, C_SQPAR_OP);
-        const char* pos_eq = strchr(name, C_EQ);
-        if(pos_eq && idx_def_start > pos_eq) idx_def_start = NULL; /* no index definition if the first index is after an equation sign*/
+        const char* idx_def_start = strchr(name.c_str(), C_SQPAR_OP);
+        const char* const pos_eq = strchr(name.c_str(), C_EQ);
+        if(pos_eq && idx_def_start > pos_eq)
+        {
+            idx_def_start = NULL; /* no index definition if the first index is after an equation sign*/
+        }
+
         variable_definition* var_def = NULL; /* the variable definition for this variable. might contain
                                                 multi-dimension index defintion and/or value initialization
                                                 or neither of these two */
         if(idx_def_start) /* index defined? */
         {
             int can_stop = 0;
-            char* index = new_string(strlen(name));
-            char* index_save = index;
-            if(!strchr(name, C_SQPAR_CL)) /* definitely an error */
+            std::string index;
+
+            if(!strchr(name.c_str(), C_SQPAR_CL)) /* definitely an error */
             {
-                throw_error(E0011_IDDEFERR, name, NULL);
+                throw_error(E0011_IDDEFERR, name.c_str(), NULL);
             }
             /* now read the index definition */
             idx_def_start ++;
@@ -687,9 +694,9 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
             {
                 if(*idx_def_start == C_SQPAR_OP) level ++;
                 if(*idx_def_start == C_SQPAR_CL && --level == -1) can_stop = 1;
-                if(!can_stop) *index ++ = *idx_def_start ++;
+                if(!can_stop) index += *idx_def_start ++;
             }
-            std::vector<std::string> dimensions = string_list_create_bsep(index_save, C_COMMA);
+            std::vector<std::string> dimensions = string_list_create_bsep(index.c_str(), C_COMMA);
             std::vector<std::string>::iterator qDimensionStrings = dimensions.begin();    /* to walk through the dimensions */
             int countedDimensions = 0;
             mdd = alloc_mem(multi_dimension_def,1);
@@ -720,13 +727,13 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
         }
 
         /* check whether we have direct initialization */
-        int eqp = var_declaration_followed_by_initialization(name, strlen(name));
+        int eqp = var_declaration_followed_by_initialization(name);
         char* deflist = NULL;                /* the definition list for this variable */
         if(eqp)
         {
-            char* name_val = duplicate_string(name);
+            char* name_val = duplicate_string(name.c_str());
             char* pos_eq = name_val + eqp;
-            *pos_eq = 0;
+            *pos_eq = 0; // TODO: This is ugly, fix it!
             name = trim(name_val);
             deflist = duplicate_string(pos_eq + 1);
             deflist = trim(deflist);
@@ -734,14 +741,20 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
 
         if(idx_def_start)
         {
-            char* tmpname = strrchr(name, C_SQPAR_CL) + 1;
+            const char* tmpname = strrchr(name.c_str(), C_SQPAR_CL) + 1;
             /* TODO: ez meghal: int x=a[1]; re */
             char* tmp1name = trim(tmpname);
             if(strlen(tmp1name) == 0)    /* in this case the index definition was after the name: int name[12];*/
             {
-                tmpname = strchr(name, C_SQPAR_OP);
-                *tmpname = 0;
-                name = trim(name);
+                std::string temp;
+                size_t tc = 0;
+                while(tc < name.length() && (name[tc] != C_SQPAR_OP && name[tc] != C_SPACE))
+                {
+                    temp += name[tc];
+                    tc ++;
+                }
+
+                name = temp;
             }
             else    /* if the index definition was before the name: int[12] name*/
             {
@@ -751,7 +764,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
 
         if(cc)
         {
-            added_var = cc->add_variable(name, var_def_type, 1, expwloc);
+            added_var = cc->add_variable(name.c_str(), var_def_type, 1, expwloc);
         }
 
         if(!added_var)
@@ -1572,7 +1585,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
 
 
-            if(node->info && !strcmp(node->info, expr))
+            if(node->info == expr)
             {
                 {
                     throw_error(E0012_SYNTAXERR, expr, NULL);

@@ -31,12 +31,12 @@ void throw_error(const char* error, const char* par1, const char* par2)
     exit(1);
 }
 
-void throw_error(const char* error, const char* par)
+void throw_error(const char* error, const std::string& par)
 {
     char location[1024];
     prepare_location(location);
     char s[2048];
-    sprintf(s, "%s %s, %s\n", error, par, location);
+    sprintf(s, "%s %s, %s\n", error, par.c_str(), location);
     fprintf(stderr, "%s", s);
     exit(1);
 }
