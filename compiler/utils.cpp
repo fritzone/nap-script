@@ -8,6 +8,7 @@
 #include "bt_string.h"
 #include "garbage_bin.h"
 #include "sys_brkp.h"
+#include "compiler.h"
 
 #include <string.h>
 
@@ -59,9 +60,9 @@ char *afts= alloc_mem(char,len - pos + 1, _compiler);
 /**
  * Trims the trailing spaces, tabs, newlines from input, returns the trimmed string
  */
-char *rtrim(const char* src)
+char *rtrim(const char* src, const nap_compiler *_compiler )
 {
-char *res = duplicate_string(src);
+char *res = _compiler->duplicate_string(src);
 int endPos = strlen(res)-1;
     if(endPos == -1)
     {
@@ -78,7 +79,7 @@ int endPos = strlen(res)-1;
 /**
 * Trims the leading spaces, tabs, newlines from input, returns the trimmed string. User must free the returned string
 */
-char *ltrim(const char* src)
+char *ltrim(const char* src, const nap_compiler *_compiler)
 {
     if(!src)
     {
@@ -90,16 +91,16 @@ char *ltrim(const char* src)
     
     while(i<endPos && is_whitespace(src[i])) i++;
     
-    return duplicate_string(src + i);
+    return _compiler->duplicate_string(src + i);
 }
 
 /**
  * Removes leading, trailing spaces
  */
-char* trim(const char* src)
+char* trim(const char* src, const nap_compiler *_compiler)
 {
-char* trimd1 = ltrim(src);
-char* trimd2 = rtrim(trimd1);
+    char* trimd1 = ltrim(src, _compiler);
+    char* trimd2 = rtrim(trimd1, _compiler);
     return trimd2;
 }
 
@@ -125,13 +126,6 @@ void reverse(char* s, int len)
         len -= 2;
         s ++;
     }
-}
-
-char* extract(const char* from, const char* to)
-{
-    char* res = new_string(to - from + 1);
-    strncpy(res, from + 1, to-from-1);
-    return res;
 }
 
 void skip_pars(const char* expr, int expr_len, int* i)
@@ -397,7 +391,7 @@ int is_valid_variable_name(const char* name)
 /**
  * Creates a new string list from the instr which is separated by the given separator
  */
-std::vector<std::string> string_list_create_bsep(const char* instr, char sep)
+std::vector<std::string> string_list_create_bsep(const char* instr, char sep, const nap_compiler* _compiler)
 {
     std::vector<std::string>  head;
     const char* p = instr, *frst = instr;
@@ -476,11 +470,13 @@ std::vector<std::string> string_list_create_bsep(const char* instr, char sep)
 
         if(*p == sep)
         {
-            cur_elem = new_string(p - frst + 1);
+            cur_elem = (char*)calloc(p - frst + 1, 1);
             strncpy(cur_elem, frst, p - frst);
-            char* telem = trim(cur_elem);
+            char* telem = trim(cur_elem, _compiler);
             head.push_back(std::string(telem));
             frst = p + 1;
+
+            free(cur_elem);
         }
         if(! already_increased)
         {
@@ -488,9 +484,9 @@ std::vector<std::string> string_list_create_bsep(const char* instr, char sep)
         }
     }
     /* and now the last element */
-    cur_elem = new_string(p - frst + 1);
+    cur_elem = _compiler->new_string(p - frst + 1);
     strncpy(cur_elem, frst, p - frst);
-    char* telem = trim(cur_elem);
+    char* telem = trim(cur_elem, _compiler);
     head.push_back(std::string(telem));
     return head;
 }

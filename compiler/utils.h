@@ -66,7 +66,7 @@ char* after(int pos, const char *src, const nap_compiler *_compiler);
  * This method does not allocate any memory.
  * @param src the string to trim
  */
-char *rtrim(const char* src);
+char *rtrim(const char* src, const nap_compiler *_compiler);
 
 /**
  * Trims the leading spaces, tabs, newlines from input, returns the trimmed string.
@@ -74,7 +74,7 @@ char *rtrim(const char* src);
  * This method allocates memory, the user must free.
  * @param src the string to trim
  */
-char *ltrim(const char* src);
+char *ltrim(const char* src, const nap_compiler *_compiler);
 
 /**
  * Trims the leading/trailing spaces, tabs, newlines from input, returns the trimmed string.
@@ -82,7 +82,7 @@ char *ltrim(const char* src);
  * This method allocates memory, the user must free.
  * @param src the string to trim
  */
-char *trim(const char* src);
+char *trim(const char* src, const nap_compiler *_compiler);
 
 /**
  * Returns the maximum between the two integers
@@ -97,11 +97,6 @@ int max_int(int a, int b);
  * @param len - the lenth of the string
  */
 void reverse(char* s, int len);
-
-/**
- * Extracts from s the seqction between from and to. Not including * from and * to
- */
-char* extract(const char* from, const char* to);
 
 /**
  * Skips the parantheses in the given expression, updates i
@@ -164,6 +159,6 @@ std::string generate_unique_hash();
  * @param instr - the input string
  * @param sep - the expected separator
  */
-std::vector<std::string> string_list_create_bsep(const char* instr, char sep);
+std::vector<std::string> string_list_create_bsep(const char* instr, char sep, const nap_compiler *_compiler);
 
 #endif

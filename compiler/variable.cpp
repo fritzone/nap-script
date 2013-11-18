@@ -24,10 +24,10 @@
  * Creates a new multi-dimension index object
  * @return a new object, inited to 0
  */
-multi_dimension_index* new_multi_dimension_index(const char* indx_id)
+multi_dimension_index* new_multi_dimension_index(const char* indx_id, const nap_compiler *_compiler)
 {
-multi_dimension_index* tmp = alloc_mem(multi_dimension_index,1);
-    tmp->id = duplicate_string(indx_id);
+multi_dimension_index* tmp = alloc_mem(multi_dimension_index,1, _compiler);
+    tmp->id = _compiler->duplicate_string(indx_id);
     return tmp;
 }
 
@@ -36,7 +36,7 @@ multi_dimension_index* tmp = alloc_mem(multi_dimension_index,1);
  */
 static variable* variable_add_new_template_variable(variable* the_variable, const char* name, const char* type, method* the_method, call_context* cc, const expression_with_location* expwloc)
 {
-char* new_name = trim(name);
+char* new_name = trim(name, cc->compiler());
     if(strchr(new_name, C_PAR_CL) || strchr(new_name, C_PAR_OP)) /* not allowed to have parantheses in the variable name */
     {
         throw_error(E0029_PARANOTALL, new_name, NULL);
@@ -61,7 +61,7 @@ static parameter* variable_add_template_parameter(variable* the_variable, const 
         throw_error(E0030_PARMNOTALL, the_variable->name, NULL);
     }
     parameter* func_par = new_parameter(the_method);
-    char *name_dup = duplicate_string(name);
+    char *name_dup = cc->compiler()->duplicate_string(name);
     char* indexOfEq = strchr(name_dup, C_EQ);
     variable* nvar = NULL;
 
@@ -74,13 +74,13 @@ static parameter* variable_add_template_parameter(variable* the_variable, const 
         *indexOfEq = 0;
     }
 
-    name = trim(name);
+    name = trim(name,cc->compiler());
 
     nvar = variable_add_new_template_variable(the_variable, name, type, the_method, cc, expwloc);
     nvar->func_par = func_par;
 
-    func_par->value = new_envelope(nvar, BASIC_TYPE_VARIABLE);
-    func_par->name = duplicate_string(name);
+    func_par->value = new_envelope(nvar, BASIC_TYPE_VARIABLE,cc->compiler());
+    func_par->name = cc->compiler()->duplicate_string(name);
 
     the_variable->templ_parameters.push_back(func_par);
     return func_par;
@@ -96,13 +96,13 @@ static parameter* variable_add_template_parameter(variable* the_variable, const 
 void variable_feed_parameter_list(variable* the_variable, char* par_list, method* the_method, call_context* cc, const expression_with_location* expwloc)
 {
     //printf("\n\nFeeding parameter list for variable [%s] with [%s]\n\n", the_variable->name, par_list);
-    std::vector<std::string> entries = string_list_create_bsep(par_list, C_COMMA);
+    std::vector<std::string> entries = string_list_create_bsep(par_list, C_COMMA,cc->compiler());
     std::vector<std::string>::iterator q = entries.begin();
     while(q != entries.end())
     {
         size_t i=0;
-        char* par_type = new_string(q->length());
-        char* par_name = new_string(q->length());
+        char* par_type = cc->compiler()->new_string(q->length());
+        char* par_name = cc->compiler()->new_string(q->length());
         size_t j = 0;
         while(i < q->length() && is_identifier_char((*q)[i]))    /* & and [] are not allowed in variable templ. parameter*/
         {
@@ -138,7 +138,8 @@ void variable_feed_parameter_list(variable* the_variable, char* par_list, method
             par_name[j++] = (*q)[i++];
         }
 
-        parameter* new_par_decl = variable_add_template_parameter(the_variable, trim(par_name), trim(par_type), the_method, cc, expwloc);
+        parameter* new_par_decl = variable_add_template_parameter(the_variable,
+                                    trim(par_name,cc->compiler()), trim(par_type,cc->compiler()), the_method, cc, expwloc);
 
         /* here we should identify the dimension of the parameter */
         if(strchr(par_type, C_SQPAR_CL) && strchr(par_type, C_SQPAR_OP))
@@ -162,9 +163,9 @@ char* templ_pars = strchr(the_variable->name, C_PAR_OP);
         throw_error(E0033_INCORRDEF, the_variable->name, NULL);
     }
     *templ_pars = 0;
-    the_variable->name = trim(the_variable->name);
+    the_variable->name = trim(the_variable->name,cc->compiler());
     templ_pars ++;
-int tplen = strlen(templ_pars);
+    int tplen = strlen(templ_pars);
     templ_pars[tplen - 1] = 0;
 
     variable_feed_parameter_list(the_variable, templ_pars, the_method, cc, expwloc);
@@ -173,9 +174,9 @@ int tplen = strlen(templ_pars);
 /**
  * Creates a new variable template reference object
  */
-variable_template_reference* new_variable_template_reference(variable* var, std::vector<parameter *> pars)
+variable_template_reference* new_variable_template_reference(variable* var, std::vector<parameter *> pars, const nap_compiler* _compiler)
 {
-variable_template_reference* tmp = alloc_mem(variable_template_reference,1);
+variable_template_reference* tmp = alloc_mem(variable_template_reference,1, _compiler);
     tmp->templ_pars = pars;
     tmp->the_variable = var;
     return tmp;

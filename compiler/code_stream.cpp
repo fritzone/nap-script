@@ -353,7 +353,7 @@ void code_stream::output_bytecode(const char* s)
             mcompiler->add_stringtable_entry(entry);
             f.write_stuff_to_file_8(OPCODE_STRING);
             f.write_stuff_to_file_32(entry->index);
-            garbage_bin<bc_string_table_entry*>::instance().place(entry);
+            garbage_bin<bc_string_table_entry*>::instance().place(entry, mcompiler);
         }
         else
         {
@@ -422,7 +422,7 @@ void code_stream::output_bytecode(const char* s)
                         f.write_stuff_to_file_8(OPCODE_VAR);
                         f.write_stuff_to_file_32(mcompiler->var_counter());
                         mcompiler->inc_var_counter();
-                        garbage_bin<bc_variable_entry*>::instance().place(new_var);
+                        garbage_bin<bc_variable_entry*>::instance().place(new_var, mcompiler);
                     }
                 }
             }
@@ -449,7 +449,7 @@ void code_stream::output_bytecode(const char* s)
                     mcompiler->add_jumptable_entry(le);
                     NUMBER_INTEGER_TYPE index = mcompiler->jumptable().size() - 1; // the real idx
                     f.write_stuff_to_file_32(index);
-                    garbage_bin<label_entry*>::instance().place(le);
+                    garbage_bin<label_entry*>::instance().place(le, mcompiler);
                 }                
             }
         }

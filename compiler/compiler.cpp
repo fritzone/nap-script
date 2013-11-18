@@ -12,15 +12,17 @@
 #include "code_stream.h"
 
 nap_compiler::nap_compiler() : opcode_counter(0),
-    mfirst_entry(true), mvar_counter(0), minterpreter(this)
+    mfirst_entry(true), mvar_counter(0), minterpreter(this), mgbb(garbage_bin_bin::instance())
 {
     cur_cc = new call_context(this, 0, "global", NULL, NULL) ;
     global_cc = cur_cc;
     cur_method = 0;
+
 }
 
 nap_compiler::~nap_compiler()
 {
+    mgbb.empty(this);
     delete global_cc;
     delete mpf;
 }
@@ -44,11 +46,11 @@ void nap_compiler::parse()
     expression_with_location* expwloc = mpf->parser_next_phrase(&delim);
     while(expwloc)
     {
-        char* exp_trim = trim(duplicate_string(expwloc->expression));
+        char* exp_trim = trim(duplicate_string(expwloc->expression), this);
         if(strstr(exp_trim, "import") == exp_trim)
         {
             exp_trim += 6;
-            char* file_to_load = trim(exp_trim);
+            char* file_to_load = trim(exp_trim, this);
             if(std::find(loaded_files.begin(), loaded_files.end(), file_to_load) == loaded_files.end())
             {
                 loaded_files.push_back(file_to_load);
@@ -130,7 +132,7 @@ void nap_compiler::place_bytes(int pos, const void *addr, int count)
 /**
  * Duplicates src
  */
-char* nap_compiler::duplicate_string(const char* s)
+char* nap_compiler::duplicate_string(const char* s) const
 {
     char *d = alloc_mem(char, strlen(s) + 1, this);   // Space for length plus nul
     if (d == NULL) return NULL;          // No memory
@@ -142,8 +144,8 @@ char* nap_compiler::duplicate_string(const char* s)
 /**
  * Creates a new string
  */
-char* nap_compiler::new_string(int size)
+char* nap_compiler::new_string(int size) const
 {
-    char* tmp = alloc_mem(char, size + 1);
+    char* tmp = alloc_mem(char, size + 1, this);
     return tmp;
 }

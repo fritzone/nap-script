@@ -1,6 +1,7 @@
 #include "call_ctx.h"
 #include "throw_error.h"
 #include "code_output.h"
+#include "garbage_bin.h"
 #include "sys_brkp.h"
 #include "type.h"
 #include "consts.h"
@@ -124,9 +125,9 @@ expression_tree* call_context::add_new_expression(const char* expr, const expres
     expression_tree* new_expression = new expression_tree(expwloc);
     garbage_bin<expression_tree*>::instance().place(new_expression, mcompiler);
 
-    char *t1 = duplicate_string(expr);
+    char *t1 = mcompiler->duplicate_string(expr);
     int res;
-    char*t = rtrim(t1);
+    char*t = rtrim(t1, mcompiler);
     mcompiler->get_interpreter().build_expr_tree(t, new_expression, ccs_method, t, this, &res, expwloc);
     expressions.push_back(new_expression);
     return new_expression;
@@ -323,9 +324,10 @@ variable* call_context::variable_list_add_variable(const char *var_name,
     }
 
     variable* var = new variable(var_size, itype);
+    garbage_bin<variable*>::instance().place(var, cc->compiler());
 
-    var->name = duplicate_string(var_name);
-    var->c_type = duplicate_string(var_type);
+    var->name = mcompiler->duplicate_string(var_name);
+    var->c_type = mcompiler->duplicate_string(var_type);
     var->cc = cc;
 
     var->dimension = var_size;
