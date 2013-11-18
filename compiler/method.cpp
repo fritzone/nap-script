@@ -27,25 +27,25 @@
 method::method(nap_compiler* _compiler, char* name, char* preturn_type, call_context* cc)
 {
     call_context* method_main_cc = NULL;
-    char* method_main_cc_name = new_string(strlen(name) + cc->get_name().length() + 3); /* will contain: parent_name::function_name*/
+    char* method_main_cc_name = mcompiler->new_string(strlen(name) + cc->get_name().length() + 3); /* will contain: parent_name::function_name*/
     strcpy(method_main_cc_name, cc->get_name().c_str());
     strcat(method_main_cc_name, STR_CALL_CONTEXT_SEPARATOR);
     strcat(method_main_cc_name, name);
 
     def_loc = DEF_INTERN;
-    method_name = duplicate_string(name);
+    method_name = mcompiler->duplicate_string(name);
     if(preturn_type && strstr(preturn_type, "extern"))
     {
         /* if this method is a method defined somewhere else ... such as your C++ application */
         char* after_ext = return_type + 6;
-        after_ext = trim(after_ext);
-        return_type = duplicate_string(after_ext);
+        after_ext = trim(after_ext, mcompiler);
+        return_type = mcompiler->duplicate_string(after_ext);
         def_loc = DEF_EXTERN;
     }
     else
     if(preturn_type)
     {
-        return_type = duplicate_string(preturn_type);
+        return_type = mcompiler->duplicate_string(preturn_type);
     }
     method_main_cc = new call_context(_compiler, CALL_CONTEXT_TYPE_METHOD_MAIN, method_main_cc_name, this, cc);
     garbage_bin<call_context*>::instance().place(method_main_cc, cc->compiler());
@@ -66,7 +66,7 @@ constructor_call::constructor_call(char* name, call_context* cc) : method(cc->co
  */
 variable* method::add_new_variable(char* pname, char* type, int dimension, const expression_with_location* expwloc)
 {
-    char* new_name = trim(pname);
+    char* new_name = trim(pname, mcompiler);
     if(!is_valid_variable_name(pname))
     {
         throw_error(E0018_INVIDENT, pname, NULL);
@@ -178,7 +178,7 @@ parameter* method::add_parameter(char* pname, char* ptype, int pdimension, const
         func_par->type = BASIC_TYPE_INT;
     }
 
-    func_par->name = duplicate_string(pname);
+    func_par->name = mcompiler->duplicate_string(pname);
     parameters.push_back(func_par);
     return func_par;
 }
@@ -201,15 +201,15 @@ parameter* method::get_parameter(size_t i)
  */
 void method::feed_parameter_list(char* par_list, const expression_with_location* expwloc)
 {
-    std::vector<std::string> entries = string_list_create_bsep(par_list, C_COMMA);
+    std::vector<std::string> entries = string_list_create_bsep(par_list, C_COMMA, mcompiler);
     std::vector<std::string>::iterator q = entries.begin();
     while(q != entries.end())
     {
         size_t i=0;
         if(!q->empty())
         {
-            char* par_type = new_string(q->length());
-            char* par_name = new_string(q->length());
+            char* par_type = mcompiler->new_string(q->length());
+            char* par_name = mcompiler->new_string(q->length());
             size_t j = 0;
             int modifiable = 0;
             while(i < q->length() && (is_identifier_char((*q)[i]) || C_SQPAR_OP  == (*q)[i]|| C_SQPAR_CL == (*q)[i]) )
@@ -236,7 +236,7 @@ void method::feed_parameter_list(char* par_list, const expression_with_location*
             {
                 par_name[j++] = (*q)[i++];
             }
-            parameter* new_par_decl = add_parameter(trim(par_name), trim(par_type), 1, /*modifiable, */ expwloc);
+            parameter* new_par_decl = add_parameter(trim(par_name, mcompiler), trim(par_type, mcompiler), 1, /*modifiable, */ expwloc);
             /* here we should identify the dimension of the parameter */
             if(strchr(par_type, C_SQPAR_CL) && strchr(par_type, C_SQPAR_OP))
             {

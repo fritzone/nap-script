@@ -81,7 +81,7 @@ nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found)
 {
     uint64_t i;
     char* finame = name;
-    const char* str_global = "global.";
+    static const char* str_global = "global.";
     if(strstr(name,  str_global) != name)
     {
         finame = (char*) calloc(strlen(name) + 1 + 7, sizeof(char));

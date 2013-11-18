@@ -65,13 +65,13 @@ struct variable
  * @param indx_id - is the actual index
  * @return a new structure with this index in it
  */
-multi_dimension_index* new_multi_dimension_index(const char* indx_id);
+multi_dimension_index* new_multi_dimension_index(const char* indx_id, const nap_compiler* _compiler);
 
 /**
  * Creates a new templated variable reference for the give variable
  * and parameters
  */
-variable_template_reference* new_variable_template_reference(variable* var, std::vector<parameter*> pars);
+variable_template_reference* new_variable_template_reference(variable* var, std::vector<parameter*> pars, const nap_compiler *_compiler);
 
 /**
  * @brief variable_resolve_templates Resolves the templates of the given variable

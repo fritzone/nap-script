@@ -1,24 +1,28 @@
 #include "nap_runtime.h"
+
 extern "C"
 {
 #include "nbci.h"
 }
 
+#include "garbage_bin.h"
 #include "compiler.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-struct nap_runtime
-{
-    nap_compiler* compiler;
-    nap_vm* vm;
-};
-
 struct nap_bytecode_chunk
 {
     uint8_t* code;
     size_t length;
+};
+
+
+struct nap_runtime
+{
+    nap_compiler* compiler;
+    nap_vm* vm;
+    std::vector<nap_bytecode_chunk*>* chunks;
 };
 
 struct nap_runtime* nap_runtime_create(const char* /*name*/)
@@ -32,6 +36,7 @@ struct nap_runtime* nap_runtime_create(const char* /*name*/)
     }
 
     result->compiler = new nap_compiler();
+    result->chunks = new std::vector<nap_bytecode_chunk*>();
 
     return result;
 }
@@ -48,6 +53,7 @@ struct nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
             nap_bytecode_chunk* chunk = (struct nap_bytecode_chunk*)
                                    calloc(sizeof(struct nap_bytecode_chunk), 1);
             runtime->compiler->deliver_bytecode(chunk->code, chunk->length);
+            runtime->chunks->push_back(chunk);
             return chunk;
         }
         else
@@ -76,7 +82,9 @@ nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
     int found = 1;
     char* t = (char*)calloc(strlen(variable_name) + 1, 1);
     strcpy(t, variable_name);
-    return nap_vm_get_int(runtime->vm, t, &found);
+    nap_int_t temp = nap_vm_get_int(runtime->vm, t, &found);
+    free(t);
+    return temp;
 }
 
 
@@ -99,5 +107,13 @@ void nap_runtime_shutdown(nap_runtime **runtime)
 {
     delete (*runtime)->compiler;
     nap_vm_cleanup((*runtime)->vm);
+    for(size_t i=0; i<(*runtime)->chunks->size(); i++)
+    {
+        free( (*runtime)->chunks->at(i)->code);
+        free( (*runtime)->chunks->at(i));
+    }
+    delete( (*runtime)->chunks);
+    free(*runtime);
     *runtime = 0;
+    garbage_bin_bin::shutdown();
 }

@@ -3,6 +3,8 @@
 #pragma once
 
 #include <vector>
+#include <map>
+
 #include <stdlib.h>
 #include <iostream>
 #include <typeinfo>
@@ -11,7 +13,6 @@
 #include <cxxabi.h>
 #endif
 
-using namespace std;
 
 class garbage_bin_base;
 class nap_compiler;
@@ -20,19 +21,19 @@ class garbage_bin_bin {
 public:
 
     void throwIn(garbage_bin_base* rubbish) { items.push_back(rubbish); }
-    void empty();
+    void empty(const nap_compiler *_compiler);
     static void shutdown();
     static garbage_bin_bin& instance();
     ~garbage_bin_bin();
 private:
     garbage_bin_bin();
-    vector<garbage_bin_base*> items;
+    std::vector<garbage_bin_base*> items;
     static garbage_bin_bin* minstance;
 };
 
 class garbage_bin_base {
 public:
-    virtual void empty() = 0;
+    virtual void empty(const nap_compiler*) = 0;
     garbage_bin_base() { garbage_bin_bin::instance().throwIn(this); }
     virtual ~garbage_bin_base() {}
 };
@@ -54,14 +55,12 @@ private:
      */
     garbage_bin()
     {
-        items = new vector<location>();
     }
 
     // the instance
     static garbage_bin<T>* pinstance;
 
 public:
-
 
     /**
      * Returns the instance of this type of garbage bin...
@@ -92,29 +91,27 @@ public:
      */
     ~garbage_bin()
     {
-        items->clear();
-        delete items;
     }
 
     /**
      * Empties the garbage bin...
      */
-    void empty()
+    void empty(const nap_compiler* _compiler)
     {
 #ifndef _WINDOWS
         int status;
         char* s = abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) ;
-        std::cout << "\nGBIN [" << s << "] TIN:" << items->size() << " PLC:" <<  singles.size() << std::endl;
+        //std::cout << "\nGBIN [" << s << "] TIN:" << items[_compiler].size() << " PLC:" <<  singles.size() << std::endl;
 #endif
-        for(size_t i=0; i<items->size(); i++)
+        for(size_t i=0; i<items[_compiler].size(); i++)
         {
-            delete [] (items->at(i).item);
+            delete [] (items[_compiler].at(i).item);
         }
 
 
-        for(size_t i=0; i<singles.size(); i++)
+        for(size_t i=0; i<singles[_compiler].size(); i++)
         {
-            delete singles[i];
+            delete singles[_compiler][i];
         }
 #ifndef _WINDOWS
         free(s);
@@ -124,35 +121,35 @@ public:
     /**
      * Adds an item to the garbage bin
      */
-    void throwIn(T item, const char* file, long line, const nap_compiler*)
+    void throwIn(T item, const char* file, long line, const nap_compiler* _compiler)
     {
         location a;
         a.file = std::string(file);
         a.line = line;
         a.item = item;
-        items->push_back(a);
+        items[_compiler].push_back(a);
     }
 
-    void throwIn(T item, const nap_compiler*)
+    void throwIn(T item, const nap_compiler* _compiler)
     {
         location a;
         a.file = "";
         a.line = 0;
         a.item = item;
-        items->push_back(a);
+        items[_compiler].push_back(a);
     }
 
-    void place(T item, const nap_compiler*)
+    void place(T item, const nap_compiler* _compiler)
     {
-        singles.push_back(item);
+        singles[_compiler].push_back(item);
     }
 
 
 private:
 
     // this is the vector which actually contains the pointers that will be deleted at the end
-    vector<location> *items;
-    vector<T> singles;
+    std::map < const nap_compiler*, std::vector <location> > items;
+    std::map < const nap_compiler*, std::vector<T> > singles;
 
 };
 

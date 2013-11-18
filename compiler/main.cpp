@@ -12,7 +12,6 @@ int main(int argc, char* argv[])
     c.compile();
     c.write_bytecode(bc_file_name);
 
-    garbage_bin_bin::instance().empty();
     garbage_bin_bin::shutdown();
 
     return 1;

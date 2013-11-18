@@ -699,7 +699,7 @@ resw_if* my_if = (resw_if*)node->reference->to_interpret;
         if(my_if->else_branch)    /* but we have an else branch */
         {
             /* generating a name for the end of the 'if' */
-            char* end_label_name = alloc_mem(char, cc->get_name().length() + 32);
+            char* end_label_name = alloc_mem(char, cc->get_name().length() + 32, _compiler);
             sprintf(end_label_name, "%s_%d", cc->get_name().c_str(), (int)cc->get_label_count());
             jlbf(_compiler, end_label_name);                /* jump to the end of the if, if the logical expression evaluated to true */
             compile_a_block(_compiler, my_if->else_branch->get_expressions(), level,
@@ -728,12 +728,12 @@ static void resolve_while_keyword(nap_compiler* _compiler, const expression_tree
 
     /* as a first step we should print the label of the while start and end*/
 
-    char* end_label_name = alloc_mem(char, cc->get_name().length() + 32);
+    char* end_label_name = alloc_mem(char, cc->get_name().length() + 32, _compiler);
     sprintf(end_label_name, "%s_%d", cc->get_name().c_str(), (int)cc->get_label_count());    /* generating a name for the end of the while */
 
     my_while->break_label = my_while->operations->add_break_label(-1, end_label_name);    /* adding the default break label location of the while to the call context */
 
-    char* while_label_name = alloc_mem(char, my_while->operations->get_name().length() + 32);
+    char* while_label_name = alloc_mem(char, my_while->operations->get_name().length() + 32, _compiler);
     sprintf(while_label_name, "%s_%d", my_while->operations->get_name().c_str(), (int)cc->get_label_count());    /* generating a name for the content */
 
     /* print the while start label */
@@ -900,7 +900,7 @@ void resolve_variable_definition(nap_compiler* _compiler, const expression_tree*
                         expression_tree* tempvar = new expression_tree(node->expwloc);
                         tempvar->left = tempvar->right = 0;
                         tempvar->op_type = BASIC_TYPE_VARIABLE;
-                        tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE);
+                        tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE, _compiler);
 
                         tempassign->left = tempvar;
                         tempassign->right = vd->the_value;
@@ -923,12 +923,12 @@ void resolve_variable_definition(nap_compiler* _compiler, const expression_tree*
                         expression_tree* tempassign = new expression_tree(node->expwloc);
                         expression_tree* tempvar = new expression_tree(node->expwloc);
 
-                        garbage_bin<expression_tree*>::instance().place(tempassign);
-                        garbage_bin<expression_tree*>::instance().place(tempvar);
+                        garbage_bin<expression_tree*>::instance().place(tempassign, _compiler);
+                        garbage_bin<expression_tree*>::instance().place(tempvar, _compiler);
 
                         tempvar->left = tempvar->right = 0;
                         tempvar->op_type = BASIC_TYPE_VARIABLE;
-                        tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE);
+                        tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE, _compiler);
 
                         tempassign->left = tempvar;
                         tempassign->right = vd->the_value;

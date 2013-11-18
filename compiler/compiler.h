@@ -4,6 +4,7 @@
 struct call_context;
 struct method;
 struct parsed_file;
+class garbage_bin_bin;
 
 #include "interpreter.h"
 
@@ -152,12 +153,12 @@ public:
     /**
      * Duplicates src
      */
-    char* duplicate_string(const char* s);
+    char* duplicate_string(const char* s) const;
 
     /**
      * Creates a new string
      */
-    char* new_string(int size);
+    char* new_string(int size) const;
 
 private:
 
@@ -189,6 +190,8 @@ private:
     std::vector<unsigned char> mopcodes;
 
     interpreter minterpreter;
+
+    garbage_bin_bin& mgbb;
 
 };
 
