@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+class nap_compiler;
+
 /**
  * Represents a  number.
  */
@@ -15,7 +17,7 @@ class number
 {
 public:
 
-    number(const char* src)
+    number(const char* src, const nap_compiler* _compiler) : mcompiler(_compiler)
     {
         int type = number_get_type(src);
         if (BASIC_TYPE_INT == type)
@@ -48,7 +50,7 @@ private:
         m_type = BASIC_TYPE_INT;
         m_location = new_long;
 
-        garbage_bin<long*>::instance().place(new_long);
+        garbage_bin<long*>::instance().place(new_long, mcompiler);
 
     }
 
@@ -58,7 +60,7 @@ private:
         *new_double = src;
         m_type = BASIC_TYPE_REAL;
         m_location = new_double;
-        garbage_bin<double*>::instance().place(new_double);
+        garbage_bin<double*>::instance().place(new_double, mcompiler);
     }
 
     /**
@@ -89,6 +91,8 @@ private:
 
     /* the location of the number */
     void *m_location;
+
+    const nap_compiler* mcompiler;
 };
 
 #endif

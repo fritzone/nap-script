@@ -97,12 +97,12 @@ void do_operation(struct nap_vm* vm, nap_int_t* target, nap_int_t operand, uint8
 /**
  * Cleans the allocated memory
  */
-void cleanup(struct nap_vm* vm)
+void nap_vm_cleanup(struct nap_vm* vm)
 {
     uint64_t i;
     int64_t tempst;
     int64_t tempjmi;
-    dump(vm, stdout);
+    //dump(vm, stdout);
     for(i=0; i<vm->meta_size; i++)
     {
         if(vm->metatable[i]->instantiation)
@@ -384,7 +384,7 @@ void nap_save_registers(struct nap_vm* vm)
     if(regi_stack_idx == DEEPEST_RECURSION)
     {
         fprintf(stderr, "too deep recursion. (ie: too many pushall's)\n");
-        cleanup(vm);
+        nap_vm_cleanup(vm);
         exit(EXIT_FAILURE);
     }
 }
@@ -394,7 +394,7 @@ void nap_restore_registers(struct nap_vm* vm)
     if(regi_stack_idx == 0)
     {
         fprintf(stderr, "cannot popall without a pushall\n");
-        cleanup(vm);
+        nap_vm_cleanup(vm);
         exit(EXIT_FAILURE);
     }
 

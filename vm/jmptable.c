@@ -17,14 +17,14 @@ void read_jumptable(struct nap_vm* vm, FILE* fp)
     if(err == -1)
     {
         fprintf(stderr, "cannot seek in the file to the jumptable location\n");
-        cleanup(vm);
+        nap_vm_cleanup(vm);
         exit(EXIT_FAILURE);
     }
     read_bytes = fread(&count, sizeof(uint32_t), 1, fp);
     if(read_bytes != 1)
     {
         fprintf(stderr, "cannot read the number of jumptable entries");
-        cleanup(vm);
+        nap_vm_cleanup(vm);
         exit(EXIT_FAILURE);
     }
     count = htovm_32(count);
@@ -44,7 +44,7 @@ void read_jumptable(struct nap_vm* vm, FILE* fp)
         if(read_bytes != 1 && jmpc != count)
         {
             fprintf(stderr, "cannot read jumptable entry: truncated file");
-            cleanup(vm);
+            nap_vm_cleanup(vm);
             exit(EXIT_FAILURE);
         }
         end_of_file = feof(fp);

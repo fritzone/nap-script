@@ -8,6 +8,7 @@
 
 struct call_context;
 struct variable;
+class nap_compiler;
 
 #define BT_IS_NUMERIC(bt) (BASIC_TYPE_INT == bt || BASIC_TYPE_REAL == bt)
 
@@ -41,7 +42,7 @@ int is_valid_variable_name(const char* name);
  * @param c the character to transform
  * Caller is responsible for deleting the result using `free`
  */
-char *c2str(char c);
+char *c2str(char c, const nap_compiler*);
 
 /**
  * Returns the substring of src before pos. The character at pos is not included.
@@ -49,7 +50,7 @@ char *c2str(char c);
  * @param src the source string
  * Returns a new string, user must `free` it.
  */
-char* before(int pos, const char *src);
+char* before(int pos, const char *src, const nap_compiler *_compiler);
 
 /**
  * Returns the substring of src after pos. The character at pos is not included.
@@ -57,7 +58,7 @@ char* before(int pos, const char *src);
  * @param src the source string
  * Returns a new string, user must `free` it.
  */
-char* after(int pos, const char *src);
+char* after(int pos, const char *src, const nap_compiler *_compiler);
 
 /**
  * Trims the trailing spaces, tabs, newlines from input, returns the trimmed string.
@@ -82,18 +83,6 @@ char *ltrim(const char* src);
  * @param src the string to trim
  */
 char *trim(const char* src);
-
-/**
- * Duplicates the given string, the user is responsible for deleting the result.
- * @param src the string to duplicate
- */
-char* duplicate_string(const char* s);
-
-/**
- * Prepares a string, allcoates and zeroes the memory for it
- * @param size the size ofthe string
- */
-char* new_string(int size);
 
 /**
  * Returns the maximum between the two integers
@@ -138,16 +127,16 @@ char* extract_next_enclosed_phrase(char* input, char c_starter, char c_ender, ch
 extern long mem_alloc_count;
 extern void** mem_allocation;
 
-template <class T> T* allocate(size_t count, const char* f, long l)
+template <class T> T* allocate(size_t count, const char* f, long l, const nap_compiler* _compiler)
 {
     T* tmp = new T[count];
     memset(tmp, 0, count * sizeof(T));
-    garbage_bin<T*>::instance().throwIn(tmp, f, l);
+    garbage_bin<T*>::instance().throwIn(tmp, f, l, _compiler);
 
     return tmp;
 }
 
-#define alloc_mem(type,count) allocate<type>(count, __FILE__, __LINE__)
+#define alloc_mem(type,count,compiler) allocate<type>(count, __FILE__, __LINE__, compiler)
 
 //#define alloc_mem(type,count) (type*)create(sizeof(type), count)
 

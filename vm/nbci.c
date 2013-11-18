@@ -180,9 +180,12 @@ void nap_vm_run(struct nap_vm* vm)
         else
         if(vm->current_opcode == OPCODE_EXIT)
         {
-            /* free the allocated metatable */
-            cleanup(vm);
-            exit(0);
+            if(vm->environment == STANDALONE) /* only if not run in a library */
+            {
+                /* free the allocated metatable */
+                nap_vm_cleanup(vm);
+                exit(0);
+            }
         }
         else
         if(vm->current_opcode == OPCODE_INC) /* increment */
@@ -232,7 +235,7 @@ void nap_vm_run(struct nap_vm* vm)
         {
             fprintf(stderr, "invalid opcode [%x] at %"PRIu64" (%"PRIx64")\n",
                     vm->current_opcode, vm->cc - 1, vm->cc - 1);
-            cleanup(vm);
+            nap_vm_cleanup(vm);
             exit(5);
 
         }

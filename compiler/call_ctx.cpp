@@ -89,9 +89,9 @@ method* call_context::get_method(const char* name)
 
 long call_context::add_label(long position, const std::string& name)
 {
-    bytecode_label* bl = alloc_mem(bytecode_label, 1);
+    bytecode_label* bl = alloc_mem(bytecode_label, 1, mcompiler);
     bl->bytecode_location = position;
-    bl->name = duplicate_string(name.c_str());
+    bl->name = mcompiler->duplicate_string(name.c_str());
     bl->type = bytecode_label::LABEL_PLAIN;
     labels.push_back(bl);
     return get_label_count();
@@ -99,9 +99,9 @@ long call_context::add_label(long position, const std::string& name)
 
 struct bytecode_label* call_context::add_break_label(long position, const std::string& name)
 {
-    bytecode_label* bl = alloc_mem(bytecode_label, 1);
+    bytecode_label* bl = alloc_mem(bytecode_label, 1, mcompiler);
     bl->bytecode_location = position;
-    bl->name = duplicate_string(name.c_str());
+    bl->name = mcompiler->duplicate_string(name.c_str());
     bl->type = bytecode_label::LABEL_BREAK;
     break_label = bl;
     labels.push_back(bl);
@@ -122,7 +122,7 @@ void call_context::add_compiled_expression(expression_tree* co_expr)
 expression_tree* call_context::add_new_expression(const char* expr, const expression_with_location* expwloc)
 {
     expression_tree* new_expression = new expression_tree(expwloc);
-    garbage_bin<expression_tree*>::instance().place(new_expression);
+    garbage_bin<expression_tree*>::instance().place(new_expression, mcompiler);
 
     char *t1 = duplicate_string(expr);
     int res;
@@ -244,7 +244,7 @@ void call_context::compile(nap_compiler* _compiler)
 bytecode_label* call_context::provide_label()
 {
     int maxlen = name.length() + 32;
-    char* label_name = alloc_mem(char, maxlen);
+    char* label_name = alloc_mem(char, maxlen, mcompiler);
     sprintf(label_name, "%s_%d", name.c_str(), (int)get_label_count());    /* generating a name for the end of the while */
     long idx = add_label(-1, label_name);
     return labels.at(idx - 1);

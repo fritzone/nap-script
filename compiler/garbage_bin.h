@@ -14,6 +14,7 @@
 using namespace std;
 
 class garbage_bin_base;
+class nap_compiler;
 
 class garbage_bin_bin {
 public:
@@ -123,7 +124,7 @@ public:
     /**
      * Adds an item to the garbage bin
      */
-    void throwIn(T item, const char* file, long line)
+    void throwIn(T item, const char* file, long line, const nap_compiler*)
     {
         location a;
         a.file = std::string(file);
@@ -132,7 +133,7 @@ public:
         items->push_back(a);
     }
 
-    void throwIn(T item)
+    void throwIn(T item, const nap_compiler*)
     {
         location a;
         a.file = "";
@@ -141,7 +142,7 @@ public:
         items->push_back(a);
     }
 
-    void place(T item)
+    void place(T item, const nap_compiler*)
     {
         singles.push_back(item);
     }

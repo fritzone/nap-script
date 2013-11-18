@@ -31,7 +31,7 @@ void nap_clrs(struct nap_vm* vm)
     if(vm->stack_pointer == -1)
     {
         fprintf(stderr, "stack underflow error. exiting.\n");
-        cleanup(vm);
+        nap_vm_cleanup(vm);
         exit(EXIT_FAILURE);
     }
 

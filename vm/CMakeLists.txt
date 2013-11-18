@@ -32,3 +32,4 @@ add_executable(napi
 )
 
 target_link_libraries(napi nbci)
+

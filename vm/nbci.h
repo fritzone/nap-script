@@ -41,6 +41,12 @@ enum flag_staus
     TRUE      =  1
 };
 
+enum environments
+{
+    EMBEDDED = 0,
+    STANDALONE = 1
+};
+
 /**
  * The TNapVM struct represents an instance of a virtual machine.
  * This structure contains all the necessary components that are used to
@@ -95,6 +101,8 @@ struct nap_vm
 
     struct strtable_entry** stringtable;    /* the stringtable itself */
     uint64_t strt_size;                     /* the size of the stringtable */
+
+    enum environments environment;               /* whether this is run as embedded in an app or a standalone application */
 };
 
 /**
@@ -120,7 +128,7 @@ void do_operation(struct nap_vm* vm, nap_int_t *target, nap_int_t operand, uint8
  * Does a system cleanup of the virtual machine (free memory, etc...)
  * @param vm - the  virtual machine
  */
-void cleanup(struct nap_vm* vm);
+void nap_vm_cleanup(struct nap_vm* vm);
 
 /**
  * Dumps the stage of the VM into the given descriptor

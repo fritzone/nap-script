@@ -97,5 +97,7 @@ nap_string_t nap_runtime_get_string(nap_runtime */*runtime*/,
 
 void nap_runtime_shutdown(nap_runtime **runtime)
 {
+    delete (*runtime)->compiler;
+    nap_vm_cleanup((*runtime)->vm);
     *runtime = 0;
 }

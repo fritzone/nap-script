@@ -48,7 +48,7 @@ method::method(nap_compiler* _compiler, char* name, char* preturn_type, call_con
         return_type = duplicate_string(preturn_type);
     }
     method_main_cc = new call_context(_compiler, CALL_CONTEXT_TYPE_METHOD_MAIN, method_main_cc_name, this, cc);
-    garbage_bin<call_context*>::instance().place(method_main_cc);
+    garbage_bin<call_context*>::instance().place(method_main_cc, cc->compiler());
     main_cc = method_main_cc;
 
     cur_cf = 0;
@@ -169,7 +169,7 @@ parameter* method::add_parameter(char* pname, char* ptype, int pdimension, const
     }
     nvar = add_new_variable(pname, ptype, pdimension, pexpwloc);
 
-    func_par->value = new_envelope(nvar, BASIC_TYPE_VARIABLE);
+    func_par->value = new_envelope(nvar, BASIC_TYPE_VARIABLE, mcompiler);
 
     nvar->func_par = func_par;
 

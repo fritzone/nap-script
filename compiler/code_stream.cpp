@@ -142,11 +142,11 @@ void code_stream::output_bytecode(const char* s)
     std::string expr = s;
     if(expr == " " || expr == "(" || expr == ")" || expr == "\n" || expr == ",")
     {
-        printf("%s ", s);
+        //printf("%s ", s);
         return;
     }
 
-    printf("%s ", s);
+    //printf("%s ", s);
 
 
     file_abstraction f(mcompiler);
