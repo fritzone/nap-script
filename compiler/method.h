@@ -76,6 +76,12 @@ struct method
         return variables;
     }
 
+    const nap_compiler* get_compiler() const
+    {
+        return mcompiler;
+    }
+
+
     /* the name of the method */
     char *method_name;
 

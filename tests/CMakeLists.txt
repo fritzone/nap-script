@@ -1,7 +1,8 @@
-include_directories(../inc ../vm ../runtime)
+include_directories(../inc ../vm ../runtime ../compiler)
 
 add_executable(vmtest
     ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp
 )
 
 target_link_libraries(vmtest nbci naprt napcpl )
+

@@ -48,28 +48,29 @@ void parsed_file::remove_comments()
     }
 }
 
-parsed_file::parsed_file(const char *pcontent)
+parsed_file::parsed_file(const nap_compiler *_compiler) : mcompiler(_compiler)
 {
     position = 0;
-    content = alloc_mem(char, strlen(pcontent));
+    content = 0;
+    content_size = 0;
+    current_line = 0;
+}
+
+parsed_file::parsed_file(const char *pcontent, const nap_compiler* _compiler) : mcompiler(_compiler)
+{
+    position = 0;
+    content = alloc_mem(char, strlen(pcontent), mcompiler);
     strcpy(content, pcontent);
     content_size = strlen(content);
     current_line = 0;
 }
 
-parsed_file::parsed_file()
-{
-    position = 0;
-    content = 0;
-}
-
-
 /**
  * Opens the given file, creates a new prsed file structure
  */
-parsed_file *parsed_file::open_file(const char *name)
+parsed_file *parsed_file::open_file(const char *name,  const nap_compiler* _compiler)
 {
-    parsed_file *f = new parsed_file();
+    parsed_file *f = new parsed_file(_compiler);
     long size = -1;
     f->name = name;
     /* the file pointer*/
@@ -90,7 +91,7 @@ parsed_file *parsed_file::open_file(const char *name)
         return NULL;
     }
     fseek(fp, 0, SEEK_SET);
-    f->content = alloc_mem(char, size);
+    f->content = alloc_mem(char, size, _compiler);
     f->content_size = size;
     fread(f->content, size, sizeof(char), fp);
     fclose(fp);
@@ -100,14 +101,14 @@ parsed_file *parsed_file::open_file(const char *name)
     return f;
 }
 
-parsed_file *parsed_file::set_source(const char *src)
+parsed_file *parsed_file::set_source(const char *src,  const nap_compiler* _compiler)
 {
-    parsed_file *f = new parsed_file();
+    parsed_file *f = new parsed_file(_compiler);
     long size = strlen(src);
     f->name = NULL;
     /* the file pointer*/
 
-    f->content = alloc_mem(char, size);
+    f->content = alloc_mem(char, size, _compiler);
     f->content_size = size;
     memcpy(f->content, src, size);
 
@@ -127,8 +128,8 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
         return NULL;
     }
     previous_position = position;
-    expression_with_location *expwloc = alloc_mem(expression_with_location, 1);
-    expwloc->location = alloc_mem(file_location, 1);
+    expression_with_location *expwloc = alloc_mem(expression_with_location, 1, mcompiler);
+    expwloc->location = alloc_mem(file_location, 1, mcompiler);
 
     expwloc->location->location = position;
     expwloc->location->start_line_number = current_line + 1;
@@ -422,7 +423,7 @@ void parsed_file::deal_with_while_loading(call_context* cc, expression_tree* new
     {
         /* load the next statements into the while's call context */
         char d = delim;
-        expression_with_location* next_exp = alloc_mem(expression_with_location,1);
+        expression_with_location* next_exp = alloc_mem(expression_with_location,1, mcompiler);
         next_exp->location = expwloc->location;
         next_exp->expression = (duplicate_string(new_node->info.c_str()));
         //pf->position += strlen(new_node->info);
@@ -448,7 +449,7 @@ void parsed_file::deal_with_while_loading(call_context* cc, expression_tree* new
     resw_while* while_st = new resw_while;
     while_st->logical_expr = (expression_tree*)new_node->reference->to_interpret;
     while_st->operations = while_cc;
-    new_node->reference = new_envelope(while_st, STATEMENT_WHILE);
+    new_node->reference = new_envelope(while_st, STATEMENT_WHILE, mcompiler);
 }
 
 void parsed_file::deal_with_class_declaration(call_context* /*cc*/,
@@ -458,7 +459,7 @@ void parsed_file::deal_with_class_declaration(call_context* /*cc*/,
                                         int /*current_level*/,
                                         expression_with_location* /*expwloc*/)
 {
-    char* new_block = alloc_mem(char, content_size - position); // should be enough ...
+    char* new_block = alloc_mem(char, content_size - position, mcompiler); // should be enough ...
     int lev = 1;
     int pos = position;
     int nbpos = 0;
@@ -475,7 +476,7 @@ void parsed_file::deal_with_class_declaration(call_context* /*cc*/,
     }
     position = pos + 1;     // skips the closing brace
     new_block[nbpos - 1] = 0;   // remove the closing brace
-    parsed_file* npf = new parsed_file(new_block);
+    parsed_file* npf = new parsed_file(new_block, mcompiler);
     npf->name = duplicate_string(name);
     expression_with_location* nexpwloc = NULL;
     char ndelim = 0;
@@ -509,7 +510,7 @@ void parsed_file::deal_with_for_loading(call_context* cc, expression_tree* new_n
     {
         /* load the next statements into the for's call context */
         char d = delim;
-        expression_with_location* next_exp = alloc_mem(expression_with_location,1);
+        expression_with_location* next_exp = alloc_mem(expression_with_location,1, mcompiler);
         next_exp->location = expwloc->location;
         next_exp->expression = duplicate_string(new_node->info.c_str());
         //pf->position += strlen(new_node->info);
@@ -544,7 +545,7 @@ void parsed_file::deal_with_ifs_loading(call_context* cc, expression_tree* new_n
     char* if_cc_name = new_string(cc->get_name().length() + 6);
     sprintf(if_cc_name, "%s%s%s", cc->get_name().c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_IF);
     call_context* if_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_IF, if_cc_name, the_method, cc);
-    garbage_bin<call_context*>::instance().place(if_cc);
+    garbage_bin<call_context*>::instance().place(if_cc, mcompiler);
 
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF)    /* normal IF with { }*/
     {
@@ -554,7 +555,7 @@ void parsed_file::deal_with_ifs_loading(call_context* cc, expression_tree* new_n
     {
         /* load the next statements into the if's call context */
         char d = delim;
-        expression_with_location* next_exp = alloc_mem(expression_with_location,1);
+        expression_with_location* next_exp = alloc_mem(expression_with_location,1, mcompiler);
         next_exp->location = expwloc->location;
         next_exp->expression = duplicate_string(new_node->info.c_str());
         //pf->position += strlen(new_node->info);
@@ -620,12 +621,12 @@ void parsed_file::deal_with_ifs_loading(call_context* cc, expression_tree* new_n
         }
     }
 
-    resw_if* if_st = alloc_mem(resw_if, 1);
+    resw_if* if_st = alloc_mem(resw_if, 1, mcompiler);
     if_st->logical_expr = (expression_tree*)new_node->reference->to_interpret;
     if_st->if_branch = if_cc;
     if_st->else_branch = else_cc;
 
-    new_node->reference = new_envelope(if_st, STATEMENT_IF);
+    new_node->reference = new_envelope(if_st, STATEMENT_IF, mcompiler);
 }
 
 /**
@@ -678,7 +679,7 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
                     call_context* child_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_UNNAMED, new_cc_name, the_method, cc);
                     expression_tree* new_node = cc->add_new_expression(STR_OPEN_BLOCK, expwloc);
                     //todo: add a new expression in the current call CONTEXT to start executing the next call context.
-                    new_node->reference = new_envelope(child_cc, ENV_TYPE_CC);
+                    new_node->reference = new_envelope(child_cc, ENV_TYPE_CC, mcompiler);
                     cc = child_cc;
                     current_level ++;
                     position ++;    /* hack again, to skip to the next character, to not to loop on the { 4ever */
@@ -727,7 +728,7 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
     {
         int op_res = -1;
         expression_tree* cnode = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance().place(cnode);
+        garbage_bin<expression_tree*>::instance().place(cnode, mcompiler);
 
         void* gen_res = cur_cc->compiler()->get_interpreter().build_expr_tree(first, cnode, cur_method, first, cur_cc, &op_res, expwloc);
         switch(op_res)

@@ -27,7 +27,7 @@ nap_compiler::~nap_compiler()
 
 bool nap_compiler::set_source(const char *src)
 {
-    mpf = parsed_file::set_source(src);
+    mpf = parsed_file::set_source(src, this);
     if(!mpf)
     {
         return false;
@@ -67,7 +67,7 @@ void nap_compiler::parse()
 
 void nap_compiler::load_file(const char* file_name)
 {
-    mpf = parsed_file::open_file(file_name);
+    mpf = mpf->open_file(file_name, this);
     if(!mpf)
     {
         return;
@@ -126,3 +126,24 @@ void nap_compiler::place_bytes(int pos, const void *addr, int count)
     }
 }
 
+
+/**
+ * Duplicates src
+ */
+char* nap_compiler::duplicate_string(const char* s)
+{
+    char *d = alloc_mem(char, strlen(s) + 1, this);   // Space for length plus nul
+    if (d == NULL) return NULL;          // No memory
+    strcpy (d,s);                        // Copy the characters
+    return d;
+}
+
+
+/**
+ * Creates a new string
+ */
+char* nap_compiler::new_string(int size)
+{
+    char* tmp = alloc_mem(char, size + 1);
+    return tmp;
+}

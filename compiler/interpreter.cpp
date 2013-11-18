@@ -47,7 +47,7 @@ std::vector<envelope*>* interpreter::listv_prepare_list(const char* src,
         skip_whitespace(src, l, &i);
         // read the next list element
         bool read_next=false;
-        char* tmp = alloc_mem(char, l);    // the worst case
+        char* tmp = alloc_mem(char, l, cc->compiler());    // the worst case
         int j = 0;
         while(!read_next && i < l)
         {
@@ -76,7 +76,7 @@ std::vector<envelope*>* interpreter::listv_prepare_list(const char* src,
                 tmp[j] = 0;    // cause we added the ',' too :(
                 expression_tree* new_expression = new expression_tree(expwloc);
                 build_expr_tree(tmp, new_expression, the_method, orig_expr, cc, result, expwloc);
-                envelope* expr_holder = new_envelope(new_expression, LIST_ELEMENT);
+                envelope* expr_holder = new_envelope(new_expression, LIST_ELEMENT, cc->compiler());
                 lst->push_back(expr_holder);
 
                 read_next = true;
@@ -185,7 +185,7 @@ int interpreter::get_operator(const char* expr, const char** foundOperator, int*
     if(zlmlt != -1)
     {
         zlop = zlmlt;
-        *foundOperator = c2str(expr[zlop]);    /* will be "*" or "/" or "%" */
+        *foundOperator = c2str(expr[zlop], mcompiler);    /* will be "*" or "/" or "%" */
         if(C_MUL == expr[zlop])
         {
             *ntype = OPERATOR_MULTIPLY;
@@ -203,7 +203,7 @@ int interpreter::get_operator(const char* expr, const char** foundOperator, int*
     if(zladd != -1)
     {
         zlop = zladd;
-        *foundOperator = c2str(expr[zlop]);    /*  will be "+" or "-" */
+        *foundOperator = c2str(expr[zlop], mcompiler);    /*  will be "+" or "-" */
         if(C_ADD == expr[zlop])
         {
             *ntype = OPERATOR_ADD;
@@ -584,7 +584,7 @@ method* interpreter::define_method(const char* expr, int expr_len, expression_tr
     cc->add_method(created_method);
 
     node->op_type = FUNCTION_DEFINITION;
-    node->reference = new_envelope(created_method, FUNCTION_DEFINITION);
+    node->reference = new_envelope(created_method, FUNCTION_DEFINITION, cc->compiler());
     return created_method;
 }
 
@@ -655,7 +655,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
     std::vector<std::string>::iterator q = var_names.begin();
     std::vector<variable_definition*>* var_def_list = new std::vector<variable_definition*>(); /* will contain the variable definitions if any*/
 
-    garbage_bin<std::vector<variable_definition*>*>::instance().place(var_def_list);
+    garbage_bin<std::vector<variable_definition*>*>::instance().place(var_def_list, cc->compiler());
 
     var_def_type = trim(var_def_type);
     while(q != var_names.end())
@@ -699,7 +699,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
             std::vector<std::string> dimensions = string_list_create_bsep(index.c_str(), C_COMMA);
             std::vector<std::string>::iterator qDimensionStrings = dimensions.begin();    /* to walk through the dimensions */
             int countedDimensions = 0;
-            mdd = alloc_mem(multi_dimension_def,1);
+            mdd = alloc_mem(multi_dimension_def,1, cc->compiler());
             qm = mdd;
             while(qDimensionStrings != dimensions.end())
             {
@@ -719,7 +719,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
                 }
                 qm->dimension = -1;
                 qm->expr_def = dim_def_node;
-                qm->next = alloc_mem(multi_dimension_def,1);
+                qm->next = alloc_mem(multi_dimension_def,1, cc->compiler());
                 qm = qm->next;
                 countedDimensions ++;
                 qDimensionStrings ++;
@@ -773,14 +773,14 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
         }
 
         /* create the variable definition/declaration structure for both of them */
-        var_def = alloc_mem(variable_definition,1);
+        var_def = alloc_mem(variable_definition,1, cc->compiler());
         var_def->the_variable = added_var;
         var_def->md_def = mdd;
 
         if(deflist)    /* whether we have a definition for this variable. if yes, we need to populate a definition_list */
         {
             expression_tree* var_def_node = new expression_tree(expwloc);
-            garbage_bin<expression_tree*>::instance().place(var_def_node);
+            garbage_bin<expression_tree*>::instance().place(var_def_node, cc->compiler());
 
             build_expr_tree(deflist, var_def_node, the_method, orig_expr, cc, result, expwloc);
             var_def->the_value = var_def_node;
@@ -793,7 +793,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
 
     node->op_type = NT_VARIABLE_DEF_LST;
     node->info = expr_trim;
-    node->reference = new_envelope(var_def_list, NT_VARIABLE_DEF_LST);
+    node->reference = new_envelope(var_def_list, NT_VARIABLE_DEF_LST, cc->compiler());
     return var_def_list;
 }
 
@@ -847,7 +847,7 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
         if(q->length() > 0)
         {
             cur_par_expr = new expression_tree(expwloc);
-            garbage_bin<expression_tree*>::instance().place(cur_par_expr);
+            garbage_bin<expression_tree*>::instance().place(cur_par_expr, cc->compiler());
             build_expr_tree((*q).c_str(), cur_par_expr, the_method, orig_expr, cc, result, expwloc);
             
             parameter* cur_par_obj = new_parameter(the_method);
@@ -858,14 +858,14 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
 
         q ++;
     }
-    cfe = alloc_mem(call_frame_entry, 1);
+    cfe = alloc_mem(call_frame_entry, 1, cc->compiler());
     cfe->the_method = func_call;
     cfe->parameters = pars_list;
     cfe->previous_cf = func_call->cur_cf;
 
     node->info = duplicate_string(func_call->method_name);
-    node->op_type = FUNCTION_CALL + type_of_call;
-    node->reference = new_envelope(cfe, FUNCTION_CALL + type_of_call);
+    node->op_type = FUNCTION_CALL + type_of_call; // TODO: This is tricky and ugly
+    node->reference = new_envelope(cfe, FUNCTION_CALL + type_of_call, cc->compiler());
     cfe->the_method = cc->get_method(func_call->method_name);
     return cfe;
 }
@@ -1004,7 +1004,7 @@ void* interpreter::deal_with_one_word_keyword( call_context* cc, expression_tree
         }
     }
     node->info = duplicate_string(keyw);
-    node->reference = new_envelope(cc, ENV_TYPE_CC);
+    node->reference = new_envelope(cc, ENV_TYPE_CC, cc->compiler());
     node->op_type = statement;
     *result = statement;
     return node->reference;
@@ -1048,7 +1048,7 @@ void* interpreter::deal_with_conditional_keywords(char* keyword_if,
     {
         node->info = duplicate_string(keyw);
         expression_tree* expt = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance().place(expt);
+        garbage_bin<expression_tree*>::instance().place(expt, cc->compiler());
 
         /* here fetch the part which is in the parentheses after the keyword and build the tree based on that*/
         char *condition = duplicate_string(expr_trim + strlen(keyw));
@@ -1064,13 +1064,13 @@ void* interpreter::deal_with_conditional_keywords(char* keyword_if,
         if(strlen(p) > 1)    /* means: there is a one lined statement after the condition*/
         {
             node->info = p;    /* somehow we must tell the external world what's the next expression */
-            node->reference = new_envelope(expt, one_line_stmt);
+            node->reference = new_envelope(expt, one_line_stmt, cc->compiler());
             *result = one_line_stmt;
             node->op_type = one_line_stmt;
         }
         else
         {
-            node->reference = new_envelope(expt, stmt);
+            node->reference = new_envelope(expt, stmt, cc->compiler());
             *result = stmt;
             node->op_type = stmt;
         }
@@ -1136,7 +1136,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
     {
         std::vector<envelope*> *thlist = listv_prepare_list(expr, the_method, orig_expr, cc, result, expwloc);
         node->op_type = LIST_VALUE;
-        node->reference = new_envelope(thlist, LIST_VALUE);
+        node->reference = new_envelope(thlist, LIST_VALUE, cc->compiler());
         return 0;
     }
 
@@ -1147,7 +1147,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         expr_trim[expr_len-1] = 0;    // removing the double quotes
         expr_trim++;
         bt_string* the_str = new bt_string(expr_trim);
-        node->reference = new_envelope(the_str, BASIC_TYPE_STRING);
+        node->reference = new_envelope(the_str, BASIC_TYPE_STRING, cc->compiler());
         node->info = duplicate_string(the_str->the_string());
         *result = RESULT_STRING;
         node->op_type = BASIC_TYPE_STRING;
@@ -1159,7 +1159,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
     {
         expr_trim[expr_len-1] = 0;    /* removing the double quotes */
         expr_trim++;
-        node->reference = new_envelope(new bt_string(expr_trim), BASIC_TYPE_STRING);
+        node->reference = new_envelope(new bt_string(expr_trim), BASIC_TYPE_STRING, cc->compiler());
         node->info = duplicate_string(expr_trim);
         *result = BACKQUOTE_STRING;
         return expr_trim;
@@ -1222,9 +1222,9 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
     {
         node->info = duplicate_string(STR_RETURN);
         expression_tree* expt = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance().place(expt);
+        garbage_bin<expression_tree*>::instance().place(expt, cc->compiler());
         build_expr_tree(keyword_return, expt, the_method, orig_expr, cc, result, expwloc);
-        node->reference = new_envelope(expt, RETURN_STATEMENT);
+        node->reference = new_envelope(expt, RETURN_STATEMENT, cc->compiler());
         *result = RETURN_STATEMENT;
         node->op_type = RETURN_STATEMENT;
         return node->reference;
@@ -1284,7 +1284,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         {
             throw_error(E0012_SYNTAXERR, for_par);
         }
-        resw_for* rswfor = alloc_mem(resw_for,1);
+        resw_for* rswfor = alloc_mem(resw_for,1, cc->compiler());
 
         rswfor->unique_hash = duplicate_string(generate_unique_hash().c_str());
         rswfor->init_stmt = init_stmt;
@@ -1313,13 +1313,13 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         if(strlen(p) > 1)    /* means: there is a one lined statement after the condition*/
         {
             node->info = p;    /* somehow we must tell the external world what's the next expression */
-            node->reference = new_envelope(rswfor, STATEMENT_FOR_1L);
+            node->reference = new_envelope(rswfor, STATEMENT_FOR_1L, cc->compiler());
             *result = STATEMENT_FOR_1L;
             node->op_type = STATEMENT_FOR_1L;
         }
         else
         {
-            node->reference = new_envelope(rswfor, STATEMENT_FOR);
+            node->reference = new_envelope(rswfor, STATEMENT_FOR, cc->compiler());
             *result = STATEMENT_FOR;
             node->op_type = STATEMENT_FOR;
         }
@@ -1334,7 +1334,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
     if(zlop!=-1)    /* we have found an operator on the zero.th level */
     {
-        char *beforer = trim(before(zlop, expr_trim));
+        char *beforer = trim(before(zlop, expr_trim, mcompiler));
         if(strlen(beforer) == 0)
         {
             /* now we should check for the 'unary' +- operators */
@@ -1372,7 +1372,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         {
             /* finding the part which is after the operator */
 
-            char* afterer = trim(after(zlop + (foundOperator ? strlen(foundOperator) -1 : 0), expr_trim));
+            char* afterer = trim(after(zlop + (foundOperator ? strlen(foundOperator) -1 : 0), expr_trim, mcompiler));
             if(strlen(afterer)==0)
             {
                 throw_error(E0012_SYNTAXERR, expr, NULL);
@@ -1381,8 +1381,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             node->op_type = ntype;
             node->left=new expression_tree(node, expwloc);
             node->right=new expression_tree(node, expwloc);
-            garbage_bin<expression_tree*>::instance().place(node->left);
-            garbage_bin<expression_tree*>::instance().place(node->right);
+            garbage_bin<expression_tree*>::instance().place(node->left, cc->compiler());
+            garbage_bin<expression_tree*>::instance().place(node->right, cc->compiler());
 
             /* the order here is important for the "." operator ... it needs to know the parent in order to identify the object to find its call_context*/
             build_expr_tree(beforer, node->left, the_method, orig_expr, cc, result, expwloc);
@@ -1445,7 +1445,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 {
                     variable* var = *it;
                     *result = MEMBER_ACCESS_OF_OBJECT;
-                    envelope* envl = new_envelope(var, BASIC_TYPE_VARIABLE);
+                    envelope* envl = new_envelope(var, BASIC_TYPE_VARIABLE, cc->compiler());
                     node->op_type = MEMBER_ACCESS_OF_OBJECT;
                     node->reference = envl;
                     return envl;
@@ -1538,7 +1538,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 indx_cnt ++;
             }
             dim->dimension_values = index_list;
-            node->right->reference = new_envelope(dim, MULTI_DIM_INDEX); /*((variable*)node->father->left->reference->to_interpret)->mult_dim_def*/
+            node->right->reference = new_envelope(dim, MULTI_DIM_INDEX, cc->compiler()); /*((variable*)node->father->left->reference->to_interpret)->mult_dim_def*/
             node->right->info = duplicate_string(expr_trim);
             node->op_type = MULTI_DIM_INDEX;
         }
@@ -1563,7 +1563,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             if(env_var)
             {
                 node->op_type = ENVIRONMENT_VARIABLE;
-                envl = new_envelope(t, ENVIRONMENT_VARIABLE);
+                envl = new_envelope(t, ENVIRONMENT_VARIABLE, cc->compiler());
             }
 
             if(!var)
@@ -1579,7 +1579,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             if(var)    /* if this is a variable */
             {
                 // TODO: Check if this is a class variable
-                envl = new_envelope(var, BASIC_TYPE_VARIABLE);
+                envl = new_envelope(var, BASIC_TYPE_VARIABLE, cc->compiler());
                 node->op_type = BASIC_TYPE_VARIABLE;
             }
 
@@ -1606,22 +1606,22 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
             if(isnumber(t))
             {
-                number* nr = new number(t);
-                garbage_bin<number*>::instance().place(nr);
-                envl = new_envelope(nr, nr->type());
+                number* nr = new number(t, cc->compiler());
+                garbage_bin<number*>::instance().place(nr, cc->compiler());
+                envl = new_envelope(nr, nr->type(), cc->compiler());
                 node->op_type = nr->type();
             }
             else
             if(!strcmp(t, "true"))
             {
-                envl = new_envelope(0, KEYWORD_TRUE);
+                envl = new_envelope(0, KEYWORD_TRUE, cc->compiler());
                 node->op_type = KEYWORD_TRUE;
                 *result = KEYWORD_TRUE;
             }
             else
             if(!strcmp(t, "false"))
             {
-                envl = new_envelope(0, KEYWORD_FALSE);
+                envl = new_envelope(0, KEYWORD_FALSE, cc->compiler());
                 node->op_type = KEYWORD_FALSE;
                 *result = KEYWORD_FALSE;
             }
@@ -1644,7 +1644,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 *tcname = 0;
                 class_declaration* cd = new class_declaration(mcompiler, the_class_name, cc);
 
-                envl = new_envelope(cd, CLASS_DECLARATION);
+                envl = new_envelope(cd, CLASS_DECLARATION, cc->compiler());
                 node->op_type = CLASS_DECLARATION;
                 *result = CLASS_DECLARATION;
             }
@@ -1652,7 +1652,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             if(!strcmp(expr, "asm"))
             {
                 *result = ASM_BLOCK;
-                envl = new_envelope(0, ASM_BLOCK);
+                envl = new_envelope(0, ASM_BLOCK, cc->compiler());
                 node->op_type = ASM_BLOCK;
             }
 

@@ -3,10 +3,7 @@
 
 #include "common_structs.h"
 
-/**
- * Opens the given file, and in case of success returns a parsed_file structure
- */
-
+class nap_compiler;
 
 /**
  * The structure of a parsed file
@@ -14,9 +11,10 @@
 struct parsed_file
 {
 public:
-    parsed_file(const char *content);
 
-    parsed_file();
+    parsed_file(const nap_compiler* _compiler);
+
+    parsed_file(const char *content, const nap_compiler* _compiler);
 
     /**
      * Retrieves the next phrase from the given parsed file. The phrase delimitators are the followings:
@@ -46,9 +44,9 @@ public:
 
     void remove_comments();
 
-    static parsed_file* open_file(const char* name);
+    static parsed_file* open_file(const char* name,  const nap_compiler* _compiler );
 
-    static parsed_file* set_source(const char* src);
+    static parsed_file* set_source(const char* src,  const nap_compiler* _compiler);
 
     /* TODO: make this private, create another start parsing function ...*/
     void load_next_single_phrase(expression_with_location* expwloc,
@@ -99,6 +97,8 @@ private:
 
     /* the previous position where the parser was before reading the current expression */
     long previous_position;
+
+    const nap_compiler* mcompiler;
 };
 
 #endif

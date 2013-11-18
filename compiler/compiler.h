@@ -149,6 +149,16 @@ public:
 
     void deliver_bytecode(uint8_t*& location, size_t& label_entry);
 
+    /**
+     * Duplicates src
+     */
+    char* duplicate_string(const char* s);
+
+    /**
+     * Creates a new string
+     */
+    char* new_string(int size);
+
 private:
 
     call_context* cur_cc;

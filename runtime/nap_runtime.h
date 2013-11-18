@@ -7,7 +7,7 @@ extern "C" {
 
 #include "nap_types.h"
 
-/* The real runtime hidden in a data pointer  */
+/* The real runtime hidden in an opaque pointer  */
 struct nap_runtime;
 
 /* A piece of compiled nap-script bytecode */

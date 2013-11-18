@@ -26,9 +26,9 @@
 /**
  * Transforms a character to a string
  */
-char *c2str(char c)
+char *c2str(char c, const nap_compiler *_compiler)
 {
-char *s = alloc_mem(char,2);
+char *s = alloc_mem(char,2, _compiler);
     s[0] = c;
     s[1] = 0;
     return s;
@@ -37,9 +37,9 @@ char *s = alloc_mem(char,2);
 /**
  * return the substring of src before pos
  */
-char* before(int pos, const char *src)
+char* before(int pos, const char *src, const nap_compiler *_compiler)
 {
-char *befs = alloc_mem(char,pos+1);
+char *befs = alloc_mem(char,pos+1, _compiler);
     strncpy(befs, src, pos);
     return befs;
 }
@@ -47,10 +47,10 @@ char *befs = alloc_mem(char,pos+1);
 /**
  * return the substring of src after pos
  */
-char* after(int pos, const char *src)
+char* after(int pos, const char *src, const nap_compiler *_compiler)
 {
 int len = strlen(src);
-char *afts= alloc_mem(char,len - pos + 1);
+char *afts= alloc_mem(char,len - pos + 1, _compiler);
     strncpy(afts, src + pos + 1, len - pos + 1);
     return afts;
 }
@@ -101,26 +101,6 @@ char* trim(const char* src)
 char* trimd1 = ltrim(src);
 char* trimd2 = rtrim(trimd1);
     return trimd2;
-}
-
-/**
- * Duplicates src
- */
-char* duplicate_string(const char* s)
-{
-    char *d = alloc_mem(char, strlen(s) + 1);   // Space for length plus nul
-    if (d == NULL) return NULL;          // No memory
-    strcpy (d,s);                        // Copy the characters
-    return d;
-}
-
-/**
- * Creates a new string
- */
-char* new_string(int size)
-{
-    char* tmp = alloc_mem(char, size + 1);
-    return tmp;
 }
 
 /**
