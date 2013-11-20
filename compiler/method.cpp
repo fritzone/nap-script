@@ -5,7 +5,6 @@
 #include "number.h"
 #include "consts.h"
 #include "envelope.h"
-#include "throw_error.h"
 #include "bt_string.h"
 #include "parametr.h"
 #include "type.h"
@@ -69,7 +68,7 @@ variable* method::add_new_variable(char* pname, char* type, int dimension, const
     char* new_name = trim(pname, mcompiler);
     if(!is_valid_variable_name(pname))
     {
-        throw_error(E0018_INVIDENT, pname, NULL);
+        mcompiler->throw_error(E0018_INVIDENT, pname, NULL);
     }
     return main_cc->variable_list_add_variable(new_name, type, dimension, variables, this, main_cc, expwloc);
 }
@@ -108,7 +107,7 @@ variable* method::add_new_variable(char* pname, char* type, int dimension, const
     {
         if((*location)->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
         {
-            throw_error(E0020_ACCTNOTP, (*location)->name, NULL);
+            mcompiler->throw_error(E0020_ACCTNOTP, (*location)->name, NULL);
         }
         return *location;
     }
@@ -124,7 +123,7 @@ variable* method::add_new_variable(char* pname, char* type, int dimension, const
         {
             if(v->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
             {
-                throw_error(E0020_ACCTNOTP, v->name, NULL);
+                mcompiler->throw_error(E0020_ACCTNOTP, v->name, NULL);
             }
             return v;
         }
@@ -139,7 +138,7 @@ variable* method::add_new_variable(char* pname, char* type, int dimension, const
         {
             if((*location)->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
             {
-                throw_error(E0020_ACCTNOTP, (*location)->name, NULL);
+                mcompiler->throw_error(E0020_ACCTNOTP, (*location)->name, NULL);
             }
             return *location;
         }
@@ -223,7 +222,7 @@ void method::feed_parameter_list(char* par_list, const expression_with_location*
             }
             if(i == q->length())
             {
-                throw_error(E0009_PARAMISM, par_list);
+                mcompiler->throw_error(E0009_PARAMISM, par_list);
             }
 
             if((modifiable = (C_AND == (*q)[i])))

@@ -82,7 +82,7 @@ public:
     {
         if (pinstance)
         {
-            delete pinstance;
+            pinstance = 0;
         }
     }
 
@@ -116,6 +116,9 @@ public:
 #ifndef _WINDOWS
         free(s);
 #endif
+        items.clear();
+        singles.clear();
+        deleteInstance(); // sets to zero only the instance, the bin_bin has the address for the delete
     }
 
     /**

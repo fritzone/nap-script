@@ -4,7 +4,6 @@
 #include "consts.h"
 #include "number.h"
 #include "envelope.h"
-#include "throw_error.h"
 #include "bt_string.h"
 #include "type.h"
 #include "opr_hndl.h"
@@ -40,7 +39,7 @@ std::vector<envelope*>* interpreter::listv_prepare_list(const char* src,
 
     // to skip the whitespace in front of the { (in case there's any)
     skip_whitespace(src, l, &i);
-    if(src[i] != '{') throw_error(E0012_SYNTAXERR);
+    if(src[i] != '{') mcompiler->throw_error(E0012_SYNTAXERR);
     i++;        // with this i points to the first character after the {
     while(i < l)
     {
@@ -69,7 +68,7 @@ std::vector<envelope*>* interpreter::listv_prepare_list(const char* src,
                     }
                 }
                 tmp[j++] = src[i++];
-                if(i==l) throw_error(E0012_SYNTAXERR);
+                if(i==l) mcompiler->throw_error(E0012_SYNTAXERR);
             }
             // here we have finished reading the stuff that was in parenthesis, continue till we find the ',' separator or ..
             if(src[i] == ',')
@@ -115,20 +114,20 @@ std::vector<envelope*>* interpreter::listv_prepare_list(const char* src,
  */
 int interpreter::get_operator(const char* expr, const char** foundOperator, int* ntype)
 {
-    int zladd = level_0_add_operator(expr);                    /* the position of a +- sign on the first level */
-    int zlbit = level_0_bitwise_operator(expr);                /* if any bitwise (&|~_ operators can be found on level 0 */
-    int zllogic = level_0_logical_operator(expr);            /* && or || or ! on the zeroth level */
-    int zlmlt=level_0_multiply_operator(expr);                /* the position of a * / sign on the first level */
-    int zlev_assignment = level_0_assignment_operator(expr);/* the position of an equal operator on the first level */
-    int zlev_dot = level_0_dot_operator(expr);              /* the position of a dot operator on the first level */
-    int zlev_shift = level_0_shift(expr);                    /* Shift operator << >> */
+    int zladd = level_0_add_operator(mcompiler, expr);                    /* the position of a +- sign on the first level */
+    int zlbit = level_0_bitwise_operator(mcompiler, expr);                /* if any bitwise (&|~_ operators can be found on level 0 */
+    int zllogic = level_0_logical_operator(mcompiler, expr);            /* && or || or ! on the zeroth level */
+    int zlmlt=level_0_multiply_operator(mcompiler, expr);                /* the position of a * / sign on the first level */
+    int zlev_assignment = level_0_assignment_operator(mcompiler, expr);/* the position of an equal operator on the first level */
+    int zlev_dot = level_0_dot_operator(mcompiler, expr);              /* the position of a dot operator on the first level */
+    int zlev_shift = level_0_shift(mcompiler, expr);                    /* Shift operator << >> */
 
     const char* found_comp_operator = NULL;                        /* the comparison operator that was found */
-    int zlev_comparison = level_0_comparison_operator(expr, &found_comp_operator);
+    int zlev_comparison = level_0_comparison_operator(mcompiler, expr, &found_comp_operator);
 
     int sgeq_type = -1;                                        /* the type of the sg_eq operator*/
     const char* found_sq_eq_operator = NULL;                        /* the found sg_eq operator*/
-    int zlev_sg_eq_operator = level_0_sg_eq_operator(expr, &found_sq_eq_operator, &sgeq_type);
+    int zlev_sg_eq_operator = level_0_sg_eq_operator(mcompiler, expr, &found_sq_eq_operator, &sgeq_type);
 
     int zlop = -1;
 
@@ -553,7 +552,7 @@ method* interpreter::define_method(const char* expr, int expr_len, expression_tr
     }
     if(i == 0)
     {
-        throw_error(E0010_INVFNCDF, expr, NULL);
+        mcompiler->throw_error(E0010_INVFNCDF, expr, NULL);
     }
     reverse(parameters, par_counter);
     i --;
@@ -574,7 +573,7 @@ method* interpreter::define_method(const char* expr, int expr_len, expression_tr
     ret_type = trim(ret_type, cc->compiler());
     if(strlen(func_name) == 0)
     {
-        throw_error(E0010_INVFNCDF, expr, NULL);
+        mcompiler->throw_error(E0010_INVFNCDF, expr, NULL);
     }
     created_method = new method(mcompiler, func_name, ret_type, cc);
     created_method->feed_parameter_list(trim(parameters, cc->compiler()), expwloc);
@@ -666,7 +665,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
 
         if(!accepted_variable_name(name))
         {
-            throw_error(E0037_INV_IDENTF, name);
+            mcompiler->throw_error(E0037_INV_IDENTF, name);
         }
         variable* added_var = NULL;    /* will be used if we'll need to implement the definition */
         const char* idx_def_start = strchr(name.c_str(), C_SQPAR_OP);
@@ -686,7 +685,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
 
             if(!strchr(name.c_str(), C_SQPAR_CL)) /* definitely an error */
             {
-                throw_error(E0011_IDDEFERR, name.c_str(), NULL);
+                mcompiler->throw_error(E0011_IDDEFERR, name.c_str(), NULL);
             }
             /* now read the index definition */
             idx_def_start ++;
@@ -714,7 +713,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
                     /* check if there are multiple dimensions for this variable. If yes disallow the dynamic dimensions for now */
                     if(countedDimensions > 0)    /* awkward but correct */
                     {
-                        throw_error(E0038_DYNDIMNALL, expr_trim);
+                        mcompiler->throw_error(E0038_DYNDIMNALL, expr_trim);
                     }
                     qm->dynamic = 1;
                 }
@@ -770,7 +769,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
 
         if(!added_var)
         {
-            throw_error("Internal: a variable cannot be defined", NULL);
+            mcompiler->throw_error("Internal: a variable cannot be defined", NULL);
         }
 
         /* create the variable definition/declaration structure for both of them */
@@ -1001,7 +1000,7 @@ void* interpreter::deal_with_one_word_keyword( call_context* cc, expression_tree
         }
         if(!in_iterative_cc)
         {
-            throw_error(E0036_NOBREAK);
+            mcompiler->throw_error(E0036_NOBREAK);
         }
     }
     node->info = mcompiler->duplicate_string(keyw);
@@ -1056,7 +1055,7 @@ void* interpreter::deal_with_conditional_keywords(char* keyword_if,
         while(is_whitespace(*condition)) condition ++;    /* skip the whitespace */
         if(*condition != C_PAR_OP)                        /* next char should be '(' */
         {
-            throw_error(E0012_SYNTAXERR, NULL);
+            mcompiler->throw_error(E0012_SYNTAXERR, NULL);
         }
         char* p = ++condition;                                /* skip the parenthesis */
         char* m_cond = mcompiler->new_string(expr_len);
@@ -1102,7 +1101,7 @@ void* interpreter::deal_with_conditional_keywords(char* keyword_if,
  */
 void* interpreter::build_expr_tree(const char *expr, expression_tree* node, method* the_method, const char* orig_expr, call_context* cc, int* result, const expression_with_location* expwloc)
 {
-    set_location(expwloc);
+    mcompiler->set_location(expwloc);
 
     /* some variables that will be used at a later stage too */
     char* expr_trim = trim(expr, mcompiler);
@@ -1198,13 +1197,13 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         class_declaration* cd = cc->get_class_declaration(constructor_name);
         if(!cd)
         {
-            throw_error("Invalid constructor: ", constructor_name);
+            mcompiler->throw_error("Invalid constructor: ", constructor_name);
         }
         method* called_constructor = cd->get_method(constructor_name);
         constructor_call* tmp = (constructor_call*)realloc(called_constructor, sizeof(constructor_call));
         if(tmp == NULL)
         {
-            throw_error("Not enough memory");
+            mcompiler->throw_error("Not enough memory");
         }
         called_constructor = tmp;
         constructor_call* ccf = (constructor_call*)called_constructor;
@@ -1256,7 +1255,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         int fors_len = strlen(fors_trm);
         if(fors_trm[0] != C_PAR_OP && fors_trm[fors_len - 1] != C_PAR_CL)
         {
-            throw_error(E0012_SYNTAXERR);
+            mcompiler->throw_error(E0012_SYNTAXERR);
         }
         char* for_par = mcompiler->new_string(fors_len);
         int i = 0, j = 1, level = 1;
@@ -1271,19 +1270,19 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         for_par = trim(for_par, mcompiler);
         if(strlen(for_par) == 0)
         {
-            throw_error(E0012_SYNTAXERR);
+            mcompiler->throw_error(E0012_SYNTAXERR);
         }
         std::vector<std::string> content = string_list_create_bsep(for_par, C_SEMC, mcompiler);
         if(content.empty())
         {
-            throw_error(E0012_SYNTAXERR, for_par);
+            mcompiler->throw_error(E0012_SYNTAXERR, for_par);
         }
         char* init_stmt = mcompiler->duplicate_string(content[0].c_str());                /* the init statement */
         char* cond_stmt = content.size() > 1?mcompiler->duplicate_string(content[1].c_str()):0;                    /* the condition */
         char* expr_stmt = content.size() == 3?mcompiler->duplicate_string(content[2].c_str()):0;
         if(content.size() > 3)
         {
-            throw_error(E0012_SYNTAXERR, for_par);
+            mcompiler->throw_error(E0012_SYNTAXERR, for_par);
         }
         resw_for* rswfor = alloc_mem(resw_for,1, cc->compiler());
 
@@ -1306,7 +1305,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         while(is_whitespace(*condition)) condition ++;    /* skip the whitespace */
         if(*condition != C_PAR_OP)                        /* next char should be '(' */
         {
-            throw_error(E0012_SYNTAXERR, NULL);
+            mcompiler->throw_error(E0012_SYNTAXERR, NULL);
         }
         char* p = ++condition;                                /* skip the parenthesis */
         char* m_cond = mcompiler->new_string(expr_len);
@@ -1367,7 +1366,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             }
             else    /* right now we are not dealing with more unary operators */
             {
-                throw_error(E0012_SYNTAXERR, expr, NULL);
+                mcompiler->throw_error(E0012_SYNTAXERR, expr, NULL);
             }
         }
         else
@@ -1377,7 +1376,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             char* afterer = trim(after(zlop + (foundOperator ? strlen(foundOperator) -1 : 0), expr_trim, mcompiler), mcompiler);
             if(strlen(afterer)==0)
             {
-                throw_error(E0012_SYNTAXERR, expr, NULL);
+                mcompiler->throw_error(E0012_SYNTAXERR, expr, NULL);
             }
             node->info = mcompiler->duplicate_string(foundOperator);
             node->op_type = ntype;
@@ -1431,7 +1430,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                     }
                     else
                     {
-                        throw_error("Only class type variables can call methods on themselves", v->name);
+                        mcompiler->throw_error("Only class type variables can call methods on themselves", v->name);
                     }
                 }
                 if((func_call = is_function_call(expr_trim, cd)))
@@ -1504,7 +1503,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 expr_trim = trim(expr_trim, mcompiler);
                 if(strlen(expr_trim)==0)
                 {
-                    throw_error(E0012_SYNTAXERR, expr, NULL);
+                    mcompiler->throw_error(E0012_SYNTAXERR, expr, NULL);
                 }
                 else
                 {
@@ -1513,7 +1512,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             }
             else
             {
-                throw_error(E0009_PARAMISM, expr_trim, NULL);
+                mcompiler->throw_error(E0009_PARAMISM, expr_trim, NULL);
             }
         }
         else if(indexed_elem)    /* if this is something indexed */
@@ -1590,7 +1589,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             if(node->info == expr)
             {
                 {
-                    throw_error(E0012_SYNTAXERR, expr, NULL);
+                    mcompiler->throw_error(E0012_SYNTAXERR, expr, NULL);
                 }
             }
             node->info=mcompiler->duplicate_string(expr_trim);
@@ -1603,7 +1602,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
             if(strlen(t) == 0)
             {
-                throw_error(E0012_SYNTAXERR, orig_expr, NULL);
+                mcompiler->throw_error(E0012_SYNTAXERR, orig_expr, NULL);
             }
 
             if(isnumber(t))

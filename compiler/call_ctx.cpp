@@ -1,5 +1,4 @@
 #include "call_ctx.h"
-#include "throw_error.h"
 #include "code_output.h"
 #include "garbage_bin.h"
 #include "sys_brkp.h"
@@ -60,7 +59,7 @@ variable* call_context::add_variable(const char* name, const char* type, int dim
 {
     if(variable_list_has_variable(name, variables) != variables.end())
     {
-        throw_error(E0034_SYMBOLDEFD, NULL);
+        mcompiler->throw_error(E0034_SYMBOLDEFD, NULL);
     }
     variable* v = variable_list_add_variable(name, type, dimension, variables, ccs_method, this, expwloc);
     v->cc = this;
@@ -307,7 +306,7 @@ variable* call_context::variable_list_add_variable(const char *var_name,
 {
     if(!valid_variable_name(var_name))
     {
-        throw_error("Invalid variable name", var_name, var_type);
+        mcompiler->throw_error("Invalid variable name", var_name, var_type);
     }
     int itype = get_typeid(var_type);
 

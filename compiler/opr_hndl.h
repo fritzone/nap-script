@@ -1,6 +1,8 @@
 #ifndef _OPR_HNDL_H_
 #define _OPR_HNDL_H_
 
+class nap_compiler;
+
 /*
  * This file contains everything that has anything in common with the operator handling
  */
@@ -13,7 +15,7 @@
  * @param op2 - the second operator
  * @param needs_first - tells the method if we need the first (1) or the last (0) found operator
  */
-int level_0_char_operator(const char *expr, char op1, char op2, int needs_first);
+int level_0_char_operator(const nap_compiler *_compiler, const char *expr, char op1, char op2, int needs_first);
 
 /**
  * This function looks for a level 0 operator which can be logner than a character, for example NotEqual.
@@ -21,7 +23,7 @@ int level_0_char_operator(const char *expr, char op1, char op2, int needs_first)
  * @param op - the operator we are looking for
  * @param need_last - tells us if we need the last occurence (1) or the first occurence (default) of the op.
  */
-int level_0_longer_operator(const char *expr, const char* op, int need_last);
+int level_0_longer_operator(const nap_compiler *_compiler, const char *expr, const char* op, int need_last);
 
 /**
  * Looks for a level 0 bitwise operator (&, |, ~, !) in the given expression
@@ -29,7 +31,7 @@ int level_0_longer_operator(const char *expr, const char* op, int need_last);
  * Returns -1 if nothing is found
  * @param expr - the expression we are working on
  */
-int level_0_add_operator(const char* expr);
+int level_0_add_operator(const nap_compiler *_compiler, const char* expr);
 
 /**
  * Looks for a lvel 0 additive operator (+, -) in the given expression
@@ -37,7 +39,7 @@ int level_0_add_operator(const char* expr);
  * Returns -1 if nothing is found
  * @param expr - the expression we are working on
  */
-int level_0_add_operator(const char* expr);
+int level_0_add_operator(const nap_compiler *_compiler, const char* expr);
 
 /** 
  * Looks for a level 0 multiplicative operator (*, /, %) in the given expression
@@ -45,7 +47,7 @@ int level_0_add_operator(const char* expr);
  * Returns -1 if nothing is found
  * @param expr - the expression we are working on
  */
-int level_0_multiply_operator(const char *expr);
+int level_0_multiply_operator(const nap_compiler *_compiler, const char *expr);
 
 /**
  * Looks for a level 0 shifting operator.
@@ -53,7 +55,7 @@ int level_0_multiply_operator(const char *expr);
  * Returns -1 if nothing is found
  * @param expr - the expression we are working on
  */
-int level_0_shift(const char* expr);
+int level_0_shift(const nap_compiler *_compiler, const char* expr);
 
 /**
  * Looks for a level 0 assignment (=) operator in the given expression
@@ -61,7 +63,7 @@ int level_0_shift(const char* expr);
  * Returns -1 if nothing is found
  * @param expr - the expression we are working on
  */
-int level_0_assignment_operator(const char *expr);
+int level_0_assignment_operator(const nap_compiler *_compiler, const char *expr);
 
 /**
  * Looks for a level 0 dot (.) operator in the given expression
@@ -69,7 +71,7 @@ int level_0_assignment_operator(const char *expr);
  * Returns -1 if nothing is found
  * @param expr - the expression we are working on
  */
-int level_0_dot_operator(const char *expr);
+int level_0_dot_operator(const nap_compiler *_compiler, const char *expr);
 
 /**
  * Looks for a level 0 comparison operator.
@@ -79,7 +81,7 @@ int level_0_dot_operator(const char *expr);
  * @param found_operator - will be populated with the operator that was retrieved, since this method can
  *        identify more than one kind of operators
  */
-int level_0_comparison_operator(const char *expr, const char** found_operator);
+int level_0_comparison_operator(const nap_compiler *_compiler, const char *expr, const char** found_operator);
 
 /**
  * Looks for a level 0 bitwise (~, &, |, ^) operator.
@@ -87,7 +89,7 @@ int level_0_comparison_operator(const char *expr, const char** found_operator);
  * Returns -1 if nothing is found
  * @param expr - the expression we are working on
  */
-int level_0_bitwise_operator(const char* expr);
+int level_0_bitwise_operator(const nap_compiler *_compiler, const char* expr);
 
 /**
  * Looks for a level 0 logical (&&, ||, !) operator.
@@ -95,7 +97,7 @@ int level_0_bitwise_operator(const char* expr);
  * Returns -1 if nothing is found
  * @param expr - the expression we are working on
  */
-int level_0_logical_operator(const char* expr);
+int level_0_logical_operator(const nap_compiler *_compiler, const char* expr);
 
 /**
  * Finds the first occurence of a level 0 x= operator, such as +=, -=, *=, etc ...
@@ -105,6 +107,6 @@ int level_0_logical_operator(const char* expr);
  * @param found_operator - will be populated with the operator that was retrieved, since this method can
  *        identify more than one kind of operators
  */
-int level_0_sg_eq_operator(const char *expr, const char** found_operator, int* found_op_type);
+int level_0_sg_eq_operator(const nap_compiler *_compiler, const char *expr, const char** found_operator, int* found_op_type);
 
 #endif

@@ -4,7 +4,6 @@
 #include "call_ctx.h"
 #include "res_wrds.h"
 #include "envelope.h"
-#include "throw_error.h"
 #include "common_structs.h"
 #include "expression_tree.h"
 #include "interpreter.h"
@@ -610,7 +609,7 @@ void parsed_file::deal_with_ifs_loading(call_context* cc, expression_tree* new_n
                 }
                 else
                 {
-                    throw_error("Internal 1", NULL);    /* actually we shouldn't get here at all*/
+                    mcompiler->throw_error("Internal 1", NULL);    /* actually we shouldn't get here at all*/
                 }
             }
             else

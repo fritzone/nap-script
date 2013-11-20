@@ -8,7 +8,6 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/method.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/opr_hndl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/parser.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/throw_error.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/notimpl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/type.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
