@@ -160,6 +160,20 @@ public:
      */
     char* new_string(int size) const;
 
+    void throw_error(const char* error) const;
+
+    void throw_error(const char* error, const std::string& par) const ;
+
+    void throw_error(const char* error, int id, const char* par) const ;
+
+    void throw_index_out_of_range(const char* variable_name, int maximum_allowed, int got) const ;
+
+    void throw_error(const char* error, const char* par1, const char* par2) const;
+
+    void set_location(const expression_with_location* loc);
+
+    std::string prepare_location() const;
+
 private:
 
     call_context* cur_cc;
@@ -193,6 +207,9 @@ private:
 
     garbage_bin_bin& mgbb;
 
+    const expression_with_location* location;
+
+    mutable std::string mfinalError;
 };
 
 

@@ -1,6 +1,5 @@
 #include "evaluate.h"
 #include "bt_string.h"
-#include "throw_error.h"
 #include "type.h"
 #include "number.h"
 #include "consts.h"
@@ -12,6 +11,7 @@
 #include "code_stream.h"
 #include "envelope.h"
 #include "expression_tree.h"
+#include "compiler.h"
 
 #include <string.h>
 #include <string>
@@ -112,7 +112,7 @@ static void deal_with_post_pre_node(nap_compiler* _compiler, const expression_tr
     }
     else
     {
-        throw_error("Can not post/pre increment this value");
+        cc->compiler()->throw_error("Can not post/pre increment this value");
     }
 }
 
@@ -184,7 +184,7 @@ static void resolve_op_equal(nap_compiler* _compiler, const expression_tree* nod
     }
     else
     {
-        throw_error("Internal: op= not having a variable to increment");
+        cc->compiler()->throw_error("Internal: op= not having a variable to increment");
     }
 }
 
@@ -274,7 +274,7 @@ void resolve_operation(nap_compiler* _compiler, const expression_tree* node, int
             }
             else
             {
-                throw_error("Internal error in an operation");
+                cc->compiler()->throw_error("Internal error in an operation");
             }
         }
         else    /* node->left is not atomic */
@@ -397,7 +397,7 @@ void resolve_assignment(nap_compiler* _compiler, const expression_tree* node, in
                 dest = (variable*)(((envelope*)node->left->reference)->to_interpret);
                 if(!dest)
                 {
-                    throw_error("cannot find a variable");
+                    cc->compiler()->throw_error("cannot find a variable");
                 }
                 if(node->right)
                 {
@@ -759,7 +759,7 @@ static void resolve_while_keyword(nap_compiler* _compiler, const expression_tree
         {
             if(my_while->logical_expr->op_type == NT_VARIABLE_DEF_LST)
             {
-                throw_error("ERROR: You cannot declare a variable here\n", NULL);
+                cc->compiler()->throw_error("ERROR: You cannot declare a variable here\n", NULL);
             }
             else
             {
@@ -878,7 +878,7 @@ void resolve_variable_definition(nap_compiler* _compiler, const expression_tree*
             variable_definition* vd = *vdl;
             if(!vd->the_variable)
             {
-                throw_error("Internal: A variable declaration is not having an associated variable object", NULL);
+                cc->compiler()->throw_error("Internal: A variable declaration is not having an associated variable object", NULL);
             }
 
             /* warning!!! Only :
@@ -961,7 +961,7 @@ void resolve_variable_definition(nap_compiler* _compiler, const expression_tree*
                     {
                         if(!q->expr_def)
                         {
-                            throw_error("Internal: Multi-dim initialization is not having an associated expression", NULL);
+                            cc->compiler()->throw_error("Internal: Multi-dim initialization is not having an associated expression", NULL);
                         }
                         compile(_compiler,q->expr_def, the_method, cc, level + 1, reqd_type, 1);
                         resolve_variable_add_dimension_regis(_compiler,cc, vd->the_variable, level + 1);
@@ -998,7 +998,7 @@ static void resolve_break_keyword(nap_compiler* _compiler, call_context* cc)
     }
     if(!qcc)    /* means this has reached to the highest level and the break was not placed in a for/while/switch*/
     {
-        throw_error(E0012_SYNTAXERR);
+        cc->compiler()->throw_error(E0012_SYNTAXERR);
     }
 
     jmp(_compiler,qcc->get_break_label()->name);
@@ -1016,7 +1016,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node, const method*
         reqd_type = BASIC_TYPE_INT;
     }
 
-    set_location(node->expwloc);
+    cc->compiler()->set_location(node->expwloc);
     if( node && (!node->info.empty() || node->op_type == STATEMENT_NEW_CC
                  || node->op_type == STATEMENT_CLOSE_CC
                  || node->op_type == BASIC_TYPE_VARIABLE
@@ -1198,7 +1198,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node, const method*
                 }
                 else
                 {
-                    throw_error("cannot pre/post inc/dec this");
+                    cc->compiler()->throw_error("cannot pre/post inc/dec this");
                 }
             }
             break;
@@ -1258,7 +1258,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node, const method*
                         parameter* fp = m->get_parameter(pc);
                         if(!fp)
                         {
-                            throw_error("parameter not found");
+                            cc->compiler()->throw_error("parameter not found");
                         }
                         expression_tree* t = p->expr;
                         if(t->op_type <= BASIC_TYPE_CLASS_VAR)
@@ -1330,7 +1330,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node, const method*
                 parameter* fp = m->get_parameter(pc);
                 if(!fp)
                 {
-                    throw_error("parameter not found");
+                    cc->compiler()->throw_error("parameter not found");
                 }
                 expression_tree* t = p->expr;
                 if(t->op_type <= BASIC_TYPE_CLASS_VAR)
@@ -1369,7 +1369,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node, const method*
                 parameter* fp = m->get_parameter(pc);
                 if(!fp)
                 {
-                    throw_error("parameter not found");
+                    cc->compiler()->throw_error("parameter not found");
                 }
                 expression_tree* t = p->expr;
                 if(t->op_type <= BASIC_TYPE_CLASS_VAR)

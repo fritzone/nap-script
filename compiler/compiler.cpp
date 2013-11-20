@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <sstream>
 
 #include "consts.h"
 #include "utils.h"
@@ -148,4 +149,69 @@ char* nap_compiler::new_string(int size) const
 {
     char* tmp = alloc_mem(char, size + 1, this);
     return tmp;
+}
+
+std::string nap_compiler::prepare_location() const
+{
+    std::stringstream ss;
+    ss << "expr:[" << location->expression
+       << "]";
+
+    if(location->location->file_name)
+    {
+        ss << "file:[" << location->location->file_name
+           << "] ~line:[" << location->location->start_line_number;
+    }
+    return ss.str();
+}
+
+void nap_compiler::throw_error(const char* error) const
+{
+    std::string loc = prepare_location();
+    std::stringstream ss;
+    ss << "[err:compiler] " << error << " @ " << loc;
+    mfinalError = ss.str();
+    std::cerr << mfinalError << std::endl ;
+}
+
+void nap_compiler::throw_error(const char* error, const char* par1, const char* par2) const
+{
+    std::string loc = prepare_location();
+    std::stringstream ss;
+    ss << "[err:compiler] " << error << ": [" << par1 << "] - " << par2 << " @ " << loc;
+    mfinalError = ss.str();
+    std::cerr << mfinalError << std::endl;
+}
+
+void nap_compiler::throw_error(const char* error, const std::string& par) const
+{
+    std::string loc = prepare_location();
+    std::stringstream ss;
+    ss << "[err:compiler] " << error << ": [" << par << "] @ " << loc;
+    mfinalError = ss.str();
+    std::cerr << mfinalError << std::endl;
+}
+
+void nap_compiler::throw_error(const char* error, int id, const char* par) const
+{
+    std::string loc = prepare_location();
+    std::stringstream ss;
+    ss << "[err:compiler] " << error << " id[" << id << "] - [" << par << "] @ " << loc;
+    mfinalError = ss.str();
+    std::cerr << mfinalError << std::endl;
+}
+
+void nap_compiler::throw_index_out_of_range(const char* variable_name, int maximum_allowed, int got) const
+{
+    std::string loc = prepare_location();
+    std::stringstream ss;
+    ss << "[err:compiler] index ["<< got << "] out of range for ["
+       << variable_name << ":"<<maximum_allowed << "]" << " @ " << loc;
+    mfinalError = ss.str();
+    std::cerr << mfinalError << std::endl;
+}
+
+void nap_compiler::set_location(const expression_with_location* loc)
+{
+    location = loc;
 }

@@ -2,7 +2,6 @@
 #include "utils.h"
 #include "type.h"
 #include "opcodes.h"
-#include "throw_error.h"
 #include "compiler.h"
 
 extern "C"
@@ -246,8 +245,7 @@ void code_stream::output_bytecode(const char* s)
                     max_reg_count = nrf;
                     if(max_reg_count == 255)
                     {
-                        fprintf(stderr, "a too complex operation was attempted in [%s]", g_location->expression);
-                        exit(1);
+                        mcompiler->throw_error("a too complex operation was attempted");
                     }
                 }
             }

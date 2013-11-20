@@ -10,7 +10,6 @@
 #include "sys_brkp.h"
 #include "envelope.h"
 #include "consts.h"
-#include "throw_error.h"
 #include "expression_tree.h"
 #include "parametr.h"
 #include "compiler.h"
@@ -39,7 +38,7 @@ static variable* variable_add_new_template_variable(variable* the_variable, cons
 char* new_name = trim(name, cc->compiler());
     if(strchr(new_name, C_PAR_CL) || strchr(new_name, C_PAR_OP)) /* not allowed to have parantheses in the variable name */
     {
-        throw_error(E0029_PARANOTALL, new_name, NULL);
+        cc->compiler()->throw_error(E0029_PARANOTALL, new_name, NULL);
     }
     return cc->variable_list_add_variable(new_name, type, 1, the_variable->templ_variables, the_method, cc, expwloc);
 }
@@ -58,7 +57,7 @@ static parameter* variable_add_template_parameter(variable* the_variable, const 
 {
     if(BASIC_TYPE_INT == the_variable->i_type || BASIC_TYPE_REAL == the_variable->i_type)
     {
-        throw_error(E0030_PARMNOTALL, the_variable->name, NULL);
+        cc->compiler()->throw_error(E0030_PARMNOTALL, the_variable->name, NULL);
     }
     parameter* func_par = new_parameter(the_method);
     char *name_dup = cc->compiler()->duplicate_string(name);
@@ -110,7 +109,7 @@ void variable_feed_parameter_list(variable* the_variable, char* par_list, method
         }
         if(i == q->length())
         {
-            throw_error(E0009_PARAMISM, par_list);
+            cc->compiler()->throw_error(E0009_PARAMISM, par_list);
         }
 
         /* now par_type contains the type of the parameter */
@@ -120,16 +119,16 @@ void variable_feed_parameter_list(variable* the_variable, char* par_list, method
         }
         if(i == q->length())
         {
-            throw_error(E0009_PARAMISM, par_list);
+            cc->compiler()->throw_error(E0009_PARAMISM, par_list);
         }
 
         if(C_AND == (*q)[i])
         {
-            throw_error(E0031_NOREFHERE, the_variable->name, NULL);
+            cc->compiler()->throw_error(E0031_NOREFHERE, the_variable->name, NULL);
         }
         if(C_SQPAR_CL == (*q)[i] || C_SQPAR_OP == (*q)[i])
         {
-            throw_error(E0032_NOARRHERE, the_variable->name, NULL);
+            cc->compiler()->throw_error(E0032_NOARRHERE, the_variable->name, NULL);
         }
 
         j = 0;
@@ -160,7 +159,7 @@ char* templ_pars = strchr(the_variable->name, C_PAR_OP);
     }
     if(!strchr(the_variable->name, C_PAR_CL))
     {
-        throw_error(E0033_INCORRDEF, the_variable->name, NULL);
+        cc->compiler()->throw_error(E0033_INCORRDEF, the_variable->name, NULL);
     }
     *templ_pars = 0;
     the_variable->name = trim(the_variable->name,cc->compiler());
@@ -187,7 +186,7 @@ variable::variable(int pdimension, int type)
 {
     if(pdimension<1)
     {
-        throw_error(STR_INVALID_DIMENSION, NULL);
+        cc->compiler()->throw_error(STR_INVALID_DIMENSION, NULL);
     }
 
     dimension = pdimension;

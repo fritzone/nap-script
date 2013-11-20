@@ -4,7 +4,6 @@
 #include "type.h"
 #include "utils.h"
 #include "notimpl.h"
-#include "throw_error.h"
 #include "bt_string.h"
 #include "garbage_bin.h"
 #include "sys_brkp.h"
@@ -14,7 +13,6 @@
 
 #include "utils.h"
 #include "consts.h"
-#include "throw_error.h"
 #include "call_ctx.h"
 
 #include <ctype.h>
@@ -214,12 +212,10 @@ bool valid_variable_name(const char* nm)
     int l = strlen(nm);
     if(l < 1 || l > 255)
     {
-        printf("variable name too long: %s [%d]\n", nm, l);
         return false;
     }
     if(!isalpha(nm[0]) && nm[0] !='$') 
     {
-        printf("variable name does not start with allowed symbol %s [%c]\n", nm, nm[0]);
         return false;
     }
     if(nm[0] == '$')
@@ -231,7 +227,6 @@ bool valid_variable_name(const char* nm)
     {
         if(!isalnum(nm[i]) && nm[i] !='_')
         {
-            printf("variable contains invalid character: %s [%c] at position [%d]\n", nm, nm[i], i);
             return false;
         }
     }
@@ -412,7 +407,7 @@ std::vector<std::string> string_list_create_bsep(const char* instr, char sep, co
             }
             if(!*p)
             {
-                throw_error(E0009_PARAMISM, instr, NULL);
+                _compiler->throw_error(E0009_PARAMISM, instr, NULL);
             }
             p++;    /* to skip the last closing brace*/
             already_increased = true;
@@ -431,7 +426,7 @@ std::vector<std::string> string_list_create_bsep(const char* instr, char sep, co
             }
             if(!*p)
             {
-                throw_error(E0009_PARAMISM, instr, NULL);
+                _compiler->throw_error(E0009_PARAMISM, instr, NULL);
             }
             p++;    /* to skip the last closing brace*/
             already_increased = true;
@@ -450,7 +445,7 @@ std::vector<std::string> string_list_create_bsep(const char* instr, char sep, co
             }
             if(!*p)
             {
-                throw_error(E0009_PARAMISM, instr, NULL);
+                _compiler->throw_error(E0009_PARAMISM, instr, NULL);
             }
             p++;    /* to skip the last closing brace*/
             already_increased = true;
