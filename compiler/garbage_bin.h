@@ -1,6 +1,5 @@
 #ifndef GARBAGE_BIN_H
 #define GARBAGE_BIN_H
-#pragma once
 
 #include <vector>
 #include <map>
@@ -13,6 +12,7 @@
 #include <cxxabi.h>
 #endif
 
+static long int all_alloc = 0;
 
 class garbage_bin_base;
 class nap_compiler;
@@ -124,8 +124,17 @@ public:
     /**
      * Adds an item to the garbage bin
      */
-    void throwIn(T item, const char* file, long line, const nap_compiler* _compiler)
+    void throwIn(T item, const char* file, long line, const nap_compiler* _compiler, long count)
     {
+        int status;
+
+        char* s = abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) ;
+        std::cout << sizeof(T) * count << " " << s << " @ "<< file << ":" << line << std::endl;
+        all_alloc += sizeof(T) * count ;
+        free(s);
+
+        std::cout<<"All memory:" << all_alloc << std::endl;
+
         location a;
         a.file = std::string(file);
         a.line = line;

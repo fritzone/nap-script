@@ -126,7 +126,7 @@ template <class T> T* allocate(size_t count, const char* f, long l, const nap_co
 {
     T* tmp = new T[count];
     memset(tmp, 0, count * sizeof(T));
-    garbage_bin<T*>::instance().throwIn(tmp, f, l, _compiler);
+    garbage_bin<T*>::instance().throwIn(tmp, f, l, _compiler, count);
 
     return tmp;
 }
