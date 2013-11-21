@@ -12,7 +12,6 @@ void garbage_bin_bin::empty(const nap_compiler* _compiler)
     for(size_t i=0; i<items.size(); i++)
     {
         items[i]->empty(_compiler);
-
     }
 }
 
@@ -32,6 +31,7 @@ garbage_bin_bin::~garbage_bin_bin()
         delete items[i];
     }
     items.clear();
+
 }
 
 
