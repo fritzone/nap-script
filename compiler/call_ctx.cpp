@@ -20,7 +20,7 @@ using namespace std;
 /**
  * Creates a new call context object
  */
-call_context::call_context(nap_compiler *_compiler, int ptype, const char* pname,
+call_context::call_context(nap_compiler *_compiler, int ptype, const string &pname,
                            method* the_method, call_context* pfather)
     : name(pname), mcompiler(_compiler)
 {
@@ -69,12 +69,12 @@ variable* call_context::add_variable(const char* name, const char* type, int dim
 /**
  * Retrieves the method object for the given name from the cc
  */
-method* call_context::get_method(const char* name)
+method* call_context::get_method(const string &pname)
 {
     std::vector<method*>::const_iterator q = methods.begin();
     while(q != methods.end())
     {
-        if((*q)->method_name && !strcmp((*q)->method_name, name))
+        if(pname == (*q)->method_name)
         {
             return *q;
         }
@@ -82,7 +82,7 @@ method* call_context::get_method(const char* name)
     }
     if(father)
     {
-        return father->get_method(name);
+        return father->get_method(pname);
     }
     return NULL;
 }
@@ -101,7 +101,7 @@ struct bytecode_label* call_context::add_break_label(long position, const std::s
 {
     bytecode_label* bl = alloc_mem(bytecode_label, 1, mcompiler);
     bl->bytecode_location = position;
-    bl->name = mcompiler->duplicate_string(name.c_str());
+    bl->name = name;
     bl->type = bytecode_label::LABEL_BREAK;
     break_label = bl;
     labels.push_back(bl);
@@ -250,7 +250,7 @@ bytecode_label* call_context::provide_label()
     return labels.at(idx - 1);
 }
 
-class_declaration* call_context::get_class_declaration(const char* required_name) const
+class_declaration* call_context::get_class_declaration(const std::string& required_name) const
 {
     for(unsigned int i=0; i<classes.size(); i++)
     {
@@ -326,7 +326,7 @@ variable* call_context::variable_list_add_variable(const char *var_name,
     garbage_bin<variable*>::instance().place(var, cc->compiler());
 
     var->name = mcompiler->duplicate_string(var_name);
-    var->c_type = mcompiler->duplicate_string(var_type);
+    var->c_type = var_type;
     var->cc = cc;
 
     var->dimension = var_size;

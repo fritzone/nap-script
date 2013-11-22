@@ -886,61 +886,54 @@ void resolve_variable_definition(nap_compiler* _compiler, const expression_tree*
              *  2. class variables are NOT pushed
              *  3. UserDef variables (ie. classes) are being pushed specially
              */
-            if(!vd->the_variable->static_var)
+            if(vd->the_variable->i_type  == BASIC_TYPE_USERDEF)
             {
-                if(vd->the_variable->i_type  == BASIC_TYPE_USERDEF)
+                /* search if we have a definition for it too, such as: Base t = new Derived()*/
+                if(vd->the_value)
                 {
-                    /* search if we have a definition for it too, such as: Base t = new Derived()*/
-                    if(vd->the_value)
-                    {
-                        code_stream(_compiler) << push() << SPACE << ref() << SPACE << (std::string(cc->get_name()) + STR_DOT + vd->the_variable->name) << NEWLINE;
+                    code_stream(_compiler) << push() << SPACE << ref() << SPACE << (std::string(cc->get_name()) + STR_DOT + vd->the_variable->name) << NEWLINE;
 
-                        expression_tree* tempassign = new expression_tree(node->expwloc);
+                    expression_tree* tempassign = new expression_tree(node->expwloc);
 
-                        expression_tree* tempvar = new expression_tree(node->expwloc);
-                        tempvar->left = tempvar->right = 0;
-                        tempvar->op_type = BASIC_TYPE_VARIABLE;
-                        tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE, _compiler);
+                    expression_tree* tempvar = new expression_tree(node->expwloc);
+                    tempvar->left = tempvar->right = 0;
+                    tempvar->op_type = BASIC_TYPE_VARIABLE;
+                    tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE, _compiler);
 
-                        tempassign->left = tempvar;
-                        tempassign->right = vd->the_value;
-                        resolve_assignment(_compiler, tempassign, level, the_method, cc, reqd_type, forced_mov);
+                    tempassign->left = tempvar;
+                    tempassign->right = vd->the_value;
+                    resolve_assignment(_compiler, tempassign, level, the_method, cc, reqd_type, forced_mov);
 
-                        // the constructor call is NOT pushing this
-                        // TODO: This was here ... push_cc_end_marker();
-                    }
-                    else
-                    {
-                        push_usertype_variable(_compiler,cc, vd->the_variable);
-                    }
+                    // the constructor call is NOT pushing this
+                    // TODO: This was here ... push_cc_end_marker();
                 }
                 else
                 {
-                    push_variable(_compiler,cc, vd->the_variable);
-
-                    if(vd->the_value)
-                    {
-                        expression_tree* tempassign = new expression_tree(node->expwloc);
-                        expression_tree* tempvar = new expression_tree(node->expwloc);
-
-                        garbage_bin<expression_tree*>::instance().place(tempassign, _compiler);
-                        garbage_bin<expression_tree*>::instance().place(tempvar, _compiler);
-
-                        tempvar->left = tempvar->right = 0;
-                        tempvar->op_type = BASIC_TYPE_VARIABLE;
-                        tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE, _compiler);
-
-                        tempassign->left = tempvar;
-                        tempassign->right = vd->the_value;
-                        resolve_assignment(_compiler, tempassign, level, the_method, cc, reqd_type, forced_mov);
-                    }
+                    push_usertype_variable(_compiler,cc, vd->the_variable);
                 }
-
             }
             else
             {
-                notimpl("static variables");
+                push_variable(_compiler,cc, vd->the_variable);
+
+                if(vd->the_value)
+                {
+                    expression_tree* tempassign = new expression_tree(node->expwloc);
+                    expression_tree* tempvar = new expression_tree(node->expwloc);
+
+                    garbage_bin<expression_tree*>::instance().place(tempassign, _compiler);
+                    garbage_bin<expression_tree*>::instance().place(tempvar, _compiler);
+
+                    tempvar->left = tempvar->right = 0;
+                    tempvar->op_type = BASIC_TYPE_VARIABLE;
+                    tempvar->reference = new_envelope(vd->the_variable, BASIC_TYPE_VARIABLE, _compiler);
+
+                    tempassign->left = tempvar;
+                    tempassign->right = vd->the_value;
+                    resolve_assignment(_compiler, tempassign, level, the_method, cc, reqd_type, forced_mov);
+                }
             }
+
 
             /* now check if there are multiple dimensions to this variable */
             multi_dimension_def* q = NULL;

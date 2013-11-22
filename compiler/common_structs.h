@@ -190,7 +190,7 @@ struct bytecode_label
     };
 
     /* the name of the label */
-    char *name;
+    std::string name;
 
     /* the location of the label in the bytecode stream */
     long bytecode_location;

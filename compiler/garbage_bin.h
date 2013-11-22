@@ -12,7 +12,7 @@
 #include <cxxabi.h>
 #endif
 
-static long int all_alloc = 0;
+extern long int all_alloc;
 
 class garbage_bin_base;
 class nap_compiler;
@@ -29,6 +29,7 @@ private:
     garbage_bin_bin();
     std::vector<garbage_bin_base*> items;
     static garbage_bin_bin* minstance;
+    friend class nap_compiler;
 };
 
 class garbage_bin_base {
@@ -126,14 +127,9 @@ public:
      */
     void throwIn(T item, const char* file, long line, const nap_compiler* _compiler, long count)
     {
-        int status;
-
-        char* s = abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) ;
-        std::cout << sizeof(T) * count << " " << s << " @ "<< file << ":" << line << std::endl;
-        all_alloc += sizeof(T) * count ;
-        free(s);
-
-        std::cout<<"All memory:" << all_alloc << std::endl;
+        //std::cout << count << " @ "<< file << ":" << line << std::endl;
+        all_alloc += count ;
+        //std::cout<<"All memory:" << all_alloc << std::endl;
 
         location a;
         a.file = std::string(file);
@@ -142,17 +138,13 @@ public:
         items[_compiler].push_back(a);
     }
 
-    void throwIn(T item, const nap_compiler* _compiler)
-    {
-        location a;
-        a.file = "";
-        a.line = 0;
-        a.item = item;
-        items[_compiler].push_back(a);
-    }
-
     void place(T item, const nap_compiler* _compiler)
     {
+        long count = sizeof(T);
+        //std::cout << count << " @ " << std::endl;
+        all_alloc += count ;
+
+        //std::cout<<"All memory:" << all_alloc << std::endl;
         singles[_compiler].push_back(item);
     }
 

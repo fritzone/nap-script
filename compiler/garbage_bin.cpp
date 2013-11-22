@@ -1,6 +1,7 @@
 #include "garbage_bin.h"
 
 garbage_bin_bin* garbage_bin_bin::minstance = NULL;
+long int all_alloc = 0;
 
 garbage_bin_bin::garbage_bin_bin()
 {
