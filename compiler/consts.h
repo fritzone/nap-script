@@ -76,6 +76,7 @@ extern const char *STR_SHRIGHT;
 const char C_PAR_OP            = '(';
 const char C_PAR_CL            = ')';
 const char C_SQPAR_OP        = '[';
+const char C_BRACKET_OP        = '{';
 const char C_SQPAR_CL        = ']';
 const char C_LT                = '<';
 const char C_GT                = '>';

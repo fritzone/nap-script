@@ -45,7 +45,7 @@ void resolve_variable_add_dimension_regis(nap_compiler *_compiler, call_context*
 void push_cc_start_marker(nap_compiler *_compiler, const char *marker_name);
 void push_cc_end_marker(nap_compiler *_compiler, const char* marker_name);
 void exit_app(nap_compiler *_compiler);
-void peek(nap_compiler *_compiler, call_context* cc, const char* type, int idx, const char* dest);
+void peek(nap_compiler *_compiler, call_context* cc, const std::string &type, int idx, const char* dest);
 void jmp(nap_compiler *_compiler, const std::string &label);
 void jlbf(nap_compiler *_compiler, const std::string &label);
 void jnlbf(nap_compiler *_compiler, const char* label);

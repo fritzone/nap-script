@@ -20,7 +20,7 @@ struct nap_bytecode_chunk
 
 struct nap_runtime
 {
-    nap_compiler* compiler;
+    std::auto_ptr<nap_compiler> compiler;
     nap_vm* vm;
     std::vector<nap_bytecode_chunk*>* chunks;
 };
@@ -35,7 +35,7 @@ struct nap_runtime* nap_runtime_create(const char* /*name*/)
         return result;
     }
 
-    result->compiler = new nap_compiler();
+    result->compiler = nap_compiler::create_compiler();
     result->chunks = new std::vector<nap_bytecode_chunk*>();
 
     return result;
@@ -49,12 +49,18 @@ struct nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
         bool source_set = runtime->compiler->set_source(commands);
         if(source_set)
         {
-            runtime->compiler->compile();
-            nap_bytecode_chunk* chunk = (struct nap_bytecode_chunk*)
-                                   calloc(sizeof(struct nap_bytecode_chunk), 1);
-            runtime->compiler->deliver_bytecode(chunk->code, chunk->length);
-            runtime->chunks->push_back(chunk);
-            return chunk;
+            if(runtime->compiler->compile())
+            {
+                nap_bytecode_chunk* chunk = (struct nap_bytecode_chunk*)
+                                       calloc(sizeof(struct nap_bytecode_chunk), 1);
+                runtime->compiler->deliver_bytecode(chunk->code, chunk->length);
+                runtime->chunks->push_back(chunk);
+                return chunk;
+            }
+            else
+            {
+                return NULL;
+            }
         }
         else
         {
@@ -105,8 +111,11 @@ nap_string_t nap_runtime_get_string(nap_runtime */*runtime*/,
 
 void nap_runtime_shutdown(nap_runtime **runtime)
 {
-    delete (*runtime)->compiler;
-    nap_vm_cleanup((*runtime)->vm);
+    nap_compiler::release_compiler((*runtime)->compiler);
+    if((*runtime)->vm)
+    {
+        nap_vm_cleanup((*runtime)->vm);
+    }
     for(size_t i=0; i<(*runtime)->chunks->size(); i++)
     {
         free( (*runtime)->chunks->at(i)->code);

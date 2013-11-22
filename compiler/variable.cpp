@@ -194,11 +194,8 @@ variable::variable(int pdimension, int type)
     i_type = type;
 
     name = NULL;
-    c_type = NULL;
     mult_dim_def = NULL;
     func_par = NULL;
-    static_var = 0;
-    environment_variable = 0;
     dynamic_dimension = 0;
     cc = 0;
 }

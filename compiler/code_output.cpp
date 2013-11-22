@@ -356,7 +356,7 @@ void exit_app(nap_compiler* _compiler)
     code_stream(_compiler) <<"exit" << NEWLINE;
 }
 
-void peek(nap_compiler* _compiler,call_context* cc, const char *type, int idx, const char *dest)
+void peek(nap_compiler* _compiler,call_context* cc, const std::string& type, int idx, const char *dest)
 {
     code_stream(_compiler) <<"peek" << type
                  << C_PAR_OP << idx << C_PAR_CL

@@ -45,7 +45,7 @@ struct call_context
      **/
     call_context (nap_compiler* _compiler,
                   int ptype,
-                  const char *pname,
+                  const std::string& pname,
                   method *the_method,
                   call_context *pfather);
 
@@ -64,7 +64,7 @@ struct call_context
      * @param name - the name of the method
      * @return the method of found, null if not found
      */
-    method *get_method(const char *name);
+    method *get_method(const std::string&pname);
 
 
     /**
@@ -135,7 +135,7 @@ struct call_context
      * @param required_name - the name of the call context
      * @return
      */
-    class_declaration *get_class_declaration(const char *required_name) const;
+    class_declaration *get_class_declaration(const std::string &required_name) const;
 
     /**
      * @brief add_class_declaration

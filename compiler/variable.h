@@ -27,7 +27,7 @@ struct variable
     int dimension;
 
     /* the type of the variable */
-    char *c_type;
+    std::string c_type;
 
     /* the type of the variable */
     int i_type;
@@ -46,12 +46,6 @@ struct variable
 
     /* used by the templ_parameters above */
     std::vector<variable*> templ_variables;
-
-    /* whether this variable is static or not*/
-    char static_var;
-
-    /* whether this variable represents an environment variable or not */
-    char environment_variable;
 
     /* 1 if this variable has dynamic dimensions, 0 if not*/
     char dynamic_dimension;

@@ -10,6 +10,7 @@ class garbage_bin_bin;
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "type.h"
 
@@ -50,13 +51,20 @@ struct label_entry
 
 class nap_compiler
 {
-public:
 
     nap_compiler();
     ~nap_compiler();
+    nap_compiler& operator = (const nap_compiler&);
+
+public:
+
+    static std::auto_ptr<nap_compiler> create_compiler();
+    friend class std::auto_ptr<nap_compiler>;
+
+    static void release_compiler(std::auto_ptr<nap_compiler>& compiler);
 
     void load_file(const char* file_name);
-    void compile();
+    bool compile();
     void write_bytecode(const char* file_name);
 
     unsigned char getLastOpcode() const;
@@ -168,11 +176,16 @@ public:
 
     void throw_index_out_of_range(const char* variable_name, int maximum_allowed, int got) const ;
 
-    void throw_error(const char* error, const char* par1, const char* par2) const;
+    void throw_error(const char* error, const std::string &par1, const std::string &par2) const;
 
     void set_location(const expression_with_location* loc);
 
     std::string prepare_location() const;
+
+    int getErrorCode() const
+    {
+        return mErrorCode;
+    }
 
 private:
 
@@ -210,6 +223,8 @@ private:
     const expression_with_location* location;
 
     mutable std::string mfinalError;
+    mutable int mErrorCode;
+    bool mEmbedded;
 };
 
 

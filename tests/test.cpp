@@ -71,8 +71,7 @@ TEST_CASE("Operations on variables", "[operations][variables]")
 
 TEST_CASE("Operations on immediate values", "[operations][immediates]")
 {
-    nap_runtime* runtime = nap_runtime_create(0);
-    nap_bytecode_chunk* bytecode = nap_runtime_compile(runtime,
+    SCRIPT_START
     "                               \
         int a_plus_b;               \
         int a_minus_b;              \
@@ -85,31 +84,27 @@ TEST_CASE("Operations on immediate values", "[operations][immediates]")
         a_div_b = 9 / 3;            \
         a_mod_b = 9 % 3;            \
     "                               
-    );
-    int t = nap_runtime_execute(runtime, bytecode);
-    REQUIRE(1 == t);
-
-    REQUIRE(12 == nap_runtime_get_int(runtime, "a_plus_b"));
-    REQUIRE(6 == nap_runtime_get_int(runtime, "a_minus_b"));
-    REQUIRE(3 == nap_runtime_get_int(runtime, "a_div_b"));
-    REQUIRE(27 == nap_runtime_get_int(runtime, "a_mul_b"));
-    REQUIRE(0 == nap_runtime_get_int(runtime, "a_mod_b"));
+    SCRIPT_END
     
-    nap_runtime_shutdown(&runtime);
-    REQUIRE(runtime == 0);
+    REQUIRE(12 == VAR_INT(a_plus_b));
+    REQUIRE( 6 == VAR_INT(a_minus_b));
+    REQUIRE( 3 == VAR_INT(a_div_b));
+    REQUIRE(27 == VAR_INT(a_mul_b));
+    REQUIRE( 0 == VAR_INT(a_mod_b));
+    
+    SCRIPT_SHUTDOWN
 }
 
-TEST_CASE("Testing of compile time error", "[error][compile]")
+TEST_CASE("Testing of invalid variable name", "[error][compile]")
 {
     nap_runtime* runtime = nap_runtime_create(0);
+    REQUIRE(runtime != NULL);
     nap_bytecode_chunk* bytecode = nap_runtime_compile(runtime,
-    "                               \
-        int a_ plus_b;               \
+    "              \
+    int a_ plus_b; \
     "
     );
-    
-    int t = nap_runtime_execute(runtime, bytecode);
-    REQUIRE(1 == t);
-    nap_runtime_shutdown(&runtime);
-    REQUIRE(runtime == 0);
+
+    REQUIRE(bytecode == NULL);
+    SCRIPT_SHUTDOWN
 }
