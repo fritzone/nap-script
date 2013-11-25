@@ -1591,7 +1591,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
             if(node->info == expr)
             {
-                mcompiler->throw_error(E0012_SYNTAXERR, expr, NULL);
+                mcompiler->throw_error(E0012_SYNTAXERR, expr, "");
             }
             node->info = expr_trim;
             while(tlen > 0 && !isalnum( t[tlen - 1]) && t[tlen -1] != '\"' && t[tlen - 1] != '(' && t[tlen - 1] != ')' )
@@ -1603,7 +1603,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
             if(strlen(t) == 0)
             {
-                mcompiler->throw_error(E0012_SYNTAXERR, orig_expr, NULL);
+                mcompiler->throw_error(E0012_SYNTAXERR, orig_expr, "");
             }
 
             if(isnumber(t))
