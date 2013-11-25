@@ -91,7 +91,7 @@ long call_context::add_label(long position, const std::string& name)
 {
     bytecode_label* bl = alloc_mem(bytecode_label, 1, mcompiler);
     bl->bytecode_location = position;
-    bl->name = mcompiler->duplicate_string(name.c_str());
+    bl->name = name;
     bl->type = bytecode_label::LABEL_PLAIN;
     labels.push_back(bl);
     return get_label_count();
@@ -124,10 +124,8 @@ expression_tree* call_context::add_new_expression(const char* expr, const expres
     expression_tree* new_expression = new expression_tree(expwloc);
     garbage_bin<expression_tree*>::instance().place(new_expression, mcompiler);
 
-    char *t1 = mcompiler->duplicate_string(expr);
     int res;
-    char*t = rtrim(t1, mcompiler);
-    mcompiler->get_interpreter().build_expr_tree(t, new_expression, ccs_method, t, this, &res, expwloc);
+    mcompiler->get_interpreter().build_expr_tree(expr, new_expression, ccs_method, expr, this, &res, expwloc);
     expressions.push_back(new_expression);
     return new_expression;
 }
@@ -180,7 +178,7 @@ void call_context::compile(nap_compiler* _compiler)
         int pctr = 0;
         while(vlist != (*ccs_methods)->get_variables().end())
         {
-            peek(_compiler, (*ccs_methods)->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name);
+            peek(_compiler, (*ccs_methods)->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name.c_str());
             vlist ++;
         }
 
@@ -217,7 +215,7 @@ void call_context::compile(nap_compiler* _compiler)
             int pctr = 0;
             while(vlist != (*ccs_methods)->get_variables().end())
             {
-                peek(_compiler, (*ccs_methods)->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name);
+                peek(_compiler, (*ccs_methods)->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name.c_str());
                 vlist ++;
             }
             std::string class_fun_hash = generate_unique_hash();
@@ -283,7 +281,7 @@ std::vector<variable*>::const_iterator call_context::variable_list_has_variable(
     std::vector<variable*>::const_iterator q = first.begin();
     while(q != first.end())
     {
-        if(!strcmp(s, (*q)->name))
+        if((*q)->name == s)
         {
             return q;
         }
@@ -322,17 +320,10 @@ variable* call_context::variable_list_add_variable(const char *var_name,
         return 0;
     }
 
-    variable* var = new variable(var_size, itype);
+    variable* var = new variable(var_size, itype, var_name, var_type, cc);
     garbage_bin<variable*>::instance().place(var, cc->compiler());
 
-    var->name = mcompiler->duplicate_string(var_name);
-    var->c_type = var_type;
-    var->cc = cc;
-
-    var->dimension = var_size;
-
     /* now fix the stuff to include template parameters if any */
-
     variable_resolve_templates(var, the_method, cc, expwloc);
 
     first.push_back(var);

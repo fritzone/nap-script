@@ -133,6 +133,7 @@ const char* STR_REAL                = "real";
 const char* STR_STRING                = "string";
 const char* STR_CHAR                            = "char";
 const char* STR_BOOL                            = "bool";
+const char* STR_VOID                            = "void";
 const char* STR_NULL                            = "null";
 
 const char* STR_UNKNOWN                = "unknown";

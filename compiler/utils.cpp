@@ -3,7 +3,6 @@
 #include "variable.h"
 #include "type.h"
 #include "utils.h"
-#include "notimpl.h"
 #include "bt_string.h"
 #include "garbage_bin.h"
 #include "sys_brkp.h"
@@ -97,8 +96,17 @@ char *ltrim(const char* src, const nap_compiler *_compiler)
  */
 char* trim(const char* src, const nap_compiler *_compiler)
 {
-    char* trimd1 = ltrim(src, _compiler);
-    char* trimd2 = rtrim(trimd1, _compiler);
+    std::cout << "-------------------" << src << "-----" << std::endl;
+    const char *start = src;
+    while(*start && is_whitespace(*start)) start ++;
+    if(!*start)
+    {
+        return (char*)"";
+    }
+    const char* end = src + strlen(src)- 1;
+    while(end > src && is_whitespace(*end)) end --;
+    char* trimd2 = alloc_mem(char, end + 1 - start + 1, _compiler);
+    strncpy(trimd2, start, end - start + 1);
     return trimd2;
 }
 
@@ -186,17 +194,6 @@ int can_stop = 0;
     p++;
     return p;
 }
-
-
-long mem_alloc_count = 0;
-
-int mem_loc_compare(const void* m1, const void* m2)
-{
-    return  (long)m2 - (long)m1;
-}
-
-void** mem_liberated = NULL;
-long liberc = 0;
 
 char other_par(char c)
 {
@@ -333,19 +330,14 @@ int isparanthesis(char c)
 int isnumber(const char *s)
 {
     unsigned int i;
-    unsigned l = strlen(s);
-    if(l == 0)
-    {
-        return 0;
-    }
-    for(i=0; i<l; i++)
+    for(i=0; s[i]; i++)
     {
         if(!isdigit(s[i]) && !(s[i]=='.') && !(s[i] == '-') && !(s[i] == '+'))
         {
             return 0;
         }
     }
-    if(!isdigit(s[0]) && s[0] != '-' && s[0] != '+')
+    if(s[0] && (!isdigit(s[0]) && s[0] != '-' && s[0] != '+'))
     {
         return 0;
     }
@@ -367,7 +359,7 @@ int is_string_delimiter(char c)
     return c == C_QUOTE || c == C_BACKQUOTE;
 }
 
-int is_whitespace(char c)
+inline int is_whitespace(char c)
 {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
@@ -386,10 +378,10 @@ int is_valid_variable_name(const char* name)
 /**
  * Creates a new string list from the instr which is separated by the given separator
  */
-std::vector<std::string> string_list_create_bsep(const char* instr, char sep, const nap_compiler* _compiler)
+std::vector<std::string> string_list_create_bsep(const std::string& instr, char sep, const nap_compiler* _compiler)
 {
     std::vector<std::string>  head;
-    const char* p = instr, *frst = instr;
+    const char* p = instr.c_str(), *frst = instr.c_str();
     char* cur_elem = NULL;
     while(*p)
     {
@@ -467,8 +459,9 @@ std::vector<std::string> string_list_create_bsep(const char* instr, char sep, co
         {
             cur_elem = (char*)calloc(p - frst + 1, 1);
             strncpy(cur_elem, frst, p - frst);
-            char* telem = trim(cur_elem, _compiler);
-            head.push_back(std::string(telem));
+            std::string t = cur_elem;
+            strim(t);
+            head.push_back(t);
             frst = p + 1;
 
             free(cur_elem);
@@ -479,9 +472,11 @@ std::vector<std::string> string_list_create_bsep(const char* instr, char sep, co
         }
     }
     /* and now the last element */
-    cur_elem = _compiler->new_string(p - frst + 1);
+    cur_elem = (char*)calloc(p - frst + 1, 1);
     strncpy(cur_elem, frst, p - frst);
-    char* telem = trim(cur_elem, _compiler);
-    head.push_back(std::string(telem));
+    std::string t = cur_elem;
+    strim(t);
+    head.push_back(t);
+    free(cur_elem);
     return head;
 }

@@ -14,6 +14,28 @@ class nap_compiler;
 
 #define BT_IS_STRING(bt) (BASIC_TYPE_STRING == bt)
 
+#include <algorithm>
+#include <functional>
+#include <cctype>
+#include <locale>
+
+// trim from start
+static inline std::string &sltrim(std::string &s) {
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+        return s;
+}
+
+// trim from end
+static inline std::string &srtrim(std::string &s) {
+        s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+        return s;
+}
+
+// trim from both ends
+static inline std::string &strim(std::string &s) {
+        return sltrim(srtrim(s));
+}
+
 /**
  * Checks if the given character is an operator or not
  */
@@ -122,16 +144,16 @@ char* extract_next_enclosed_phrase(char* input, char c_starter, char c_ender, ch
 extern long mem_alloc_count;
 extern void** mem_allocation;
 
-template <class T> T* allocate(size_t count, const char* f, long l, const nap_compiler* _compiler)
+template <class T> T* allocate(size_t count, const nap_compiler* _compiler)
 {
     T* tmp = new T[count];
     memset(tmp, 0, count * sizeof(T));
-    garbage_bin<T*>::instance().throwIn(tmp, f, l, _compiler, count);
+    garbage_bin<T*>::instance().throwIn(tmp, _compiler);
 
     return tmp;
 }
 
-#define alloc_mem(type,count,compiler) allocate<type>(count, __FILE__, __LINE__, compiler)
+#define alloc_mem(type,count,compiler) allocate<type>(count, compiler)
 
 //#define alloc_mem(type,count) (type*)create(sizeof(type), count)
 
@@ -159,6 +181,6 @@ std::string generate_unique_hash();
  * @param instr - the input string
  * @param sep - the expected separator
  */
-std::vector<std::string> string_list_create_bsep(const char* instr, char sep, const nap_compiler *_compiler);
+std::vector<std::string> string_list_create_bsep(const std::string &instr, char sep, const nap_compiler *_compiler);
 
 #endif

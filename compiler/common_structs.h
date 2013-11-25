@@ -25,6 +25,10 @@ struct variable;
 struct file_location
 {
 
+    file_location(long plocation, long pstart_line, long pend_line, const std::string& file)
+        : location(plocation), start_line_number(pstart_line), end_line_number(pend_line), file_name(file)
+    {}
+
     /* the location in the 'content' of the parsed_file structure */
     long location;
 
@@ -35,7 +39,7 @@ struct file_location
     int end_line_number;
 
     /* this is the file name */
-    const char *file_name;
+    std::string file_name;
 };
 
 /**

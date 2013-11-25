@@ -52,15 +52,15 @@ void nap_compiler::parse()
     expression_with_location* expwloc = mpf->parser_next_phrase(&delim);
     while(expwloc)
     {
-        char* exp_trim = trim(duplicate_string(expwloc->expression), this);
-        if(strstr(exp_trim, "import") == exp_trim)
+        if(strstr(expwloc->expression, "import") == expwloc->expression)
         {
-            exp_trim += 6;
-            char* file_to_load = trim(exp_trim, this);
-            if(std::find(loaded_files.begin(), loaded_files.end(), file_to_load) == loaded_files.end())
+            std::string exp_trim = expwloc->expression + 6;
+            exp_trim = strim(exp_trim);
+
+            if(std::find(loaded_files.begin(), loaded_files.end(), exp_trim) == loaded_files.end())
             {
-                loaded_files.push_back(file_to_load);
-                load_file(file_to_load);
+                loaded_files.push_back(exp_trim);
+                load_file(exp_trim);
                 expwloc = mpf->parser_next_phrase(&delim);
             }
         }
@@ -73,7 +73,7 @@ void nap_compiler::parse()
 }
 
 
-void nap_compiler::load_file(const char* file_name)
+void nap_compiler::load_file(const std::string & file_name)
 {
     mpf = mpf->open_file(file_name, this);
     if(!mpf)
@@ -170,7 +170,7 @@ std::string nap_compiler::prepare_location() const
     ss << "expr:[" << location->expression
        << "]";
 
-    if(location->location->file_name)
+    if(!location->location->file_name.empty())
     {
         ss << "file:[" << location->location->file_name
            << "] ~line:[" << location->location->start_line_number;

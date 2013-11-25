@@ -83,10 +83,10 @@ struct method
 
 
     /* the name of the method */
-    char *method_name;
+    std::string method_name;
 
     /* the return type of the function */
-    char *return_type;
+    std::string return_type;
 
     /* the parameters of the method */
     std::vector<parameter*> parameters;

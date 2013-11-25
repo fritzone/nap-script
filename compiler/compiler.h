@@ -63,7 +63,7 @@ public:
 
     static void release_compiler(std::auto_ptr<nap_compiler>& compiler);
 
-    void load_file(const char* file_name);
+    void load_file(const std::string &file_name);
     bool compile();
     void write_bytecode(const char* file_name);
 

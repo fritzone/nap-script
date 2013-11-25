@@ -80,6 +80,7 @@ private:
 
      void* deal_with_one_word_keyword( call_context* cc, expression_tree* node, int* &result, const char* keyw, int statement);
 
+     method* is_function_call(char *s,  call_context* cc);
 private:
 
     nap_compiler* mcompiler;

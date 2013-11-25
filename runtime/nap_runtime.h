@@ -23,7 +23,7 @@ struct nap_bytecode_chunk;
  *
  * @return a new runtime environment
  **/
-struct nap_runtime* nap_runtime_create(const char* name);
+nap_runtime* nap_runtime_create(const char* name);
 
 /**
  * @brief Compiles the commands and creates a bytecode chunk for them.
@@ -54,7 +54,7 @@ struct nap_runtime* nap_runtime_create(const char* name);
  * @return a nap_bytecode_chunk object containing the compiled bytecode or 
  * NULL in case of an error.
  **/
-struct nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
+nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
                                                const char* commands);
 /**
  * @brief Executes the given bytecode chunk in the VM.
@@ -73,6 +73,16 @@ nap_real_t nap_runtime_get_real(struct nap_runtime* runtime,
 nap_string_t nap_runtime_get_string(struct nap_runtime* runtime,
                                  const char* variable_name);
 
+/**
+ * @brief Shuts down the runtime and frees the allocated memory.
+ *
+ * Frees the memory allocated by this runtime, shuts down its compiler, and
+ * deallocates the allocated bytecode chunks. It is mandatory to call this
+ * method when your application does not need it anymore in order to release
+ * all the allocated memory.
+ *
+ * @param runtime - the address of a nap_runtime object
+ */
 void nap_runtime_shutdown(struct nap_runtime** runtime);
 
 #ifdef __cplusplus

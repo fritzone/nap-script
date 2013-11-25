@@ -6,7 +6,6 @@
 #include "interpreter.h"
 #include "utils.h"
 #include "parametr.h"
-#include "notimpl.h"
 #include "sys_brkp.h"
 #include "envelope.h"
 #include "consts.h"
@@ -150,14 +149,15 @@ void variable_feed_parameter_list(variable* the_variable, char* par_list, method
     }
 }
 
-void variable_resolve_templates(variable* the_variable,  method* the_method,  call_context* cc, const expression_with_location* expwloc)
+void variable_resolve_templates(variable* /*the_variable*/,  method* /*the_method*/,  call_context* /*cc*/, const expression_with_location* /*expwloc*/)
 {
-char* templ_pars = strchr(the_variable->name, C_PAR_OP);
+    // TODO: whe nwe have a clear vision for the variable templates uncomment and fix this code
+    /*char* templ_pars = strchr(the_variable->name.c_str(), C_PAR_OP);
     if(!templ_pars)
     {
         return;
     }
-    if(!strchr(the_variable->name, C_PAR_CL))
+    if(!strchr(the_variable->name.c_str(), C_PAR_CL))
     {
         cc->compiler()->throw_error(E0033_INCORRDEF, the_variable->name, NULL);
     }
@@ -167,7 +167,7 @@ char* templ_pars = strchr(the_variable->name, C_PAR_OP);
     int tplen = strlen(templ_pars);
     templ_pars[tplen - 1] = 0;
 
-    variable_feed_parameter_list(the_variable, templ_pars, the_method, cc, expwloc);
+    variable_feed_parameter_list(the_variable, templ_pars, the_method, cc, expwloc);*/
 }
 
 /**
@@ -182,21 +182,19 @@ variable_template_reference* tmp = alloc_mem(variable_template_reference,1, _com
 }
 
 
-variable::variable(int pdimension, int type)
+variable::variable(int pdimension, int type, const std::string &pname,
+                   const std::string &pctype, call_context *pcc)
+    : name(pname), dimension(pdimension), c_type(pctype), cc(pcc)
 {
     if(pdimension<1)
     {
         cc->compiler()->throw_error(STR_INVALID_DIMENSION, NULL);
     }
 
-    dimension = pdimension;
     multi_dim_count = 1;
     i_type = type;
-
-    name = NULL;
     mult_dim_def = NULL;
     func_par = NULL;
     dynamic_dimension = 0;
-    cc = 0;
 }
 

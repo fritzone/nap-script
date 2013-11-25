@@ -18,10 +18,10 @@
 struct variable
 {
 
-    variable(int pdimension, int type);
+    variable(int pdimension, int type, const std::string& pname, const std::string& pctype, call_context* pcc);
 
     /* the name of the variable */
-    char *name;
+    std::string name;
 
     /* the size of the variable (ie. dimension) */
     int dimension;

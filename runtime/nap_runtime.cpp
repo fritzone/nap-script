@@ -11,13 +11,17 @@ extern "C"
 #include <stdio.h>
 #include <string.h>
 
+/* The bytecode chunk which is created as a result of the compile command */
 struct nap_bytecode_chunk
 {
+    /* the bytecode */
     uint8_t* code;
+
+    /* the length of the bytecode */
     size_t length;
 };
 
-
+/* The nap runtime environment. There can be multiple runtimes */
 struct nap_runtime
 {
     std::auto_ptr<nap_compiler> compiler;
@@ -25,7 +29,7 @@ struct nap_runtime
     std::vector<nap_bytecode_chunk*>* chunks;
 };
 
-struct nap_runtime* nap_runtime_create(const char* /*name*/)
+nap_runtime* nap_runtime_create(const char* /*name*/)
 {
     struct nap_runtime* result = (struct nap_runtime*)
                                       calloc(sizeof(struct nap_runtime), 1);
@@ -41,7 +45,7 @@ struct nap_runtime* nap_runtime_create(const char* /*name*/)
     return result;
 }
 
-struct nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
+nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
                                                const char* commands)
 {
     if(runtime != NULL)
