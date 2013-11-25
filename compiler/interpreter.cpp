@@ -7,7 +7,6 @@
 #include "bt_string.h"
 #include "type.h"
 #include "opr_hndl.h"
-#include "notimpl.h"
 #include "variable.h"
 #include "method.h"
 #include "sys_brkp.h"
@@ -39,7 +38,11 @@ std::vector<envelope*>* interpreter::listv_prepare_list(const char* src,
 
     // to skip the whitespace in front of the { (in case there's any)
     skip_whitespace(src, l, &i);
-    if(src[i] != '{') mcompiler->throw_error(E0012_SYNTAXERR);
+    if(src[i] != '{')
+    {
+        mcompiler->throw_error(E0012_SYNTAXERR, "String declaration not starting wiht '{'");
+    }
+
     i++;        // with this i points to the first character after the {
     while(i < l)
     {
@@ -88,7 +91,7 @@ std::vector<envelope*>* interpreter::listv_prepare_list(const char* src,
                 {
                     if(src[i+1] == '.')
                     {
-                        // Implement
+                        cc->compiler()->throw_error("Dot followed by dot?");
                     }
                 }
             }
@@ -137,7 +140,7 @@ int interpreter::get_operator(const char* expr, const char** foundOperator, int*
     if(zlev_dot != -1)
     {
         *ntype = OPERATOR_DOT;
-        *foundOperator = mcompiler->duplicate_string(STR_DOT);
+        *foundOperator = STR_DOT;
         zlop = zlev_dot;
     }
 
@@ -148,12 +151,12 @@ int interpreter::get_operator(const char* expr, const char** foundOperator, int*
         if(expr[zlop] == C_LT)
         {
             *ntype = OPERATOR_SHIFT_LEFT;
-            *foundOperator = mcompiler->duplicate_string(STR_SHLEFT);
+            *foundOperator = STR_SHLEFT;
         }
         else if(expr[zlop] == C_GT)
         {
             *ntype = OPERATOR_SHIFT_RIGHT;
-            *foundOperator = mcompiler->duplicate_string(STR_SHRIGHT);
+            *foundOperator = STR_SHRIGHT;
         }
     }
 
@@ -164,19 +167,19 @@ int interpreter::get_operator(const char* expr, const char** foundOperator, int*
         {
         case '&':
             *ntype = OPERATOR_BITWISE_AND;
-            *foundOperator = mcompiler->duplicate_string(STR_BIT_AND);
+            *foundOperator = STR_BIT_AND;
             break;
         case '|':
             *ntype = OPERATOR_BITWISE_OR;
-            *foundOperator = mcompiler->duplicate_string(STR_BIT_OR);
+            *foundOperator = STR_BIT_OR;
             break;
         case '^':
             *ntype = OPERATOR_BITWISE_XOR;
-            *foundOperator = mcompiler->duplicate_string(STR_BIT_XOR);
+            *foundOperator = STR_BIT_XOR;
             break;
         case '~':
             *ntype = OPERATOR_BITWISE_COMP;
-            *foundOperator = mcompiler->duplicate_string(STR_BIT_COMP);
+            *foundOperator = STR_BIT_COMP;
             break;
         }
     }
@@ -203,24 +206,26 @@ int interpreter::get_operator(const char* expr, const char** foundOperator, int*
     if(zladd != -1)
     {
         zlop = zladd;
-        *foundOperator = c2str(expr[zlop], mcompiler);    /*  will be "+" or "-" */
         if(C_ADD == expr[zlop])
         {
             *ntype = OPERATOR_ADD;
+            *foundOperator = STR_PLUS;
         }
         else if(C_SUB == expr[zlop])
         {
             *ntype = OPERATOR_MINUS;
+            *foundOperator = STR_MINUS;
         }
     }
 
     /* check the comparison operator presence */
     if(zlev_comparison != -1)
     {
-        if((*ntype != OPERATOR_SHIFT_LEFT && *ntype != OPERATOR_SHIFT_RIGHT) || ((zlev_comparison != zlev_shift && zlev_comparison != zlev_shift - 1 && zlev_comparison != zlev_shift + 1)))
+        if((*ntype != OPERATOR_SHIFT_LEFT && *ntype != OPERATOR_SHIFT_RIGHT)
+                || ((zlev_comparison != zlev_shift && zlev_comparison != zlev_shift - 1 && zlev_comparison != zlev_shift + 1)))
         {
             zlop = zlev_comparison;
-            *foundOperator = mcompiler->duplicate_string(found_comp_operator);
+            *foundOperator = found_comp_operator;
             *ntype = get_comp_typeid(*foundOperator);
         }
     }
@@ -231,12 +236,12 @@ int interpreter::get_operator(const char* expr, const char** foundOperator, int*
         {
         case '&':
             *ntype = OPERATOR_BITWISE_AND;
-            *foundOperator = mcompiler->duplicate_string(STR_LOGIC_AND);
+            *foundOperator = STR_LOGIC_AND;
             zlop = zllogic;
             break;
         case '|':
             *ntype = OPERATOR_BITWISE_OR;
-            *foundOperator = mcompiler->duplicate_string(STR_LOGIC_OR);
+            *foundOperator = STR_LOGIC_OR;
             zlop = zllogic;
             break;
         case '!':
@@ -247,7 +252,7 @@ int interpreter::get_operator(const char* expr, const char** foundOperator, int*
                 if(zllogic != zlev_comparison)
                 {
                     *ntype = OPERATOR_NOT;
-                    *foundOperator = mcompiler->duplicate_string(STR_LOGIC_NOT);
+                    *foundOperator = STR_LOGIC_NOT;
                     zlop = zllogic;
                 }
             }
@@ -266,14 +271,14 @@ int interpreter::get_operator(const char* expr, const char** foundOperator, int*
             if(expr[zlev_assignment - 1] != '<' && expr[zlev_assignment - 1] != '>' && expr[zlev_assignment - 1] != '!' && expr[zlev_assignment - 1] != '=')
             {
                 zlop = zlev_assignment;
-                *foundOperator = mcompiler->duplicate_string("=");
+                *foundOperator = STR_EQUAL;
                 *ntype = OPERATOR_ASSIGN;
             }
         }
         else    /* if zlev_assignment is == 0 it's not valid anyway, but for this case it does not matter */
         {
             zlop = zlev_assignment;
-            *foundOperator = mcompiler->duplicate_string("=");
+            *foundOperator = STR_EQUAL;
             *ntype = OPERATOR_ASSIGN;
         }
     }
@@ -282,35 +287,26 @@ int interpreter::get_operator(const char* expr, const char** foundOperator, int*
     if(zlev_sg_eq_operator != -1)
     {
         zlop = zlev_sg_eq_operator;
-        *foundOperator = mcompiler->duplicate_string(found_sq_eq_operator);
+        *foundOperator = found_sq_eq_operator;
         *ntype = sgeq_type;
     }
 
     return zlop;
 }
 
-
 /*
  * this checks if an expression is a function or not (ex: sin(x) is s function)
  */
-method* is_function_call(char *s,  call_context* cc)
+method* interpreter::is_function_call(char *s,  call_context* cc)
 {
     unsigned int i=0;
-    int sc2=0;
-    char *s2 = cc->compiler()->new_string(strlen(s));
-    method* get_method = NULL;
-
-    while(i<strlen(s) && s[i]!='(')
+    std::string method_name;
+    while( i<strlen(s) && s[i] != C_PAR_OP && !is_whitespace(s[i]))
     {
-        s2[sc2++]=s[i++];
+        method_name += s[i++];
     }
-    s2[sc2]=0;
 
-    s2 = trim(s2, cc->compiler());
-    get_method = cc->get_method(s2);
-    if(get_method) return get_method;
-
-    return NULL;
+    return cc->get_method(method_name);
 }
 
 /**
@@ -321,22 +317,31 @@ method* is_function_call(char *s,  call_context* cc)
  */
 int interpreter::looks_like_function_def(const char* expr, int expr_len, const expression_tree* node, call_context* cc)
 {
-    if(node && node->father && node->father->op_type == OPERATOR_ASSIGN) return 0;    /* this is part of a templated variable definition */
-    if(expr[expr_len - 1] != C_PAR_CL) return 0; /* not ending with ), return false*/
+    if(node && node->father && node->father->op_type == OPERATOR_ASSIGN)
+    {
+        return 0;    /* this is part of a templated variable definition */
+    }
+
+    if(expr[expr_len - 1] != C_PAR_CL)
+    {
+        return 0; /* not ending with ), return false*/
+    }
+
     int i=expr_len - 2; /* the first one: to skip the paranthesys, the second one is the last character inside the parantheses*/
-    char* tmp = mcompiler->new_string(expr_len);    /* will hold the parameters in the first run*/
+    std::string tmp;    /* will hold the parameters in the first run*/
     int can_stop = 0;
-    int tmpc = 0;
     int level = 1;
     while(i && !can_stop)            /* this is reading backwards */
     {
         if(expr[i] == C_PAR_CL) level ++;
         if(expr[i] == C_PAR_OP) level --;
         if(level == 0) can_stop = 1;
-        if(!can_stop)tmp[tmpc++] = expr[i--];
-
+        if(!can_stop)
+        {
+            tmp += expr[i--];
+        }
     }
-    reverse(tmp, strlen(tmp));
+    std::reverse(tmp.begin(), tmp.end());
 
     if(i == 0) return 0; /* this means, we've got to the first character, there is nothing before this */
 
@@ -405,15 +410,14 @@ int interpreter::looks_like_function_def(const char* expr, int expr_len, const e
 
     if(is_identifier_char(expr[i]))
     {
-        char* ret_type=mcompiler->new_string(expr_len);
-        int rtc = 0;
+        std::string ret_type = "";
         /* fetching the return type of the function */
         while(i>-1 && is_identifier_char(expr[i]))
         {
-            ret_type[rtc ++] = expr[i];
+            ret_type += expr[i];
             i--;
         }
-        reverse(ret_type, strlen(ret_type));
+        std::reverse(ret_type.begin(), ret_type.end());
         /* now check if we still have something before this. If yes, return 0 */
         while(i > -1 && is_whitespace(expr[i])) i--; /* skip the whitespace */
 
@@ -431,15 +435,15 @@ int interpreter::looks_like_function_def(const char* expr, int expr_len, const e
         else    /* before the return type there was something else too */
         {
             /* now fetch it. it can be 'extern' or 'use' or something else */
-            tmpc = 0;
 
+            tmp = "";
             while(i > -1 && is_identifier_char(expr[i]))
             {
-                tmp[tmpc++] = expr[i--];
+                tmp += expr[i--];
             }
-            tmp[tmpc] = 0;
-            reverse(tmp, strlen(tmp));
-            if(!strcmp(tmp, STR_EXTERN) || !strcmp(tmp, STR_USE))
+
+            std::reverse(tmp.begin(), tmp.end());
+            if(tmp == STR_EXTERN || tmp == STR_USE)
             {
                 while(i > -1 && is_whitespace(expr[i])) i--;    /* see if we have something before the extern. We may not have*/
                 if(i > -1)
@@ -469,9 +473,11 @@ int interpreter::looks_like_function_def(const char* expr, int expr_len, const e
 bool interpreter::is_list_value(const char* what)
 {
     int i=0;
-    const char *what2 = what;
-    skip_whitespace(what, strlen(what2), &i);
-    if(what2[i] == '{') return true;
+    skip_whitespace(what, strlen(what), &i);
+    if(what[i] ==  C_BRACKET_OP)
+    {
+        return true;
+    }
     return false;
 }
 
@@ -649,15 +655,13 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
                                                                  int* result,
                                                                  const expression_with_location* expwloc)
 {
-    char * copied = mcompiler->duplicate_string(expr_trim + strlen(var_def_type));
-
+    std::string copied = expr_trim + strlen(var_def_type);
     std::vector<std::string> var_names = string_list_create_bsep(copied, ',', mcompiler);
     std::vector<std::string>::iterator q = var_names.begin();
     std::vector<variable_definition*>* var_def_list = new std::vector<variable_definition*>(); /* will contain the variable definitions if any*/
 
     garbage_bin<std::vector<variable_definition*>*>::instance().place(var_def_list, cc->compiler());
 
-    var_def_type = trim(var_def_type, cc->compiler());
     while(q != var_names.end())
     {
         multi_dimension_def* mdd = NULL, *qm;    /* will contain the dimension definitions if any */
@@ -696,7 +700,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
                 if(*idx_def_start == C_SQPAR_CL && --level == -1) can_stop = 1;
                 if(!can_stop) index += *idx_def_start ++;
             }
-            std::vector<std::string> dimensions = string_list_create_bsep(index.c_str(), C_COMMA, mcompiler);
+            std::vector<std::string> dimensions = string_list_create_bsep(index, C_COMMA, mcompiler);
             std::vector<std::string>::iterator qDimensionStrings = dimensions.begin();    /* to walk through the dimensions */
             int countedDimensions = 0;
             mdd = alloc_mem(multi_dimension_def,1, cc->compiler());
@@ -734,17 +738,17 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
             char* name_val = mcompiler->duplicate_string(name.c_str());
             char* pos_eq = name_val + eqp;
             *pos_eq = 0; // TODO: This is ugly, fix it!
-            name = trim(name_val, cc->compiler());
-            deflist = mcompiler->duplicate_string(pos_eq + 1);
-            deflist = trim(deflist, cc->compiler());
+            name = name_val;
+            strim(name);
+            deflist = pos_eq + 1;
         }
 
         if(idx_def_start)
         {
-            const char* tmpname = strrchr(name.c_str(), C_SQPAR_CL) + 1;
+            std::string tmpname = strrchr(name.c_str(), C_SQPAR_CL) + 1;
             /* TODO: ez meghal: int x=a[1]; re */
-            char* tmp1name = trim(tmpname, cc->compiler());
-            if(strlen(tmp1name) == 0)    /* in this case the index definition was after the name: int name[12];*/
+            strim(tmpname);
+            if(tmpname.empty())    /* in this case the index definition was after the name: int name[12];*/
             {
                 std::string temp;
                 size_t tc = 0;
@@ -758,7 +762,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
             }
             else    /* if the index definition was before the name: int[12] name*/
             {
-                name = mcompiler->duplicate_string(tmp1name);
+                name = tmpname;
             }
         }
 
@@ -819,7 +823,7 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
     std::vector<std::string> parameters;
     std::vector<parameter*> pars_list;
     call_frame_entry* cfe = NULL;
-    strcpy(params_body, expr_trim + strlen(func_call->method_name) + 1); /* here this is supposed to copy the body of the parameters without the open/close paranthesis */
+    strcpy(params_body, expr_trim + func_call->method_name.length() + 1); /* here this is supposed to copy the body of the parameters without the open/close paranthesis */
     while(is_whitespace(*params_body)) params_body ++;
     if(*params_body == C_PAR_OP) params_body ++;        /* now we've skipped the opening paranthesis */
 
@@ -863,7 +867,7 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
     cfe->parameters = pars_list;
     cfe->previous_cf = func_call->cur_cf;
 
-    node->info = mcompiler->duplicate_string(func_call->method_name);
+    node->info = func_call->method_name;
     node->op_type = FUNCTION_CALL + type_of_call; // TODO: This is tricky and ugly
     node->reference = new_envelope(cfe, FUNCTION_CALL + type_of_call, cc->compiler());
     cfe->the_method = cc->get_method(func_call->method_name);
@@ -1046,7 +1050,7 @@ void* interpreter::deal_with_conditional_keywords(char* keyword_if,
 
     if(keyw)
     {
-        node->info = mcompiler->duplicate_string(keyw);
+        node->info = keyw;
         expression_tree* expt = new expression_tree(expwloc);
         garbage_bin<expression_tree*>::instance().place(expt, cc->compiler());
 
@@ -1148,7 +1152,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         expr_trim++;
         bt_string* the_str = new bt_string(expr_trim);
         node->reference = new_envelope(the_str, BASIC_TYPE_STRING, cc->compiler());
-        node->info = mcompiler->duplicate_string(the_str->the_string());
+        node->info = the_str->the_string();
         *result = RESULT_STRING;
         node->op_type = BASIC_TYPE_STRING;
         return expr_trim;
@@ -1160,7 +1164,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         expr_trim[expr_len-1] = 0;    /* removing the double quotes */
         expr_trim++;
         node->reference = new_envelope(new bt_string(expr_trim), BASIC_TYPE_STRING, cc->compiler());
-        node->info = mcompiler->duplicate_string(expr_trim);
+        node->info = expr_trim;
         *result = BACKQUOTE_STRING;
         return expr_trim;
     }
@@ -1220,7 +1224,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
     /* check if this is a 'return' statement */
     if(keyword_return)
     {
-        node->info = mcompiler->duplicate_string(STR_RETURN);
+        node->info = STR_RETURN;
         expression_tree* expt = new expression_tree(expwloc);
         garbage_bin<expression_tree*>::instance().place(expt, cc->compiler());
         build_expr_tree(keyword_return, expt, the_method, orig_expr, cc, result, expwloc);
@@ -1286,7 +1290,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         }
         resw_for* rswfor = alloc_mem(resw_for,1, cc->compiler());
 
-        rswfor->unique_hash = mcompiler->duplicate_string(generate_unique_hash().c_str());
+        rswfor->unique_hash = generate_unique_hash();
         rswfor->init_stmt = init_stmt;
         rswfor->tree_init_stmt = new expression_tree(expwloc);
         build_expr_tree(init_stmt, rswfor->tree_init_stmt, the_method, orig_expr, cc, result, expwloc);
@@ -1299,7 +1303,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         rswfor->tree_expr = new expression_tree(expwloc);
         build_expr_tree(expr_stmt, rswfor->tree_expr, the_method, orig_expr, cc, result, expwloc);
 
-        node->info = mcompiler->duplicate_string(STR_FOR);
+        node->info = STR_FOR;
 
         char *condition = mcompiler->duplicate_string(expr_trim + strlen(STR_FOR));    /* not actually condition, but the for's three statements: init, cond, expr*/
         while(is_whitespace(*condition)) condition ++;    /* skip the whitespace */
@@ -1341,10 +1345,11 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             if(ntype == OPERATOR_ADD || ntype == OPERATOR_MINUS || ntype == OPERATOR_BITWISE_COMP || ntype == OPERATOR_NOT)
             {
                 /* check if this is a number or not ?*/
-                char* afterer = trim(mcompiler->duplicate_string(expr_trim + 1), mcompiler);
-                if(!isnumber(afterer))
+                std::string afterer = expr_trim + 1;
+                afterer = strim(afterer);
+                if(!isnumber(afterer.c_str()))
                 {
-                    node->info = mcompiler->duplicate_string(foundOperator);
+                    node->info = foundOperator;
                     if(ntype == OPERATOR_ADD)
                     {
                         ntype = OPERATOR_UNARY_PLUS;
@@ -1355,8 +1360,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                     }
                     node->op_type = ntype;
                     node->left = new expression_tree(node, expwloc);
-                    build_expr_tree(trim(mcompiler->duplicate_string(expr_trim + 1), mcompiler),
-                                    node->left, the_method, orig_expr, cc, result, expwloc);
+                    garbage_bin<expression_tree*>::instance().place(node->left, cc->compiler());
+                    build_expr_tree(expr_trim + 1, node->left, the_method, orig_expr, cc, result, expwloc);
                     return NULL;
                 }
                 else
@@ -1378,7 +1383,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             {
                 mcompiler->throw_error(E0012_SYNTAXERR, expr, NULL);
             }
-            node->info = mcompiler->duplicate_string(foundOperator);
+            node->info = foundOperator;
             node->op_type = ntype;
             node->left=new expression_tree(node, expwloc);
             node->right=new expression_tree(node, expwloc);
@@ -1455,7 +1460,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             else
                 if(node->father->left->op_type == FUNCTION_CALL)    // to solve func().anotherOne()
                 {
-                    notimpl("func().anotherOne()");
+                    mcompiler->throw_error("func().anotherOne()");
                 }
         }
     }
@@ -1470,7 +1475,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             p = STR_MINMIN;
             ntype = OPERATOR_PREDEC;
         }
-        node->info = mcompiler->duplicate_string(p);
+        node->info = p;
         node->op_type = ntype;
         node->left = new expression_tree(node, expwloc);
         build_expr_tree(expr_trim + 2, node->left, the_method, orig_expr, cc, result, expwloc);
@@ -1486,7 +1491,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 p = STR_MINMIN;
                 ntype = OPERATOR_POSTDEC;
             }
-            node->info = mcompiler->duplicate_string(p);
+            node->info = p;
             node->op_type = ntype;
 
             /* now add the  variable to the tree... */
@@ -1522,7 +1527,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             std::vector<expression_tree*>* index_list = new std::vector<expression_tree*>();
             multi_dimension_index* dim = new_multi_dimension_index(expr_trim, mcompiler);
 
-            node->info = mcompiler->duplicate_string(STR_IDXID);
+            node->info = STR_IDXID;
             node->left = new expression_tree(node, expwloc);
             node->right = new expression_tree(node, expwloc);
             build_expr_tree(indexed_elem, node->left, the_method, orig_expr, cc, result, expwloc);    /* to discover the indexed element */
@@ -1540,7 +1545,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             }
             dim->dimension_values = index_list;
             node->right->reference = new_envelope(dim, MULTI_DIM_INDEX, cc->compiler()); /*((variable*)node->father->left->reference->to_interpret)->mult_dim_def*/
-            node->right->info = mcompiler->duplicate_string(expr_trim);
+            node->right->info = expr_trim;
             node->op_type = MULTI_DIM_INDEX;
         }
         else
@@ -1584,15 +1589,11 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 node->op_type = BASIC_TYPE_VARIABLE;
             }
 
-
-
             if(node->info == expr)
             {
-                {
-                    mcompiler->throw_error(E0012_SYNTAXERR, expr, NULL);
-                }
+                mcompiler->throw_error(E0012_SYNTAXERR, expr, NULL);
             }
-            node->info=mcompiler->duplicate_string(expr_trim);
+            node->info = expr_trim;
             while(tlen > 0 && !isalnum( t[tlen - 1]) && t[tlen -1] != '\"' && t[tlen - 1] != '(' && t[tlen - 1] != ')' )
             {
                 t[tlen - 1] = 0 ;

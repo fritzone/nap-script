@@ -54,7 +54,7 @@ struct resw_for
 
     call_context* operations;
 
-    const char* unique_hash;
+    std::string unique_hash;
 };
 
 #endif

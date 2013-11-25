@@ -3,7 +3,6 @@
 #include "type.h"
 #include "number.h"
 #include "consts.h"
-#include "notimpl.h"
 #include "utils.h"
 #include "res_wrds.h"
 #include "code_output.h"
@@ -561,7 +560,7 @@ static std::vector<std::string> chop_up(const char* s)
             cpart += *q;
             q++;
         }
-        cpart = trim(cpart);
+        cpart = strim(cpart);
         if(cpart.length())
         {
             result.push_back(cpart);
@@ -802,7 +801,7 @@ static void resolve_for_keyword(nap_compiler* _compiler, const expression_tree* 
 {
     struct resw_for* my_for = (struct resw_for*)node->reference->to_interpret;
 
-    push_cc_start_marker(_compiler,my_for->unique_hash);
+    push_cc_start_marker(_compiler,my_for->unique_hash.c_str());
     /* as a first step we should compile the init statement of the for*/
     compile(_compiler,my_for->tree_init_stmt, the_method, cc, level + 1, reqd_type, forced_mov);
 
@@ -851,7 +850,7 @@ static void resolve_for_keyword(nap_compiler* _compiler, const expression_tree* 
     jlbf(_compiler,start_label->name);
     code_stream(_compiler) << fully_qualified_label(end_label->name) << NEWLINE ;
 
-    push_cc_end_marker(_compiler,my_for->unique_hash);
+    push_cc_end_marker(_compiler,my_for->unique_hash.c_str());
 }
 
 
@@ -1037,7 +1036,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node, const method*
                 {
                     code_stream(_compiler) << mov()
                                   << SPACE
-                                  << reg() << "int" << C_PAR_OP << level << C_PAR_CL
+                                  << reg() << STR_INT << C_PAR_OP << level << C_PAR_CL
                                   << C_COMMA
                                   << *(NUMBER_INTEGER_TYPE*)(nr->location())
                                   << NEWLINE;
@@ -1047,8 +1046,8 @@ void compile(nap_compiler* _compiler, const expression_tree* node, const method*
         case BASIC_TYPE_REAL:
             if(node->reference)
             {
-            number* nr = (number*)node->reference->to_interpret;
-            code_stream(_compiler) << *(NUMBER_REAL_TYPE*)nr->location();
+                number* nr = (number*)node->reference->to_interpret;
+                code_stream(_compiler) << *(NUMBER_REAL_TYPE*)nr->location();
             }
             break;
 

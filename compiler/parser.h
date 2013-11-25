@@ -44,7 +44,7 @@ public:
 
     void remove_comments();
 
-    static parsed_file* open_file(const char* name,  const nap_compiler* _compiler );
+    static parsed_file* open_file(const std::string &name,  const nap_compiler* _compiler );
 
     static parsed_file* set_source(const char* src,  const nap_compiler* _compiler);
 
@@ -81,7 +81,7 @@ private:
 
 private:
     /* name of the file */
-    const char *name;
+    std::string name;
 
     /* this is the content of the file*/
     char *content;

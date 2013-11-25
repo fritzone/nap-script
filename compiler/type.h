@@ -2,6 +2,7 @@
 #define _TYPE_H_
 
 #include <stdint.h>
+#include <string>
 
 typedef uint32_t NUMBER_INTEGER_TYPE;
 
@@ -142,6 +143,6 @@ enum cmp_typeids
 /**
  * Returns the type identifier for the given type
  */
-int get_typeid(const char* type);
+int get_typeid(const std::string& type);
 
 #endif

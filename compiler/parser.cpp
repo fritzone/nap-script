@@ -11,6 +11,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sstream>
 
 /**
  * This file removes the comments from the input file. This is the first step and should be done right after the
@@ -47,7 +48,7 @@ void parsed_file::remove_comments()
     }
 }
 
-parsed_file::parsed_file(const nap_compiler *_compiler) : mcompiler(_compiler)
+parsed_file::parsed_file(const nap_compiler *_compiler) : name(), mcompiler(_compiler)
 {
     position = 0;
     content = 0;
@@ -55,7 +56,7 @@ parsed_file::parsed_file(const nap_compiler *_compiler) : mcompiler(_compiler)
     current_line = 0;
 }
 
-parsed_file::parsed_file(const char *pcontent, const nap_compiler* _compiler) : mcompiler(_compiler)
+parsed_file::parsed_file(const char *pcontent, const nap_compiler* _compiler) : name(), mcompiler(_compiler)
 {
     position = 0;
     content = alloc_mem(char, strlen(pcontent), mcompiler);
@@ -67,7 +68,7 @@ parsed_file::parsed_file(const char *pcontent, const nap_compiler* _compiler) : 
 /**
  * Opens the given file, creates a new prsed file structure
  */
-parsed_file *parsed_file::open_file(const char *name,  const nap_compiler* _compiler)
+parsed_file *parsed_file::open_file(const std::string& name,  const nap_compiler* _compiler)
 {
     parsed_file *f = new parsed_file(_compiler);
     long size = -1;
@@ -75,7 +76,7 @@ parsed_file *parsed_file::open_file(const char *name,  const nap_compiler* _comp
     /* the file pointer*/
     FILE *fp;
 
-    fp = fopen(f->name, "rb");
+    fp = fopen(f->name.c_str(), "rb");
     if (!fp)
     {
         delete f;
@@ -104,7 +105,6 @@ parsed_file *parsed_file::set_source(const char *src,  const nap_compiler* _comp
 {
     parsed_file *f = new parsed_file(_compiler);
     long size = strlen(src);
-    f->name = NULL;
     /* the file pointer*/
 
     f->content = alloc_mem(char, size, _compiler);
@@ -128,16 +128,11 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
     }
     previous_position = position;
     expression_with_location *expwloc = alloc_mem(expression_with_location, 1, mcompiler);
-    expwloc->location = alloc_mem(file_location, 1, mcompiler);
-
-    expwloc->location->location = position;
-    expwloc->location->start_line_number = current_line + 1;
-    expwloc->location->end_line_number = current_line + 1;
-    expwloc->location->file_name = name;
+    expwloc->location = new file_location(position, current_line + 1, current_line + 1, name);
+    garbage_bin<file_location*>::instance().place(expwloc->location, mcompiler);
 
     long cur_save = position;
     long size = -1;
-    char *phrase = NULL;
     int i = 0;
     int phrase_read = 0;
     int skipper = 1; // the scope of this variable is to skip one character forward if we reached a ";" separator, but nothing if we reached "{" or "}"
@@ -317,6 +312,7 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
     }
 
     size = cur_save - position;
+    char *phrase = NULL;
     phrase = mcompiler->new_string(size + 1);
     strncpy(phrase, content + position, size);
     position = cur_save + skipper; /* to skip the delimiter */
@@ -411,9 +407,10 @@ void parsed_file::deal_with_while_loading(call_context* cc, expression_tree* new
                                           expression_with_location* expwloc)
 {
     /* firstly create a call context for it */
-    char* while_cc_name = mcompiler->new_string(cc->get_name().length() + 10);
-    sprintf(while_cc_name, "%s%s%s", cc->get_name().c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_WHILE);
-    call_context* while_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_WHILE, while_cc_name, the_method, cc);
+    std::stringstream ss;
+    ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << STR_WHILE;
+
+    call_context* while_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_WHILE, ss.str(), the_method, cc);
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_WHILE)    /* normal WHILE with { }*/
     {
         load_next_block(the_method, while_cc, current_level + 1, current_level);    /* loading the function*/
@@ -428,13 +425,13 @@ void parsed_file::deal_with_while_loading(call_context* cc, expression_tree* new
         //pf->position += strlen(new_node->info);
         load_next_single_phrase(next_exp, the_method, while_cc, &d, current_level + 1);
         new_node->op_type = STATEMENT_WHILE;
-        new_node->info = mcompiler->duplicate_string(STR_WHILE);
+        new_node->info = STR_WHILE;
     }
     else if(C_SEMC == delim && new_node->op_type == STATEMENT_WHILE_1L)            /* one lined while, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
         while_cc->add_new_expression(new_node->info.c_str(), expwloc);
         new_node->op_type = STATEMENT_WHILE;
-        new_node->info = mcompiler->duplicate_string(STR_WHILE);
+        new_node->info = STR_WHILE;
     }
     else if(C_SEMC == delim && new_node->op_type == STATEMENT_WHILE)            /* one lined while, with empty command, skip pf to the first position after the ; */
     {
@@ -476,7 +473,7 @@ void parsed_file::deal_with_class_declaration(call_context* /*cc*/,
     position = pos + 1;     // skips the closing brace
     new_block[nbpos - 1] = 0;   // remove the closing brace
     parsed_file* npf = new parsed_file(new_block, mcompiler);
-    npf->name = mcompiler->duplicate_string(name);
+    npf->name = this->name;
     expression_with_location* nexpwloc = NULL;
     char ndelim = 0;
     method* nmethod = 0;
@@ -498,9 +495,10 @@ void parsed_file::deal_with_class_declaration(call_context* /*cc*/,
 void parsed_file::deal_with_for_loading(call_context* cc, expression_tree* new_node, method* the_method, char delim, int current_level, expression_with_location* expwloc)
 {
     /* firstly create a call context for it */
-    char* for_cc_name = mcompiler->new_string(cc->get_name().length() + 10);
-    sprintf(for_cc_name, "%s%s%s", cc->get_name().c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_FOR);
-    call_context* for_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_FOR, for_cc_name, the_method, cc);
+    std::stringstream ss;
+    ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << STR_FOR;
+
+    call_context* for_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_FOR, ss.str(), the_method, cc);
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR)    /* normal FOR with { }*/
     {
         load_next_block(the_method, for_cc, current_level + 1, current_level);    /* loading the function*/
@@ -515,13 +513,13 @@ void parsed_file::deal_with_for_loading(call_context* cc, expression_tree* new_n
         //pf->position += strlen(new_node->info);
         load_next_single_phrase(next_exp, the_method, for_cc, &d, current_level + 1);
         new_node->op_type = STATEMENT_FOR;
-        new_node->info = mcompiler->duplicate_string(STR_FOR);
+        new_node->info = STR_FOR;
     }
     else if(C_SEMC == delim && new_node->op_type == STATEMENT_FOR_1L)            /* one lined for, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
         for_cc->add_new_expression(new_node->info.c_str(), expwloc);
         new_node->op_type = STATEMENT_FOR;
-        new_node->info = mcompiler->duplicate_string(STR_FOR);
+        new_node->info = STR_FOR;
     }
     else if(C_SEMC == delim && new_node->op_type == STATEMENT_FOR)            /* one lined for, with empty command, skip pf to the first position after the ; */
     {
@@ -541,9 +539,9 @@ void parsed_file::deal_with_for_loading(call_context* cc, expression_tree* new_n
 void parsed_file::deal_with_ifs_loading(call_context* cc, expression_tree* new_node, method* the_method, char delim, int current_level, expression_with_location* expwloc)
 {
     /* firstly create a call context for it */
-    char* if_cc_name = mcompiler->new_string(cc->get_name().length() + 6);
-    sprintf(if_cc_name, "%s%s%s", cc->get_name().c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_IF);
-    call_context* if_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_IF, if_cc_name, the_method, cc);
+    std::stringstream ss;
+    ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << STR_IF;
+    call_context* if_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_IF, ss.str(), the_method, cc);
     garbage_bin<call_context*>::instance().place(if_cc, mcompiler);
 
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF)    /* normal IF with { }*/
@@ -560,13 +558,13 @@ void parsed_file::deal_with_ifs_loading(call_context* cc, expression_tree* new_n
         //pf->position += strlen(new_node->info);
         load_next_single_phrase(next_exp, the_method, if_cc, &d, current_level + 1);
         new_node->op_type = STATEMENT_IF;
-        new_node->info = mcompiler->duplicate_string(STR_IF);
+        new_node->info = STR_IF;
     }
     else if(C_SEMC == delim && new_node->op_type == STATEMENT_IF_1L)            /* one lined if, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
         if_cc->add_new_expression(new_node->info.c_str(), expwloc);
         new_node->op_type = STATEMENT_IF;
-        new_node->info = mcompiler->duplicate_string(STR_IF);
+        new_node->info = STR_IF;
     }
     else if(C_SEMC == delim && new_node->op_type == STATEMENT_IF)            /* one lined if, with empty command, skip pf to the first position after the ; */
     {
@@ -583,9 +581,9 @@ void parsed_file::deal_with_ifs_loading(call_context* cc, expression_tree* new_n
     call_context* else_cc = NULL;
     if(nextw && !strcmp(nextw, STR_ELSE))
     {
-        char* else_cc_name = mcompiler->new_string(cc->get_name().length() + 16);
-        sprintf(else_cc_name, "%s%s%s:%s", cc->get_name().c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_IF, STR_ELSE);
-        else_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_ELSE, else_cc_name, the_method, cc);
+        std::stringstream ss;
+        ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << STR_IF << C_SEMC << STR_ELSE;
+        else_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_ELSE, ss.str(), the_method, cc);
         if(delim2 == C_SEMC)
         {
             expression_with_location* expwloc2 = parser_next_phrase(&delim);
@@ -673,9 +671,9 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
                 {
                 case C_OPEN_BLOCK:
                 {
-                    char* new_cc_name = mcompiler->new_string(cc->get_name().length() + 10);
-                    sprintf(new_cc_name, "%s%s%s", cc->get_name().c_str(), STR_CALL_CONTEXT_SEPARATOR, STR_UNNAMED_CC);
-                    call_context* child_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_UNNAMED, new_cc_name, the_method, cc);
+                    std::stringstream ss;
+                    ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << STR_UNNAMED_CC;
+                    call_context* child_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_UNNAMED, ss.str(), the_method, cc);
                     expression_tree* new_node = cc->add_new_expression(STR_OPEN_BLOCK, expwloc);
                     //todo: add a new expression in the current call CONTEXT to start executing the next call context.
                     new_node->reference = new_envelope(child_cc, ENV_TYPE_CC, mcompiler);
@@ -686,7 +684,7 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
                 break;
                 case C_CLOSE_BLOCK:
                 {
-                    if(expwloc->expression[0] != '}') // put a new close block only if this is not a method def.
+                    if(expwloc->expression[0] != C_CLOSE_BLOCK) // put a new close block only if this is not a method def.
                     {
                         cc->add_new_expression(STR_CLOSE_BLOCK, expwloc);
                     }

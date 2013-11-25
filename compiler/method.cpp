@@ -20,33 +20,33 @@
 #include <ctype.h>
 #include <stdio.h>
 
+#include <sstream>
+
 /**
  * Creates a new method
  */
-method::method(nap_compiler* _compiler, char* name, char* preturn_type, call_context* cc)
+method::method(nap_compiler* _compiler, char* name, char* preturn_type, call_context* cc) : return_type("")
 {
     call_context* method_main_cc = NULL;
-    char* method_main_cc_name = mcompiler->new_string(strlen(name) + cc->get_name().length() + 3); /* will contain: parent_name::function_name*/
-    strcpy(method_main_cc_name, cc->get_name().c_str());
-    strcat(method_main_cc_name, STR_CALL_CONTEXT_SEPARATOR);
-    strcat(method_main_cc_name, name);
+    std::stringstream ss;
+    ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << name;
 
     def_loc = DEF_INTERN;
-    method_name = mcompiler->duplicate_string(name);
+    method_name = name;
     if(preturn_type && strstr(preturn_type, "extern"))
     {
         /* if this method is a method defined somewhere else ... such as your C++ application */
-        char* after_ext = return_type + 6;
-        after_ext = trim(after_ext, mcompiler);
-        return_type = mcompiler->duplicate_string(after_ext);
+        char* after_ext = preturn_type + 6;
+        return_type = after_ext;
+        strim(return_type);
         def_loc = DEF_EXTERN;
     }
     else
     if(preturn_type)
     {
-        return_type = mcompiler->duplicate_string(preturn_type);
+        return_type = preturn_type;
     }
-    method_main_cc = new call_context(_compiler, CALL_CONTEXT_TYPE_METHOD_MAIN, method_main_cc_name, this, cc);
+    method_main_cc = new call_context(_compiler, CALL_CONTEXT_TYPE_METHOD_MAIN, ss.str(), this, cc);
     garbage_bin<call_context*>::instance().place(method_main_cc, cc->compiler());
     main_cc = method_main_cc;
 
@@ -55,7 +55,6 @@ method::method(nap_compiler* _compiler, char* name, char* preturn_type, call_con
 
 constructor_call::constructor_call(char* name, call_context* cc) : method(cc->compiler(), name, 0, cc)
 {
-    return_type = 0;
     the_class = cc->get_class_declaration(name);
 }
 

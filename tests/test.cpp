@@ -2,7 +2,7 @@
 #include "catch.h"
 
 #include "nap_runtime.h"
-
+#include "utils.h"
 
 #define SCRIPT_START \
     nap_runtime* runtime = nap_runtime_create(0);                  \
@@ -106,5 +106,54 @@ TEST_CASE("Testing of invalid variable name", "[error][compile]")
     );
 
     REQUIRE(bytecode == NULL);
+    SCRIPT_SHUTDOWN
+}
+
+
+TEST_CASE("Post, pre increment", "[operations][post][pre][increment")
+{
+    SCRIPT_START
+            "               \
+            int i=0;        \
+            int y = i++;    \
+            int z = ++i;    \
+            "
+    SCRIPT_END
+
+    REQUIRE(2 == VAR_INT(i));
+    REQUIRE(0 == VAR_INT(y));
+    REQUIRE(2 == VAR_INT(z));
+
+    SCRIPT_SHUTDOWN
+}
+
+TEST_CASE("Function definition", "[function]")
+{
+    SCRIPT_START
+    "                             \
+    int func(int a, int b)        \
+    {                             \
+        if(a == 7777777)          \
+        {                         \
+            int rr = 9;           \
+            return 5;             \
+        }                         \
+    }                             \
+    int func2()                   \
+    {                             \
+    }                             \
+    z = 3;                        \
+    if(z == 3)                    \
+    {                             \
+      int y = 2;                  \
+      z = 4;                      \
+    }                             \
+    int g = func(z, 66);          \
+    int ll = func2();             \
+    int y = 1;                    \
+    "
+    SCRIPT_END
+    REQUIRE( 5 == VAR_INT(g));
+
     SCRIPT_SHUTDOWN
 }

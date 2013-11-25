@@ -6,11 +6,6 @@
 
 #include <stdlib.h>
 #include <iostream>
-#include <typeinfo>
-
-#ifndef _WIN32
-#include <cxxabi.h>
-#endif
 
 extern long int all_alloc;
 
@@ -43,13 +38,6 @@ template <typename T>
 class garbage_bin : public garbage_bin_base
 {
 private:
-
-    struct location
-    {
-        long line;
-        std::string file;
-        T item;
-    };
 
     /**
      * Constructor. Creates a new Garbage Bin object.
@@ -99,24 +87,15 @@ public:
      */
     void empty(const nap_compiler* _compiler)
     {
-#ifndef _WINDOWS
-        int status;
-        char* s = abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) ;
-        //std::cout << "\nGBIN [" << s << "] TIN:" << items[_compiler].size() << " PLC:" <<  singles.size() << std::endl;
-#endif
         for(size_t i=0; i<items[_compiler].size(); i++)
         {
-            delete [] (items[_compiler].at(i).item);
+            delete [] (items[_compiler][i]);
         }
-
 
         for(size_t i=0; i<singles[_compiler].size(); i++)
         {
             delete singles[_compiler][i];
         }
-#ifndef _WINDOWS
-        free(s);
-#endif
         items.clear();
         singles.clear();
         deleteInstance(); // sets to zero only the instance, the bin_bin has the address for the delete
@@ -125,26 +104,13 @@ public:
     /**
      * Adds an item to the garbage bin
      */
-    void throwIn(T item, const char* file, long line, const nap_compiler* _compiler, long count)
+    void throwIn(T item, const nap_compiler* _compiler)
     {
-        //std::cout << count << " @ "<< file << ":" << line << std::endl;
-        all_alloc += count ;
-        //std::cout<<"All memory:" << all_alloc << std::endl;
-
-        location a;
-        a.file = std::string(file);
-        a.line = line;
-        a.item = item;
-        items[_compiler].push_back(a);
+        items[_compiler].push_back(item);
     }
 
     void place(T item, const nap_compiler* _compiler)
     {
-        long count = sizeof(T);
-        //std::cout << count << " @ " << std::endl;
-        all_alloc += count ;
-
-        //std::cout<<"All memory:" << all_alloc << std::endl;
         singles[_compiler].push_back(item);
     }
 
@@ -152,7 +118,7 @@ public:
 private:
 
     // this is the vector which actually contains the pointers that will be deleted at the end
-    std::map < const nap_compiler*, std::vector <location> > items;
+    std::map < const nap_compiler*, std::vector <T> > items;
     std::map < const nap_compiler*, std::vector<T> > singles;
 
 };
