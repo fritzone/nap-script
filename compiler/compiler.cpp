@@ -31,7 +31,7 @@ nap_compiler::~nap_compiler()
     delete mpf;
 }
 
-bool nap_compiler::set_source(const char *src)
+bool nap_compiler::set_source(const char *src, bool& psuccess)
 {
     mpf = parsed_file::set_source(src, this);
     if(!mpf)
@@ -40,12 +40,18 @@ bool nap_compiler::set_source(const char *src)
     }
 
     mEmbedded = true;
-    parse();
+    bool success = true;
+    parse(success);
+    if(!success)
+    {
+        psuccess = false;
+        return 0;
+    }
 
     return true;
 }
 
-void nap_compiler::parse()
+void nap_compiler::parse(bool& psuccess)
 {
     int level = -1; /* currently we are in a global context */
     char delim = 0;
@@ -60,33 +66,59 @@ void nap_compiler::parse()
             if(std::find(loaded_files.begin(), loaded_files.end(), exp_trim) == loaded_files.end())
             {
                 loaded_files.push_back(exp_trim);
-                load_file(exp_trim);
+                bool success = true;
+                load_file(exp_trim, success);
+                if(!success)
+                {
+                    psuccess = false;
+                    return;
+                }
+
                 expwloc = mpf->parser_next_phrase(&delim);
             }
         }
         else
         {
-            mpf->load_next_single_phrase(expwloc, cur_method, cur_cc, &delim, level);
+            bool success = true;
+            mpf->load_next_single_phrase(expwloc, cur_method, cur_cc, &delim, level, success);
+            if(!success)
+            {
+                psuccess = false;
+                return;
+            }
+
             expwloc = mpf->parser_next_phrase(&delim);
         }
     }
 }
 
 
-void nap_compiler::load_file(const std::string & file_name)
+void nap_compiler::load_file(const std::string & file_name, bool &psuccess)
 {
     mpf = mpf->open_file(file_name, this);
     if(!mpf)
     {
         return;
     }
+    bool success = true;
+    parse(success);
+    if(!success)
+    {
+        psuccess = false;
+        return;
+    }
 
-    parse();
 }
 
 bool nap_compiler::compile()
 {
-    global_cc->compile(this);
+    bool success = true;
+    global_cc->compile(this, success);
+    if(!success)
+    {
+        return false;
+    }
+
     if(mErrorCode == 0)
     {
         return true;
@@ -186,6 +218,7 @@ void nap_compiler::throw_error(const char* error) const
     ss << "[err:compiler] " << error << " @ " << loc;
     mfinalError = ss.str();
     if(!mEmbedded) std::cerr << mfinalError << std::endl ;
+
 }
 
 void nap_compiler::throw_error(const char* error, const std::string& par1, const std::string& par2) const
@@ -195,6 +228,7 @@ void nap_compiler::throw_error(const char* error, const std::string& par1, const
     ss << "[err:compiler] " << error << ": [" << par1 << "] - " << par2 << " @ " << loc;
     mfinalError = ss.str();
     if(!mEmbedded) std::cerr << mfinalError << std::endl;
+
 }
 
 void nap_compiler::throw_error(const char* error, const std::string& par) const
@@ -204,6 +238,7 @@ void nap_compiler::throw_error(const char* error, const std::string& par) const
     ss << "[err:compiler] " << error << ": [" << par << "] @ " << loc;
     mfinalError = ss.str();
     if(!mEmbedded) std::cerr << mfinalError << std::endl;
+
 }
 
 void nap_compiler::throw_error(const char* error, int id, const char* par) const
@@ -213,6 +248,7 @@ void nap_compiler::throw_error(const char* error, int id, const char* par) const
     ss << "[err:compiler] " << error << " id[" << id << "] - [" << par << "] @ " << loc;
     mfinalError = ss.str();
     if(!mEmbedded) std::cerr << mfinalError << std::endl;
+
 }
 
 void nap_compiler::throw_index_out_of_range(const char* variable_name, int maximum_allowed, int got) const
@@ -223,6 +259,7 @@ void nap_compiler::throw_index_out_of_range(const char* variable_name, int maxim
        << variable_name << ":"<<maximum_allowed << "]" << " @ " << loc;
     mfinalError = ss.str();
     if(!mEmbedded) std::cerr << mfinalError << std::endl;
+
 }
 
 void nap_compiler::set_location(const expression_with_location* loc)

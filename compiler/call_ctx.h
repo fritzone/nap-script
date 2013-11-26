@@ -78,7 +78,7 @@ struct call_context
     variable *add_variable(const char *name,
                            const char *type,
                            int dimension,
-                           const expression_with_location *expwloc);
+                           const expression_with_location *expwloc, bool &psuccess);
 
 
     /**
@@ -115,19 +115,19 @@ struct call_context
      * @param expwloc - the location of the expression in the file
      * @return the new expression_tree object
      */
-    expression_tree *add_new_expression(const char *expr, const expression_with_location *expwloc);
+    expression_tree *add_new_expression(const char *expr, const expression_with_location *expwloc, bool &psuccess);
 
 
     /**
      * Compile the given call context, and output the bytecode to the
      * system bytecode stream
      */
-    void compile(nap_compiler *_compiler);
+    void compile(nap_compiler *_compiler, bool &psuccess);
 
     /**
      * Runs this call context, the call context is supposed to be an "inner" call cotnext (mostly nameless call cotnext)
      */
-    void compile_standalone(nap_compiler* _compiler, int level, int reqd_type, int forced_mov);
+    void compile_standalone(nap_compiler* _compiler, int level, int reqd_type, int forced_mov, bool &psuccess);
 
     /**
      * @brief call_context_get_class_declaration return a clas declaration from the
@@ -207,7 +207,7 @@ struct call_context
                                          std::vector<variable *> &first,
                                          method* the_method,
                                          call_context* cc,
-                                         const expression_with_location* expwloc);
+                                         const expression_with_location* expwloc, bool &psuccess);
 private:
 
     /* the type of the call context: 0 - global, 1 - named*/

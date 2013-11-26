@@ -119,6 +119,7 @@ void code_finalizer::finalize()
     for(unsigned int i=0; i<jumptable_count; i++)
     {
         f.write_stuff_to_file_32(mcompiler->jumptable()[i]->bytecode_location);
+        std::cerr << "JUMP:" << mcompiler->jumptable()[i]->bytecode_location << std::endl;
     }
 
     }
@@ -132,7 +133,7 @@ void code_finalizer::finalize()
     f.write_stuff_to_file_32(meta_location, 0 + 1); // the meta location for variables
     f.write_stuff_to_file_32(strtable_location, 0 + 1 + 4); // the stringtable location
     f.write_stuff_to_file_32(jumptable_location, 0 + 1 + 4 + 4); // the jumptable location
-    f.write_stuff_to_file_8(max_reg_count, 0 + 1 + 4 + 4 + 1);
+    f.write_stuff_to_file_8(max_reg_count, 0 + 1 + 4 + 4 + 4);
     }
 }
 
@@ -141,11 +142,11 @@ void code_stream::output_bytecode(const char* s)
     std::string expr = s;
     if(expr == " " || expr == "(" || expr == ")" || expr == "\n" || expr == ",")
     {
-        //printf("%s ", s);
+        fprintf(stderr, "%s ", s);
         return;
     }
 
-    //printf("%s ", s);
+    fprintf(stderr, "%s ", s);
 
 
     file_abstraction f(mcompiler);
@@ -245,7 +246,8 @@ void code_stream::output_bytecode(const char* s)
                     max_reg_count = nrf;
                     if(max_reg_count == 255)
                     {
-                        mcompiler->throw_error("a too complex operation was attempted");
+                        std::cerr <<"[compiler] a too complex operation was attempted. re-write your applcation :( " << std::endl;
+                        abort();
                     }
                 }
             }

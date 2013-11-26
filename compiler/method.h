@@ -35,7 +35,7 @@ struct method
      * @param type - the type of the parameter (as string)
      * @param modifiable - if the parameter is a reference or not (C++ rulez :) )
      */
-    parameter* add_parameter(char* pname,  char* ptype, int pdimension, const expression_with_location* pexpwloc);
+    parameter* add_parameter(char* pname,  char* ptype, int pdimension, const expression_with_location* pexpwloc, call_context *cc, bool &psuccess);
 
     /**
      * @brief get_parameter return the parameter at the given location
@@ -52,7 +52,7 @@ struct method
      * @param expwloc
      * @return
      */
-    variable* add_new_variable(char* pname,  char* type, int dimension, const expression_with_location* expwloc);
+    variable* add_new_variable(char* pname,  char* type, int dimension, const expression_with_location* expwloc, bool &psuccess);
     /**
      * @brief has_variable
      * @param cc
@@ -61,14 +61,14 @@ struct method
      * @param env_var
      * @return
      */
-    variable* has_variable(call_context* cc, char* varname, int* templed, int* env_var);
+    variable* has_variable(call_context* cc, char* varname, int* templed, int* env_var, bool &psuccess);
 
     /**
      * @brief feed_parameter_list Feeds in the given parameter list to the method for it to create its parameter structures
      * @param par_list
      * @param expwloc
      */
-    void feed_parameter_list(char* par_list, const expression_with_location* expwloc);
+    void feed_parameter_list(char* par_list, const expression_with_location* expwloc, bool &psuccess);
 
 
     const std::vector<variable*>& get_variables() const

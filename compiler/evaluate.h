@@ -9,7 +9,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
              call_context* cc,
              int level,
              int &reqd_type,
-             int forced_mov);
+             int forced_mov, bool &psuccess);
 
 const char *get_reg_type(int req_type);
 

@@ -14,7 +14,7 @@
  * Returns -1 in case nothing was found or the location of the operator which comes first
  * between op1, op2 in the list
  */
-int level_0_char_operator(const nap_compiler* _compiler, const char *expr, char op1, char op2, int need_first)
+int level_0_char_operator(const nap_compiler* _compiler, const char *expr, char op1, char op2, int need_first, bool& psuccess)
 {
     signed int i=0, len = strlen(expr);
     if(len == 1 && expr[0] != op1 && expr[0] != op2)
@@ -41,6 +41,9 @@ int level_0_char_operator(const nap_compiler* _compiler, const char *expr, char 
             if(level == -1)
             {
                 _compiler->throw_error(E0012_SYNTAXERR, expr, NULL);
+                psuccess = false;
+                return -1;
+
             }
         }
 
@@ -72,6 +75,8 @@ int level_0_char_operator(const nap_compiler* _compiler, const char *expr, char 
             if(i == len)
             {
                 _compiler->throw_error(E0009_PARAMISM, expr, NULL);
+                psuccess = false;
+                return -1;
             }
         }
 
@@ -94,6 +99,8 @@ int level_0_char_operator(const nap_compiler* _compiler, const char *expr, char 
             if(i == len)
             {
                 _compiler->throw_error(E0025_QMISM, expr, NULL);
+                psuccess = false;
+                return -1;
             }
 
             i++; /* to skip the closing quote, without affecting  */
@@ -156,7 +163,7 @@ int level_0_char_operator(const nap_compiler* _compiler, const char *expr, char 
  * Look for a level 0 operator, specifies if we need the last occurence or the first
  * The operator can be longer than a single character
  */
-int level_0_longer_operator(const nap_compiler* _compiler, const char *expr, const char* op, int need_last)
+int level_0_longer_operator(const nap_compiler* _compiler, const char *expr, const char* op, int need_last, bool& psuccess)
 {
 signed int len = strlen(expr), lenopc = strlen(op), i = 0;
 int last_idx = -1, level = 0;
@@ -170,6 +177,8 @@ int last_idx = -1, level = 0;
             if(level == -1)
             {
                 _compiler->throw_error(E0009_PARAMISM, expr, NULL);
+                psuccess = false;
+                return -1;
             }
         }
         if(expr[i] == C_SQPAR_OP)
@@ -202,6 +211,8 @@ int last_idx = -1, level = 0;
             if(i == len)
             {
                 _compiler->throw_error(E0009_PARAMISM, expr, NULL);
+                psuccess = false;
+                return -1;
             }
         }
 
@@ -224,6 +235,8 @@ int last_idx = -1, level = 0;
             if(i == len)
             {
                 _compiler->throw_error(E0025_QMISM, expr, NULL);
+                psuccess = false;
+                return -1;
             }
 
             i++; /*skipping the closing quote*/
@@ -275,25 +288,41 @@ int last_idx = -1, level = 0;
 /**
  * Looks for a lvel 0 additive operator, such as + -
  */
-int level_0_add_operator(const nap_compiler* _compiler, const char* expr)
+int level_0_add_operator(const nap_compiler* _compiler, const char* expr, bool& psuccess)
 {
-    return level_0_char_operator(_compiler, expr, C_ADD, C_SUB, 0);
+    return level_0_char_operator(_compiler, expr, C_ADD, C_SUB, 0, psuccess);
 }
 
 /**
  * Looks for level 0 bitwise operators:
  * && || !
  */
-int level_0_logical_operator(const nap_compiler* _compiler, const char* expr)
+int level_0_logical_operator(const nap_compiler* _compiler, const char* expr, bool& psuccess)
 {
-int opr = level_0_longer_operator(_compiler, expr, STR_LOGIC_OR, 0);
+    bool success = true;
+    int opr = level_0_longer_operator(_compiler, expr, STR_LOGIC_OR, 0, success);
     if(opr > -1) return opr;
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
 
-    opr = level_0_longer_operator(_compiler, expr, STR_LOGIC_AND, 0);
+    opr = level_0_longer_operator(_compiler, expr, STR_LOGIC_AND, 0, success);
     if(opr > -1) return opr;
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
 
-    opr = level_0_longer_operator(_compiler, expr, STR_LOGIC_NOT, 0);
+    opr = level_0_longer_operator(_compiler, expr, STR_LOGIC_NOT, 0, success);
     if(opr > -1) return opr;
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
 
     return -1;
 }
@@ -302,18 +331,41 @@ int opr = level_0_longer_operator(_compiler, expr, STR_LOGIC_OR, 0);
  * Looks for level 0 bitwise operators:
  * & | ~ ^
  */
-int level_0_bitwise_operator(const nap_compiler* _compiler,const char* expr)
+int level_0_bitwise_operator(const nap_compiler* _compiler,const char* expr, bool &psuccess)
 {
-int opr = level_0_longer_operator(_compiler, expr, STR_BIT_OR, 0);
+    bool success = true;
+    int opr = level_0_longer_operator(_compiler, expr, STR_BIT_OR, 0, success);
+    if(opr > -1) return opr;
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
+    opr = level_0_longer_operator(_compiler, expr, STR_BIT_XOR, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
     if(opr > -1) return opr;
 
-    opr = level_0_longer_operator(_compiler, expr, STR_BIT_XOR, 0);
+    opr = level_0_longer_operator(_compiler, expr, STR_BIT_AND, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(opr > -1) return opr;
 
-    opr = level_0_longer_operator(_compiler, expr, STR_BIT_AND, 0);
-    if(opr > -1) return opr;
+    opr = level_0_longer_operator(_compiler, expr, STR_BIT_COMP, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
 
-    opr = level_0_longer_operator(_compiler, expr, STR_BIT_COMP, 0);
     if(opr > -1) return opr;
 
     return -1;
@@ -322,37 +374,80 @@ int opr = level_0_longer_operator(_compiler, expr, STR_BIT_OR, 0);
 /**
  * Looks for a level 0 multiplicative operator
  */
-int level_0_multiply_operator(const nap_compiler* _compiler,const char *expr)
+int level_0_multiply_operator(const nap_compiler* _compiler,const char *expr, bool& psuccess)
 {
-int posMply = level_0_longer_operator(_compiler, expr, STR_MUL, 1);
-int posDiv = level_0_longer_operator(_compiler, expr, STR_DIV, 1);
-int modDiv = level_0_longer_operator(_compiler, expr, STR_MOD, 1);
+    bool success = true;
+    int posMply = level_0_longer_operator(_compiler, expr, STR_MUL, 1, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+    int posDiv = level_0_longer_operator(_compiler, expr, STR_DIV, 1, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+    int modDiv = level_0_longer_operator(_compiler, expr, STR_MOD, 1, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
     return (max_int (posMply, max_int(posDiv, modDiv)));
 }
 
 /**
  * Looks for a level 0 assignment operator
  */
-int level_0_assignment_operator(const nap_compiler* _compiler,const char *expr)
+int level_0_assignment_operator(const nap_compiler* _compiler,const char *expr, bool& psuccess)
 {
-    return level_0_longer_operator(_compiler, expr, STR_EQUAL, 0);
+    bool success = true;
+    int t = level_0_longer_operator(_compiler, expr, STR_EQUAL, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+    return t;
 }
 
 /**
  * Looks for a level 0 dot operator
  */
-int level_0_dot_operator(const nap_compiler* _compiler, const char *expr)
+int level_0_dot_operator(const nap_compiler* _compiler, const char *expr, bool& psuccess)
 {
-    return level_0_longer_operator(_compiler, expr, STR_DOT, 0);
+    bool success = true;
+    int t = level_0_longer_operator(_compiler, expr, STR_DOT, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+    return t;
 }
 
 /**
  * Finds the shift operations on the 0th level. Left shift has priority
  */
-int level_0_shift(const nap_compiler* _compiler, const char* expr)
+int level_0_shift(const nap_compiler* _compiler, const char* expr, bool& psuccess)
 {
-int posleft = level_0_longer_operator(_compiler, expr, STR_SHLEFT, 0);
-int posrigh = level_0_longer_operator(_compiler, expr, STR_SHRIGHT, 0);
+    bool success = true;
+    int posleft = level_0_longer_operator(_compiler, expr, STR_SHLEFT, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
+    int posrigh = level_0_longer_operator(_compiler, expr, STR_SHRIGHT, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     return posleft==-1? posrigh : posleft;
 }
 
@@ -360,15 +455,28 @@ int posrigh = level_0_longer_operator(_compiler, expr, STR_SHRIGHT, 0);
 * Looks for a level 0 comparison operator.
 * Returns the index, if any found and the found_operator is populated with the found op
 */
-int level_0_comparison_operator(const nap_compiler* _compiler, const char *expr, const char** found_operator)
+int level_0_comparison_operator(const nap_compiler* _compiler, const char *expr, const char** found_operator, bool& psuccess)
 {
-    int l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_EQUALEQUAL, 0);
+    bool success = true;
+    int l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_EQUALEQUAL, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(l0_cmp_op > -1)
     {
         *found_operator = STR_EQUALEQUAL;
         return l0_cmp_op;
     }
-    l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_NEQ, 0);
+    l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_NEQ, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(l0_cmp_op > -1)
     {
         *found_operator = STR_NEQ;
@@ -376,25 +484,49 @@ int level_0_comparison_operator(const nap_compiler* _compiler, const char *expr,
     }
     /* the order is important, LTE should be checked before LT since other way it might find the < op
        and ignore the = after it, leading to errors */
-    l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_LTE, 0);
+    l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_LTE, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(l0_cmp_op > -1)
     {
         *found_operator = STR_LTE;
         return l0_cmp_op;
     }
-    l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_GTE, 0);
+    l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_GTE, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(l0_cmp_op > -1)
     {
         *found_operator = STR_GTE;
         return l0_cmp_op;
     }
-    l0_cmp_op = level_0_char_operator(_compiler, expr, '<', '<', 1);
+    l0_cmp_op = level_0_char_operator(_compiler, expr, '<', '<', 1, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(l0_cmp_op > -1)
     {
         *found_operator = STR_LT;
         return l0_cmp_op;
     }
-    l0_cmp_op = level_0_char_operator(_compiler, expr, '>', '>', 1 );
+    l0_cmp_op = level_0_char_operator(_compiler, expr, '>', '>', 1, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(l0_cmp_op > -1)
     {
         *found_operator = STR_GT;
@@ -406,9 +538,16 @@ int level_0_comparison_operator(const nap_compiler* _compiler, const char *expr,
 /**
  * Finds the first ocurence of a level 0 x= operator.
  */
-int level_0_sg_eq_operator(const nap_compiler* _compiler, const char *expr, const char** found_operator, int* found_type)
+int level_0_sg_eq_operator(const nap_compiler* _compiler, const char *expr, const char** found_operator, int* found_type, bool&psuccess)
 {
-int l0_seq_op = level_0_longer_operator(_compiler, expr, STR_PLUS_EQUAL, 0);
+    bool success = true;
+    int l0_seq_op = level_0_longer_operator(_compiler, expr, STR_PLUS_EQUAL, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(l0_seq_op > -1)
     {
         *found_operator = STR_PLUS_EQUAL;
@@ -416,7 +555,13 @@ int l0_seq_op = level_0_longer_operator(_compiler, expr, STR_PLUS_EQUAL, 0);
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_MINUS_EQUAL, 0);
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_MINUS_EQUAL, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(l0_seq_op > -1)
     {
         *found_operator = STR_MINUS_EQUAL;
@@ -424,7 +569,13 @@ int l0_seq_op = level_0_longer_operator(_compiler, expr, STR_PLUS_EQUAL, 0);
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_MUL_EQUAL, 0);
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_MUL_EQUAL, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(l0_seq_op > -1)
     {
         *found_operator = STR_MUL_EQUAL;
@@ -432,7 +583,13 @@ int l0_seq_op = level_0_longer_operator(_compiler, expr, STR_PLUS_EQUAL, 0);
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_DIV_EQUAL, 0);
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_DIV_EQUAL, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(l0_seq_op > -1)
     {
         *found_operator = STR_DIV_EQUAL;
@@ -440,7 +597,13 @@ int l0_seq_op = level_0_longer_operator(_compiler, expr, STR_PLUS_EQUAL, 0);
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_AND_EQUAL, 0);
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_AND_EQUAL, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(l0_seq_op > -1)
     {
         *found_operator = STR_AND_EQUAL;
@@ -448,7 +611,13 @@ int l0_seq_op = level_0_longer_operator(_compiler, expr, STR_PLUS_EQUAL, 0);
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_OR_EQUAL, 0);
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_OR_EQUAL, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(l0_seq_op > -1)
     {
         *found_operator = STR_OR_EQUAL;
@@ -456,7 +625,13 @@ int l0_seq_op = level_0_longer_operator(_compiler, expr, STR_PLUS_EQUAL, 0);
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_XOR_EQUAL, 0);
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_XOR_EQUAL, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(l0_seq_op > -1)
     {
         *found_operator = STR_XOR_EQUAL;
@@ -464,7 +639,13 @@ int l0_seq_op = level_0_longer_operator(_compiler, expr, STR_PLUS_EQUAL, 0);
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_SHL_EQUAL, 0);
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_SHL_EQUAL, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(l0_seq_op > -1)
     {
         *found_operator = STR_SHL_EQUAL;
@@ -472,7 +653,13 @@ int l0_seq_op = level_0_longer_operator(_compiler, expr, STR_PLUS_EQUAL, 0);
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_SHR_EQUAL, 0);
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_SHR_EQUAL, 0, success);
+    if(!success)
+    {
+        psuccess = false;
+        return -1;
+    }
+
     if(l0_seq_op > -1)
     {
         *found_operator = STR_SHR_EQUAL;

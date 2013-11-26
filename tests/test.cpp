@@ -141,7 +141,7 @@ TEST(Functions, MessyCodeTest)
     int func2()                   \
     {                             \
     }                             \
-    z = 3;                        \
+    int z = 3;                    \
     if(z == 3)                    \
     {                             \
       int y = 2;                  \
@@ -152,7 +152,7 @@ TEST(Functions, MessyCodeTest)
     int y = 1;                    \
     "
     SCRIPT_END
-    ASSERT_TRUE( 5 == VAR_INT(g));
+    ASSERT_EQ(5, VAR_INT(g));
 
     SCRIPT_SHUTDOWN
 }

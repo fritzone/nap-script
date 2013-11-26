@@ -50,7 +50,9 @@ nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
 {
     if(runtime != NULL)
     {
-        bool source_set = runtime->compiler->set_source(commands);
+        bool success = true;
+        bool source_set = runtime->compiler->set_source(commands, success);
+
         if(source_set)
         {
             if(runtime->compiler->compile())
@@ -68,7 +70,7 @@ nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
         }
         else
         {
-            fprintf(stderr, "cannot compile the given source\n");
+            fprintf(stderr, "cannot compile the given source: %s\n", runtime->compiler->get_error().c_str());
             return NULL;
         }
     }

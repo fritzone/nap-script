@@ -62,14 +62,23 @@ constructor_call::constructor_call(char* name, call_context* cc) : method(cc->co
  * Adds a new variable.
  * If the dimensions is 1
  */
-variable* method::add_new_variable(char* pname, char* type, int dimension, const expression_with_location* expwloc)
+variable* method::add_new_variable(char* pname, char* type, int dimension, const expression_with_location* expwloc, bool& psuccess)
 {
     char* new_name = trim(pname, mcompiler);
     if(!is_valid_variable_name(pname))
     {
         mcompiler->throw_error(E0018_INVIDENT, pname, NULL);
+        psuccess = false;
+        return 0;
     }
-    return main_cc->variable_list_add_variable(new_name, type, dimension, variables, this, main_cc, expwloc);
+    bool success = true;
+    variable* v = main_cc->variable_list_add_variable(new_name, type, dimension, variables, this, main_cc, expwloc, success);
+    if(!success)
+    {
+        psuccess = false;
+        return 0;
+    }
+    return v;
 }
 
 /**
@@ -79,7 +88,7 @@ variable* method::add_new_variable(char* pname, char* type, int dimension, const
  * 3. if reached to the method's main cc find variable in all the CC's above
  * 4. find the variables of the method (meaning: parameters)
  */
- variable* method::has_variable(call_context* cc, char* varname, int* templed, int* env_var)
+ variable* method::has_variable(call_context* cc, char* varname, int* templed, int* env_var, bool& psuccess)
 {
     //printf("\t[MGV]: Variable [%s] in method [%s]\n", varname, the_method?the_method->name:"global");
     if(varname[0] == C_DOLLAR)        /* is this an enviornment variable? */
@@ -107,6 +116,8 @@ variable* method::add_new_variable(char* pname, char* type, int dimension, const
         if((*location)->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
         {
             mcompiler->throw_error(E0020_ACCTNOTP, (*location)->name, NULL);
+            psuccess = false;
+            return 0;
         }
         return *location;
     }
@@ -123,6 +134,8 @@ variable* method::add_new_variable(char* pname, char* type, int dimension, const
             if(v->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
             {
                 mcompiler->throw_error(E0020_ACCTNOTP, v->name, NULL);
+                psuccess = false;
+                return 0;
             }
             return v;
         }
@@ -138,6 +151,8 @@ variable* method::add_new_variable(char* pname, char* type, int dimension, const
             if((*location)->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
             {
                 mcompiler->throw_error(E0020_ACCTNOTP, (*location)->name, NULL);
+                psuccess = false;
+                return 0;
             }
             return *location;
         }
@@ -151,9 +166,9 @@ variable* method::add_new_variable(char* pname, char* type, int dimension, const
 /**
  * Adds a new parameter to the method. These will go in the
  */
-parameter* method::add_parameter(char* pname, char* ptype, int pdimension, const expression_with_location* pexpwloc)
+parameter* method::add_parameter(char* pname, char* ptype, int pdimension, const expression_with_location* pexpwloc, call_context*cc, bool& psuccess)
 {
-    parameter* func_par = new_parameter(this);
+    parameter* func_par = new_parameter(this, cc);
     char* indexOfEq = strchr(pname, C_EQ);
     variable* nvar = NULL;
 
@@ -162,10 +177,23 @@ parameter* method::add_parameter(char* pname, char* ptype, int pdimension, const
         char* afterEq = indexOfEq + 1;
         int res = -1;
         func_par->initial_value = new expression_tree(pexpwloc);
-        mcompiler->get_interpreter().build_expr_tree(afterEq, func_par->initial_value, this, afterEq, main_cc, &res, pexpwloc);
+        bool success = true;
+        mcompiler->get_interpreter().build_expr_tree(afterEq, func_par->initial_value, this, afterEq, main_cc, &res, pexpwloc, success);
+        if(!success)
+        {
+            psuccess = false;
+            return 0;
+        }
+
         *indexOfEq = 0;
     }
-    nvar = add_new_variable(pname, ptype, pdimension, pexpwloc);
+    bool success = true;
+    nvar = add_new_variable(pname, ptype, pdimension, pexpwloc, success);
+    if(!success)
+    {
+        psuccess = false;
+        return 0;
+    }
 
     func_par->value = new_envelope(nvar, BASIC_TYPE_VARIABLE, mcompiler);
 
@@ -197,9 +225,16 @@ parameter* method::get_parameter(size_t i)
 /**
  * Populates the parameters of this method with the definitions from the string
  */
-void method::feed_parameter_list(char* par_list, const expression_with_location* expwloc)
+void method::feed_parameter_list(char* par_list, const expression_with_location* expwloc, bool& psuccess)
 {
-    std::vector<std::string> entries = string_list_create_bsep(par_list, C_COMMA, mcompiler);
+    bool success = true;
+    std::vector<std::string> entries = string_list_create_bsep(par_list, C_COMMA, mcompiler, success);
+    if(!success)
+    {
+        psuccess = false;
+        return;
+    }
+
     std::vector<std::string>::iterator q = entries.begin();
     while(q != entries.end())
     {
@@ -222,6 +257,8 @@ void method::feed_parameter_list(char* par_list, const expression_with_location*
             if(i == q->length())
             {
                 mcompiler->throw_error(E0009_PARAMISM, par_list);
+                psuccess = false;
+                return;
             }
 
             if((modifiable = (C_AND == (*q)[i])))
@@ -234,7 +271,14 @@ void method::feed_parameter_list(char* par_list, const expression_with_location*
             {
                 par_name[j++] = (*q)[i++];
             }
-            parameter* new_par_decl = add_parameter(trim(par_name, mcompiler), trim(par_type, mcompiler), 1, /*modifiable, */ expwloc);
+            bool success = true;
+            parameter* new_par_decl = add_parameter(trim(par_name, mcompiler), trim(par_type, mcompiler), 1, expwloc, main_cc, success);
+            if(!success)
+            {
+                psuccess = false;
+                return;
+            }
+
             /* here we should identify the dimension of the parameter */
             if(strchr(par_type, C_SQPAR_CL) && strchr(par_type, C_SQPAR_OP))
             {

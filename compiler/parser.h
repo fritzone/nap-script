@@ -51,30 +51,30 @@ public:
     /* TODO: make this private, create another start parsing function ...*/
     void load_next_single_phrase(expression_with_location* expwloc,
                                  method* cur_method, call_context* cur_cc,
-                                 char* delim, int level);
+                                 char* delim, int level, bool &psuccess);
 private:
 
     void deal_with_while_loading(call_context* cc, expression_tree* new_node,
                                  method* the_method, char delim,
-                                 int current_level, expression_with_location* expwloc);
+                                 int current_level, expression_with_location* expwloc, bool &psuccess);
 
     void deal_with_class_declaration(call_context* /*cc*/,
                                             expression_tree* new_node,
                                             method* /*the_method*/,
                                             char /*delim*/,
                                             int /*current_level*/,
-                                            expression_with_location* /*expwloc*/);
+                                            expression_with_location* /*expwloc*/, bool &psuccess);
 
     void deal_with_for_loading(call_context* cc, expression_tree* new_node,
                                method* the_method, char delim,
-                               int current_level, expression_with_location* expwloc);
+                               int current_level, expression_with_location* expwloc, bool &psuccess);
 
     void deal_with_ifs_loading(call_context* cc, expression_tree* new_node,
                                method* the_method, char delim, int current_level,
-                               expression_with_location* expwloc);
+                               expression_with_location* expwloc, bool &psuccess);
 
     void load_next_block(method* the_method, call_context* par_cc,
-                         int current_level, int orig_level);
+                         int current_level, int orig_level, bool&psuccess);
 
 
     void load_next_assembly_block(call_context* par_cc);

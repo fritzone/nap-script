@@ -2,6 +2,9 @@
 #define _JMPTABLE_H_
 
 #include <stdint.h>
+#include <stdio.h>
+
+struct nap_vm;
 
 /******************************************************************************/
 /*                             Jumptable section                              */
@@ -16,4 +19,10 @@ struct jumptable_entry
     uint32_t location;
 };
 
+
+/*
+ * Read the stringtable of the bytecode file. Exits on failure.
+ */
+void read_jumptable(struct nap_vm *vm, FILE* fp);
+void interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t len);
 #endif

@@ -96,7 +96,6 @@ char *ltrim(const char* src, const nap_compiler *_compiler)
  */
 char* trim(const char* src, const nap_compiler *_compiler)
 {
-    std::cout << "-------------------" << src << "-----" << std::endl;
     const char *start = src;
     while(*start && is_whitespace(*start)) start ++;
     if(!*start)
@@ -378,7 +377,7 @@ int is_valid_variable_name(const char* name)
 /**
  * Creates a new string list from the instr which is separated by the given separator
  */
-std::vector<std::string> string_list_create_bsep(const std::string& instr, char sep, const nap_compiler* _compiler)
+std::vector<std::string> string_list_create_bsep(const std::string& instr, char sep, const nap_compiler* _compiler, bool& psuccess)
 {
     std::vector<std::string>  head;
     const char* p = instr.c_str(), *frst = instr.c_str();
@@ -400,6 +399,8 @@ std::vector<std::string> string_list_create_bsep(const std::string& instr, char 
             if(!*p)
             {
                 _compiler->throw_error(E0009_PARAMISM, instr, NULL);
+                psuccess = false;
+                return std::vector<std::string>();
             }
             p++;    /* to skip the last closing brace*/
             already_increased = true;
@@ -419,6 +420,8 @@ std::vector<std::string> string_list_create_bsep(const std::string& instr, char 
             if(!*p)
             {
                 _compiler->throw_error(E0009_PARAMISM, instr, NULL);
+                psuccess = false;
+                return std::vector<std::string>();
             }
             p++;    /* to skip the last closing brace*/
             already_increased = true;

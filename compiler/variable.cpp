@@ -32,14 +32,28 @@ multi_dimension_index* tmp = alloc_mem(multi_dimension_index,1, _compiler);
 /**
  * Adds a new template variable to the variable
  */
-static variable* variable_add_new_template_variable(variable* the_variable, const char* name, const char* type, method* the_method, call_context* cc, const expression_with_location* expwloc)
+static variable* variable_add_new_template_variable(variable* the_variable,
+                                                    const char* name,
+                                                    const char* type,
+                                                    method* the_method,
+                                                    call_context* cc,
+                                                    const expression_with_location* expwloc, bool& psuccess)
 {
 char* new_name = trim(name, cc->compiler());
     if(strchr(new_name, C_PAR_CL) || strchr(new_name, C_PAR_OP)) /* not allowed to have parantheses in the variable name */
     {
         cc->compiler()->throw_error(E0029_PARANOTALL, new_name, NULL);
+        psuccess = false;
+        return 0;
     }
-    return cc->variable_list_add_variable(new_name, type, 1, the_variable->templ_variables, the_method, cc, expwloc);
+    bool success = true;
+    variable* v = cc->variable_list_add_variable(new_name, type, 1, the_variable->templ_variables, the_method, cc, expwloc, success);
+    if(!success)
+    {
+        psuccess = false;
+        return 0;
+    }
+    return v;
 }
 
 
@@ -52,13 +66,20 @@ char* new_name = trim(name, cc->compiler());
  * @param cc - the cc in which we are located
  * @return the newly created parameter object
  */
-static parameter* variable_add_template_parameter(variable* the_variable, const char* name, const char* type, method* the_method, call_context* cc, const expression_with_location* expwloc)
+static parameter* variable_add_template_parameter(variable* the_variable,
+                                                  const char* name,
+                                                  const char* type,
+                                                  method* the_method,
+                                                  call_context* cc,
+                                                  const expression_with_location* expwloc, bool& psuccess)
 {
     if(BASIC_TYPE_INT == the_variable->i_type || BASIC_TYPE_REAL == the_variable->i_type)
     {
         cc->compiler()->throw_error(E0030_PARMNOTALL, the_variable->name, NULL);
+        psuccess = false;
+        return 0;
     }
-    parameter* func_par = new_parameter(the_method);
+    parameter* func_par = new_parameter(the_method, cc);
     char *name_dup = cc->compiler()->duplicate_string(name);
     char* indexOfEq = strchr(name_dup, C_EQ);
     variable* nvar = NULL;
@@ -68,13 +89,26 @@ static parameter* variable_add_template_parameter(variable* the_variable, const 
         const char* afterEq = indexOfEq + 1;
         int res = -1;
         func_par->initial_value = new expression_tree(expwloc);
-        cc->compiler()->get_interpreter().build_expr_tree(afterEq, func_par->initial_value, the_method, afterEq, cc, &res, expwloc);
+        bool success = true;
+        cc->compiler()->get_interpreter().build_expr_tree(afterEq, func_par->initial_value, the_method, afterEq, cc, &res, expwloc, success);
+        if(!success)
+        {
+            psuccess = false;
+            return 0;
+        }
+
         *indexOfEq = 0;
     }
 
     name = trim(name,cc->compiler());
+    bool success = true;
+    nvar = variable_add_new_template_variable(the_variable, name, type, the_method, cc, expwloc, success);
+    if(!success)
+    {
+        psuccess = false;
+        return 0;
+    }
 
-    nvar = variable_add_new_template_variable(the_variable, name, type, the_method, cc, expwloc);
     nvar->func_par = func_par;
 
     func_par->value = new_envelope(nvar, BASIC_TYPE_VARIABLE,cc->compiler());
@@ -91,10 +125,19 @@ static parameter* variable_add_template_parameter(variable* the_variable, const 
  * @param the_method - the method we are working on
  * @param cc - the cc we are palced in
  */
-void variable_feed_parameter_list(variable* the_variable, char* par_list, method* the_method, call_context* cc, const expression_with_location* expwloc)
+void variable_feed_parameter_list(variable* the_variable, char* par_list,
+                                  method* the_method,
+                                  call_context* cc,
+                                  const expression_with_location* expwloc, bool&psuccess)
 {
-    //printf("\n\nFeeding parameter list for variable [%s] with [%s]\n\n", the_variable->name, par_list);
-    std::vector<std::string> entries = string_list_create_bsep(par_list, C_COMMA,cc->compiler());
+    bool success = true;
+    std::vector<std::string> entries = string_list_create_bsep(par_list, C_COMMA,cc->compiler(), success);
+    if(!success)
+    {
+        psuccess = false;
+        return;
+    }
+
     std::vector<std::string>::iterator q = entries.begin();
     while(q != entries.end())
     {
@@ -109,6 +152,8 @@ void variable_feed_parameter_list(variable* the_variable, char* par_list, method
         if(i == q->length())
         {
             cc->compiler()->throw_error(E0009_PARAMISM, par_list);
+            psuccess = false;
+            return;
         }
 
         /* now par_type contains the type of the parameter */
@@ -119,15 +164,21 @@ void variable_feed_parameter_list(variable* the_variable, char* par_list, method
         if(i == q->length())
         {
             cc->compiler()->throw_error(E0009_PARAMISM, par_list);
+            psuccess = false;
+            return;
         }
 
         if(C_AND == (*q)[i])
         {
             cc->compiler()->throw_error(E0031_NOREFHERE, the_variable->name, NULL);
+            psuccess = false;
+            return;
         }
         if(C_SQPAR_CL == (*q)[i] || C_SQPAR_OP == (*q)[i])
         {
             cc->compiler()->throw_error(E0032_NOARRHERE, the_variable->name, NULL);
+            psuccess = false;
+            return;
         }
 
         j = 0;
@@ -136,8 +187,14 @@ void variable_feed_parameter_list(variable* the_variable, char* par_list, method
             par_name[j++] = (*q)[i++];
         }
 
+        bool success = true;
         parameter* new_par_decl = variable_add_template_parameter(the_variable,
-                                    trim(par_name,cc->compiler()), trim(par_type,cc->compiler()), the_method, cc, expwloc);
+                                    trim(par_name,cc->compiler()), trim(par_type,cc->compiler()), the_method, cc, expwloc, success);
+        if(!success)
+        {
+            psuccess = false;
+            return;
+        }
 
         /* here we should identify the dimension of the parameter */
         if(strchr(par_type, C_SQPAR_CL) && strchr(par_type, C_SQPAR_OP))
@@ -186,11 +243,6 @@ variable::variable(int pdimension, int type, const std::string &pname,
                    const std::string &pctype, call_context *pcc)
     : name(pname), dimension(pdimension), c_type(pctype), cc(pcc)
 {
-    if(pdimension<1)
-    {
-        cc->compiler()->throw_error(STR_INVALID_DIMENSION, NULL);
-    }
-
     multi_dim_count = 1;
     i_type = type;
     mult_dim_def = NULL;
