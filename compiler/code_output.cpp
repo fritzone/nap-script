@@ -177,15 +177,22 @@ void operation_register_level_register_next_level(nap_compiler* _compiler, const
 }
 
 void mov_var_into_reg(nap_compiler* _compiler, expression_tree* var_node, int reqd_type, int level,
-                      const method* the_method, call_context* cc, int forced_mov)
+                      const method* the_method, call_context* cc, int forced_mov, bool& psuccess)
 {
+    bool success = true;
     /* initialize the command output to move something into the register */
     code_stream(_compiler) << mov()
                   << SPACE
                   << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL;
 
     /* put in the next register the variable*/
-    compile(_compiler, var_node, the_method, cc, level, reqd_type, forced_mov);
+    compile(_compiler, var_node, the_method, cc, level, reqd_type, forced_mov, success);
+    if(!success)
+    {
+        psuccess = false;
+        return;
+    }
+
 
     code_stream(_compiler) << NEWLINE;
 }
@@ -288,11 +295,21 @@ void push_cc_end_marker(nap_compiler* _compiler,const char* marker_name)
 
 }
 
-void move_atomic_into_index_register(nap_compiler* _compiler, int& idxc, expression_tree* indxs, const method* the_method, call_context* cc, int level, int forced_mov )
+void move_atomic_into_index_register(nap_compiler* _compiler, int& idxc,
+                                     expression_tree* indxs,
+                                     const method* the_method,
+                                     call_context* cc, int level, int forced_mov, bool& psuccess )
 {
+    bool success = true;
     code_stream(_compiler) << NEWLINE << mov() << SPACE << reg() << idx() << C_PAR_OP << idxc << C_PAR_CL << C_COMMA;
     int int_type = BASIC_TYPE_INT;
-    compile(_compiler,indxs, the_method, cc, level, int_type, forced_mov);
+    compile(_compiler,indxs, the_method, cc, level, int_type, forced_mov, success);
+    if(!success)
+    {
+        psuccess = false;
+        return;
+    }
+
     code_stream(_compiler) << NEWLINE;
 }
 

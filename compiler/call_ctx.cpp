@@ -55,13 +55,25 @@ void call_context::add_method(method* the_method)
 /**
  * Adds a variable to the call context
  */
-variable* call_context::add_variable(const char* name, const char* type, int dimension, const expression_with_location* expwloc)
+variable* call_context::add_variable(const char* name, const char* type,
+                                     int dimension,
+                                     const expression_with_location* expwloc, bool& psuccess)
 {
+    psuccess = true;
     if(variable_list_has_variable(name, variables) != variables.end())
     {
+        psuccess = false;
         mcompiler->throw_error(E0034_SYMBOLDEFD, NULL);
+        return 0;
     }
-    variable* v = variable_list_add_variable(name, type, dimension, variables, ccs_method, this, expwloc);
+    bool success = true;
+    variable* v = variable_list_add_variable(name, type, dimension, variables, ccs_method, this, expwloc, success);
+    if(!success)
+    {
+        psuccess = false;
+        return 0;
+    }
+
     v->cc = this;
     return v;
 }
@@ -89,7 +101,8 @@ method* call_context::get_method(const string &pname)
 
 long call_context::add_label(long position, const std::string& name)
 {
-    bytecode_label* bl = alloc_mem(bytecode_label, 1, mcompiler);
+    bytecode_label* bl = new bytecode_label;
+    garbage_bin<bytecode_label*>::instance().place(bl, compiler());
     bl->bytecode_location = position;
     bl->name = name;
     bl->type = bytecode_label::LABEL_PLAIN;
@@ -119,13 +132,20 @@ void call_context::add_compiled_expression(expression_tree* co_expr)
 /**
  * Adds a new expression to the method's list
  */
-expression_tree* call_context::add_new_expression(const char* expr, const expression_with_location* expwloc)
+expression_tree* call_context::add_new_expression(const char* expr, const expression_with_location* expwloc, bool& psuccess)
 {
+    psuccess = true;
     expression_tree* new_expression = new expression_tree(expwloc);
     garbage_bin<expression_tree*>::instance().place(new_expression, mcompiler);
 
     int res;
-    mcompiler->get_interpreter().build_expr_tree(expr, new_expression, ccs_method, expr, this, &res, expwloc);
+    bool success = true;
+    mcompiler->get_interpreter().build_expr_tree(expr, new_expression, ccs_method, expr, this, &res, expwloc, success);
+    if(!success)
+    {
+        psuccess = false;
+        return 0;
+    }
     expressions.push_back(new_expression);
     return new_expression;
 }
@@ -135,12 +155,19 @@ expression_tree* call_context::add_new_expression(const char* expr, const expres
 /**
 * Runs the given call context.
 */
-void call_context::compile_standalone(nap_compiler* _compiler, int level, int reqd_type, int forced_mov)
+void call_context::compile_standalone(nap_compiler* _compiler, int level, int reqd_type, int forced_mov, bool&psuccess)
 {
     std::vector<expression_tree*>::iterator q = expressions.begin();
     while(q != expressions.end())
     {
-        ::compile(_compiler, *q, ccs_method, this, level, reqd_type, forced_mov);
+        bool success = true;
+        ::compile(_compiler, *q, ccs_method, this, level, reqd_type, forced_mov, success);
+        if(!success)
+        {
+            psuccess = false;
+            return;
+        }
+
         q ++;
     }
 }
@@ -151,14 +178,21 @@ void call_context::compile_standalone(nap_compiler* _compiler, int level, int re
  * found outside the methods.
  * Run method main
  */
-void call_context::compile(nap_compiler* _compiler)
+void call_context::compile(nap_compiler* _compiler, bool&psuccess)
 {
     {
         std::vector<expression_tree*>::iterator q = expressions.begin();
         while(q != expressions.end())
         {
             int unknown_type = -1;
-            ::compile(_compiler, *q, NULL, this, 0, unknown_type, 0);
+            bool success = true;
+            ::compile(_compiler, *q, NULL, this, 0, unknown_type, 0, success);
+            if(!success)
+            {
+                psuccess = false;
+                return;
+            }
+
             q ++;
         }
         exit_app(_compiler);
@@ -188,7 +222,14 @@ void call_context::compile(nap_compiler* _compiler)
         while(q1 != (*ccs_methods)->main_cc->get_expressions().end())
         {
             int unknown_type = -1;
-            ::compile(_compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0);
+            bool success = true;
+            ::compile(_compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0, success);
+            if(!success)
+            {
+                psuccess = false;
+                return;
+            }
+
             q1 ++;
         }
         ccs_methods ++;
@@ -225,7 +266,14 @@ void call_context::compile(nap_compiler* _compiler)
             while(q1 != (*ccs_methods)->main_cc->get_expressions().end())
             {
                 int unknown_type = -1;
-                ::compile(_compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0);
+                bool success = true;
+                ::compile(_compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0, success);
+                if(!success)
+                {
+                    psuccess = false;
+                    return;
+                }
+
                 q1 ++;
             }
 
@@ -300,11 +348,13 @@ variable* call_context::variable_list_add_variable(const char *var_name,
                                      std::vector<variable*>& first,
                                      method* the_method,
                                      call_context* cc,
-                                     const expression_with_location* expwloc)
+                                     const expression_with_location* expwloc, bool&psuccess)
 {
     if(!valid_variable_name(var_name))
     {
         mcompiler->throw_error("Invalid variable name", var_name, var_type);
+        psuccess = false;
+        return 0;
     }
     int itype = get_typeid(var_type);
 
@@ -319,6 +369,14 @@ variable* call_context::variable_list_add_variable(const char *var_name,
     {
         return 0;
     }
+
+    if(var_size < 1)
+    {
+        cc->compiler()->throw_error(STR_INVALID_DIMENSION, NULL);
+        psuccess = false;
+        return 0;
+    }
+
 
     variable* var = new variable(var_size, itype, var_name, var_type, cc);
     garbage_bin<variable*>::instance().place(var, cc->compiler());

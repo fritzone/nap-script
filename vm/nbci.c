@@ -186,6 +186,10 @@ void nap_vm_run(struct nap_vm* vm)
                 nap_vm_cleanup(vm);
                 exit(0);
             }
+            else
+            {
+                fprintf(stderr, "Goodbye\n");
+            }
         }
         else
         if(vm->current_opcode == OPCODE_INC) /* increment */

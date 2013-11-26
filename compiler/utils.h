@@ -181,6 +181,6 @@ std::string generate_unique_hash();
  * @param instr - the input string
  * @param sep - the expected separator
  */
-std::vector<std::string> string_list_create_bsep(const std::string &instr, char sep, const nap_compiler *_compiler);
+std::vector<std::string> string_list_create_bsep(const std::string &instr, char sep, const nap_compiler *_compiler, bool &psuccess);
 
 #endif

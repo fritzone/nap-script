@@ -18,7 +18,7 @@ void op_reg_reg(nap_compiler *_compiler, int op_type, char reg1_ty, int reg1_lev
 void operation_start_register_atomic(nap_compiler *_compiler, const expression_tree* node, int reqd_type, int level );
 void operation_register_level_register_next_level(nap_compiler *_compiler, const expression_tree* node, int reqd_type, int level );
 void move_register_level_register_next_level( int reqd_type, int level );
-void move_atomic_into_index_register(nap_compiler *_compiler, int& idxc, expression_tree *indxs, const method* the_method, call_context* cc, int level, int forced_mov );
+void move_atomic_into_index_register(nap_compiler *_compiler, int& idxc, expression_tree *indxs, const method* the_method, call_context* cc, int level, int forced_mov , bool &psuccess);
 void move_int_register_into_index_register(nap_compiler *_compiler, int& idxc, int level );
 void move_start_register_atomic(nap_compiler* _compiler,variable* dest, int level );
 void move_reg_into_var(nap_compiler *_compiler, call_context* cc, variable* dest, int level );
@@ -30,7 +30,7 @@ void move_register_level_register_next_level(nap_compiler* _compiler, int reqd_t
 void cmp_register_with_zero(nap_compiler *_compiler, int reqd_type, int level );
 void push_variable(nap_compiler *_compiler, call_context* cc, variable* var);
 void push_usertype_variable(nap_compiler *_compiler, call_context* cc, variable* var);
-void mov_var_into_reg(nap_compiler *_compiler, expression_tree* var_node, int reqd_type, int level, const method* the_method, call_context* cc, int forced_mov);
+void mov_var_into_reg(nap_compiler *_compiler, expression_tree* var_node, int reqd_type, int level, const method* the_method, call_context* cc, int forced_mov, bool &psuccess);
 void operation_on_variable(nap_compiler* _compiler,call_context* cc, int opr, variable* var );
 void operation_on_indexed(nap_compiler *_compiler, call_context* cc, int opr, const variable* var, int idxc );
 void operation_target_var_source_reg(nap_compiler *_compiler, call_context* cc, int opr, variable* var, int level );

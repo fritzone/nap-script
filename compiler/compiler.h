@@ -14,6 +14,7 @@ class garbage_bin_bin;
 
 #include "type.h"
 
+#include <setjmp.h>
 /**
  * The named marks
  */
@@ -63,7 +64,7 @@ public:
 
     static void release_compiler(std::auto_ptr<nap_compiler>& compiler);
 
-    void load_file(const std::string &file_name);
+    void load_file(const std::string &file_name, bool& psuccess);
     bool compile();
     void write_bytecode(const char* file_name);
 
@@ -152,9 +153,9 @@ public:
         return minterpreter;
     }
 
-    bool set_source(const char* src);
+    bool set_source(const char* src, bool &psuccess);
 
-    void parse();
+    void parse(bool &psuccess);
 
     void deliver_bytecode(uint8_t*& location, size_t& label_entry);
 
@@ -185,6 +186,11 @@ public:
     int getErrorCode() const
     {
         return mErrorCode;
+    }
+
+    std::string get_error() const
+    {
+        return mfinalError;
     }
 
 private:

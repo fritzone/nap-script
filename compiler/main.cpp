@@ -8,14 +8,20 @@ int main(int argc, char* argv[])
     const char* bc_file_name = argc > 2?argv[2]:"test.ncb";
 
     std::auto_ptr<nap_compiler> c = nap_compiler::create_compiler();
-    c->load_file(file_name);
+    bool success = true;
+    c->load_file(file_name, success);
+    if(!success)
+    {
+        nap_compiler::release_compiler(c);
+         garbage_bin_bin::shutdown();
+        return 1;
+    }
+
     c->compile();
     c->write_bytecode(bc_file_name);
     nap_compiler::release_compiler(c);
 
     garbage_bin_bin::shutdown();
 
-    return 1;
-
-
+    return 0;
 }

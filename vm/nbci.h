@@ -149,11 +149,6 @@ struct nap_vm* nap_vm_load(const char* filename);
  */
 void nap_vm_run(struct nap_vm* vm);
 
-/*
- * Read the stringtable of the bytecode file. Exits on failure.
- */
-void read_jumptable(struct nap_vm *vm, FILE* fp);
-
 /**
  * Fetches the address at the current location in the bytecode stream
  * @param vm

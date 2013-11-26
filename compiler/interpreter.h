@@ -17,7 +17,7 @@ public:
     void* build_expr_tree(const char *expr, expression_tree* node,
                           method* the_method, const char* orig_expr,
                           call_context* cc, int* result,
-                          const expression_with_location* location);
+                          const expression_with_location* location, bool &psuccess);
 
 private:
 
@@ -26,7 +26,7 @@ private:
                                                const char* orig_expr,
                                                call_context* cc,
                                                int* result,
-                                               const expression_with_location* expwloc);
+                                               const expression_with_location* expwloc, bool &psuccess);
 
      std::vector<variable_definition*>* define_variables(char* var_def_type,
                                                          char* expr_trim,
@@ -35,7 +35,7 @@ private:
                                                          call_context* cc,
                                                          const char* orig_expr,
                                                          int* result,
-                                                         const expression_with_location* expwloc);
+                                                         const expression_with_location* expwloc, bool &psuccess);
 
      call_frame_entry* handle_function_call(char *expr_trim,
                                             int expr_len,
@@ -46,7 +46,7 @@ private:
                                             call_context* cc,
                                             int* result,
                                             const expression_with_location* expwloc,
-                                            int type_of_call);
+                                            int type_of_call, bool &psuccess);
 
      void* deal_with_conditional_keywords(char* keyword_if,
                                           char* keyword_while,
@@ -57,14 +57,14 @@ private:
                                           method* the_method,
                                           const char* orig_expr,
                                           call_context* cc,
-                                          int* &result );
+                                          int* &result , bool &psuccess);
 
      method* define_method(const char* expr, int expr_len, expression_tree* node,
-                           call_context* cc, const expression_with_location* expwloc);
+                           call_context* cc, const expression_with_location* expwloc, bool &psuccess);
 
-     int get_operator(const char* expr, const char** foundOperator, int* ntype);
+     int get_operator(const char* expr, const char** foundOperator, int* ntype, bool &psuccess);
 
-     int looks_like_function_def(const char* expr, int expr_len, const expression_tree* node, call_context* cc);
+     int looks_like_function_def(const char* expr, int expr_len, const expression_tree* node, call_context* cc, bool &psuccess);
 
      bool is_list_value(const char* what);
 
@@ -78,7 +78,7 @@ private:
 
      char* is_some_statement(const char* expr_trim, const char* keyword);
 
-     void* deal_with_one_word_keyword( call_context* cc, expression_tree* node, int* &result, const char* keyw, int statement);
+     void* deal_with_one_word_keyword(call_context* cc, expression_tree* node, int* &result, const char* keyw, int statement, bool &psuccess);
 
      method* is_function_call(char *s,  call_context* cc);
 private:

@@ -5,6 +5,7 @@
 #include "nbci.h"
 #include "metatbl.h"
 #include "strtable.h"
+#include "jmptable.h"
 #include "opcodes.h"
 #include "stack.h"
 #include "byte_order.h"
@@ -217,6 +218,10 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len)
     cloc ++;
 
     interpret_metatable(vm, bytecode + vm->meta_location, bytecode_len);
+
+    interpret_stringtable(vm, bytecode + vm->stringtable_location, bytecode_len);
+
+    interpret_jumptable(vm, bytecode + vm->jumptable_location, bytecode_len);
 
     /* cc is the instruction pointer: skip the 3 addresses and the startbyte and the regsiter count */
     vm->cc = 3 * vm->file_bitsize + 1 + 1;
