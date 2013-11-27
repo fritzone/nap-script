@@ -4,14 +4,12 @@
 #include "interpreter.h"
 #include "number.h"
 #include "consts.h"
-#include "envelope.h"
 #include "bt_string.h"
-#include "parametr.h"
+#include "parameter.h"
 #include "type.h"
 #include "sys_brkp.h"
 #include "evaluate.h"
 #include "variable.h"
-#include "parametr.h"
 #include "expression_tree.h"
 #include "compiler.h"
 
@@ -62,17 +60,24 @@ constructor_call::constructor_call(char* name, call_context* cc) : method(cc->co
  * Adds a new variable.
  * If the dimensions is 1
  */
-variable* method::add_new_variable(char* pname, char* type, int dimension, const expression_with_location* expwloc, bool& psuccess)
+variable* method::add_new_variable(const std::string& pname,
+                                   const std::string& ptype, int dimension,
+                                   const expression_with_location* expwloc,
+                                   bool& psuccess)
 {
-    char* new_name = trim(pname, mcompiler);
-    if(!is_valid_variable_name(pname))
+    if(!is_valid_variable_name(pname.c_str()))
     {
         mcompiler->throw_error(E0018_INVIDENT, pname, NULL);
         psuccess = false;
         return 0;
     }
     bool success = true;
-    variable* v = main_cc->variable_list_add_variable(new_name, type, dimension, variables, this, main_cc, expwloc, success);
+    variable* v = main_cc->variable_list_add_variable(pname.c_str(),
+                                                      ptype.c_str(),
+                                                      dimension,
+                                                      variables,
+                                                      this,
+                                                      main_cc, expwloc, success);
     if(!success)
     {
         psuccess = false;
@@ -166,28 +171,41 @@ variable* method::add_new_variable(char* pname, char* type, int dimension, const
 /**
  * Adds a new parameter to the method. These will go in the
  */
-parameter* method::add_parameter(char* pname, char* ptype, int pdimension, const expression_with_location* pexpwloc, call_context*cc, bool& psuccess)
+parameter* method::add_parameter(std::string pname,
+                                 const std::string& ptype,
+                                 int pdimension,
+                                 const expression_with_location* pexpwloc,
+                                 call_context*cc, bool& psuccess)
 {
-    parameter* func_par = new_parameter(this, cc);
-    char* indexOfEq = strchr(pname, C_EQ);
+    parameter* func_par = new parameter(this, cc);
+    garbage_bin<parameter*>::instance().place(func_par, cc->compiler());
+
+    size_t indexOfEq = pname.find(C_EQ);
     variable* nvar = NULL;
 
-    if(indexOfEq)
+    if(indexOfEq != std::string::npos)
     {
-        char* afterEq = indexOfEq + 1;
+        std::string afterEq = pname.substr(indexOfEq + 1);
         int res = -1;
         func_par->initial_value = new expression_tree(pexpwloc);
         bool success = true;
-        mcompiler->get_interpreter().build_expr_tree(afterEq, func_par->initial_value, this, afterEq, main_cc, &res, pexpwloc, success);
+        char* tmp = new char[afterEq.length() + 1];
+        afterEq.copy(tmp, afterEq.length());
+        mcompiler->get_interpreter().build_expr_tree(tmp,
+                                                     func_par->initial_value,
+                                                     this, tmp, main_cc,
+                                                     &res, pexpwloc, success);
+        delete tmp;
         if(!success)
         {
             psuccess = false;
             return 0;
         }
-
-        *indexOfEq = 0;
+        pname = pname.substr(0, indexOfEq);
+        strim(pname);
     }
     bool success = true;
+
     nvar = add_new_variable(pname, ptype, pdimension, pexpwloc, success);
     if(!success)
     {
@@ -195,16 +213,14 @@ parameter* method::add_parameter(char* pname, char* ptype, int pdimension, const
         return 0;
     }
 
-    func_par->value = new_envelope(nvar, BASIC_TYPE_VARIABLE, mcompiler);
-
     nvar->func_par = func_par;
 
-    if(!strcmp(ptype, "int"))
+    if(ptype == "int")
     {
         func_par->type = BASIC_TYPE_INT;
     }
 
-    func_par->name = mcompiler->duplicate_string(pname);
+    func_par->name = pname;
     parameters.push_back(func_par);
     return func_par;
 }
@@ -241,13 +257,17 @@ void method::feed_parameter_list(char* par_list, const expression_with_location*
         size_t i=0;
         if(!q->empty())
         {
-            char* par_type = mcompiler->new_string(q->length());
-            char* par_name = mcompiler->new_string(q->length());
-            size_t j = 0;
+            std::string par_type, par_name;
             int modifiable = 0;
-            while(i < q->length() && (is_identifier_char((*q)[i]) || C_SQPAR_OP  == (*q)[i]|| C_SQPAR_CL == (*q)[i]) )
+            while(i < q->length()
+                  && (
+                      is_identifier_char((*q)[i])
+                      || C_SQPAR_OP  == (*q)[i]
+                      || C_SQPAR_CL == (*q)[i]
+                     )
+                  )
             {
-                par_type[j++] = (*q)[i++];
+                par_type += (*q)[i++];
             }
             /* now par_type contains the type of the parameter */
             while(i < q->length() && is_whitespace((*q)[i]))
@@ -266,13 +286,15 @@ void method::feed_parameter_list(char* par_list, const expression_with_location*
                 i++;
                 // TODO: There is no support for this in the bytecode yet.
             }
-            j = 0;
+
             while(i < q->length())
             {
-                par_name[j++] = (*q)[i++];
+                par_name += (*q)[i++];
             }
+            strim(par_name);
+            strim(par_type);
             bool success = true;
-            parameter* new_par_decl = add_parameter(trim(par_name, mcompiler), trim(par_type, mcompiler), 1, expwloc, main_cc, success);
+            parameter* new_par_decl = add_parameter(par_name, par_type, 1, expwloc, main_cc, success);
             if(!success)
             {
                 psuccess = false;
@@ -280,7 +302,8 @@ void method::feed_parameter_list(char* par_list, const expression_with_location*
             }
 
             /* here we should identify the dimension of the parameter */
-            if(strchr(par_type, C_SQPAR_CL) && strchr(par_type, C_SQPAR_OP))
+            if(par_type.find(C_SQPAR_CL) != std::string::npos
+                    && par_type.find(C_SQPAR_OP) != std::string::npos)
             {
                 new_par_decl->simple_value = 0;
             }

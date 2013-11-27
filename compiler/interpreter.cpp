@@ -1,5 +1,5 @@
 #include "interpreter.h"
-#include "parametr.h"
+#include "parameter.h"
 #include "utils.h"
 #include "consts.h"
 #include "number.h"
@@ -11,7 +11,6 @@
 #include "method.h"
 #include "sys_brkp.h"
 #include "res_wrds.h"
-#include "parametr.h"
 #include "expression_tree.h"
 #include "compiler.h"
 
@@ -991,7 +990,8 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
                 psuccess = false;
                 return 0;
             }
-            parameter* cur_par_obj = new_parameter(the_method, cc);
+            parameter* cur_par_obj = new parameter(the_method, cc);
+            garbage_bin<parameter*>::instance().place(cur_par_obj, cc->compiler());
             cur_par_obj->expr = cur_par_expr;
 
             pars_list.push_back(cur_par_obj);
@@ -1774,6 +1774,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         node->info = p;
         node->op_type = ntype;
         node->left = new expression_tree(node, expwloc);
+        garbage_bin<expression_tree*>::instance().place(node->left, cc->compiler());
+
         bool success = true;
         build_expr_tree(expr_trim + 2, node->left, the_method, orig_expr, cc, result, expwloc, success);
         if(!success)
@@ -1799,6 +1801,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
             /* now add the  variable to the tree... */
             node->left = new expression_tree(node, expwloc);
+            garbage_bin<expression_tree*>::instance().place(node->left, cc->compiler());
             expr_trim[expr_len - 2] = 0;    /* this is to cut down the two ++ or -- signs ... */
             bool success = true;
             build_expr_tree(expr_trim, node->left, the_method, orig_expr, cc, result, expwloc, success);

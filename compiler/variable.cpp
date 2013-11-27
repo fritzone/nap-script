@@ -5,12 +5,10 @@
 #include "method.h"
 #include "interpreter.h"
 #include "utils.h"
-#include "parametr.h"
 #include "sys_brkp.h"
-#include "envelope.h"
 #include "consts.h"
 #include "expression_tree.h"
-#include "parametr.h"
+#include "parameter.h"
 #include "compiler.h"
 
 #include <string.h>
@@ -79,7 +77,8 @@ static parameter* variable_add_template_parameter(variable* the_variable,
         psuccess = false;
         return 0;
     }
-    parameter* func_par = new_parameter(the_method, cc);
+    parameter* func_par = new parameter(the_method, cc);
+    garbage_bin<parameter*>::instance().place(func_par, cc->compiler());
     char *name_dup = cc->compiler()->duplicate_string(name);
     char* indexOfEq = strchr(name_dup, C_EQ);
     variable* nvar = NULL;
@@ -111,7 +110,6 @@ static parameter* variable_add_template_parameter(variable* the_variable,
 
     nvar->func_par = func_par;
 
-    func_par->value = new_envelope(nvar, BASIC_TYPE_VARIABLE,cc->compiler());
     func_par->name = cc->compiler()->duplicate_string(name);
 
     the_variable->templ_parameters.push_back(func_par);

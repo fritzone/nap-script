@@ -208,9 +208,9 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
                                                                       (*ccs_methods)->method_name).c_str()) << NEWLINE;
         code_stream(_compiler) << "pushall" << NEWLINE;
         // now pop off the variables from the stack
-        std::vector<variable*>::const_iterator vlist = (*ccs_methods)->get_variables().begin();
+        std::vector<variable*>::const_reverse_iterator vlist = (*ccs_methods)->get_variables().rbegin();
         int pctr = 0;
-        while(vlist != (*ccs_methods)->get_variables().end())
+        while(vlist != (*ccs_methods)->get_variables().rend())
         {
             peek(_compiler, (*ccs_methods)->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name.c_str());
             vlist ++;
@@ -252,9 +252,9 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
             // now pop off the variables from the stack
             code_stream(_compiler) << "pushall" << NEWLINE;
 
-            std::vector<variable*>::const_iterator vlist = (*ccs_methods)->get_variables().begin();
+            std::vector<variable*>::const_reverse_iterator vlist = (*ccs_methods)->get_variables().rbegin();
             int pctr = 0;
-            while(vlist != (*ccs_methods)->get_variables().end())
+            while(vlist != (*ccs_methods)->get_variables().rend())
             {
                 peek(_compiler, (*ccs_methods)->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name.c_str());
                 vlist ++;

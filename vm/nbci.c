@@ -188,7 +188,7 @@ void nap_vm_run(struct nap_vm* vm)
             }
             else
             {
-                fprintf(stderr, "Goodbye\n");
+                return;
             }
         }
         else

@@ -119,7 +119,7 @@ void code_finalizer::finalize()
     for(unsigned int i=0; i<jumptable_count; i++)
     {
         f.write_stuff_to_file_32(mcompiler->jumptable()[i]->bytecode_location);
-        std::cerr << "JUMP:" << mcompiler->jumptable()[i]->bytecode_location << std::endl;
+//        std::cerr << "JUMP:" << mcompiler->jumptable()[i]->bytecode_location << std::endl;
     }
 
     }
@@ -142,11 +142,11 @@ void code_stream::output_bytecode(const char* s)
     std::string expr = s;
     if(expr == " " || expr == "(" || expr == ")" || expr == "\n" || expr == ",")
     {
-        fprintf(stderr, "%s ", s);
+//        fprintf(stderr, "%s ", s);
         return;
     }
 
-    fprintf(stderr, "%s ", s);
+//    fprintf(stderr, "%s ", s);
 
 
     file_abstraction f(mcompiler);

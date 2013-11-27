@@ -132,7 +132,7 @@ TEST(Functions, MessyCodeTest)
     "                             \
     int func(int a, int b)        \
     {                             \
-        if(a == 7777777)          \
+        if(a == 4)                \
         {                         \
             int rr = 9;           \
             return 5;             \

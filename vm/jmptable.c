@@ -103,7 +103,7 @@ void interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t le
             nap_vm_cleanup(vm);
             exit(EXIT_FAILURE);
         }
-        fprintf(stderr, "j: %d\n", index);
+//        fprintf(stderr, "j: %d\n", index);
         new_jmpentry->location = index;
         vm->jumptable[ jmpc++ ] = new_jmpentry;
     }
