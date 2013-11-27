@@ -1,7 +1,10 @@
 #include "garbage_bin.h"
 
 garbage_bin_bin* garbage_bin_bin::minstance = NULL;
+
+#ifdef MEMORY_DEBUG
 long int all_alloc = 0;
+#endif
 
 garbage_bin_bin::garbage_bin_bin()
 {

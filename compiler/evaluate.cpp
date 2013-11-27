@@ -10,6 +10,7 @@
 #include "code_stream.h"
 #include "envelope.h"
 #include "expression_tree.h"
+#include "parameter.h"
 #include "compiler.h"
 
 #include <string.h>
@@ -840,6 +841,7 @@ void compile_a_block(nap_compiler* _compiler, const std::vector<expression_tree*
     push_cc_end_marker(_compiler, if_hash.c_str());
     if(last_opcode == RETURN_STATEMENT)
     {
+        code_stream(_compiler) << "popall" << NEWLINE;
         code_stream(_compiler) << "leave" << NEWLINE;
     }
 }

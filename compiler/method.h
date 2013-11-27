@@ -35,7 +35,7 @@ struct method
      * @param type - the type of the parameter (as string)
      * @param modifiable - if the parameter is a reference or not (C++ rulez :) )
      */
-    parameter* add_parameter(char* pname,  char* ptype, int pdimension, const expression_with_location* pexpwloc, call_context *cc, bool &psuccess);
+    parameter* add_parameter(std::string pname,  const std::string &ptype, int pdimension, const expression_with_location* pexpwloc, call_context *cc, bool &psuccess);
 
     /**
      * @brief get_parameter return the parameter at the given location
@@ -52,7 +52,7 @@ struct method
      * @param expwloc
      * @return
      */
-    variable* add_new_variable(char* pname,  char* type, int dimension, const expression_with_location* expwloc, bool &psuccess);
+    variable* add_new_variable(const std::string &pname,  const std::string &ptype, int dimension, const expression_with_location* expwloc, bool &psuccess);
     /**
      * @brief has_variable
      * @param cc

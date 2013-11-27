@@ -144,18 +144,16 @@ char* extract_next_enclosed_phrase(char* input, char c_starter, char c_ender, ch
 extern long mem_alloc_count;
 extern void** mem_allocation;
 
-template <class T> T* allocate(size_t count, const nap_compiler* _compiler)
+template <class T> T* allocate(size_t count, const nap_compiler* _compiler, const char*f ,long l)
 {
     T* tmp = new T[count];
     memset(tmp, 0, count * sizeof(T));
-    garbage_bin<T*>::instance().throwIn(tmp, _compiler);
+    garbage_bin<T*>::instance().throwIn(tmp, f, l, _compiler, count);
 
     return tmp;
 }
 
-#define alloc_mem(type,count,compiler) allocate<type>(count, compiler)
-
-//#define alloc_mem(type,count) (type*)create(sizeof(type), count)
+#define alloc_mem(type,count,compiler) allocate<type>(count, compiler, __FILE__, __LINE__)
 
 char other_par(char c);
 
