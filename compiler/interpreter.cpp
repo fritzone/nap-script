@@ -1509,7 +1509,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             psuccess = false;
             return 0;
         }
-        resw_for* rswfor = alloc_mem(resw_for,1, cc->compiler());
+        resw_for* rswfor = new resw_for;
+        garbage_bin<resw_for*>::instance().place(rswfor, cc->compiler());
 
         rswfor->unique_hash = generate_unique_hash();
         rswfor->init_stmt = init_stmt;

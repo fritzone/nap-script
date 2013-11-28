@@ -4,12 +4,12 @@
 
 #define SCRIPT_START \
     nap_runtime* runtime = nap_runtime_create(0);                  \
-    EXPECT_FALSE(runtime == NULL);                                      \
+    ASSERT_FALSE(runtime == NULL);                                      \
     nap_bytecode_chunk* bytecode = nap_runtime_compile(runtime,    
     
 #define SCRIPT_END \
     );                                                             \
-    EXPECT_FALSE(bytecode == NULL);                                     \
+    ASSERT_FALSE(bytecode == NULL);                                     \
     int t = nap_runtime_execute(runtime, bytecode);                \
     ASSERT_EQ(1, t);                                               
 
@@ -18,7 +18,7 @@
 
 #define SCRIPT_SHUTDOWN \
     nap_runtime_shutdown(&runtime);                                \
-    EXPECT_TRUE(runtime == NULL);
+    ASSERT_TRUE(runtime == NULL);
     
 TEST(VariableDefinitions, SimpleInt)
 {
@@ -157,3 +157,53 @@ TEST(Functions, MessyCodeTest)
     SCRIPT_SHUTDOWN
 }
 
+TEST(Keywords, Break)
+{
+    SCRIPT_START
+    "                             \
+    int y = 1;                    \
+    for(int i = 0; i< 11; i++)    \
+    {                             \
+      int t = y ++;               \
+      if (t == 7)                 \
+      {                           \
+        break;                    \
+      }                           \
+    }                             \
+    "
+    SCRIPT_END
+    ASSERT_EQ(8, VAR_INT(y));
+
+    SCRIPT_SHUTDOWN
+}
+
+TEST(Functions, DefaultReturnValue)
+{
+    SCRIPT_START
+    "                             \
+    int func()                    \
+    {                             \
+    }                             \
+    int z = func();               \
+    "
+    SCRIPT_END
+    ASSERT_EQ(0, VAR_INT(z));
+
+    SCRIPT_SHUTDOWN
+}
+
+TEST(InvalidSyntax, PostPreIncMess)
+{
+
+    nap_runtime* runtime = nap_runtime_create(0);
+    ASSERT_TRUE(runtime != NULL);
+    nap_bytecode_chunk* bytecode = nap_runtime_compile(runtime,
+    "                             \
+     int z = 3;                    \
+     int g = z++ ++;               \
+    "
+    );
+
+    ASSERT_TRUE(bytecode == NULL);
+    SCRIPT_SHUTDOWN
+}

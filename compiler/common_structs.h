@@ -159,6 +159,8 @@ struct variable_template_reference
  */
 struct bytecode_label
 {
+    bytecode_label() : name(), bytecode_location(0), type(LABEL_PLAIN) {}
+
     enum label_type
     {
         LABEL_PLAIN = 0,

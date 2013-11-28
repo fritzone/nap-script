@@ -24,6 +24,7 @@ void nap_jump(struct nap_vm *vm)
         }
         else
         {
+            vm->lbf = UNDECIDED;
             vm->cc += sizeof(nap_index_t);
         }
     }

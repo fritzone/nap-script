@@ -295,7 +295,7 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
         }
     }
 
-    if (cur_save == position)
+    if (cur_save == position && position < content_size)
     {
         if (content[cur_save] == '}')
         {
@@ -309,6 +309,12 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
         {
             return NULL;
         }
+    }
+
+    // did we go after the last character?
+    if(cur_save > content_size)
+    {
+        return NULL;
     }
 
     size = cur_save - position;
