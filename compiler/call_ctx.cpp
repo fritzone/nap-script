@@ -112,7 +112,9 @@ long call_context::add_label(long position, const std::string& name)
 
 struct bytecode_label* call_context::add_break_label(long position, const std::string& name)
 {
-    bytecode_label* bl = alloc_mem(bytecode_label, 1, mcompiler);
+    bytecode_label* bl = new bytecode_label;
+    garbage_bin<bytecode_label*>::instance().place(bl, mcompiler);
+
     bl->bytecode_location = position;
     bl->name = name;
     bl->type = bytecode_label::LABEL_BREAK;
