@@ -43,8 +43,13 @@ struct bc_string_table_entry
 
 struct label_entry
 {
+    label_entry() : bytecode_location(0), type(0), name() {}
+
     // where this is in the bytecode stream
     NUMBER_INTEGER_TYPE bytecode_location;
+
+    // if this is a function (1) or not (0) or method call (2)
+    uint8_t type;
 
     // and the name of it
     std::string name;
