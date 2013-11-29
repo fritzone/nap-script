@@ -22,8 +22,9 @@ using namespace std;
  */
 call_context::call_context(nap_compiler *_compiler, int ptype, const string &pname,
                            method* the_method, call_context* pfather)
-    : name(pname), mcompiler(_compiler)
+    : mcompiler(_compiler)
 {
+    name = pname == "global"?pname : pname + "_" + generate_unique_hash();
     type = ptype;
     ccs_method = the_method;
     father = pfather;

@@ -92,9 +92,23 @@ void code_finalizer::finalize()
     {
         f.write_stuff_to_file_32(mcompiler->variables()[i]->meta_location);
         uint16_t var_name_length = mcompiler->variables()[i]->name.length();
-        f.write_stuff_to_file_16(var_name_length);
-        const char* vname = mcompiler->variables()[i]->name.c_str();
-        f.write_string_to_file(vname, var_name_length);
+        // find out if this is a global variable or not: if there is only one dot
+        // in the name, it is a global variable
+        // TODO: include a debugging flag option to write out all the variable names
+        size_t n = std::count(mcompiler->variables()[i]->name.begin(),
+                              mcompiler->variables()[i]->name.end(), '.');
+        if(n == 1) // global variable. Skip the "global."
+        {
+            int globlen = strlen("global") + 1;
+            f.write_stuff_to_file_16(var_name_length - globlen);
+            const char* vname = mcompiler->variables()[i]->name.c_str();
+            vname += globlen;
+            f.write_string_to_file(vname, var_name_length);
+        }
+        else
+        {
+            f.write_stuff_to_file_16(var_name_length);
+        }
     }
 
     strtable_location = f.ftell();
@@ -118,8 +132,16 @@ void code_finalizer::finalize()
     f.write_stuff_to_file_32(jumptable_count);
     for(unsigned int i=0; i<jumptable_count; i++)
     {
-        f.write_stuff_to_file_32(mcompiler->jumptable()[i]->bytecode_location);
-//        std::cerr << "JUMP:" << mcompiler->jumptable()[i]->bytecode_location << std::endl;
+        label_entry* je = mcompiler->jumptable()[i];
+        uint16_t l = je->name.length();
+
+        f.write_stuff_to_file_32(je->bytecode_location); // the actual location in code
+        f.write_stuff_to_file_8(je->type);      // 0, 1, 2 .. .see there
+        if(je->type == 1 || je->type == 2)
+        {
+            f.write_stuff_to_file_16(l);            // The length of the name
+            f.write_string_to_file(je->name.c_str(), l);
+        }
     }
 
     }
@@ -142,11 +164,11 @@ void code_stream::output_bytecode(const char* s)
     std::string expr = s;
     if(expr == " " || expr == "(" || expr == ")" || expr == "\n" || expr == ",")
     {
-//        fprintf(stderr, "%s ", s);
+        fprintf(stderr, "%s ", s);
         return;
     }
 
-//    fprintf(stderr, "%s ", s);
+    fprintf(stderr, "%s ", s);
 
 
     file_abstraction f(mcompiler);
@@ -444,12 +466,17 @@ void code_stream::output_bytecode(const char* s)
                 else // let's create a label
                 {
                     label_entry* le = new label_entry;
+                    garbage_bin<label_entry*>::instance().place(le, mcompiler);
+
                     le->bytecode_location = 0;
                     le->name = expr;
                     mcompiler->add_jumptable_entry(le);
+                    if(mcompiler->getLastOpcode() == OPCODE_CALL)
+                    {
+                        le->type = 1;
+                    }
                     NUMBER_INTEGER_TYPE index = mcompiler->jumptable().size() - 1; // the real idx
                     f.write_stuff_to_file_32(index);
-                    garbage_bin<label_entry*>::instance().place(le, mcompiler);
                 }                
             }
         }

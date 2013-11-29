@@ -18,22 +18,25 @@ extern "C" {
 #include <inttypes.h>
 #endif
 
-#define REGISTER_COUNT    256               /* number of registers in the VM*/
-#define STACK_INIT        4096              /* initially 4096 entries  */
-#define DEEPEST_RECURSION 4096              /* how deep we can dwelve into recursion */
+#define REGISTER_COUNT    256        /* number of registers in the VM*/
+#define STACK_INIT        4096       /* initially 4096 entries  */
+#define DEEPEST_RECURSION 4096       /* how deep we can dwelve into recursion */
 
 /* Macro for leaving the application in case of an error */
 #define _NOT_IMPLEMENTED \
     do {\
-    fprintf(stderr, "NI: file [%s] line [%d] instr [%x] opcode [%x] at %"PRIu64" (%" PRIx64 ")\n\n", \
-            __FILE__, __LINE__, vm->content[vm->cc - 1], vm->current_opcode, vm->cc - 1, vm->cc - 1); \
+    fprintf(stderr, "NI: file [%s] line [%d] instr [%x] "\
+                    "opcode [%x] at %"PRIu64" (%" PRIx64 ")\n\n", \
+            __FILE__, __LINE__, vm->content[vm->cc - 1], \
+            vm->current_opcode, vm->cc - 1, vm->cc - 1); \
     exit(99);\
     } while(0);
 
 #include "nap_types.h"
 
-/* the lbf initially is undecided, the first operation sets it, and it is AND-ed with the
-   result of the next boolean operations as long as it is not cleared by a jlbf or clbf */
+/* the lbf initially is undecided, the first operation sets it, and it is
+ * AND-ed with the result of the next boolean operations as long as it is
+ * not cleared by a jlbf or clbf */
 enum flag_staus
 {
     UNDECIDED = -1,
@@ -41,6 +44,9 @@ enum flag_staus
     TRUE      =  1
 };
 
+/* whether this virtual machine runs in and EMBEDDED environement (as invoked
+ * by the nap_runtime framework or in a STANDALONE environment (as invoked from
+ * the command line) */
 enum environments
 {
     EMBEDDED = 0,
@@ -56,14 +62,14 @@ struct nap_vm
 {
     /* Registers section */
 
-    nap_int_t    regi  [REGISTER_COUNT]; /* the integer registers */
-    char*           regs  [REGISTER_COUNT]; /* the string registers */
-    nap_int_t    regidx[REGISTER_COUNT]; /* the register indexes */
-    enum flag_staus lbf;                    /* the last boolean flag of the machine */
-    uint8_t         mrc;                    /* the number of registers used in this VM */
+    nap_int_t       regi  [REGISTER_COUNT]; /* the integer registers         */
+    char*           regs  [REGISTER_COUNT]; /* the string registers          */
+    nap_int_t       regidx[REGISTER_COUNT]; /* the register indexes          */
+    enum flag_staus lbf;                    /* the last boolean flag         */
+    uint8_t         mrc;                    /* number of registers of the VM */
 
     /* return values */
-    nap_int_t rvi;                       /* the integer return value */
+    nap_int_t rvi;                          /* the integer return value      */
 
     /* variables regarding the execution flow */
 
