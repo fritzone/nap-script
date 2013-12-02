@@ -217,14 +217,24 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len)
     vm->mrc = *cloc;
     cloc ++;
 
+    /* flags of the file */
+    vm->flags = *cloc;
+    cloc ++;
+
     interpret_metatable(vm, bytecode + vm->meta_location, bytecode_len);
 
     interpret_stringtable(vm, bytecode + vm->stringtable_location, bytecode_len);
 
     interpret_jumptable(vm, bytecode + vm->jumptable_location, bytecode_len);
 
-    /* cc is the instruction pointer: skip the 3 addresses and the startbyte and the regsiter count */
-    vm->cc = 3 * vm->file_bitsize + 1 + 1;
+    /* cc is the instruction pointer:
+     * skip the:
+     * - startbyte            - 8 bits
+     * - 3 addresses          - 3 * 32 (64) bits
+     * - the register count   - 8 bits
+     * - the flags            - 8 bits */
+    vm->cc = 1 + 3 * vm->file_bitsize + 1
+            + 1; /* to point to the first instruction */
 
     /* initially the last boolean flag is in an unknow state */
     vm->lbf = UNDECIDED;
@@ -235,7 +245,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len)
 struct nap_vm *nap_vm_load(const char *filename)
 {
     long fsize = 0;
-    uint8_t type = 0;
+    uint8_t* file_content;
     struct nap_vm* vm = NULL;
     FILE* fp = fopen(filename, "rb");
     if(!fp)
@@ -244,69 +254,19 @@ struct nap_vm *nap_vm_load(const char *filename)
         return 0;
     }
 
-    /* now we can create t he VM */
-    vm = (struct nap_vm*)(calloc(1, sizeof(struct nap_vm)));
-    /* TODO: check memory */
-
     /* read in all the data in memory. Should be faster */
     fseek(fp, 0, SEEK_END);
     fsize = ftell(fp);
-    vm->content = (uint8_t *) calloc(sizeof(uint8_t), fsize);
+    file_content = (uint8_t *) calloc(sizeof(uint8_t), fsize);
     /* TODO: check memory */
 
     fseek(fp, 0, SEEK_SET);
-    fread(vm->content, sizeof(uint8_t ), fsize, fp);
+    fread(file_content, sizeof(uint8_t ), fsize, fp);
 
-    fseek(fp, 0, SEEK_SET);
-
-    /* create the stack */
-    vm->stack_size = STACK_INIT;
-    vm->stack_pointer = 0;
-    vm->stack = (struct stack_entry**)calloc(sizeof(struct stack_entry*), STACK_INIT);
-    if(vm->stack == NULL)
-    {
-        fprintf(stderr, "Cannot allocate stack\n");
-        exit(45);
-    }
-
-    /* the format of the addresses in the file 32 or 64 bit addresses */
-    fread(&type, sizeof(uint8_t), 1, fp);
-    if(type == 0x32)
-    {
-        vm->file_bitsize = sizeof(uint32_t);
-    }
-    else
-    {
-        vm->file_bitsize = sizeof(uint64_t);
-    }
-
-    /* read in the important addresses from the bytecode file*/
-    fread(&vm->meta_location, vm->file_bitsize, 1, fp);
-    fread(&vm->stringtable_location, vm->file_bitsize, 1, fp);
-    fread(&vm->jumptable_location, vm->file_bitsize, 1, fp);
-    fread(&vm->mrc, sizeof(uint8_t), 1, fp);
-
-    vm->meta_location = htovm_32(vm->meta_location);
-    vm->stringtable_location = htovm_32(vm->stringtable_location);
-    vm->jumptable_location = htovm_32(vm->jumptable_location);
-
-    /* prepare the meta table of the application */
-    read_metatable(vm, fp);
-
-    /* read the stringtable */
-    read_stringtable(vm, fp);
-
-    /* read the jumptable */
-    read_jumptable(vm, fp);
-
-    /* done with the file */
     fclose(fp);
 
-    /* cc is the instruction pointer: skip the 3 addresses and the startbyte and the regsiter count */
-    vm->cc = 3 * vm->file_bitsize + 1 + 1;
-
-    /* initially the last boolean flag is in an unknow state */
-    vm->lbf = UNDECIDED;
+    vm = nap_vm_inject(file_content, fsize);
+    free(file_content);
 
     return vm;
 }

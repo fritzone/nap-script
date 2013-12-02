@@ -18,6 +18,11 @@ struct variable_entry
     /* the index of the variable */
     uint32_t index;
 
+    /* the type of the variable:
+     * 0 - variable defined in this VM
+     * 1 - variable defiend in a parent VM */
+    uint8_t type;
+
     /* the name of the variable */
     char* name;
 
@@ -29,10 +34,11 @@ struct variable_entry
 };
 
 /*
- * Read the metatable of the bytecode file. Exits on error.
+ * Read the metatable from the given location
  */
-void read_metatable(struct nap_vm*, FILE* fp);
-void interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len);
+void interpret_metatable(struct nap_vm* vm,
+                         uint8_t* start_location,
+                         uint32_t len);
 
 
 #endif

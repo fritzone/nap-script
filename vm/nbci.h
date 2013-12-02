@@ -56,7 +56,9 @@ enum environments
 /**
  * The TNapVM struct represents an instance of a virtual machine.
  * This structure contains all the necessary components that are used to
- * create a fully functional virtual machine.
+ * create a fully functional virtual machine. This actually is a linked list
+ * of NAP Vm structures, each representing a virtual machine for a piece of code
+ * that was started with the nap command "execute()"
  */
 struct nap_vm
 {
@@ -108,7 +110,9 @@ struct nap_vm
     struct strtable_entry** stringtable;    /* the stringtable itself */
     uint64_t strt_size;                     /* the size of the stringtable */
 
-    enum environments environment;               /* whether this is run as embedded in an app or a standalone application */
+    enum environments environment;          /* whether this is run as embedded in an app or a standalone application */
+    uint8_t flags;                          /* Some flags used by the VM */
+    struct nap_vm* parent;                  /* the parent VM of this. NULL if main VM */
 };
 
 /**

@@ -29,7 +29,8 @@ struct strtable_entry
 /*
  * Read the stringtable of the bytecode file. Exits on failure.
  */
-void read_stringtable(struct nap_vm*, FILE* fp);
-void interpret_stringtable(struct nap_vm* vm, uint8_t* start_location, uint32_t len);
+void interpret_stringtable(struct nap_vm* vm,
+                           uint8_t* start_location,
+                           uint32_t len);
 
 #endif

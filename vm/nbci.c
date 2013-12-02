@@ -97,7 +97,7 @@ nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found)
             {
                 if(vm->metatable[i]->instantiation->type == STACK_ENTRY_INT)
                 {
-                    if(!strcmp(vm->metatable[i]->name, finame))
+                    if(vm->metatable[i]->name && !strcmp(vm->metatable[i]->name, finame))
                     {
                         if(finame != name)
                         {

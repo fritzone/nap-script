@@ -31,6 +31,7 @@ struct bc_variable_entry
 {
     NUMBER_INTEGER_TYPE meta_location;
     std::string name;
+    uint8_t type; // 0 - internal, 1 - external (from the parent VM)
 };
 
 
@@ -55,6 +56,11 @@ struct label_entry
     std::string name;
 };
 
+struct nap_vm ;
+
+/**
+ * @brief The nap_compiler class represents a compiler.
+ */
 class nap_compiler
 {
 
@@ -236,6 +242,8 @@ private:
     mutable std::string mfinalError;
     mutable int mErrorCode;
     bool mEmbedded;
+
+    struct nap_vm *mvm_chain;
 };
 
 
