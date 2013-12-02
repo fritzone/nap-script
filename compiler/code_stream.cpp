@@ -83,6 +83,7 @@ void code_finalizer::finalize()
     file_abstraction f(mcompiler);
 
     meta_location = f.ftell();
+
     // write out the variables
     static const char METATABLE[] = ".meta";
     f.write_string_to_file(METATABLE, 5);
@@ -91,6 +92,8 @@ void code_finalizer::finalize()
     for(unsigned int i=0; i<meta_count; i++)
     {
         f.write_stuff_to_file_32(mcompiler->variables()[i]->meta_location);
+        f.write_stuff_to_file_8(mcompiler->variables()[i]->type);
+
         uint16_t var_name_length = mcompiler->variables()[i]->name.length();
         // find out if this is a global variable or not: if there is only one dot
         // in the name, it is a global variable
@@ -103,11 +106,11 @@ void code_finalizer::finalize()
             f.write_stuff_to_file_16(var_name_length - globlen);
             const char* vname = mcompiler->variables()[i]->name.c_str();
             vname += globlen;
-            f.write_string_to_file(vname, var_name_length);
+            f.write_string_to_file(vname, var_name_length - globlen);
         }
         else
         {
-            f.write_stuff_to_file_16(var_name_length);
+            f.write_stuff_to_file_16(0); // write 0 to indicate name is not important
         }
     }
 
@@ -156,6 +159,7 @@ void code_finalizer::finalize()
     f.write_stuff_to_file_32(strtable_location, 0 + 1 + 4); // the stringtable location
     f.write_stuff_to_file_32(jumptable_location, 0 + 1 + 4 + 4); // the jumptable location
     f.write_stuff_to_file_8(max_reg_count, 0 + 1 + 4 + 4 + 4);
+    f.write_stuff_to_file_8(0, 0 + 1 + 4 + 4 + 4); /* a dummy flag for now */
     }
 }
 
@@ -185,6 +189,7 @@ void code_stream::output_bytecode(const char* s)
         f.write_stuff_to_file_32(temp); // the stringtable location
         f.write_stuff_to_file_32(temp); // the jumptable location
         f.write_stuff_to_file_8(bits);  // extra for the max reg count
+        f.write_stuff_to_file_8(0);     // extra for the flags
     }
 
     unsigned char opcode = 0;
