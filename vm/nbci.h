@@ -18,6 +18,12 @@ extern "C" {
 #include <inttypes.h>
 #endif
 
+#ifdef _MEM_DEBUG_
+#define _FREE(x) if((x)) { fprintf(stderr, "free:%p (%s:%d)\n", (x), __FILE__, __LINE__);  free((x)); }
+#else
+#define MEM_FREE(x) if(x){ free((x)); }
+#endif
+
 #define REGISTER_COUNT    256        /* number of registers in the VM*/
 #define STACK_INIT        4096       /* initially 4096 entries  */
 #define DEEPEST_RECURSION 4096       /* how deep we can dwelve into recursion */

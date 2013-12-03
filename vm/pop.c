@@ -41,8 +41,8 @@ void nap_pop(struct nap_vm* vm)
                 {
                     vm->regi[register_index] = 0;
                 }
-                free(vm->stack[vm->stack_pointer]->value);
-                free(vm->stack[vm->stack_pointer]);
+                MEM_FREE(vm->stack[vm->stack_pointer]->value);
+                MEM_FREE(vm->stack[vm->stack_pointer]);
 
                 vm->stack_pointer --;
             }
@@ -137,9 +137,9 @@ void nap_pop(struct nap_vm* vm)
 
             if(vm->stack[vm->stack_pointer]->type == OPCODE_IMMEDIATE)
             { /* immediate values are being allocated by the push */
-                free(vm->stack[vm->stack_pointer]->value);
+                MEM_FREE(vm->stack[vm->stack_pointer]->value);
             }
-            free(vm->stack[vm->stack_pointer]);
+            MEM_FREE(vm->stack[vm->stack_pointer]);
 
             /* and the stack will decrease */
             vm->stack_pointer --;

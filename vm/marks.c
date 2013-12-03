@@ -22,5 +22,4 @@ void nap_marks(struct nap_vm *vm)
     marker->value = temp;
 
     vm->stack[++ vm->stack_pointer] = marker;
-
 }

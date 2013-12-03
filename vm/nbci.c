@@ -81,13 +81,6 @@ nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found)
 {
     uint64_t i;
     char* finame = name;
-    static const char* str_global = "global.";
-    if(strstr(name,  str_global) != name)
-    {
-        finame = (char*) calloc(strlen(name) + 1 + 7, sizeof(char));
-        strcpy(finame, str_global);
-        strcat(finame, name);
-    }
 
     for(i=0; i<vm->meta_size; i++)
     {
@@ -101,7 +94,7 @@ nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found)
                     {
                         if(finame != name)
                         {
-                            free(finame);
+                            MEM_FREE(finame);
                         }
                         *found = 1;
                         return *(nap_int_t*)(vm->metatable[i]->instantiation->value);
