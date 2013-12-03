@@ -57,8 +57,6 @@ void interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t le
                 cloc += len;
             }
 
-            fprintf(stderr, "add: %d, %s\n", index, name);
-
             if(vm->meta_size < index + 1)
             { /* seems there is something wrong with the metatable size*/
                 struct variable_entry** tmp = (struct variable_entry**) realloc(vm->metatable,

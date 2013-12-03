@@ -110,25 +110,25 @@ void nap_vm_cleanup(struct nap_vm* vm)
         {
             if(vm->metatable[i]->instantiation->value)
             {
-                free(vm->metatable[i]->instantiation->value);
+                MEM_FREE(vm->metatable[i]->instantiation->value);
             }
 
-            free(vm->metatable[i]->instantiation);
+            MEM_FREE(vm->metatable[i]->instantiation);
         }
     }
     for(i=0; i<vm->meta_size; i++)
     {
         if(vm->metatable[i]->name)
         {
-            free(vm->metatable[i]->name);
+            MEM_FREE(vm->metatable[i]->name);
         }
 
         if(vm->metatable[i])
         {
-            free(vm->metatable[i]);
+            MEM_FREE(vm->metatable[i]);
         }
     }
-    free(vm->metatable);
+    MEM_FREE(vm->metatable);
 
     /* free the allocated stack */
     for(tempst = vm->stack_pointer; tempst > -1; tempst --)
@@ -141,26 +141,30 @@ void nap_vm_cleanup(struct nap_vm* vm)
         if(vm->stack[tempst] && (vm->stack[tempst]->type == OPCODE_REG
                                  || vm->stack[tempst]->type == STACK_ENTRY_MARKER_NAME))
         {
-            free(vm->stack[tempst]->value);
+            MEM_FREE(vm->stack[tempst]->value);
         }
 
-        free(vm->stack[tempst]);
+        MEM_FREE(vm->stack[tempst]);
     }
-    free(vm->stack);
+    MEM_FREE(vm->stack);
 
     /* freeing the jumptable */
     for(tempjmi = vm->jumptable_size - 1; tempjmi >= 0; tempjmi --)
     {
-        free(vm->jumptable[tempjmi]);
+        if(vm->jumptable[tempjmi]->label_name)
+        {
+            MEM_FREE(vm->jumptable[tempjmi]->label_name);
+        }
+        MEM_FREE(vm->jumptable[tempjmi]);
     }
 
-    free(vm->jumptable);
+    MEM_FREE(vm->jumptable);
 
     /* freeing the content */
-    free(vm->content);
+    MEM_FREE(vm->content);
 
     /* and the VM itself */
-    free(vm);
+    MEM_FREE(vm);
 }
 
 struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len)
@@ -221,11 +225,11 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len)
     vm->flags = *cloc;
     cloc ++;
 
-    interpret_metatable(vm, bytecode + vm->meta_location, bytecode_len);
+    interpret_metatable(vm, vm->content + vm->meta_location, bytecode_len);
 
-    interpret_stringtable(vm, bytecode + vm->stringtable_location, bytecode_len);
+    interpret_stringtable(vm, vm->content + vm->stringtable_location, bytecode_len);
 
-    interpret_jumptable(vm, bytecode + vm->jumptable_location, bytecode_len);
+    interpret_jumptable(vm, vm->content + vm->jumptable_location, bytecode_len);
 
     /* cc is the instruction pointer:
      * skip the:
@@ -266,7 +270,7 @@ struct nap_vm *nap_vm_load(const char *filename)
     fclose(fp);
 
     vm = nap_vm_inject(file_content, fsize);
-    free(file_content);
+    MEM_FREE(file_content);
 
     return vm;
 }
@@ -365,6 +369,6 @@ void nap_restore_registers(struct nap_vm* vm)
 
     regi_stack_idx --;
     memcpy(vm->regi, regi_stack[regi_stack_idx], vm->mrc * sizeof(nap_int_t));
-    free(regi_stack[regi_stack_idx]);
+    MEM_FREE(regi_stack[regi_stack_idx]);
 
 }

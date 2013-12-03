@@ -184,7 +184,7 @@ void nap_mov(struct nap_vm* vm)
                         {
                             char* temp = (char*)calloc(strlen(vm->regs[register_index]) + 1, sizeof(char));
                             strcpy(temp, vm->regs[register_index]);
-                            free(var->instantiation->value);
+                            MEM_FREE(var->instantiation->value);
                             var->instantiation->value = temp;
                             var->instantiation->len = strlen(vm->regs[register_index]);
                         }

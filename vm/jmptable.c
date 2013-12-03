@@ -25,7 +25,7 @@ void interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t le
     {
         uint32_t index = 0;
         uint8_t type = 0;
-        uint16_t length = 0;
+        uint16_t loc_name_length = 0;
         char* name = NULL;
 
         struct jumptable_entry* new_jmpentry = NULL;
@@ -46,20 +46,20 @@ void interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t le
         if(type != 0)
         {
             /* the length */
-            length = htovm_16(*(uint16_t*)(cloc));
+            loc_name_length = htovm_16(*(uint16_t*)(cloc));
             cloc += 2;
 
-            if(length != 0)
+            if(loc_name_length != 0)
             {
-                name = (char*)calloc(sizeof(char), length + 1);
+                name = (char*)calloc(sizeof(char), loc_name_length + 1);
                 if(name == NULL)
                 {
                     fprintf(stderr, "cannot allocate a metatable entry\n");
                     exit(EXIT_FAILURE);
                 }
 
-                memcpy(name, cloc, len);
-                cloc += len;
+                memcpy(name, cloc, loc_name_length);
+                cloc += loc_name_length;
             }
         }
         new_jmpentry = (struct jumptable_entry*)calloc(1, sizeof(struct jumptable_entry));
