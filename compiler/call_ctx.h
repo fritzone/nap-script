@@ -208,6 +208,7 @@ struct call_context
                                          method* the_method,
                                          call_context* cc,
                                          const expression_with_location* expwloc, bool &psuccess);
+
 private:
 
     /* the type of the call context: 0 - global, 1 - named*/

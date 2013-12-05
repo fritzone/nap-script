@@ -205,7 +205,7 @@ std::string nap_compiler::prepare_location() const
     if(!location->location->file_name.empty())
     {
         ss << "file:[" << location->location->file_name
-           << "] ~line:[" << location->location->start_line_number;
+           << "] ~line:[" << location->location->start_line_number << "]";
     }
     mErrorCode = 1;
     return ss.str();
@@ -217,8 +217,10 @@ void nap_compiler::throw_error(const char* error) const
     std::stringstream ss;
     ss << "[err:compiler] " << error << " @ " << loc;
     mfinalError = ss.str();
-    if(!mEmbedded) std::cerr << mfinalError << std::endl ;
-
+    if(!mEmbedded)
+    {
+        std::cerr << mfinalError << std::endl ;
+    }
 }
 
 void nap_compiler::throw_error(const char* error, const std::string& par1, const std::string& par2) const
@@ -227,8 +229,10 @@ void nap_compiler::throw_error(const char* error, const std::string& par1, const
     std::stringstream ss;
     ss << "[err:compiler] " << error << ": [" << par1 << "] - " << par2 << " @ " << loc;
     mfinalError = ss.str();
-    if(!mEmbedded) std::cerr << mfinalError << std::endl;
-
+    if(!mEmbedded)
+    {
+        std::cerr << mfinalError << std::endl;
+    }
 }
 
 void nap_compiler::throw_error(const char* error, const std::string& par) const
@@ -237,8 +241,10 @@ void nap_compiler::throw_error(const char* error, const std::string& par) const
     std::stringstream ss;
     ss << "[err:compiler] " << error << ": [" << par << "] @ " << loc;
     mfinalError = ss.str();
-    if(!mEmbedded) std::cerr << mfinalError << std::endl;
-
+    if(!mEmbedded)
+    {
+        std::cerr << mfinalError << std::endl;
+    }
 }
 
 void nap_compiler::throw_error(const char* error, int id, const char* par) const
@@ -247,8 +253,10 @@ void nap_compiler::throw_error(const char* error, int id, const char* par) const
     std::stringstream ss;
     ss << "[err:compiler] " << error << " id[" << id << "] - [" << par << "] @ " << loc;
     mfinalError = ss.str();
-    if(!mEmbedded) std::cerr << mfinalError << std::endl;
-
+    if(!mEmbedded)
+    {
+        std::cerr << mfinalError << std::endl;
+    }
 }
 
 void nap_compiler::throw_index_out_of_range(const char* variable_name, int maximum_allowed, int got) const
@@ -258,8 +266,10 @@ void nap_compiler::throw_index_out_of_range(const char* variable_name, int maxim
     ss << "[err:compiler] index ["<< got << "] out of range for ["
        << variable_name << ":"<<maximum_allowed << "]" << " @ " << loc;
     mfinalError = ss.str();
-    if(!mEmbedded) std::cerr << mfinalError << std::endl;
-
+    if(!mEmbedded)
+    {
+        std::cerr << mfinalError << std::endl;
+    }
 }
 
 void nap_compiler::set_location(const expression_with_location* loc)

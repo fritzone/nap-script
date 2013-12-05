@@ -1927,6 +1927,23 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
             break;
             }
 
+        case FUNCTION_CALL_NAP_EXEC:
+        {
+            // generate code to call the interrupt 2 to compile regs(0)
+            // and then interrupt 3 to execute the code
+            code_stream(_compiler) << mov() << SPACE
+                                   << reg() << "string" << SPACE << C_PAR_OP << 0 << C_PAR_CL
+                                   << C_COMMA ;
+            int ty = -2;
+            compile(_compiler, node->left, the_method, cc, level + 1, ty, forced_mov, success);
+
+            code_stream(_compiler) << NEWLINE
+                                   << "intr" << SPACE << 2
+                                   << NEWLINE
+                                   << "intr" << SPACE << 3
+                                   << NEWLINE;
+            break;
+        }
         default:
             printf("Something funny:%d\n", node->op_type);
             exit(2);

@@ -202,6 +202,7 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "real") opcode = OPCODE_FLOAT;
     if(expr == "string")  opcode = OPCODE_STRING;
     if(expr == "idx")  opcode = OPCODE_IDX;
+    if(expr == "intr")  opcode = OPCODE_INTR;
     if(expr == "call") opcode = OPCODE_CALL;
     if(expr == "mov") opcode = OPCODE_MOV;
     if(expr == "inc") opcode = OPCODE_INC;
@@ -250,7 +251,10 @@ void code_stream::output_bytecode(const char* s)
     
     if(opcode)
     {
-        if(opcode == OPCODE_IMMEDIATE && mcompiler->opcode_counter > 2 && mcompiler->opcodes()[mcompiler->opcode_counter - 2] == OPCODE_REG)
+        if(opcode == OPCODE_IMMEDIATE && mcompiler->opcode_counter > 2 &&
+                (   mcompiler->opcodes()[mcompiler->opcode_counter - 2] == OPCODE_REG
+                 || mcompiler->opcodes()[mcompiler->opcode_counter - 1] == OPCODE_INTR)
+                )
         {
             // do not write it if it counts registers
         }
@@ -277,6 +281,13 @@ void code_stream::output_bytecode(const char* s)
                         abort();
                     }
                 }
+            }
+            else
+            // interrupt, does not neeed spcifier, there are max 255 of them
+            if(mcompiler->opcode_counter > 3 && mcompiler->opcodes()[mcompiler->opcode_counter - 2] == OPCODE_INTR)
+            {
+                uint8_t nrf = atoi(expr.c_str());
+                f.write_stuff_to_file_8(nrf);
             }
             else
             {

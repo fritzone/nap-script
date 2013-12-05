@@ -9,6 +9,7 @@
 #include "opcodes.h"
 #include "stack.h"
 #include "byte_order.h"
+#include "nbci_impl.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -371,4 +372,26 @@ void nap_restore_registers(struct nap_vm* vm)
     memcpy(vm->regi, regi_stack[regi_stack_idx], vm->mrc * sizeof(nap_int_t));
     MEM_FREE(regi_stack[regi_stack_idx]);
 
+}
+
+int nap_vmi_has_variable(const struct nap_vm* vm, const char* name, int* type)
+{
+    uint64_t i;
+
+    for(i=0; i<vm->meta_size; i++)
+    {
+        if(vm->metatable[i]->instantiation)
+        {
+            if(vm->metatable[i]->instantiation->value)
+            {
+                if(vm->metatable[i]->name && !strcmp(vm->metatable[i]->name, name))
+                {
+                    *type = (int)vm->metatable[i]->instantiation->type;
+                    return 1;
+                }
+            }
+        }
+    }
+    *type = -1;
+    return 0;
 }
