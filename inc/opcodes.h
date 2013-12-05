@@ -11,6 +11,7 @@ static const unsigned char OPCODE_SHORT         = (unsigned char)0x16; /**/
 static const unsigned char OPCODE_IMMEDIATE     = (unsigned char)0x11; /**/
 static const unsigned char OPCODE_INC           = (unsigned char)0x1C; /**/
 static const unsigned char OPCODE_DEC           = (unsigned char)0x1D; /**/
+static const unsigned char OPCODE_INTR          = (unsigned char)0x1E;
 static const unsigned char OPCODE_CCIDX         = (unsigned char)0x21;
 static const unsigned char OPCODE_GROW          = (unsigned char)0x22;
 static const unsigned char OPCODE_LONG          = (unsigned char)0x32; /**/

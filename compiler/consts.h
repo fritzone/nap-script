@@ -147,7 +147,8 @@ const int NO_INDEX                = -1;
 const int METHOD_CALL_NORMAL            = 0;
 const int METHOD_CALL_CONSTRUCTOR       = 1;
 const int METHOD_CALL_OF_OBJECT         = 2;
-const int METHOD_CALL_STATIC_OF_CLASS   = 3;
+const int METHOD_CALL_STATIC_OF_CLASS   = 3; // do not use 4,5
+const int METHOD_CALL_SPECIAL_EXECUTE   = 6;
 
 /*
  * Error message strings

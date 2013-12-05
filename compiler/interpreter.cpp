@@ -14,6 +14,9 @@
 #include "expression_tree.h"
 #include "compiler.h"
 
+// from VM
+#include "nbci_impl.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -364,7 +367,7 @@ int interpreter::get_operator(const char* expr, const char** foundOperator, int*
 /*
  * this checks if an expression is a function or not (ex: sin(x) is s function)
  */
-method* interpreter::is_function_call(char *s,  call_context* cc)
+method* interpreter::is_function_call(char *s,  call_context* cc, int* special)
 {
     unsigned int i=0;
     std::string method_name;
@@ -373,6 +376,22 @@ method* interpreter::is_function_call(char *s,  call_context* cc)
         method_name += s[i++];
     }
 
+    // now if whitespace, find the opening parenthesis
+    while(i<strlen(s) && is_whitespace(s[i]) && s[i] != C_PAR_OP )
+    {
+        i++;
+    }
+
+    if(s[i] != C_PAR_OP) // named (and lot of whitespace) not followed by parenthesis
+    {
+        return 0;
+    }
+
+    if(method_name == "nap_execute")
+    {
+        *special = METHOD_CALL_SPECIAL_EXECUTE;
+        return 0;
+    }
     return cc->get_method(method_name);
 }
 
@@ -1675,18 +1694,69 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
     // no operator on the zeroth level
 
     /* Is this is a function call?*/
-    if((func_call = is_function_call(expr_trim, cc)))
+    int special = 0;
+    func_call = is_function_call(expr_trim, cc, &special);
+    if(func_call || special != 0)
     {
-        bool success = true;
-        call_frame_entry* cfe = handle_function_call(expr_trim, expr_len, node, func_call, the_method, orig_expr, cc, result, expwloc, METHOD_CALL_NORMAL, success);
-        if(!success)
+        if(func_call)
         {
-            psuccess = false;
-            return 0;
-        }
+            bool success = true;
+            call_frame_entry* cfe = handle_function_call(expr_trim,
+                                                         expr_len, node,
+                                                         func_call,
+                                                         the_method,
+                                                         orig_expr,
+                                                         cc, result,
+                                                         expwloc,
+                                                         METHOD_CALL_NORMAL,
+                                                         success);
+            if(!success)
+            {
+                psuccess = false;
+                return 0;
+            }
 
-        *result = FUNCTION_CALL;
-        return cfe;
+            *result = FUNCTION_CALL;
+            return cfe;
+        }
+        else
+        {
+            if(special == METHOD_CALL_SPECIAL_EXECUTE)
+            {
+                *result = FUNCTION_CALL_NAP_EXEC;
+
+
+                node->op_type = FUNCTION_CALL_NAP_EXEC;
+
+                // now parse out the string
+                char* temp = cc->compiler()->duplicate_string(expr_trim);
+                temp += strlen("nap_execute");
+                while(is_whitespace(*temp))
+                {
+                    temp ++;
+                }
+                char* temp2 = cc->compiler()->new_string(strlen(expr_trim));
+                extract_next_enclosed_phrase(temp, C_PAR_OP, C_PAR_CL, temp2);
+                // and now remove the parentheses
+                temp2 ++;
+                temp2[strlen(temp2) - 1] = 0;
+                node->info = temp2;
+
+                node->left = new expression_tree(node, expwloc);
+                garbage_bin<expression_tree*>::instance().place(node->left, cc->compiler());
+
+                bool success = true;
+                build_expr_tree(temp2, node->left, the_method, orig_expr, cc, result, expwloc, success);
+                if(!success)
+                {
+                    psuccess = false;
+                    return 0;
+                }
+
+                node->reference = new_envelope(0, FUNCTION_CALL_NAP_EXEC, cc->compiler());
+                return 0;
+            }
+        }
     }
 
     /* Check if this is a function call of an object*/
@@ -1718,26 +1788,35 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                         return 0;
                     }
                 }
-                if((func_call = is_function_call(expr_trim, cd)))
+                int type = 0;
+                func_call = is_function_call(expr_trim, cd, &type);
+                if(func_call || type != 0)
                 {
-                    bool success = true;
-                    call_frame_entry* cfe = handle_function_call(expr_trim,
-                                                                 expr_len, node,
-                                                                 func_call,
-                                                                 the_method,
-                                                                 orig_expr, cd,
-                                                                 result,
-                                                                 expwloc,
-                                                                 METHOD_CALL_OF_OBJECT,
-                                                                 success);
-                    if(!success)
+                    if(func_call)
                     {
-                        psuccess = false;
-                        return 0;
-                    }
+                        bool success = true;
+                        call_frame_entry* cfe = handle_function_call(expr_trim,
+                                                                     expr_len, node,
+                                                                     func_call,
+                                                                     the_method,
+                                                                     orig_expr, cd,
+                                                                     result,
+                                                                     expwloc,
+                                                                     METHOD_CALL_OF_OBJECT,
+                                                                     success);
+                        if(!success)
+                        {
+                            psuccess = false;
+                            return 0;
+                        }
 
-                    *result = FUNCTION_CALL;
-                    return cfe;
+                        *result = FUNCTION_CALL;
+                        return cfe;
+                    }
+                    else // we shouldn't get in here ... ever,
+                    {
+
+                    }
                 }
 
                 // now see if this is a class variable: a.b = 4
@@ -1950,7 +2029,23 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 }
             }
 
-            if(var)    /* if this is a variable */
+            // still not found a variable ... See if it comes from father VMs
+            if(!var)
+            {
+                int tt;
+                if(cc->compiler()->vm_chain())
+                {
+                    if(nap_vmi_has_variable(cc->compiler()->vm_chain(), t, &tt))
+                    {
+                        // it is a variable in the father VM
+                        var = new variable(1, tt, t, "extern", cc);
+                        envl = new_envelope(var, BASIC_TYPE_EXTERN_VARIABLE, cc->compiler());
+                        node->op_type = BASIC_TYPE_EXTERN_VARIABLE;
+                    }
+                }
+            }
+            else
+                if(var)    /* if this is a variable */
             {
                 // TODO: Check if this is a class variable
                 envl = new_envelope(var, BASIC_TYPE_VARIABLE, cc->compiler());

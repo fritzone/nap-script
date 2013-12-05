@@ -19,10 +19,16 @@ set(${project}_files
     ../vm/byte_order.c
 )
 
+include_directories(../vm)
+
 add_library(napcpl ${${project}_files} )
 
 add_executable(nap
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )
 
-target_link_libraries(nap napcpl)
+LINK_DIRECTORIES(../vm)
+
+target_link_libraries(napcpl nbci)
+
+target_link_libraries(nap nbci napcpl)

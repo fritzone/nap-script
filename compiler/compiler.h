@@ -204,6 +204,11 @@ public:
         return mfinalError;
     }
 
+    const struct nap_vm* vm_chain() const
+    {
+        return mvm_chain;
+    }
+
 private:
 
     call_context* cur_cc;
@@ -243,7 +248,7 @@ private:
     mutable int mErrorCode;
     bool mEmbedded;
 
-    struct nap_vm *mvm_chain;
+    const struct nap_vm *mvm_chain;
 };
 
 
