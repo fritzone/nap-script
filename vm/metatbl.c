@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 /*
  * Read the metatable of the bytecode file. Exits on error.
@@ -35,13 +36,13 @@ void interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t le
         {
             char* name = NULL;
             struct variable_entry* new_var = NULL;
+			uint16_t len = 0;                 /* the length of the name */
+            uint8_t type = *cloc;             /* the type of the variable */
 
-            /* the type of the variable */
-            uint8_t type = *cloc;
             cloc ++;
 
             /* length of the variable name */
-            uint16_t len = htovm_16(*(uint16_t*)(cloc));
+            len = htovm_16(*(uint16_t*)(cloc));
             cloc += 2;
 
             if(len != 0)

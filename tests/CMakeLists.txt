@@ -4,6 +4,9 @@ add_executable(vmtest
     ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gtest/src/gtest_main.cc
 )
+if(WIN32)
+    add_definitions("/D_VARIADIC_MAX=10")
+endif()
 
 add_subdirectory(gtest)
 

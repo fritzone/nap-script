@@ -101,8 +101,8 @@ nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
 
 
 
-nap_real_t nap_runtime_get_real(nap_runtime */*runtime*/,
-                                const char */*variable_name*/)
+nap_real_t nap_runtime_get_real(nap_runtime * /*runtime*/,
+                                const char * /*variable_name*/)
 {
     return 0;
 }

@@ -1,7 +1,7 @@
 #ifndef _PARAMETER_H_
 #define _PARAMETER_H_
 
-class expression_tree;
+struct expression_tree;
 struct envelope;
 struct call_context;
 struct method;
