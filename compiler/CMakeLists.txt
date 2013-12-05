@@ -27,7 +27,7 @@ add_executable(nap
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )
 
-LINK_DIRECTORIES(../vm)
+# LINK_DIRECTORIES(../vm)
 
 target_link_libraries(napcpl nbci)
 

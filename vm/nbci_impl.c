@@ -9,7 +9,8 @@
 #include "opcodes.h"
 #include "stack.h"
 #include "byte_order.h"
-#include "nbci_impl.h"
+
+#include <nbci_impl.h>
 
 #include <stdio.h>
 #include <stdint.h>

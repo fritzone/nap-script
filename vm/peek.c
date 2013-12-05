@@ -19,7 +19,7 @@ void nap_peek(struct nap_vm *vm)
 
         if(peek_index_type == OPCODE_IMMEDIATE) /* immediate value (1,..) */
         {
-            peek_index = nap_read_immediate(vm);
+            peek_index = (nap_index_t)nap_read_immediate(vm);
         }
         else
         {
