@@ -1018,7 +1018,9 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
 
         q ++;
     }
-    cfe = alloc_mem(call_frame_entry, 1, cc->compiler());
+    cfe = new call_frame_entry();
+	garbage_bin<call_frame_entry*>::instance().place(cfe, mcompiler);
+
     cfe->the_method = func_call;
     cfe->parameters = pars_list;
     cfe->previous_cf = func_call->cur_cf;

@@ -137,6 +137,8 @@ struct constructor_call : public method
  */
 struct call_frame_entry
 {
+	call_frame_entry() : the_method(0), parameters(), previous_cf(0) {}
+
     /* this is the method that was called */
     method *the_method;
 
