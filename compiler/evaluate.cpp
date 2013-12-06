@@ -1835,13 +1835,14 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
 
         case FUNCTION_CALL:
         {
+			int pc = 0;
             call_frame_entry* cfe = (call_frame_entry*)node->reference->to_interpret;
+			std::string func_call_hash = generate_unique_hash();
             method* m = cfe->the_method;
-            std::vector<parameter*>::iterator ingoing_parameters = cfe->parameters.begin();
-            int pc = 0;
-            std::string func_call_hash = generate_unique_hash();
-            push_cc_start_marker(_compiler,func_call_hash.c_str());
-            while(ingoing_parameters != cfe->parameters.end())
+            std::vector<parameter*>::const_iterator ingoing_parameters = cfe->parameters.begin();
+			std::vector<parameter*>::const_iterator last = cfe->parameters.end();
+            push_cc_start_marker(_compiler, func_call_hash.c_str());
+            while(ingoing_parameters != last)
             {
                 parameter* p = *ingoing_parameters;
                 parameter* fp = m->get_parameter(pc);
