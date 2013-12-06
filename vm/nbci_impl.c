@@ -151,14 +151,14 @@ void nap_vm_cleanup(struct nap_vm* vm)
     MEM_FREE(vm->stack);
 
     /* freeing the jumptable */
-    for(tempjmi = vm->jumptable_size - 1; tempjmi >= 0; tempjmi --)
-    {
-        if(vm->jumptable[tempjmi]->label_name)
-        {
-            MEM_FREE(vm->jumptable[tempjmi]->label_name);
-        }
-        MEM_FREE(vm->jumptable[tempjmi]);
-    }
+	for(tempjmi = vm->jumptable_size; tempjmi > 0; tempjmi --)
+	{
+	    if(vm->jumptable[tempjmi - 1]->label_name)
+		{
+	        MEM_FREE(vm->jumptable[tempjmi - 1]->label_name);
+		}
+		MEM_FREE(vm->jumptable[tempjmi - 1]);
+	}
 
     MEM_FREE(vm->jumptable);
 
