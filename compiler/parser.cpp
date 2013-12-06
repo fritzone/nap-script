@@ -534,6 +534,8 @@ void parsed_file::deal_with_for_loading(call_context* cc,
     ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << STR_FOR;
 
     call_context* for_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_FOR, ss.str(), the_method, cc);
+    garbage_bin<call_context*>::instance().place(for_cc, cc->compiler());
+
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR)    /* normal FOR with { }*/
     {
         bool success = true;

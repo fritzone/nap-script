@@ -396,3 +396,12 @@ int nap_vmi_has_variable(const struct nap_vm* vm, const char* name, int* type)
     *type = -1;
     return 0;
 }
+
+void nap_handle_interrupt(struct nap_vm* vm)
+{
+    uint8_t intr = 0;
+    vm->cc ++;  /* since it still points to the "interrupt" opcode*/
+
+    intr = *(uint8_t*)(vm->content + vm->cc);
+    vm->cc ++;
+}

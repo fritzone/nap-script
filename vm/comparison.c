@@ -3,6 +3,7 @@
 #include "nbci.h"
 #include "metatbl.h"
 #include "stack.h"
+#include "nbci_impl.h"
 
 #include <stdlib.h>
 #include <stdint.h>

@@ -348,6 +348,8 @@ void code_stream::output_bytecode(const char* s)
             else /* possibly creating a label before using it */
             {
                 label_entry* le = new label_entry;
+                garbage_bin<label_entry*>::instance().place(le, mcompiler);
+
                 le->bytecode_location = f.ftell();
                 le->name = lblName;
                 mcompiler->add_jumptable_entry(le);

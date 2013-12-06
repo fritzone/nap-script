@@ -21,7 +21,7 @@ set(${project}_files
 
 include_directories(../vm)
 
-add_library(napcpl ${${project}_files} )
+add_library(nap-cpl SHARED ${${project}_files} )
 
 add_executable(nap
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
@@ -29,6 +29,6 @@ add_executable(nap
 
 # LINK_DIRECTORIES(../vm)
 
-target_link_libraries(napcpl nbci)
+target_link_libraries(nap-cpl nap-bci)
 
-target_link_libraries(nap nbci napcpl)
+target_link_libraries(nap nap-bci nap-cpl)
