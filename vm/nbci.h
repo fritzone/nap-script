@@ -10,9 +10,7 @@ extern "C" {
 #define PRId64 "lld"
 #define PRIu64 "lld"
 #define PRIx64 "x"
-
 #pragma warning (disable : 4127)
-
 #else
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -164,44 +162,6 @@ struct nap_vm* nap_vm_load(const char* filename);
  * @param vm - the VM to run
  */
 void nap_vm_run(struct nap_vm* vm);
-
-/**
- * Fetches the address at the current location in the bytecode stream
- * @param vm
- * @return
- */
-nap_addr_t nap_fetch_address(struct nap_vm *vm);
-
-/**
- * Fetch a marker from the bytecode stream
- * @param vm
- * @return
- */
-nap_mark_t nap_fetch_mark(struct nap_vm* vm);
-
-/**
- * Fetch an index from the bytecode stream
- * @param vm
- * @return
- */
-nap_index_t nap_fetch_index(struct nap_vm* vm);
-
-/**
- * Read an immediate value from the bytecode stream and return it
- * @param vm
- * @return
- */
-nap_int_t nap_read_immediate(struct nap_vm* vm);
-
-/**
- * Saves the registers. Happens automatically on a "call"
- */
-void nap_save_registers(struct nap_vm*);
-
-/**
- * Restores the registers. Happens automatically on a "leave"
- */
-void nap_restore_registers(struct nap_vm*);
 
 /**
  * @brief creates a new virtual machine and injects the given bytecode

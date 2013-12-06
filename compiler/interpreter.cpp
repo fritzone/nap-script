@@ -1536,6 +1536,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         rswfor->unique_hash = generate_unique_hash();
         rswfor->init_stmt = init_stmt;
         rswfor->tree_init_stmt = new expression_tree(expwloc);
+        garbage_bin<expression_tree*>::instance().place(rswfor->tree_init_stmt, cc->compiler());
+
         bool success = true;
         build_expr_tree(init_stmt, rswfor->tree_init_stmt, the_method, orig_expr, cc, result, expwloc, success);
         if(!success)
@@ -1544,10 +1546,11 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             return 0;
         }
 
-
         rswfor->condition = cond_stmt;
         rswfor->tree_condition = new expression_tree(expwloc);
         build_expr_tree(cond_stmt, rswfor->tree_condition, the_method, orig_expr, cc, result, expwloc, success);
+        garbage_bin<expression_tree*>::instance().place(rswfor->tree_condition, cc->compiler());
+
         if(!success)
         {
             psuccess = false;
@@ -1556,6 +1559,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
         rswfor->expr = expr_stmt;
         rswfor->tree_expr = new expression_tree(expwloc);
+        garbage_bin<expression_tree*>::instance().place(rswfor->tree_expr, cc->compiler());
+
         build_expr_tree(expr_stmt, rswfor->tree_expr, the_method, orig_expr, cc, result, expwloc, success);
         if(!success)
         {

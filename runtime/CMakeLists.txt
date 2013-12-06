@@ -6,8 +6,8 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/nap_runtime.cpp
 )
 
-add_library(naprt ${${project}_files} )
+add_library(nap-rt SHARED ${${project}_files} )
 
 
-target_link_libraries(naprt napcpl nbci)
+target_link_libraries(nap-rt nap-cpl nap-bci)
 

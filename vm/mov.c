@@ -95,6 +95,30 @@ void nap_mov(struct nap_vm* vm)
                 vm->regs[register_index] = vm->stringtable[str_index]->string;
             }
             else
+            if(move_source == OPCODE_VAR) /* movin a variable into a string reg*/
+            {
+                nap_index_t var_index = nap_fetch_index(vm);
+
+                /* fetch the variable from the given index */
+                struct variable_entry* var = vm->metatable[var_index];
+                if(var->instantiation == 0)
+                {
+                    fprintf(stderr, "variable [%s] not initialised correctly\n", var->name);
+                    exit(3);
+                }
+
+                if(var->instantiation->type != STACK_ENTRY_STRING)
+                {
+                    fprintf(stderr, "variable [%s] has wrong type\n", var->name);
+                    exit(4);
+                }
+
+                /* and moving the value in the regsiter itself */
+                vm->regs[register_index] = (char*)var->instantiation->value;
+
+            }
+
+            else
             {
                 _NOT_IMPLEMENTED
             }

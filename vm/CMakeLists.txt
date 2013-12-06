@@ -25,11 +25,11 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/operation.c
 )
 
-add_library(nbci ${${project}_files} )
+add_library(nap-bci SHARED ${${project}_files} )
 
 add_executable(napi
     ${CMAKE_CURRENT_SOURCE_DIR}/main.c
 )
 
-target_link_libraries(napi nbci)
+target_link_libraries(napi nap-bci)
 

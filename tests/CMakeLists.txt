@@ -10,5 +10,5 @@ endif()
 
 add_subdirectory(gtest)
 
-target_link_libraries(vmtest nbci naprt napcpl gtest)
+target_link_libraries(vmtest nap-bci nap-rt nap-cpl gtest)
 
