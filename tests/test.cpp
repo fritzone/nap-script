@@ -220,5 +220,6 @@ TEST(RuntimeCompilation, SimpleCheck)
     SCRIPT_END
 
     ASSERT_EQ(5, VAR_INT(c));
+
     SCRIPT_SHUTDOWN
 }

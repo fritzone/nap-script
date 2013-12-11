@@ -169,6 +169,29 @@ void nap_vm_cleanup(struct nap_vm* vm)
     /* freeing the content */
     MEM_FREE(vm->content);
 
+    /* freeing the allocated bytecode chunks */
+    for(i = 0; i<vm->allocated_chunks; i++)
+    {
+        if(vm->btyecode_chunks[i])
+        {
+            if(vm->btyecode_chunks[i]->code)
+            {
+                free(vm->btyecode_chunks[i]->code);
+            }
+            free(vm->btyecode_chunks[i]);
+        }
+    }
+
+    free(vm->btyecode_chunks);
+
+    /* the stringtable */
+    for(i = 0; i<vm->strt_size; i++)
+    {
+        free(vm->stringtable[i]->string);
+        free(vm->stringtable[i]);
+    }
+    free(vm->stringtable);
+
     /* and the VM itself */
     MEM_FREE(vm);
 }
