@@ -8,14 +8,14 @@
 void interpret_stringtable(struct nap_vm *vm, uint8_t *start_location, uint32_t len)
 {
     uint8_t* cloc = start_location + 4; /* skip the .str TODO: chec is this .str?*/
-    uint32_t strt_size = htovm_32(*(uint32_t*)(cloc)); /* the next: count*/
-    if(strt_size == 0)
+    vm->strt_size = htovm_32(*(uint32_t*)(cloc)); /* the next: count*/
+    if(vm->strt_size == 0)
     {
         return;
     }
     cloc += 4;
 
-    vm->stringtable = (struct strtable_entry**) calloc(strt_size + 1,
+    vm->stringtable = (struct strtable_entry**) calloc(vm->strt_size + 1,
                                                        sizeof(struct strtable_entry*));
 
     for(;;)
@@ -36,10 +36,11 @@ void interpret_stringtable(struct nap_vm *vm, uint8_t *start_location, uint32_t 
             memcpy(str, cloc, len);
             cloc += len;
 
-            if(strt_size < index + 1)
+            if(vm->strt_size < index + 1)
             {
                 vm->stringtable = (struct strtable_entry**) realloc(vm->stringtable,
                                  sizeof(struct strtable_entry**) * (index + 1));
+                vm->strt_size = index + 1;
             }
             new_strentry = (struct strtable_entry*)calloc(1, sizeof(struct strtable_entry));
             new_strentry->index = index;

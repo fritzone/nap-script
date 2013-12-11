@@ -2047,6 +2047,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                     {
                         // it is a variable in the father VM
                         var = new variable(1, tt, t, "extern", cc);
+                        garbage_bin<variable*>::instance().place(var, cc->compiler());
                         envl = new_envelope(var, BASIC_TYPE_EXTERN_VARIABLE, cc->compiler());
                         node->op_type = BASIC_TYPE_EXTERN_VARIABLE;
                     }
