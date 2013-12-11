@@ -6,12 +6,10 @@ extern "C" {
 #endif
 
 #include "nap_types.h"
+#include "nap_structs.h"
 
 /* The real runtime hidden in an opaque pointer  */
 struct nap_runtime;
-
-/* A piece of compiled nap-script bytecode */
-struct nap_bytecode_chunk;
 
 /**
  * @brief Create a new nap runtime environment.

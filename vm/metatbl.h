@@ -10,6 +10,12 @@
 /*                             Metatable section                              */
 /******************************************************************************/
 
+enum VAR_TYPE
+{
+    OWN_VAR = 0,
+    EXTERN_VAR = 1
+};
+
 /**
  * Structure containing the definition of a variable
  **/
@@ -21,7 +27,7 @@ struct variable_entry
     /* the type of the variable:
      * 0 - variable defined in this VM
      * 1 - variable defiend in a parent VM */
-    uint8_t type;
+    enum VAR_TYPE type;
 
     /* the name of the variable */
     char* name;

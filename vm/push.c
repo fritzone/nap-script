@@ -20,7 +20,7 @@ void nap_push(struct nap_vm *vm)
         if(push_what == OPCODE_VAR)
         {
             nap_index_t var_index = nap_fetch_index(vm);
-            struct variable_entry* ve = vm->metatable[var_index];
+            struct variable_entry* ve = nap_fetch_variable(vm, var_index);
 
             /* TODO: is ve NULL? */
 
@@ -102,7 +102,7 @@ void nap_push(struct nap_vm *vm)
     if(se->type == OPCODE_VAR)
     {
         nap_index_t var_index = nap_fetch_index(vm);
-        struct variable_entry* ve = vm->metatable[var_index];
+        struct variable_entry* ve = nap_fetch_variable(vm, var_index);
         if(ve->instantiation == NULL)
         {
             fprintf(stderr, "invalid push of an undeclared variable [%s]\n", ve->name);

@@ -3,6 +3,7 @@
 #include "opcodes.h"
 #include "stack.h"
 #include "metatbl.h"
+#include "nbci_impl.h"
 
 #include <stdlib.h>
 
@@ -31,7 +32,7 @@ void nap_peek(struct nap_vm *vm)
         if(peek_target == OPCODE_VAR)
         {
             nap_index_t var_index = nap_fetch_index(vm);
-            struct variable_entry* ve = vm->metatable[var_index];
+            struct variable_entry* ve = nap_fetch_variable(vm, var_index);
 
             /* there is no instantioation at this point for the var */
             ve->instantiation = (struct stack_entry*)(

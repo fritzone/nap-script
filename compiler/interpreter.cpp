@@ -1334,6 +1334,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         expr_trim[expr_len-1] = 0;    // removing the double quotes
         expr_trim++;
         bt_string* the_str = new bt_string(expr_trim);
+        garbage_bin<bt_string*>::instance().place(the_str, cc->compiler());
         node->reference = new_envelope(the_str, BASIC_TYPE_STRING, cc->compiler());
         node->info = the_str->the_string();
         *result = RESULT_STRING;

@@ -1,6 +1,13 @@
 set(project nbci)
 
-set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/*.c PROPERTIES COMPILE_FLAGS -std=c90)
+set_source_files_properties(
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.c
+    PROPERTIES COMPILE_FLAGS "-std=c90")
+
+include_directories(
+    interrupts/intr_2
+    interrupts/intr_3
+)
 
 set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/strtable.c
@@ -25,11 +32,16 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/operation.c
 )
 
+include_directories(${NAP-ROOT}/compiler)
+
+set(interrupt_files CACHE INTERNAL "interrupt_files" FORCE)
+add_subdirectory(interrupts)
+list(APPEND ${project}_files ${interrupt_files})
+
 add_library(nap-bci SHARED ${${project}_files} )
 
 add_executable(napi
     ${CMAKE_CURRENT_SOURCE_DIR}/main.c
 )
 
-target_link_libraries(napi nap-bci)
-
+target_link_libraries(napi nap-bci nap-cpl)

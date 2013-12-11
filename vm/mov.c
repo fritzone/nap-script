@@ -2,6 +2,7 @@
 #include "opcodes.h"
 #include "stack.h"
 #include "metatbl.h"
+#include "nbci_impl.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -28,9 +29,8 @@ void nap_mov(struct nap_vm* vm)
             if(move_source == OPCODE_VAR) /* movin a variable into reg*/
             {
                 nap_index_t var_index = nap_fetch_index(vm);
-
-                /* fetch the variable from the given index */
-                struct variable_entry* var = vm->metatable[var_index];
+                /* and fetch the variable from the given index */
+                struct variable_entry* var = nap_fetch_variable(vm, var_index);
                 if(var->instantiation == 0)
                 {
                     fprintf(stderr, "variable [%s] not initialised correctly\n", var->name);
@@ -98,9 +98,8 @@ void nap_mov(struct nap_vm* vm)
             if(move_source == OPCODE_VAR) /* movin a variable into a string reg*/
             {
                 nap_index_t var_index = nap_fetch_index(vm);
-
                 /* fetch the variable from the given index */
-                struct variable_entry* var = vm->metatable[var_index];
+                struct variable_entry* var = nap_fetch_variable(vm, var_index);
                 if(var->instantiation == 0)
                 {
                     fprintf(stderr, "variable [%s] not initialised correctly\n", var->name);
@@ -148,7 +147,7 @@ void nap_mov(struct nap_vm* vm)
     if(mov_target == OPCODE_VAR) /* we move into a variable */
     {
         nap_index_t var_index = nap_fetch_index(vm);
-        struct variable_entry* var = vm->metatable[var_index];
+        struct variable_entry* var = nap_fetch_variable(vm, var_index);
         uint8_t move_source = 0;
 
         /* first time usage of this variable? */
@@ -245,7 +244,7 @@ void nap_mov(struct nap_vm* vm)
         if(ccidx_target == OPCODE_VAR)
         {
             nap_index_t var_index = nap_fetch_index(vm);
-            struct variable_entry* var = vm->metatable[var_index];
+            struct variable_entry* var = nap_fetch_variable(vm, var_index);
             uint8_t ctr_used_index_regs = 0;
             uint8_t move_src = 0;
 

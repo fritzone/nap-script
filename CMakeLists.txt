@@ -30,8 +30,10 @@ if(gprof-build)
   set(CMAKE_EXE_LINKER_FLAGS "-pg")
 endif()
 
-add_subdirectory(compiler)
+set(NAP-ROOT ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "NAP-ROOT")
+
 add_subdirectory(vm)
+add_subdirectory(compiler)
 add_subdirectory(runtime)
 add_subdirectory(tests)
 

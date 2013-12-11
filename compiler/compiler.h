@@ -82,7 +82,7 @@ public:
     unsigned char getLastOpcode() const;
     void setLastOpcode(unsigned char value);
 
-    const std::vector<bc_variable_entry*>& variables() const
+    std::vector<bc_variable_entry*>& variables()
     {
         return mvariables;
     }
@@ -207,6 +207,11 @@ public:
     const struct nap_vm* vm_chain() const
     {
         return mvm_chain;
+    }
+
+    void set_vmchain(struct nap_vm* vm)
+    {
+        mvm_chain = vm;
     }
 
 private:

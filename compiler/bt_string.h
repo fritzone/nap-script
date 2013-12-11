@@ -4,6 +4,7 @@
 #include "consts.h"
 
 #include <string.h>
+#include <stdlib.h>
 
 /**
  * The String Basic Type
@@ -14,7 +15,7 @@ public:
     bt_string(const char* src)
     {
         int len = strlen(src);
-        char *tmp = new char[len + 1];
+        char *tmp = (char*)calloc(len + 1, sizeof(char));
 
         // skips the backslahsed characters.
         for(int i=0, j=0; i<len; i++)
@@ -38,7 +39,7 @@ public:
         strncpy(m_the_string, tmp, len2);
 
         len = len2;
-        delete [] tmp;
+        free (tmp);
     }
 
     const char* the_string() const

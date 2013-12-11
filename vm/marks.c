@@ -1,6 +1,7 @@
 #include "marks.h"
 #include "stack.h"
 #include "nbci.h"
+#include "nbci_impl.h"
 
 #include <stdlib.h>
 
