@@ -248,14 +248,21 @@ int get_comp_typeid(const char* input)
 
 std::string fully_qualified_varname(call_context* cc, variable* v)
 {
+    std::string result;
     if(v->cc)
     {
-        return std::string(v->cc->get_name()) + STR_DOT + v->name;
+        result = std::string(v->cc->get_name()) + STR_DOT + v->name;
     }
     else
     {
-        return std::string(cc->get_name()) + STR_DOT + v->name;
+        result = std::string(cc->get_name()) + STR_DOT + v->name;
     }
+
+    if(v->c_type == "extern")
+    {
+        result = "extern." + v->name;
+    }
+    return result;
 }
 std::string fully_qualified_varname(call_context* cc, const char* v)
 {

@@ -19,6 +19,7 @@
 #include "dec.h"
 #include "clidx.h"
 #include "operation.h"
+#include "nbci_impl.h"
 
 #include <stdio.h>
 #include <string.h>

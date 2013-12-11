@@ -16,6 +16,10 @@ struct nap_vm;
  **/
 int nap_vmi_has_variable(const struct nap_vm *vm, const char* name, int *type);
 
+/**
+ * Returns the internal variable structure of the given variable or NULL if nothing is found
+ **/
+struct variable_entry* nap_vmi_get_variable(const struct nap_vm *vm, const char* name);
 
 /**
  * Fetches the address at the current location in the bytecode stream
@@ -37,6 +41,14 @@ nap_mark_t nap_fetch_mark(struct nap_vm* vm);
  * @return
  */
 nap_index_t nap_fetch_index(struct nap_vm* vm);
+
+/**
+ * @brief Fetch a variable of the VM, or from the parent VM
+ * @param vm - the VM in whitch we are working
+ * @param var_index - the index of teh variable
+ * @return
+ */
+struct variable_entry* nap_fetch_variable(struct nap_vm* vm, nap_index_t var_index);
 
 /**
  * Read an immediate value from the bytecode stream and return it

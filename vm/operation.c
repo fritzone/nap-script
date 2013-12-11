@@ -3,6 +3,7 @@
 #include "opcodes.h"
 #include "metatbl.h"
 #include "stack.h"
+#include "nbci_impl.h"
 
 #include <stdlib.h>
 
@@ -29,7 +30,7 @@ void nap_operation(struct nap_vm* vm)
             if(add_source == OPCODE_VAR) /* adding a variable to the reg*/
             {
                 nap_index_t var_index = nap_fetch_index(vm);
-                struct variable_entry* var = vm->metatable[var_index];
+                struct variable_entry* var = nap_fetch_variable(vm, var_index);
 
                 if(var->instantiation == 0)
                 {
@@ -79,7 +80,7 @@ void nap_operation(struct nap_vm* vm)
     if(add_target == OPCODE_VAR) /* we move into a variable */
     {
         nap_index_t var_index = nap_fetch_index(vm);
-        struct variable_entry* var = vm->metatable[var_index];
+        struct variable_entry* var = nap_fetch_variable(vm, var_index);
         uint8_t add_source = 0;
 
         /* first time usage of this variable? */

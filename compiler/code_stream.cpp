@@ -92,16 +92,26 @@ void code_finalizer::finalize()
     for(unsigned int i=0; i<meta_count; i++)
     {
         f.write_stuff_to_file_32(mcompiler->variables()[i]->meta_location);
+        std::string ex = "extern";
+        if(mcompiler->variables()[i]->name.compare(0, ex.length(), ex ) == 0)
+        {
+            // starts with extern
+            mcompiler->variables()[i]->type = 1;
+        }
+        else
+        {
+            mcompiler->variables()[i]->type = 0;
+        }
         f.write_stuff_to_file_8(mcompiler->variables()[i]->type);
 
         uint16_t var_name_length = mcompiler->variables()[i]->name.length();
-        // find out if this is a global variable or not: if there is only one dot
-        // in the name, it is a global variable
+        // find out if this is a global/extern variable or not: if there is only one dot
+        // in the name, it is a global/extern variable
         // TODO: include a debugging flag option to write out all the variable names
         size_t n = std::count(mcompiler->variables()[i]->name.begin(),
                               mcompiler->variables()[i]->name.end(), '.');
-        if(n == 1) // global variable. Skip the "global."
-        {
+        if(n == 1) // global/extern variable. Skip the "global." or "extern."
+        {          // WARNING: this code counts on tha both global and extern have 6 characters.
             int globlen = strlen("global") + 1;
             f.write_stuff_to_file_16(var_name_length - globlen);
             const char* vname = mcompiler->variables()[i]->name.c_str();
@@ -193,7 +203,7 @@ void code_stream::output_bytecode(const char* s)
     }
 
     unsigned char opcode = 0;
-        
+
     if(expr == "push") opcode = OPCODE_PUSH;
     if(expr == "ref")  opcode = OPCODE_REF;
     if(expr == "int")  opcode = OPCODE_INT;

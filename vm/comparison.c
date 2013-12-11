@@ -31,7 +31,8 @@ void nap_comparison(struct nap_vm* vm)
             if(cmp_second == OPCODE_VAR) /* int register compared to a variable */
             {
                 nap_index_t var_index = nap_fetch_index(vm);
-                struct variable_entry* ve = vm->metatable[var_index];
+                struct variable_entry* ve = nap_fetch_variable(vm, var_index);
+
                 if(ve->instantiation->type == OPCODE_INT) /* comparing int register with an int variable */
                 {
                     nap_vm_set_lbf_to_op_result(vm, vm->regi[register_index],
@@ -72,14 +73,14 @@ void nap_comparison(struct nap_vm* vm)
     if(cmp_first == OPCODE_VAR) /* do we compare a variable to something? */
     {
         nap_index_t var_index = nap_fetch_index(vm);
-        struct variable_entry* ve = vm->metatable[var_index];
+        struct variable_entry* ve = nap_fetch_variable(vm, var_index);
         if(ve->instantiation->type == OPCODE_INT) /* comparing int variable to something */
         {
             uint8_t cmp_second = vm->content[vm->cc ++]; /* what are we checking against*/
             if(cmp_second == OPCODE_VAR) /* int variable compared to some variable */
             {
                 nap_index_t second_var_index = nap_fetch_index(vm);
-                struct variable_entry* second_ve = vm->metatable[second_var_index];
+                struct variable_entry* second_ve = nap_fetch_variable(vm, second_var_index);
                 if(second_ve->instantiation->type == OPCODE_INT) /* comparing int register with an int variable */
                 {
                     nap_vm_set_lbf_to_op_result(vm, *(nap_int_t*)ve->instantiation->value,

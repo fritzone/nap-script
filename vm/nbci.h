@@ -16,6 +16,9 @@ extern "C" {
 #include <inttypes.h>
 #endif
 
+#include "nap_types.h"
+#include "nap_structs.h"
+
 #ifdef _MEM_DEBUG_
 #define _FREE(x) if((x)) { fprintf(stderr, "free:%p (%s:%d)\n", (x), __FILE__, __LINE__);  free((x)); }
 #else
@@ -33,10 +36,9 @@ extern "C" {
                     "opcode [%x] at %"PRIu64" (%" PRIx64 ")\n\n", \
             __FILE__, __LINE__, vm->content[vm->cc - 1], \
             vm->current_opcode, vm->cc - 1, vm->cc - 1); \
-    exit(99);\
+    exit(EXIT_FAILURE);\
     } while(0);
 
-#include "nap_types.h"
 
 /* the lbf initially is undecided, the first operation sets it, and it is
  * AND-ed with the result of the next boolean operations as long as it is
@@ -56,6 +58,10 @@ enum environments
     EMBEDDED = 0,
     STANDALONE = 1
 };
+
+struct nap_vm;
+/* the function pointer for an interrupt function */
+typedef uint8_t (*interrupt)(struct nap_vm*);
 
 /**
  * The TNapVM struct represents an instance of a virtual machine.
@@ -116,7 +122,16 @@ struct nap_vm
 
     enum environments environment;          /* whether this is run as embedded in an app or a standalone application */
     uint8_t flags;                          /* Some flags used by the VM */
+
+    /* runtime code execution support */
+    struct nap_bytecode_chunk** btyecode_chunks; /* holds all the compiled bytechunks */
     struct nap_vm* parent;                  /* the parent VM of this. NULL if main VM */
+    size_t chunk_counter;                   /* counts the number of chunks */
+    size_t allocated_chunks ;               /* how many chunks have we allocated */
+    /* interrupt handling */
+
+    /* the interrupt vectors of the implementation */
+    interrupt interrupts[255];
 };
 
 /**

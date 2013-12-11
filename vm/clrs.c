@@ -2,6 +2,7 @@
 #include "nbci.h"
 #include "stack.h"
 #include "opcodes.h"
+#include "nbci_impl.h"
 
 #include <stdlib.h>
 

@@ -10,6 +10,9 @@
 #include "stack.h"
 #include "byte_order.h"
 
+#include "intr_2.h"
+#include "intr_3.h"
+
 #include <nbci_impl.h>
 
 #include <stdio.h>
@@ -112,6 +115,7 @@ void nap_vm_cleanup(struct nap_vm* vm)
         {
             if(vm->metatable[i]->instantiation->value)
             {
+                fprintf(stderr, "%s=%d\n", vm->metatable[i]->name, *(int*)vm->metatable[i]->instantiation->value);
                 MEM_FREE(vm->metatable[i]->instantiation->value);
             }
 
@@ -244,6 +248,14 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len)
 
     /* initially the last boolean flag is in an unknow state */
     vm->lbf = UNDECIDED;
+    vm->btyecode_chunks = (struct nap_bytecode_chunk**)calloc(255,
+                                            sizeof(struct nap_bytecode_chunk*));
+    vm->chunk_counter = 0;
+    vm->allocated_chunks = 255;
+
+    /* and setting the interrupts */
+    vm->interrupts[2] = intr_2;
+    vm->interrupts[3] = intr_3;
 
     return vm;
 }
@@ -399,9 +411,76 @@ int nap_vmi_has_variable(const struct nap_vm* vm, const char* name, int* type)
 
 void nap_handle_interrupt(struct nap_vm* vm)
 {
-    uint8_t intr = 0;
-    vm->cc ++;  /* since it still points to the "interrupt" opcode*/
+    /* CC points to the interrupt number */
+    uint8_t intr = *(uint8_t*)(vm->content + vm->cc);
+    uint8_t int_res = 0;
 
-    intr = *(uint8_t*)(vm->content + vm->cc);
+    if(vm->interrupts[intr])
+    {
+        int_res = (vm->interrupts[intr])(vm);
+        if(int_res != 0)
+        {
+            fprintf(stderr, "error executig interrupt %d. Code: %d", intr, int_res);
+            exit(EXIT_FAILURE);
+        }
+    }
+    else
+    {
+        /* ignoring unimplemented interrupt */
+    }
+    /* advance to the next position */
     vm->cc ++;
+}
+
+
+struct variable_entry *nap_fetch_variable(struct nap_vm* vm, nap_index_t var_index)
+{
+
+    struct variable_entry* ve = vm->metatable[var_index];
+    if(ve->type == EXTERN_VAR)
+    {
+        /* fetch the variable from the parent VMs */
+        struct nap_vm* current_vm = vm->parent;
+        while(current_vm)
+        {
+            struct variable_entry* ve_2 = nap_vmi_get_variable(current_vm, ve->name);
+            if(ve_2 && ve_2->type == OWN_VAR)
+            {
+                fprintf(stderr, "\nret:%s\n", ve_2->name);
+                return ve_2;
+            }
+            else
+            {
+                current_vm = current_vm->parent;
+            }
+        }
+
+        /* nothing found, need to return NULL */
+        return NULL;
+    }
+    else
+    {
+        return ve;
+    }
+    return NULL;
+}
+
+
+struct variable_entry *nap_vmi_get_variable(const struct nap_vm *vm, const char *name)
+{
+    size_t i;
+    for(i=0; i<vm->meta_size; i++)
+    {
+        if(vm->metatable[i]->instantiation)
+        {
+            if(vm->metatable[i]->instantiation->value)
+            {
+                if(vm->metatable[i]->name && !strcmp(vm->metatable[i]->name, name))
+                {
+                    return vm->metatable[i];
+                }
+            }
+        }
+    }
+    return NULL;
 }

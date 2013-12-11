@@ -1,6 +1,7 @@
 #include "call.h"
 #include "nbci.h"
 #include "jmptable.h"
+#include "nbci_impl.h"
 
 void nap_call(struct nap_vm *vm)
 {

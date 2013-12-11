@@ -43,6 +43,7 @@ bool is_atomic_type(int the_type)
     case TEMPLATED_VARIABLE:
     case KEYWORD_FALSE:
     case KEYWORD_TRUE:
+    case BASIC_TYPE_EXTERN_VARIABLE:
         return true;
     }
     return false;
@@ -61,13 +62,15 @@ static bool is_assign_destination(expression_tree* node)
     return BASIC_TYPE_CLASS_VAR == node->op_type
             || BASIC_TYPE_VARIABLE == node->op_type
             || BASIC_TYPE_INDEXED == node->op_type
-            || MULTI_DIM_INDEX == node->op_type;
+            || MULTI_DIM_INDEX == node->op_type
+            || BASIC_TYPE_EXTERN_VARIABLE == node->op_type;
 }
 
 static bool is_variable(expression_tree* node)
 {
     return BASIC_TYPE_VARIABLE == node->op_type
-            || BASIC_TYPE_CLASS_VAR == node->op_type;
+            || BASIC_TYPE_CLASS_VAR == node->op_type
+            || BASIC_TYPE_EXTERN_VARIABLE == node->op_type;
 }
 
 /**
@@ -82,7 +85,7 @@ static void deal_with_post_pre_node(nap_compiler* _compiler,
                                     call_context* cc,
                                     int forced_mov, bool& psuccess)
 {
-    if(pp_node->left->op_type == BASIC_TYPE_VARIABLE || pp_node->left->op_type == BASIC_TYPE_CLASS_VAR)    /* a normal variable is being post/pre'd */
+    if(is_variable(pp_node->left))    /* a normal variable is being post/pre'd */
     {
         variable* var = (variable*)pp_node->left->reference->to_interpret;    /* this is the variable */
         if(pp_node->op_type == OPERATOR_POSTDEC || pp_node->op_type == OPERATOR_POSTINC) /*post increment/decrement?*/
@@ -1439,6 +1442,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
 
         case BASIC_TYPE_VARIABLE:
         case BASIC_TYPE_CLASS_VAR:
+        case BASIC_TYPE_EXTERN_VARIABLE:
             if(node->reference)
             {
                 variable* var = (variable*)node->reference->to_interpret;
@@ -1453,7 +1457,8 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                 }
                 else
                 {
-                    code_stream(_compiler) << fully_qualified_varname(cc, var);
+                    std::string s = fully_qualified_varname(cc, var);
+                    code_stream(_compiler)  << s ;
                 }
             }
             break;

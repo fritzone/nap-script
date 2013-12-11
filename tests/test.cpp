@@ -198,12 +198,27 @@ TEST(InvalidSyntax, PostPreIncMess)
     nap_runtime* runtime = nap_runtime_create(0);
     ASSERT_TRUE(runtime != NULL);
     nap_bytecode_chunk* bytecode = nap_runtime_compile(runtime,
-    "                             \
+    "                              \
      int z = 3;                    \
      int g = z++ ++;               \
     "
     );
 
     ASSERT_TRUE(bytecode == NULL);
+    SCRIPT_SHUTDOWN
+}
+
+TEST(RuntimeCompilation, SimpleCheck)
+{
+    SCRIPT_START
+    "                                   \
+    int a = 2;                          \
+    int b = 3;                          \
+    int c;                              \
+    nap_execute(\"c = a + b\");         \
+    "
+    SCRIPT_END
+
+    ASSERT_EQ(5, VAR_INT(c));
     SCRIPT_SHUTDOWN
 }

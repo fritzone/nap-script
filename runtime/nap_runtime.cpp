@@ -3,6 +3,7 @@
 extern "C"
 {
 #include "nbci.h"
+#include "nap_structs.h"
 }
 
 #include "garbage_bin.h"
@@ -10,16 +11,6 @@ extern "C"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-/* The bytecode chunk which is created as a result of the compile command */
-struct nap_bytecode_chunk
-{
-    /* the bytecode */
-    uint8_t* code;
-
-    /* the length of the bytecode */
-    size_t length;
-};
 
 /* The nap runtime environment. There can be multiple runtimes */
 struct nap_runtime
