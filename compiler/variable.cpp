@@ -78,7 +78,7 @@ static parameter* variable_add_template_parameter(variable* the_variable,
         return 0;
     }
     parameter* func_par = new parameter(the_method, cc);
-    garbage_bin<parameter*>::instance().place(func_par, cc->compiler());
+    garbage_bin<parameter*>::instance(cc->compiler()).place(func_par, cc->compiler());
     char *name_dup = cc->compiler()->duplicate_string(name);
     char* indexOfEq = strchr(name_dup, C_EQ);
     variable* nvar = NULL;

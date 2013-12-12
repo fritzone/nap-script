@@ -45,7 +45,7 @@ method::method(nap_compiler* _compiler, char* name, char* preturn_type, call_con
         return_type = preturn_type;
     }
     method_main_cc = new call_context(_compiler, CALL_CONTEXT_TYPE_METHOD_MAIN, ss.str(), this, cc);
-    garbage_bin<call_context*>::instance().place(method_main_cc, cc->compiler());
+    garbage_bin<call_context*>::instance(cc->compiler()).place(method_main_cc, cc->compiler());
     main_cc = method_main_cc;
 
     cur_cf = 0;
@@ -178,7 +178,7 @@ parameter* method::add_parameter(std::string pname,
                                  call_context*cc, bool& psuccess)
 {
     parameter* func_par = new parameter(this, cc);
-    garbage_bin<parameter*>::instance().place(func_par, cc->compiler());
+    garbage_bin<parameter*>::instance(cc->compiler()).place(func_par, cc->compiler());
 
     size_t indexOfEq = pname.find(C_EQ);
     variable* nvar = NULL;

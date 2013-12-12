@@ -30,17 +30,30 @@ garbage_bin_bin& garbage_bin_bin::instance()
 
 garbage_bin_bin::~garbage_bin_bin()
 {
-    for(size_t i=0; i<items.size(); i++)
-    {
-        delete items[i];
-    }
-    items.clear();
-
 }
 
+void garbage_bin_bin::release()
+{
+    for(size_t i=0; i<minstance->items.size(); i++)
+    {
+        delete minstance->items[i];
+    }
+    minstance->items.clear();
+}
 
 void garbage_bin_bin::shutdown()
 {
+    if(minstance == 0)
+    {
+        return;
+    }
+
+    for(size_t i=0; i<minstance->items.size(); i++)
+    {
+        delete minstance->items[i];
+    }
+    minstance->items.clear();
+
     delete minstance;
     minstance = 0;
 }

@@ -461,6 +461,7 @@ std::vector<std::string> string_list_create_bsep(const std::string& instr, char 
             while(*p && !can_stop)
             {
                 if(*p == C_QUOTE && *(p-1) != C_BACKSLASH) can_stop = 1;
+                already_increased = 1;
                 p++;
             }
         }

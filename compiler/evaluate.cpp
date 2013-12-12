@@ -1289,8 +1289,8 @@ void resolve_variable_definition(nap_compiler* _compiler,
                     expression_tree* tempassign = new expression_tree(node->expwloc);
                     expression_tree* tempvar = new expression_tree(node->expwloc);
 
-                    garbage_bin<expression_tree*>::instance().place(tempassign, _compiler);
-                    garbage_bin<expression_tree*>::instance().place(tempvar, _compiler);
+                    garbage_bin<expression_tree*>::instance(_compiler).place(tempassign, _compiler);
+                    garbage_bin<expression_tree*>::instance(_compiler).place(tempvar, _compiler);
 
                     tempvar->left = tempvar->right = 0;
                     tempvar->op_type = BASIC_TYPE_VARIABLE;

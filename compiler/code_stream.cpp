@@ -358,7 +358,7 @@ void code_stream::output_bytecode(const char* s)
             else /* possibly creating a label before using it */
             {
                 label_entry* le = new label_entry;
-                garbage_bin<label_entry*>::instance().place(le, mcompiler);
+                garbage_bin<label_entry*>::instance(mcompiler).place(le, mcompiler);
 
                 le->bytecode_location = f.ftell();
                 le->name = lblName;
@@ -403,7 +403,7 @@ void code_stream::output_bytecode(const char* s)
             mcompiler->add_stringtable_entry(entry);
             f.write_stuff_to_file_8(OPCODE_STRING);
             f.write_stuff_to_file_32(entry->index);
-            garbage_bin<bc_string_table_entry*>::instance().place(entry, mcompiler);
+            garbage_bin<bc_string_table_entry*>::instance(mcompiler).place(entry, mcompiler);
         }
         else
         {
@@ -472,7 +472,7 @@ void code_stream::output_bytecode(const char* s)
                         f.write_stuff_to_file_8(OPCODE_VAR);
                         f.write_stuff_to_file_32(mcompiler->var_counter());
                         mcompiler->inc_var_counter();
-                        garbage_bin<bc_variable_entry*>::instance().place(new_var, mcompiler);
+                        garbage_bin<bc_variable_entry*>::instance(mcompiler).place(new_var, mcompiler);
                     }
                 }
             }
@@ -494,7 +494,7 @@ void code_stream::output_bytecode(const char* s)
                 else // let's create a label
                 {
                     label_entry* le = new label_entry;
-                    garbage_bin<label_entry*>::instance().place(le, mcompiler);
+                    garbage_bin<label_entry*>::instance(mcompiler).place(le, mcompiler);
 
                     le->bytecode_location = 0;
                     le->name = expr;

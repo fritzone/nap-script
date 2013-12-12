@@ -103,7 +103,7 @@ method* call_context::get_method(const string &pname)
 long call_context::add_label(long position, const std::string& name)
 {
     bytecode_label* bl = new bytecode_label;
-    garbage_bin<bytecode_label*>::instance().place(bl, compiler());
+    garbage_bin<bytecode_label*>::instance(mcompiler).place(bl, compiler());
     bl->bytecode_location = position;
     bl->name = name;
     bl->type = bytecode_label::LABEL_PLAIN;
@@ -114,7 +114,7 @@ long call_context::add_label(long position, const std::string& name)
 struct bytecode_label* call_context::add_break_label(long position, const std::string& name)
 {
     bytecode_label* bl = new bytecode_label;
-    garbage_bin<bytecode_label*>::instance().place(bl, mcompiler);
+    garbage_bin<bytecode_label*>::instance(mcompiler).place(bl, mcompiler);
 
     bl->bytecode_location = position;
     bl->name = name;
@@ -139,7 +139,7 @@ expression_tree* call_context::add_new_expression(const char* expr, const expres
 {
     psuccess = true;
     expression_tree* new_expression = new expression_tree(expwloc);
-    garbage_bin<expression_tree*>::instance().place(new_expression, mcompiler);
+    garbage_bin<expression_tree*>::instance(mcompiler).place(new_expression, mcompiler);
 
     int res;
     bool success = true;
@@ -382,7 +382,7 @@ variable* call_context::variable_list_add_variable(const char *var_name,
 
 
     variable* var = new variable(var_size, itype, var_name, var_type, cc);
-    garbage_bin<variable*>::instance().place(var, cc->compiler());
+    garbage_bin<variable*>::instance(cc->compiler()).place(var, cc->compiler());
 
     /* now fix the stuff to include template parameters if any */
     variable_resolve_templates(var, the_method, cc, expwloc);

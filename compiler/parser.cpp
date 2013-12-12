@@ -129,7 +129,7 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
     previous_position = position;
     expression_with_location *expwloc = alloc_mem(expression_with_location, 1, mcompiler);
     expwloc->location = new file_location(position, current_line + 1, current_line + 1, name);
-    garbage_bin<file_location*>::instance().place(expwloc->location, mcompiler);
+    garbage_bin<file_location*>::instance(mcompiler).place(expwloc->location, mcompiler);
 
     long cur_save = position;
     long size = -1;
@@ -534,7 +534,7 @@ void parsed_file::deal_with_for_loading(call_context* cc,
     ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << STR_FOR;
 
     call_context* for_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_FOR, ss.str(), the_method, cc);
-    garbage_bin<call_context*>::instance().place(for_cc, cc->compiler());
+    garbage_bin<call_context*>::instance(cc->compiler()).place(for_cc, cc->compiler());
 
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR)    /* normal FOR with { }*/
     {
@@ -604,7 +604,7 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
     std::stringstream ss;
     ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << STR_IF;
     call_context* if_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_IF, ss.str(), the_method, cc);
-    garbage_bin<call_context*>::instance().place(if_cc, mcompiler);
+    garbage_bin<call_context*>::instance(cc->compiler()).place(if_cc, mcompiler);
 
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF)    /* normal IF with { }*/
     {
@@ -872,7 +872,7 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
     {
         int op_res = -1;
         expression_tree* cnode = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance().place(cnode, mcompiler);
+        garbage_bin<expression_tree*>::instance(mcompiler).place(cnode, mcompiler);
 
         bool success = true;
         void* gen_res = cur_cc->compiler()->get_interpreter().build_expr_tree(first, cnode, cur_method, first, cur_cc, &op_res, expwloc, success);

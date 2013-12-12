@@ -772,7 +772,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
     std::vector<std::string>::iterator q = var_names.begin();
     std::vector<variable_definition*>* var_def_list = new std::vector<variable_definition*>(); /* will contain the variable definitions if any*/
 
-    garbage_bin<std::vector<variable_definition*>*>::instance().place(var_def_list, cc->compiler());
+    garbage_bin<std::vector<variable_definition*>*>::instance(mcompiler).place(var_def_list, cc->compiler());
 
     while(q != var_names.end())
     {
@@ -922,7 +922,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
         if(deflist)    /* whether we have a definition for this variable. if yes, we need to populate a definition_list */
         {
             expression_tree* var_def_node = new expression_tree(expwloc);
-            garbage_bin<expression_tree*>::instance().place(var_def_node, cc->compiler());
+            garbage_bin<expression_tree*>::instance(cc->compiler()).place(var_def_node, cc->compiler());
             bool success = true;
             build_expr_tree(deflist, var_def_node, the_method, orig_expr, cc, result, expwloc, success);
             if(!success)
@@ -1001,7 +1001,7 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
         if(q->length() > 0)
         {
             cur_par_expr = new expression_tree(expwloc);
-            garbage_bin<expression_tree*>::instance().place(cur_par_expr, cc->compiler());
+            garbage_bin<expression_tree*>::instance(cc->compiler()).place(cur_par_expr, cc->compiler());
             bool success = true;
             build_expr_tree((*q).c_str(), cur_par_expr, the_method, orig_expr, cc, result, expwloc, success);
             if(!success)
@@ -1010,7 +1010,7 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
                 return 0;
             }
             parameter* cur_par_obj = new parameter(the_method, cc);
-            garbage_bin<parameter*>::instance().place(cur_par_obj, cc->compiler());
+            garbage_bin<parameter*>::instance(cc->compiler()).place(cur_par_obj, cc->compiler());
             cur_par_obj->expr = cur_par_expr;
 
             pars_list.push_back(cur_par_obj);
@@ -1019,7 +1019,7 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
         q ++;
     }
     cfe = new call_frame_entry();
-	garbage_bin<call_frame_entry*>::instance().place(cfe, mcompiler);
+    garbage_bin<call_frame_entry*>::instance(mcompiler).place(cfe, mcompiler);
 
     cfe->the_method = func_call;
     cfe->parameters = pars_list;
@@ -1213,7 +1213,7 @@ void* interpreter::deal_with_conditional_keywords(char* keyword_if,
     {
         node->info = keyw;
         expression_tree* expt = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance().place(expt, cc->compiler());
+        garbage_bin<expression_tree*>::instance(cc->compiler()).place(expt, cc->compiler());
 
         /* here fetch the part which is in the parentheses after the keyword and build the tree based on that*/
         char *condition = mcompiler->duplicate_string(expr_trim + strlen(keyw));
@@ -1334,7 +1334,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         expr_trim[expr_len-1] = 0;    // removing the double quotes
         expr_trim++;
         bt_string* the_str = new bt_string(expr_trim);
-        garbage_bin<bt_string*>::instance().place(the_str, cc->compiler());
+        garbage_bin<bt_string*>::instance(cc->compiler()).place(the_str, cc->compiler());
         node->reference = new_envelope(the_str, BASIC_TYPE_STRING, cc->compiler());
         node->info = the_str->the_string();
         *result = RESULT_STRING;
@@ -1431,7 +1431,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
     {
         node->info = STR_RETURN;
         expression_tree* expt = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance().place(expt, cc->compiler());
+        garbage_bin<expression_tree*>::instance(cc->compiler()).place(expt, cc->compiler());
         build_expr_tree(keyword_return, expt, the_method, orig_expr, cc, result, expwloc, success);
         if(!success)
         {
@@ -1532,12 +1532,12 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             return 0;
         }
         resw_for* rswfor = new resw_for;
-        garbage_bin<resw_for*>::instance().place(rswfor, cc->compiler());
+        garbage_bin<resw_for*>::instance(cc->compiler()).place(rswfor, cc->compiler());
 
         rswfor->unique_hash = generate_unique_hash();
         rswfor->init_stmt = init_stmt;
         rswfor->tree_init_stmt = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance().place(rswfor->tree_init_stmt, cc->compiler());
+        garbage_bin<expression_tree*>::instance(cc->compiler()).place(rswfor->tree_init_stmt, cc->compiler());
 
         bool success = true;
         build_expr_tree(init_stmt, rswfor->tree_init_stmt, the_method, orig_expr, cc, result, expwloc, success);
@@ -1550,7 +1550,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         rswfor->condition = cond_stmt;
         rswfor->tree_condition = new expression_tree(expwloc);
         build_expr_tree(cond_stmt, rswfor->tree_condition, the_method, orig_expr, cc, result, expwloc, success);
-        garbage_bin<expression_tree*>::instance().place(rswfor->tree_condition, cc->compiler());
+        garbage_bin<expression_tree*>::instance(cc->compiler()).place(rswfor->tree_condition, cc->compiler());
 
         if(!success)
         {
@@ -1560,7 +1560,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
         rswfor->expr = expr_stmt;
         rswfor->tree_expr = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance().place(rswfor->tree_expr, cc->compiler());
+        garbage_bin<expression_tree*>::instance(cc->compiler()).place(rswfor->tree_expr, cc->compiler());
 
         build_expr_tree(expr_stmt, rswfor->tree_expr, the_method, orig_expr, cc, result, expwloc, success);
         if(!success)
@@ -1634,7 +1634,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                     }
                     node->op_type = ntype;
                     node->left = new expression_tree(node, expwloc);
-                    garbage_bin<expression_tree*>::instance().place(node->left, cc->compiler());
+                    garbage_bin<expression_tree*>::instance(cc->compiler()).place(node->left, cc->compiler());
                     bool success = true;
                     build_expr_tree(expr_trim + 1, node->left, the_method, orig_expr, cc, result, expwloc, success);
                     if(!success)
@@ -1672,8 +1672,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             node->op_type = ntype;
             node->left=new expression_tree(node, expwloc);
             node->right=new expression_tree(node, expwloc);
-            garbage_bin<expression_tree*>::instance().place(node->left, cc->compiler());
-            garbage_bin<expression_tree*>::instance().place(node->right, cc->compiler());
+            garbage_bin<expression_tree*>::instance(cc->compiler()).place(node->left, cc->compiler());
+            garbage_bin<expression_tree*>::instance(cc->compiler()).place(node->right, cc->compiler());
 
             /* the order here is important for the "." operator ... it needs to know the parent in order to identify the object to find its call_context*/
             bool success = true;
@@ -1751,7 +1751,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 node->info = temp2;
 
                 node->left = new expression_tree(node, expwloc);
-                garbage_bin<expression_tree*>::instance().place(node->left, cc->compiler());
+                garbage_bin<expression_tree*>::instance(cc->compiler()).place(node->left, cc->compiler());
 
                 bool success = true;
                 build_expr_tree(temp2, node->left, the_method, orig_expr, cc, result, expwloc, success);
@@ -1862,7 +1862,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         node->info = p;
         node->op_type = ntype;
         node->left = new expression_tree(node, expwloc);
-        garbage_bin<expression_tree*>::instance().place(node->left, cc->compiler());
+        garbage_bin<expression_tree*>::instance(cc->compiler()).place(node->left, cc->compiler());
 
         bool success = true;
         build_expr_tree(expr_trim + 2, node->left, the_method, orig_expr, cc, result, expwloc, success);
@@ -1889,7 +1889,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
             /* now add the  variable to the tree... */
             node->left = new expression_tree(node, expwloc);
-            garbage_bin<expression_tree*>::instance().place(node->left, cc->compiler());
+            garbage_bin<expression_tree*>::instance(cc->compiler()).place(node->left, cc->compiler());
             expr_trim[expr_len - 2] = 0;    /* this is to cut down the two ++ or -- signs ... */
             bool success = true;
             build_expr_tree(expr_trim, node->left, the_method, orig_expr, cc, result, expwloc, success);
@@ -2047,7 +2047,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                     {
                         // it is a variable in the father VM
                         var = new variable(1, tt, t, "extern", cc);
-                        garbage_bin<variable*>::instance().place(var, cc->compiler());
+                        garbage_bin<variable*>::instance(cc->compiler()).place(var, cc->compiler());
                         envl = new_envelope(var, BASIC_TYPE_EXTERN_VARIABLE, cc->compiler());
                         node->op_type = BASIC_TYPE_EXTERN_VARIABLE;
                     }
@@ -2085,7 +2085,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             if(isnumber(t))
             {
                 number* nr = new number(t, cc->compiler());
-                garbage_bin<number*>::instance().place(nr, cc->compiler());
+                garbage_bin<number*>::instance(cc->compiler()).place(nr, cc->compiler());
                 envl = new_envelope(nr, nr->type(), cc->compiler());
                 node->op_type = nr->type();
             }
