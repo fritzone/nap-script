@@ -42,6 +42,11 @@ public:
         free (tmp);
     }
 
+    ~bt_string()
+    {
+        delete [] m_the_string;
+    }
+
     const char* the_string() const
     {
         return m_the_string;

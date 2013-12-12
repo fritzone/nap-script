@@ -148,7 +148,7 @@ template <class T> T* allocate(size_t count, const nap_compiler* _compiler, cons
 {
     T* tmp = new T[count];
     memset(tmp, 0, count * sizeof(T));
-    garbage_bin<T*>::instance().throwIn(tmp, f, l, _compiler, count);
+    garbage_bin<T*>::instance(_compiler).throwIn(tmp, f, l, _compiler, count);
 
     return tmp;
 }

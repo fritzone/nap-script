@@ -15,6 +15,8 @@
 #include <execinfo.h>
 #endif
 
+// #define MEMORY_DEBUG
+
 #ifdef MEMORY_DEBUG
 extern long int all_alloc;
 #endif
@@ -28,6 +30,7 @@ public:
     void throwIn(garbage_bin_base* rubbish) { items.push_back(rubbish); }
     void empty(const nap_compiler *_compiler);
     static void shutdown();
+    static void release();
     static garbage_bin_bin& instance();
     ~garbage_bin_bin();
 private:
@@ -64,31 +67,31 @@ private:
     }
 
     // the instance
-    static garbage_bin<T>* pinstance;
+    static std::map<const nap_compiler*, garbage_bin<T>* > pinstances;
 
 public:
 
     /**
      * Returns the instance of this type of garbage bin...
      */
-    static garbage_bin& instance()
+    static garbage_bin& instance(const nap_compiler* _compiler)
     {
-        if(pinstance == NULL)
+        if(pinstances[_compiler] == NULL)
         {
-            pinstance = new garbage_bin();
+            pinstances[_compiler] = new garbage_bin();
         }
 
-        return *pinstance;
+        return *(pinstances[_compiler]);
     }
 
     /**
      * Deletes the instance
      */
-    static void deleteInstance()
+    static void deleteInstance(const nap_compiler* _compiler)
     {
-        if (pinstance)
+        if (pinstances[_compiler])
         {
-            pinstance = 0;
+            pinstances[_compiler] = 0;
         }
     }
 
@@ -108,17 +111,29 @@ public:
 #ifndef _WINDOWS
         int status;
         char* s = abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) ;
-        std::cout << "\nGBIN [" << s << "] TIN:" << items[_compiler].size() << " PLC:" <<  singles.size() << std::endl;
+        std::cout << "\nEM GBIN [" << s << "] TIN:"
+                  << items[_compiler].size() << " PLC:" <<  singles.size()
+                  << " COMPILER:" << _compiler
+                  << std::endl;
 #endif
 #endif
         for(size_t i=0; i<items[_compiler].size(); i++)
         {
+#ifdef MEMORY_DEBUG
+            std::cerr << "DEL ITEM: "  << (void*)(items[_compiler].at(i).item )<< std::endl;
+#endif
             delete [] (items[_compiler].at(i).item);
         }
 
+#ifdef MEMORY_DEBUG
+        std::cerr << " -- " << std::endl;
+#endif
 
         for(size_t i=0; i<singles[_compiler].size(); i++)
         {
+#ifdef MEMORY_DEBUG
+            std::cerr << " ITEM: "  << (void*)(singles[_compiler][i]) << std::endl;
+#endif
             delete singles[_compiler][i];
         }
 #ifdef MEMORY_DEBUG
@@ -126,9 +141,9 @@ public:
         free(s);
 #endif
 #endif
-        items.clear();
-        singles.clear();
-        deleteInstance(); // sets to zero only the instance, the bin_bin has the address for the delete
+        items[_compiler].clear();
+        singles[_compiler].clear();
+        deleteInstance(_compiler);
     }
 
 #ifdef MEMORY_DEBUG
@@ -187,10 +202,13 @@ public:
 #ifndef _WINDOWS
 int status;
 char* s = abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) ;
-std::cout << "\nGBIN [" << s << "] TIN:" << items[_compiler].size() << " PLC:" << singles.size() << std::endl;
+std::cout << "\nGBIN [" << s << "] TIN:" << items[_compiler].size() << " PLC:" << singles.size()
+          << " COMPILER:" << _compiler
+          << std::endl;
+std::cout << "ITM:" << (void*)item << std::endl;
 #endif
         std::cerr << "xxxxxxxxxxxxxxxxx " << count << " @ "<< file << ":" << line << std::endl;
-        print_trace(stderr, file, line);
+        //print_trace(stderr, file, line);
         std::cerr << std::endl;
         all_alloc += count ;
         std::cerr<<"All memory:" << all_alloc << std::endl;
@@ -231,7 +249,7 @@ private:
 };
 
 // this is here to create the instance of the garbage bin.
-template <class T> garbage_bin<T>*  garbage_bin<T>::pinstance = NULL;
+template <class T> std::map<const nap_compiler*, garbage_bin<T>* >  garbage_bin<T>::pinstances;
 
 
 #endif // GARBAGE_BIN_H

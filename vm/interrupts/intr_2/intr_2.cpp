@@ -3,8 +3,21 @@
 #include "garbage_bin.h"
 #include "compiler.h"
 
+class gb_releaser
+{
+public:
+    ~gb_releaser()
+    {
+        garbage_bin_bin::shutdown();
+    }
+};
+
+static gb_releaser gbr;
+
 uint8_t intr_2(struct nap_vm* vm)
 {
+    std::cerr << "INTR2_STARTS" << std::endl;
+
     std::auto_ptr<nap_compiler> compiler = nap_compiler::create_compiler();
     compiler->set_vmchain(vm);
     bool success = true;
@@ -12,7 +25,7 @@ uint8_t intr_2(struct nap_vm* vm)
     if(!source_set)
     {
         nap_compiler::release_compiler(compiler);
-        garbage_bin_bin::shutdown();
+        garbage_bin_bin::release();
 
         return CANNOT_SET_SOURCE;
     }
@@ -39,13 +52,18 @@ uint8_t intr_2(struct nap_vm* vm)
     else
     {
         nap_compiler::release_compiler(compiler);
-        garbage_bin_bin::shutdown();
+        garbage_bin_bin::release();
 
         return CANNOT_COMPILE_SOURCE;
     }
 
+    std::cerr << "INTR2_RELEASE" << std::endl;
+
+    garbage_bin_bin::instance().empty(compiler.get());
     nap_compiler::release_compiler(compiler);
-    garbage_bin_bin::shutdown();
     vm->regi[0] = vm->chunk_counter - 1 ;
+
+    std::cerr << "INTR2_ENDS" << std::endl;
+
     return 0;
 }
