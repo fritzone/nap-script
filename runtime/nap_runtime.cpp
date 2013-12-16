@@ -119,7 +119,7 @@ void nap_runtime_shutdown(nap_runtime **runtime)
         free( (*runtime)->chunks->at(i));
     }
     delete( (*runtime)->chunks);
-    free(*runtime);
+    //free(*runtime);
     *runtime = 0;
     garbage_bin_bin::shutdown();
 }
