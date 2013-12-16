@@ -34,6 +34,7 @@ int level_0_char_operator(const nap_compiler* _compiler, const char *expr, char 
     int level = 0, found_idx = -1;
     while(i<len)
     {
+        bool already_inced = false;
         if( expr[i] == C_PAR_OP ) level++;
         if( expr[i] == C_PAR_CL )
         {
@@ -104,10 +105,11 @@ int level_0_char_operator(const nap_compiler* _compiler, const char *expr, char 
             }
 
             i++; /* to skip the closing quote, without affecting  */
+            already_inced = true;
         }
 
         //if(i < len && i+1 < len && i+2 < len) /* This if will check the post/pre increments so it needs to be aware of the length of the string */
-        if( (
+        if( !is_whitespace(expr[i]) && ( (
              ( (i < len && expr[i]==op1) || expr[i]==op2) && (level==0)
                 && ( (i+1 < len && i-1>=0 && expr[i+1] != expr[i] && expr[i-1] != expr[i]) )
             )/* check if not pre-post increment */
@@ -136,6 +138,7 @@ int level_0_char_operator(const nap_compiler* _compiler, const char *expr, char 
                       (i+2 < len && expr[i+2] == expr[i+1])
                     ) /*  check if pre/post increment followed by a +/- sign again: x+++--y */
                 )
+              ) // closes the one after the &&
             )
         {
             if(need_first)
@@ -154,7 +157,7 @@ int level_0_char_operator(const nap_compiler* _compiler, const char *expr, char 
             }
 
         }
-        i++;
+        if(!already_inced) i++;
     }
     return found_idx;
 }

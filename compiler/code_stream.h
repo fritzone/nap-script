@@ -73,7 +73,6 @@ private:
     void output_bytecode(const char* s);
 
     nap_compiler* mcompiler;
-
 };
 
 class code_finalizer

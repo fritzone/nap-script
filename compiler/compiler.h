@@ -254,6 +254,11 @@ private:
     bool mEmbedded;
 
     const struct nap_vm *mvm_chain;
+
+    // the last command for the bytecode generation. Used for the debugging feature
+    std::string mlast_cmd_for_bytecode;
+
+    friend class code_stream;
 };
 
 

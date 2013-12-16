@@ -53,7 +53,7 @@ parsed_file::parsed_file(const nap_compiler *_compiler) : name(), mcompiler(_com
     position = 0;
     content = 0;
     content_size = 0;
-    current_line = 0;
+    current_line = 1;
 }
 
 parsed_file::parsed_file(const char *pcontent, const nap_compiler* _compiler) : name(), mcompiler(_compiler)
@@ -62,7 +62,7 @@ parsed_file::parsed_file(const char *pcontent, const nap_compiler* _compiler) : 
     content = alloc_mem(char, strlen(pcontent), mcompiler);
     strcpy(content, pcontent);
     content_size = strlen(content);
-    current_line = 0;
+    current_line = 1;
 }
 
 /**
@@ -96,7 +96,7 @@ parsed_file *parsed_file::open_file(const std::string& name,  const nap_compiler
     fread(f->content, size, sizeof(char), fp);
     fclose(fp);
     f->position = 0;
-    f->current_line = 0;
+    f->current_line = 1;
     f->remove_comments();
     return f;
 }
@@ -112,7 +112,7 @@ parsed_file *parsed_file::set_source(const char *src,  const nap_compiler* _comp
     memcpy(f->content, src, size);
 
     f->position = 0;
-    f->current_line = 0;
+    f->current_line = 1;
     f->remove_comments();
     return f;
 }
@@ -128,10 +128,24 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
     }
     previous_position = position;
     expression_with_location *expwloc = alloc_mem(expression_with_location, 1, mcompiler);
-    expwloc->location = new file_location(position, current_line + 1, current_line + 1, name);
+    expwloc->location = new file_location(position, current_line, current_line, name);
     garbage_bin<file_location*>::instance(mcompiler).place(expwloc->location, mcompiler);
 
     long cur_save = position;
+
+    // very first step: skip the "leading" spaces and newlines
+    while (cur_save < content_size && is_whitespace(content[cur_save]))
+    {
+        if(content[cur_save] == '\r' || content[cur_save] == '\n')
+        {
+            expwloc->location->start_line_number ++;
+            expwloc->location->end_line_number ++;
+            current_line ++;
+        }
+        cur_save ++;
+        position ++;
+    }
+
     long size = -1;
     int i = 0;
     int phrase_read = 0;
@@ -329,13 +343,25 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
     {
         if (phrase[i] == C_CARRET || phrase[i] == C_NEWLINE)
         {
-            expwloc->location->end_line_number ++;
+            // inc the end lin, but only if there is something after it, such as
+            // this is an endline in the middle ofthe phrase, not at the end
+            bool can_inc_endline = false;
+            for(int j=i + 1; j < size; j++)
+            {
+                if(!is_whitespace(phrase[j]))
+                {
+                    can_inc_endline = true;
+                    break;
+                }
+            }
+            if(can_inc_endline)
+            {
+                expwloc->location->end_line_number  ++;
+            }
+
+            current_line ++;
             lineIncd ++;
             phrase[i] = C_SPACE;
-            if (i + 1 < size && C_NEWLINE == phrase[i + 1])
-            {
-                phrase[i + 1] = C_SPACE;
-            }
         }
         if (phrase[i] == C_TAB)
         {
@@ -348,7 +374,13 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
         phrase[strlen(phrase) - 1] = 0;
     }
     expwloc->expression = phrase;
-    current_line = expwloc->location->end_line_number - 1;
+
+    //expwloc->location->start_line_number = expwloc->location->end_line_number;
+
+    fprintf(stderr, "BBB: %s \t\t\t|||start:%d end:%d\n", expwloc->expression,
+            expwloc->location->start_line_number,
+            expwloc->location->end_line_number);
+
     return expwloc;
 }
 
@@ -359,9 +391,14 @@ char *parsed_file::parser_preview_next_word(char *delim)
 {
     int save_prev_p = position;
     int save_prev_prev_p = previous_position;
+    int save_current_line = current_line;
+
     expression_with_location *expwloc = parser_next_phrase(delim);
+
     position = save_prev_p;                        /* nothing happened */
     previous_position = save_prev_prev_p;
+    current_line  =save_current_line;
+
     if (!expwloc)
     {
         return NULL;
@@ -384,6 +421,10 @@ void parsed_file::parser_skip_whitespace()
 {
     while (is_whitespace(content[position]))
     {
+        if(content[position] == '\r' || content[position] == '\n')
+        {
+            current_line ++;
+        }
         position++;
     }
 }
