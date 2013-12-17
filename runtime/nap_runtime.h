@@ -7,6 +7,7 @@ extern "C" {
 
 #include "nap_types.h"
 #include "nap_structs.h"
+#include "nap_consts.h"
 
 /* The real runtime hidden in an opaque pointer  */
 struct nap_runtime;
@@ -17,11 +18,11 @@ struct nap_runtime;
  * Creates a new runtime environment which can execute nap-script code. 
  * Optionally you can specify a name for the new environment.
  *
- * @param name - the name of the environment. If NULL means not used.
+ * @param[in] name The name of the environment. If NULL means not used.
  *
- * @return a new runtime environment
+ * @return a new runtime environment or NULL (0) in case of error
  **/
-nap_runtime* nap_runtime_create(const char* name);
+nap_runtime* nap_runtime_create(const char *name);
 
 /**
  * @brief Compiles the commands and creates a bytecode chunk for them.
@@ -44,26 +45,52 @@ nap_runtime* nap_runtime_create(const char* name);
  * The format of the returned bytcode chunk is the same as of a compiled 
  * nap bytecode file.
  *
- * @param runtime  - the runtime on which the commands should be compiled
- * @param commands - the commands the runtime will execute. These are 
- *                   standard nap-script commands, you would place in a 
- *                   .nap source file.
+ * @param[in] runtime   The runtime on which the commands should be compiled
+ * @param[in] commands  The commands the runtime will execute. These are
+ *                      standard nap-script commands, you would place in a
+ *                      .nap source file.
  *
  * @return a nap_bytecode_chunk object containing the compiled bytecode or 
- * NULL in case of an error.
+ * NULL (0) in case of an error.
  **/
-nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
-                                               const char* commands);
+nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime *runtime,
+                                        const char         *commands);
 /**
- * @brief Executes the given bytecode chunk in the VM.
+ * @brief The nap_runtime_execute executes the given bytecode chunk in the
+ *        virtual machine of the runtime.
  *
- * @return 1 in case of succes, 0 in case of failure
+ * @param[in] runtime The runtime which will execute the bytecode
+ * @param[in] bytecode The bytecode that will be executed.
+ *
+ * @return NAP_EXECUTE_SUCCESS (1) in case of succes, or NAP_EXECUTE_FAILURE (0)
+ * in case of failure. In case of failure you can call the method
+ * nap_runtime_last_error() to get the last error
  **/ 
-int nap_runtime_execute(struct nap_runtime* runtime, 
-                        struct nap_bytecode_chunk* bytecode);
+int nap_runtime_execute(struct nap_runtime        *runtime,
+                        struct nap_bytecode_chunk *bytecode);
 
+/**
+ * @brief The nap_runtime_get_int returns the value of the integer type variable
+ *        called variable_name.
+ *
+ * The method returns the value of the integer type variable called
+ * variable_name. Only variables from the global namespace can be retrieved.
+ *
+ * @param[in]  runtime The runtime which has the variable defined.
+ * @param[in]  name    The name of the variable.
+ * @param[out] found   Populated to NAP_VARIABLE_FOUND (1) if the variable was
+ *                     found in the runtime or to NAP_VARIABLE_NOT_FOUND (0) if
+ *                     the variable was not found.
+ *
+ * @return The value of the variable, or NAP_NO_VALUE (0x0BADF00D) if the
+ *         variable was not found. If the runtime returns the NAP_NO_VALUE then
+ *         also the found parameter should be populated to the value of
+ *         NAP_VARIABLE_NOT_FOUND in order to confirm that there is indeed no
+ *         such variable, otherwise the value indeed is 0x0BADF00D.
+ */
 nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
-                                 const char *variable_name);
+                              const char *variable_name,
+                              int* found);
 
 nap_real_t nap_runtime_get_real(struct nap_runtime* runtime,
                                  const char* variable_name);
