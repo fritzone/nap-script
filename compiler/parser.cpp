@@ -122,7 +122,7 @@ parsed_file *parsed_file::set_source(const char *src,  const nap_compiler* _comp
  */
 expression_with_location* parsed_file::parser_next_phrase(char *delim)
 {
-    if(position == content_size)
+    if(position >= content_size)
     {
         return NULL;
     }
@@ -705,7 +705,7 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
     if(nextw && !strcmp(nextw, STR_ELSE))
     {
         std::stringstream ss;
-        ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << STR_IF << C_SEMC << STR_ELSE;
+        ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << STR_IF << C_UNDERLINE << STR_ELSE;
         else_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_ELSE, ss.str(), the_method, cc);
         if(delim2 == C_SEMC)
         {

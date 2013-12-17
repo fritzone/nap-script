@@ -68,7 +68,6 @@ nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
     return NULL;
 }
 
-
 int nap_runtime_execute(struct nap_runtime* runtime,
                         struct nap_bytecode_chunk* bytecode)
 {
@@ -80,12 +79,11 @@ int nap_runtime_execute(struct nap_runtime* runtime,
 
 
 nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
-                                 const char* variable_name)
+                                 const char* variable_name, int *found)
 {
-    int found = 1;
     char* t = (char*)calloc(strlen(variable_name) + 1, 1);
     strcpy(t, variable_name);
-    nap_int_t temp = nap_vm_get_int(runtime->vm, t, &found);
+    nap_int_t temp = nap_vm_get_int(runtime->vm, t, found);
     free(t);
     return temp;
 }

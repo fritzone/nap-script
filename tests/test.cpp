@@ -4,17 +4,18 @@
 
 #define SCRIPT_START \
     nap_runtime* runtime = nap_runtime_create(0);                  \
-    ASSERT_FALSE(runtime == NULL);                                      \
+    ASSERT_FALSE(runtime == NULL);                                 \
+    int found_indicator;                                           \
     nap_bytecode_chunk* bytecode = nap_runtime_compile(runtime,    
     
 #define SCRIPT_END \
     );                                                             \
-    ASSERT_FALSE(bytecode == NULL);                                     \
+    ASSERT_FALSE(bytecode == NULL);                                \
     int t = nap_runtime_execute(runtime, bytecode);                \
     ASSERT_EQ(1, t);                                               
 
 
-#define VAR_INT(a)    nap_runtime_get_int(runtime, #a )
+#define VAR_INT(a)    nap_runtime_get_int(runtime, #a, &found_indicator)
 
 #define SCRIPT_SHUTDOWN \
     nap_runtime_shutdown(&runtime);                                \
