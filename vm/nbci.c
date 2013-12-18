@@ -21,6 +21,8 @@
 #include "operation.h"
 #include "nbci_impl.h"
 
+#include "nap_consts.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -129,7 +131,22 @@ void nap_vm_run(struct nap_vm* vm)
                 || vm->current_opcode == OPCODE_LTE
                 || vm->current_opcode == OPCODE_GTE)
         {
-            nap_comparison(vm);
+            if(NAP_SUCCESS != nap_comparison(vm))
+            {
+                if(vm->environment == STANDALONE) /* only if not run in a library */
+                {
+                    /* free the allocated metatable */
+                    fprintf(stderr, "%s\n", vm->error_message);
+                    nap_vm_cleanup(vm);
+
+                    exit(0);
+                }
+                else
+                {
+                    return;
+                }
+
+            }
         }
         else
         if(vm->current_opcode == OPCODE_MOV)
@@ -149,7 +166,24 @@ void nap_vm_run(struct nap_vm* vm)
         else
         if(vm->current_opcode == OPCODE_CLRS_NAME)
         {
-            nap_clrs(vm);
+            int t =  nap_clrs(vm);
+            if(t == NAP_FAILURE)
+            {
+                nap_set_error(vm, ERR_VM_0002);
+
+                if(vm->environment == STANDALONE) /* only if not run in a library */
+                {
+                    /* free the allocated metatable */
+                    fprintf(stderr, "%s\n", vm->error_message);
+                    nap_vm_cleanup(vm);
+
+                    exit(0);
+                }
+                else
+                {
+                    return;
+                }
+            }
         }
         else
         if(vm->current_opcode == OPCODE_CALL)

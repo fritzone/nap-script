@@ -4,11 +4,12 @@
 #include "metatbl.h"
 #include "stack.h"
 #include "nbci_impl.h"
+#include "nap_consts.h"
 
 #include <stdlib.h>
 #include <stdint.h>
 
-void nap_comparison(struct nap_vm* vm)
+int nap_comparison(struct nap_vm* vm)
 {
     uint8_t cmp_first = vm->content[vm->cc ++];   /* what to check (reg only)*/
 
@@ -117,8 +118,8 @@ void nap_comparison(struct nap_vm* vm)
     }
     else
     {
-        fprintf(stderr, "eq works only on registers/variables\n");
-        exit(EXIT_FAILURE);
+        nap_set_error(vm, ERR_VM_0005);
+        return NAP_FAILURE;
     }
-
+    return NAP_SUCCESS;
 }

@@ -12,7 +12,6 @@ int main()
         exit(1);
     }
 
-    vm->environment = STANDALONE;
     nap_vm_run(vm);
     nap_vm_cleanup(vm);
 

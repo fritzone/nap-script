@@ -70,7 +70,13 @@ void nap_restore_registers(struct nap_vm*);
 /**
  * Handles the interrupt which is next in the "content" of the VM
  */
-void nap_handle_interrupt(struct nap_vm*);
+int nap_handle_interrupt(struct nap_vm*);
+
+/**
+ * Delivers the error message with the code error_code in the error_message
+ * field of the VM, ie: allocates memory for it and copies the string over.
+ */
+void nap_set_error(struct nap_vm*, int error_code);
 
 #ifdef __cplusplus
 }

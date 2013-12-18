@@ -25,10 +25,10 @@ extern "C" {
 #define MEM_FREE(x) if(x){ free((x)); }
 #endif
 
-#define REGISTER_COUNT    256        /* number of registers in the VM*/
-#define STACK_INIT        4096       /* initially 4096 entries  */
-#define DEEPEST_RECURSION 4096       /* how deep we can dwelve into recursion */
-
+#define REGISTER_COUNT      255        /* number of registers in the VM*/
+#define STACK_INIT          4096       /* initially 4096 entries  */
+#define DEEPEST_RECURSION   4096       /* how deep we can dwelve into recursion */
+#define MAX_BYTECODE_CHUNKS 255        /* the number of bytecode chunks that can be allocated */
 /* Macro for leaving the application in case of an error */
 #define _NOT_IMPLEMENTED \
     do {\
@@ -43,7 +43,7 @@ extern "C" {
 /* the lbf initially is undecided, the first operation sets it, and it is
  * AND-ed with the result of the next boolean operations as long as it is
  * not cleared by a jlbf or clbf */
-enum flag_staus
+enum flag_status
 {
     UNDECIDED = -1,
     FALSE     =  0,
@@ -52,11 +52,12 @@ enum flag_staus
 
 /* whether this virtual machine runs in and EMBEDDED environement (as invoked
  * by the nap_runtime framework or in a STANDALONE environment (as invoked from
- * the command line) */
+ * the command line) or if it was invoked while executing an interrupt */
 enum environments
 {
-    EMBEDDED = 0,
-    STANDALONE = 1
+    EMBEDDED   = 0,
+    STANDALONE = 1,
+    INTERRUPT  = 2
 };
 
 struct nap_vm;
@@ -77,7 +78,7 @@ struct nap_vm
     nap_int_t       regi  [REGISTER_COUNT]; /* the integer registers         */
     char*           regs  [REGISTER_COUNT]; /* the string registers          */
     nap_int_t       regidx[REGISTER_COUNT]; /* the register indexes          */
-    enum flag_staus lbf;                    /* the last boolean flag         */
+    enum flag_status lbf;                   /* the last boolean flag         */
     uint8_t         mrc;                    /* number of registers of the VM */
 
     /* return values */
@@ -132,6 +133,10 @@ struct nap_vm
 
     /* the interrupt vectors of the implementation */
     interrupt interrupts[255];
+
+    /* error handling */
+    char* error_message;                    /* the last error message. Must be freed on cleanup */
+    int error_code;                         /* the last error code */
 };
 
 /**
@@ -184,7 +189,7 @@ void nap_vm_run(struct nap_vm* vm);
  * @param bytecode_len
  * @return
  */
-struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len);
+struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environments target);
 
 /**
  * @brief nap_vm_get_int return the value of the variable called "name"
