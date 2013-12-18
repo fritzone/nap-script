@@ -15,23 +15,26 @@ extern "C"
 /* The nap runtime environment. There can be multiple runtimes */
 struct nap_runtime
 {
+    nap_runtime() : compiler(nap_compiler::create_compiler()), vm(0), chunks(),
+        last_error("[NAP_OK] no error")
+    {}
+
+    // the compiler of the runtime
     std::auto_ptr<nap_compiler> compiler;
+
+    // the virtual machine
     nap_vm* vm;
-    std::vector<nap_bytecode_chunk*>* chunks;
+
+    // the list of chunks that were compiled
+    std::vector<nap_bytecode_chunk*> chunks;
+
+    // the last error
+    std::string last_error;
 };
 
 nap_runtime* nap_runtime_create(const char* /*name*/)
 {
-    struct nap_runtime* result = (struct nap_runtime*)
-                                      calloc(sizeof(struct nap_runtime), 1);
-    if(result == NULL)
-    {
-        fprintf(stderr, "cannot create a new runtime\n");
-        return result;
-    }
-
-    result->compiler = nap_compiler::create_compiler();
-    result->chunks = new std::vector<nap_bytecode_chunk*>();
+    struct nap_runtime* result = new nap_runtime;
 
     return result;
 }
@@ -51,17 +54,18 @@ nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
                 nap_bytecode_chunk* chunk = (struct nap_bytecode_chunk*)
                                        calloc(sizeof(struct nap_bytecode_chunk), 1);
                 runtime->compiler->deliver_bytecode(chunk->code, chunk->length);
-                runtime->chunks->push_back(chunk);
+                runtime->chunks.push_back(chunk);
                 return chunk;
             }
             else
             {
+                runtime->last_error = runtime->compiler->get_error();
                 return NULL;
             }
         }
         else
         {
-            fprintf(stderr, "cannot compile the given source: %s\n", runtime->compiler->get_error().c_str());
+            runtime->last_error = runtime->compiler->get_error();
             return NULL;
         }
     }
@@ -71,7 +75,7 @@ nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
 int nap_runtime_execute(struct nap_runtime* runtime,
                         struct nap_bytecode_chunk* bytecode)
 {
-    runtime->vm = nap_vm_inject(bytecode->code, bytecode->length);
+    runtime->vm = nap_vm_inject(bytecode->code, bytecode->length, EMBEDDED);
     nap_vm_run(runtime->vm);
 
     return 1;
@@ -111,13 +115,12 @@ void nap_runtime_shutdown(nap_runtime **runtime)
     {
         nap_vm_cleanup((*runtime)->vm);
     }
-    for(size_t i=0; i<(*runtime)->chunks->size(); i++)
+    for(size_t i=0; i<(*runtime)->chunks.size(); i++)
     {
-        free( (*runtime)->chunks->at(i)->code);
-        free( (*runtime)->chunks->at(i));
+        free( (*runtime)->chunks.at(i)->code);
+        free( (*runtime)->chunks.at(i));
     }
-    delete( (*runtime)->chunks);
-    //free(*runtime);
+    free(*runtime);
     *runtime = 0;
     garbage_bin_bin::shutdown();
 }

@@ -10,6 +10,8 @@
 #include "stack.h"
 #include "byte_order.h"
 
+#include "nap_consts.h"
+
 #include "intr_2.h"
 #include "intr_3.h"
 
@@ -19,6 +21,18 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "string.h"
+
+#define ERROR_COUNT 5
+
+/* section for defining the constants */
+static char* error_table[ERROR_COUNT] =
+{
+    "[VM-001] not enough memory ",
+    "[VM-002] stack underflow",
+    "[VM-003] cannot allocate a child VM in intr 3",
+    "[VM-004] unimplemented interrupt",
+    "[VM-005] \"eq\" works only on register/variable"
+};
 
 void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_int_t reg, nap_int_t immediate, uint8_t opcode)
 {
@@ -192,20 +206,47 @@ void nap_vm_cleanup(struct nap_vm* vm)
     }
     free(vm->stringtable);
 
+    /* the error */
+    if(vm->error_message)
+    {
+        int needs_free = 1;
+        for(i=0; i<ERROR_COUNT; i++)
+        {
+            if(vm->error_message == error_table[i])
+            {
+                needs_free = 0;
+            }
+        }
+
+        if(needs_free)
+        {
+            free(vm->error_message);
+        }
+    }
+
     /* and the VM itself */
     MEM_FREE(vm);
 }
 
-struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len)
+struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environments target)
 {
     struct nap_vm* vm = NULL;
     uint8_t* cloc = bytecode;
 
     vm = (struct nap_vm*)(calloc(1, sizeof(struct nap_vm)));
-    /* TODO: check memory */
+    if(vm == NULL)
+    {
+        /* TODO: provide a mechanism for error reporting */
+        return NULL;
+    }
 
     vm->content = (uint8_t *) calloc(sizeof(uint8_t), bytecode_len);
-    /* TODO: check memory */
+    if(vm->content == NULL)
+    {
+        /* TODO: provide a mechanism for error reporting */
+        free(vm);
+        return NULL;
+    }
 
     /* create the stack */
     vm->stack_size = STACK_INIT;
@@ -213,8 +254,10 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len)
     vm->stack = (struct stack_entry**)calloc(sizeof(struct stack_entry*), STACK_INIT);
     if(vm->stack == NULL)
     {
-        fprintf(stderr, "Cannot allocate stack\n");
-        exit(45);
+        /* TODO: provide a mechanism for error reporting */
+        free(vm->content);
+        free(vm);
+        return NULL;
     }
 
     memcpy(vm->content, bytecode, bytecode_len);
@@ -254,11 +297,23 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len)
     vm->flags = *cloc;
     cloc ++;
 
-    interpret_metatable(vm, vm->content + vm->meta_location, bytecode_len);
+    if(NAP_SUCCESS != interpret_metatable(vm, vm->content + vm->meta_location, bytecode_len))
+    {
+        nap_vm_cleanup(vm);
+        return NULL;
+    }
 
-    interpret_stringtable(vm, vm->content + vm->stringtable_location, bytecode_len);
+    if(NAP_SUCCESS != interpret_stringtable(vm, vm->content + vm->stringtable_location, bytecode_len))
+    {
+        nap_vm_cleanup(vm);
+        return NULL;
+    }
 
-    interpret_jumptable(vm, vm->content + vm->jumptable_location, bytecode_len);
+    if(NAP_SUCCESS != interpret_jumptable(vm, vm->content + vm->jumptable_location, bytecode_len))
+    {
+        nap_vm_cleanup(vm);
+        return NULL;
+    }
 
     /* cc is the instruction pointer:
      * skip the:
@@ -271,7 +326,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len)
 
     /* initially the last boolean flag is in an unknow state */
     vm->lbf = UNDECIDED;
-    vm->btyecode_chunks = (struct nap_bytecode_chunk**)calloc(255,
+    vm->btyecode_chunks = (struct nap_bytecode_chunk**)calloc(MAX_BYTECODE_CHUNKS,
                                             sizeof(struct nap_bytecode_chunk*));
     vm->chunk_counter = 0;
     vm->allocated_chunks = 255;
@@ -279,6 +334,9 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len)
     /* and setting the interrupts */
     vm->interrupts[2] = intr_2;
     vm->interrupts[3] = intr_3;
+
+    /* setting the container type of the VM*/
+    vm->environment = target;
 
     return vm;
 }
@@ -292,7 +350,7 @@ struct nap_vm *nap_vm_load(const char *filename)
     if(!fp)
     {
         fprintf(stderr, "cannot load file [%s]", filename);
-        return 0;
+        return NULL;
     }
 
     /* read in all the data in memory. Should be faster */
@@ -306,7 +364,7 @@ struct nap_vm *nap_vm_load(const char *filename)
 
     fclose(fp);
 
-    vm = nap_vm_inject(file_content, fsize);
+    vm = nap_vm_inject(file_content, fsize, STANDALONE);
     MEM_FREE(file_content);
 
     return vm;
@@ -432,7 +490,7 @@ int nap_vmi_has_variable(const struct nap_vm* vm, const char* name, int* type)
     return 0;
 }
 
-void nap_handle_interrupt(struct nap_vm* vm)
+int nap_handle_interrupt(struct nap_vm* vm)
 {
     /* CC points to the interrupt number */
     uint8_t intr = *(uint8_t*)(vm->content + vm->cc);
@@ -441,11 +499,6 @@ void nap_handle_interrupt(struct nap_vm* vm)
     if(vm->interrupts[intr])
     {
         int_res = (vm->interrupts[intr])(vm);
-        if(int_res != 0)
-        {
-            fprintf(stderr, "error executig interrupt %d. Code: %d", intr, int_res);
-            exit(EXIT_FAILURE);
-        }
     }
     else
     {
@@ -453,6 +506,7 @@ void nap_handle_interrupt(struct nap_vm* vm)
     }
     /* advance to the next position */
     vm->cc ++;
+    return int_res;
 }
 
 
@@ -506,4 +560,14 @@ struct variable_entry *nap_vmi_get_variable(const struct nap_vm *vm, const char 
         }
     }
     return NULL;
+}
+
+void nap_set_error(struct nap_vm *vm, int error_code)
+{
+    if(vm->error_message != NULL)
+    {
+        free(vm->error_message);
+    }
+    vm->error_code = error_code;
+    vm->error_message = error_table[error_code - 1];
 }

@@ -1,11 +1,12 @@
 #include "jmptable.h"
 #include "nbci.h"
 #include "byte_order.h"
+#include "nap_consts.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-void interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t len)
+int interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t len)
 {
     uint8_t* cloc = start_location + 4; /* skip the .jmp TODO :check if it is .jmp */
     size_t count = 0;
@@ -16,11 +17,17 @@ void interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t le
     cloc += 4;
     if(count == 0)
     {
-        return;
+        return NAP_SUCCESS;
     }
     vm->jumptable_size = count;
     vm->jumptable = (struct jumptable_entry**) calloc(vm->jumptable_size + 1,
                                               sizeof(struct jumptable_entry*));
+    if(vm->jumptable == NULL)
+    {
+        vm->jumptable_size = 0;
+        return NAP_FAILURE;
+    }
+
     for(;;)
     {
         uint32_t index = 0;
@@ -32,7 +39,7 @@ void interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t le
 
         if( (cloc + 4) > (vm->content + len) || ++indx_ctr == count+1)
         {
-            return;
+            return NAP_SUCCESS;
         }
 
         /* read the index */
@@ -54,8 +61,7 @@ void interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t le
                 name = (char*)calloc(sizeof(char), loc_name_length + 1);
                 if(name == NULL)
                 {
-                    fprintf(stderr, "cannot allocate a metatable entry\n");
-                    exit(EXIT_FAILURE);
+                    return NAP_FAILURE;
                 }
 
                 memcpy(name, cloc, loc_name_length);
@@ -65,9 +71,7 @@ void interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t le
         new_jmpentry = (struct jumptable_entry*)calloc(1, sizeof(struct jumptable_entry));
         if(new_jmpentry == NULL)
         {
-            fprintf(stderr, "out of memory when creating a jmpentry\n");
-            nap_vm_cleanup(vm);
-            exit(EXIT_FAILURE);
+            return NAP_FAILURE;
         }
         new_jmpentry->location = index;
         new_jmpentry->type = type;

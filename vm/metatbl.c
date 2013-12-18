@@ -1,6 +1,7 @@
 #include "metatbl.h"
 #include "nbci.h"
 #include "byte_order.h"
+#include "nap_consts.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -9,7 +10,7 @@
 /*
  * Read the metatable of the bytecode file. Exits on error.
  */
-void interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len)
+int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len)
 {
     uint8_t* cloc = start_location + 5; /* skip the .meta TODO :check if it is .meta */
     uint32_t count = htovm_32(*(uint32_t*)(cloc));
@@ -17,12 +18,18 @@ void interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t le
 
     if(count == 0)
     {
-        return;
+        return NAP_SUCCESS;
     }
 
     vm->meta_size = count;
     vm->metatable = (struct variable_entry**) calloc(vm->meta_size + 1,
                                                sizeof(struct variable_entry*));
+    if(vm->metatable == NULL)
+    {
+        vm->meta_size = 0;
+        return NAP_FAILURE;
+    }
+
     for(;;)
     {
         uint32_t index = htovm_32(*(uint32_t*)(cloc));
@@ -50,8 +57,7 @@ void interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t le
                 name = (char*)calloc(sizeof(char), len + 1);
                 if(name == NULL)
                 {
-                    fprintf(stderr, "cannot allocate a metatable entry\n");
-                    exit(EXIT_FAILURE);
+                    return NAP_FAILURE;
                 }
 
                 memcpy(name, cloc, len);
@@ -64,8 +70,7 @@ void interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t le
                                                sizeof(struct variable_entry**) * (index + 1));
                 if(tmp == NULL)
                 {
-                    fprintf(stderr, "cannot reallocate the metatable\n");
-                    exit(EXIT_FAILURE);
+                    return NAP_FAILURE;
                 }
 
                 vm->metatable = tmp;
@@ -81,4 +86,6 @@ void interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t le
             vm->metatable[index] = new_var;
         }
     }
+
+    return NAP_SUCCESS;
 }

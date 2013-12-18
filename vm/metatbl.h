@@ -42,7 +42,7 @@ struct variable_entry
 /*
  * Read the metatable from the given location
  */
-void interpret_metatable(struct nap_vm* vm,
+int interpret_metatable(struct nap_vm* vm,
                          uint8_t* start_location,
                          uint32_t len);
 

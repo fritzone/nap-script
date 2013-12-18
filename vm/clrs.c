@@ -3,10 +3,11 @@
 #include "stack.h"
 #include "opcodes.h"
 #include "nbci_impl.h"
+#include "nap_consts.h"
 
 #include <stdlib.h>
 
-void nap_clrs(struct nap_vm* vm)
+int nap_clrs(struct nap_vm* vm)
 {
     nap_mark_t marker = nap_fetch_mark(vm);
 
@@ -32,9 +33,7 @@ void nap_clrs(struct nap_vm* vm)
 
     if(vm->stack_pointer == -1)
     {
-        fprintf(stderr, "stack underflow error. exiting.\n");
-        nap_vm_cleanup(vm);
-        exit(EXIT_FAILURE);
+        return NAP_FAILURE;
     }
 
     if(vm->stack[vm->stack_pointer] != NULL
@@ -47,5 +46,5 @@ void nap_clrs(struct nap_vm* vm)
         vm->stack[vm->stack_pointer] = NULL;
         vm->stack_pointer --;
     }
-
+    return NAP_SUCCESS;
 }
