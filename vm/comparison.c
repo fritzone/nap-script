@@ -33,6 +33,7 @@ int nap_comparison(struct nap_vm* vm)
             {
                 nap_index_t var_index = nap_fetch_index(vm);
                 struct variable_entry* ve = nap_fetch_variable(vm, var_index);
+                ASSERT_NOT_NULL_VAR(ve);
 
                 if(ve->instantiation->type == OPCODE_INT) /* comparing int register with an int variable */
                 {
@@ -75,6 +76,8 @@ int nap_comparison(struct nap_vm* vm)
     {
         nap_index_t var_index = nap_fetch_index(vm);
         struct variable_entry* ve = nap_fetch_variable(vm, var_index);
+        ASSERT_NOT_NULL_VAR(ve)
+
         if(ve->instantiation->type == OPCODE_INT) /* comparing int variable to something */
         {
             uint8_t cmp_second = vm->content[vm->cc ++]; /* what are we checking against*/
@@ -82,6 +85,8 @@ int nap_comparison(struct nap_vm* vm)
             {
                 nap_index_t second_var_index = nap_fetch_index(vm);
                 struct variable_entry* second_ve = nap_fetch_variable(vm, second_var_index);
+                ASSERT_NOT_NULL_VAR(second_ve)
+
                 if(second_ve->instantiation->type == OPCODE_INT) /* comparing int register with an int variable */
                 {
                     nap_vm_set_lbf_to_op_result(vm, *(nap_int_t*)ve->instantiation->value,
@@ -118,7 +123,6 @@ int nap_comparison(struct nap_vm* vm)
     }
     else
     {
-        nap_set_error(vm, ERR_VM_0005);
         return NAP_FAILURE;
     }
     return NAP_SUCCESS;

@@ -4,10 +4,11 @@
 #include "stack.h"
 #include "metatbl.h"
 #include "nbci_impl.h"
+#include "nap_consts.h"
 
 #include <stdlib.h>
 
-void nap_pop(struct nap_vm* vm)
+int nap_pop(struct nap_vm* vm)
 {
     uint8_t pop_what = vm->content[vm->cc ++];
     if(pop_what == OPCODE_REG)
@@ -59,12 +60,8 @@ void nap_pop(struct nap_vm* vm)
     {
         nap_index_t var_index = nap_fetch_index(vm);
         struct variable_entry* ve = nap_fetch_variable(vm, var_index);
-
-        if(ve->instantiation == 0)
-        {
-            fprintf(stderr, "variable [%s] not initialised correctly for pop\n", ve->name);
-            exit(3);
-        }
+        ASSERT_NOT_NULL_VAR(ve)
+        CHECK_VARIABLE_INSTANTIATON(ve)
 
         if(vm->stack[vm->stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
         {
@@ -150,5 +147,5 @@ void nap_pop(struct nap_vm* vm)
     {
         _NOT_IMPLEMENTED
     }
-
+    return NAP_SUCCESS;
 }

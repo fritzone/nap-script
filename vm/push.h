@@ -8,6 +8,6 @@
  * the internal structures and advance the instruction pointer
  * @param vm - the VM on which this operation runs
  */
-void nap_push(struct nap_vm* vm);
+int nap_push(struct nap_vm* vm);
 
 #endif

@@ -3,6 +3,6 @@
 
 struct nap_vm;
 
-void nap_marks(struct nap_vm* vm);
+int nap_marks(struct nap_vm* vm);
 
 #endif

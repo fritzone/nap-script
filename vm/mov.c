@@ -3,11 +3,12 @@
 #include "stack.h"
 #include "metatbl.h"
 #include "nbci_impl.h"
+#include "nap_consts.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-void nap_mov(struct nap_vm* vm)
+int nap_mov(struct nap_vm* vm)
 {
     uint8_t mov_target = vm->content[vm->cc ++];   /* where we move (reg, var)*/
 
@@ -31,21 +32,12 @@ void nap_mov(struct nap_vm* vm)
                 nap_index_t var_index = nap_fetch_index(vm);
                 /* and fetch the variable from the given index */
                 struct variable_entry* var = nap_fetch_variable(vm, var_index);
-                if(var->instantiation == 0)
-                {
-                    fprintf(stderr, "variable [%s] not initialised correctly\n", var->name);
-                    exit(3);
-                }
-
-                if(var->instantiation->type != STACK_ENTRY_INT)
-                {
-                    fprintf(stderr, "variable [%s] has wrong type\n", var->name);
-                    exit(4);
-                }
+                ASSERT_NOT_NULL_VAR(var)
+                CHECK_VARIABLE_INSTANTIATON(var)
+                CHECK_VARIABLE_TYPE(var, STACK_ENTRY_INT)
 
                 /* and moving the value in the regsiter itself */
                 vm->regi[register_index] = *(nap_int_t*)var->instantiation->value;
-
             }
             else
             if(move_source == OPCODE_RV)
@@ -100,21 +92,12 @@ void nap_mov(struct nap_vm* vm)
                 nap_index_t var_index = nap_fetch_index(vm);
                 /* fetch the variable from the given index */
                 struct variable_entry* var = nap_fetch_variable(vm, var_index);
-                if(var->instantiation == 0)
-                {
-                    fprintf(stderr, "variable [%s] not initialised correctly\n", var->name);
-                    exit(3);
-                }
-
-                if(var->instantiation->type != STACK_ENTRY_STRING)
-                {
-                    fprintf(stderr, "variable [%s] has wrong type\n", var->name);
-                    exit(4);
-                }
+                ASSERT_NOT_NULL_VAR(var)
+                CHECK_VARIABLE_INSTANTIATON(var)
+                CHECK_VARIABLE_TYPE(var, STACK_ENTRY_STRING)
 
                 /* and moving the value in the regsiter itself */
                 vm->regs[register_index] = (char*)var->instantiation->value;
-
             }
 
             else
@@ -129,7 +112,6 @@ void nap_mov(struct nap_vm* vm)
             uint8_t move_source = vm->content[vm->cc ++]; /* the index definition */
             if(move_source == OPCODE_IMMEDIATE) /* immediate value (1,..) */
             {
-                // TODO: Implement a method to read immediate index values, returning uint32_t
                 vm->regidx[register_index] = nap_read_immediate(vm);
             }
             else
@@ -149,15 +131,8 @@ void nap_mov(struct nap_vm* vm)
         nap_index_t var_index = nap_fetch_index(vm);
         struct variable_entry* var = nap_fetch_variable(vm, var_index);
         uint8_t move_source = 0;
-
-        /* first time usage of this variable? */
-        if(var->instantiation == 0)
-        {
-            fprintf(stderr,
-                    "using variable [%s] without being on stack\n",
-                    var->name);
-            exit(6);
-        }
+        ASSERT_NOT_NULL_VAR(var)
+        CHECK_VARIABLE_INSTANTIATON(var)
 
         /* and now let's see what we move in the variable */
         move_source = vm->content[vm->cc ++];
@@ -230,11 +205,9 @@ void nap_mov(struct nap_vm* vm)
                 _NOT_IMPLEMENTED
             }
         }
-        else
+        else /* moving another variable or an immediate into the variable */
         {
-            fprintf(stderr, "only register can be moved to var [%s]\n",
-                    var->name);
-            exit(5);
+            _NOT_IMPLEMENTED
         }
     }
     else
@@ -244,19 +217,15 @@ void nap_mov(struct nap_vm* vm)
         if(ccidx_target == OPCODE_VAR)
         {
             nap_index_t var_index = nap_fetch_index(vm);
-            struct variable_entry* var = nap_fetch_variable(vm, var_index);
             uint8_t ctr_used_index_regs = 0;
             uint8_t move_src = 0;
 
-            /* first time usage of this variable? */
-            if(var->instantiation == 0)
-            {
-                fprintf(stderr,
-                        "using variable [%s] without being on stack\n",
-                        var->name);
-                exit(6);
-            }
+            struct variable_entry* var = nap_fetch_variable(vm, var_index);
 
+            ASSERT_NOT_NULL_VAR(var)
+            CHECK_VARIABLE_INSTANTIATON(var)
+
+            /* first time usage of this variable? */
             /* now should come the index reg counter of vm->ccidx,
                a simple byte since there are max 256 indexes */
             ctr_used_index_regs = vm->content[vm->cc ++];
@@ -291,10 +260,18 @@ void nap_mov(struct nap_vm* vm)
 
                         if(real_index + strlen(vm->regs[register_index]) > strlen((char*)var->instantiation->value))
                         {
-                            fprintf(stderr,
-                                    "Index overflow error for [%s]. Requested index: [%" PRIu64 "] Available length: [%ld] Assumed length: [%" PRIu64 "]\n",
-                                    var->name, real_index, strlen((char*)var->instantiation->value), real_index + strlen(vm->regs[register_index]));
-                            exit(18);
+                            char* s = (char*)calloc(256, sizeof(char));
+                            snprintf(s, 256,
+                                    "[ERR-INT-3] Index overflow error for [%s]."
+                                     "Requested index: [%" PRIu64 "] "
+                                     "Available length: [%ld] "
+                                     "Assumed length: [%" PRIu64 "]\n",
+                                     var->name,
+                                     real_index,
+                                     strlen((char*)var->instantiation->value),
+                                     real_index + strlen(vm->regs[register_index]));
+                            vm->error_description = s;
+                            return NAP_FAILURE;
                         }
                         /* and finally do a strcpy */
                         strncpy((char*)var->instantiation->value + real_index,
@@ -328,4 +305,6 @@ void nap_mov(struct nap_vm* vm)
     {
         _NOT_IMPLEMENTED
     }
+
+    return NAP_SUCCESS;
 }

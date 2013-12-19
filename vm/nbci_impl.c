@@ -22,16 +22,29 @@
 #include <stdlib.h>
 #include "string.h"
 
-#define ERROR_COUNT 5
+#define ERROR_COUNT 18
 
 /* section for defining the constants */
 static char* error_table[ERROR_COUNT] =
 {
-    "[VM-001] not enough memory ",
-    "[VM-002] stack underflow",
-    "[VM-003] cannot allocate a child VM in intr 3",
-    "[VM-004] unimplemented interrupt",
-    "[VM-005] \"eq\" works only on register/variable"
+    "[VM-0001] not enough memory ",
+    "[VM-0002] stack underflow",
+    "[VM-0003] cannot allocate a child VM in intr 3",
+    "[VM-0004] unimplemented interrupt",
+    "[VM-0005] \"eq\" works only on register/variable",
+    "[VM-0006] call frame stack overflow (too deep recursion)",
+    "[VM-0007] call frame stack empty, cannot popall (no pushall)",
+    "[VM-0008] internal VM error: a variable is not defined",
+    "[VM-0009] cannot decrement something",
+    "[VM-0010] cannot increment something",
+    "[VM-0011] cannot execute a move operation",
+    "[VM-0012] cannot execute an arithmetic operation",
+    "[VM-0013] cannot peek from the stack",
+    "[VM-0014] cannot pop from the stack",
+    "[VM-0015] cannot push onto the stack",
+    "[VM-0016] cannot create a temporay marker",
+    "[VM-0017] unimplemented interrupt",
+    "[VM-0018] a variable was not initialized correctly",
 };
 
 void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_int_t reg, nap_int_t immediate, uint8_t opcode)
@@ -190,23 +203,23 @@ void nap_vm_cleanup(struct nap_vm* vm)
         {
             if(vm->btyecode_chunks[i]->code)
             {
-                free(vm->btyecode_chunks[i]->code);
+                MEM_FREE(vm->btyecode_chunks[i]->code);
             }
-            free(vm->btyecode_chunks[i]);
+            MEM_FREE(vm->btyecode_chunks[i]);
         }
     }
 
-    free(vm->btyecode_chunks);
+    MEM_FREE(vm->btyecode_chunks);
 
     /* the stringtable */
     for(i = 0; i<vm->strt_size; i++)
     {
-        free(vm->stringtable[i]->string);
-        free(vm->stringtable[i]);
+        MEM_FREE(vm->stringtable[i]->string);
+        MEM_FREE(vm->stringtable[i]);
     }
-    free(vm->stringtable);
+    MEM_FREE(vm->stringtable);
 
-    /* the error */
+    /* the error message will be freed only if it was not allocated */
     if(vm->error_message)
     {
         int needs_free = 1;
@@ -220,8 +233,13 @@ void nap_vm_cleanup(struct nap_vm* vm)
 
         if(needs_free)
         {
-            free(vm->error_message);
+            MEM_FREE(vm->error_message);
         }
+    }
+
+    if(vm->error_description)
+    {
+        MEM_FREE(vm->error_description);
     }
 
     /* and the VM itself */
@@ -439,7 +457,7 @@ nap_int_t nap_read_immediate(struct nap_vm* vm)
 static nap_int_t* regi_stack[DEEPEST_RECURSION] = {0};
 static nap_index_t regi_stack_idx = 0;
 
-void nap_save_registers(struct nap_vm* vm)
+int nap_save_registers(struct nap_vm* vm)
 {
     nap_int_t* tmp = calloc(REGISTER_COUNT, sizeof(nap_int_t));
     memcpy(tmp, vm->regi, vm->mrc * sizeof(nap_int_t));
@@ -447,25 +465,22 @@ void nap_save_registers(struct nap_vm* vm)
     regi_stack_idx ++;
     if(regi_stack_idx == DEEPEST_RECURSION)
     {
-        fprintf(stderr, "too deep recursion. (ie: too many pushall's)\n");
-        nap_vm_cleanup(vm);
-        exit(EXIT_FAILURE);
+        return NAP_FAILURE;
     }
+    return NAP_SUCCESS;
 }
 
-void nap_restore_registers(struct nap_vm* vm)
+int nap_restore_registers(struct nap_vm* vm)
 {
     if(regi_stack_idx == 0)
     {
-        fprintf(stderr, "cannot popall without a pushall\n");
-        nap_vm_cleanup(vm);
-        exit(EXIT_FAILURE);
+        return NAP_FAILURE;
     }
 
     regi_stack_idx --;
     memcpy(vm->regi, regi_stack[regi_stack_idx], vm->mrc * sizeof(nap_int_t));
     MEM_FREE(regi_stack[regi_stack_idx]);
-
+    return NAP_SUCCESS;
 }
 
 int nap_vmi_has_variable(const struct nap_vm* vm, const char* name, int* type)
@@ -502,7 +517,11 @@ int nap_handle_interrupt(struct nap_vm* vm)
     }
     else
     {
-        /* ignoring unimplemented interrupt */
+        /* unimplemented interrupt, reporting an error */
+        char* s = (char*)calloc(64, sizeof(char));
+        sprintf(s, "unimplemented interrupt: %d", intr);
+        vm->error_description = s;
+        return NAP_FAILURE;
     }
     /* advance to the next position */
     vm->cc ++;
@@ -523,7 +542,6 @@ struct variable_entry *nap_fetch_variable(struct nap_vm* vm, nap_index_t var_ind
             struct variable_entry* ve_2 = nap_vmi_get_variable(current_vm, ve->name);
             if(ve_2 && ve_2->type == OWN_VAR)
             {
-                fprintf(stderr, "\nret:%s\n", ve_2->name);
                 return ve_2;
             }
             else
@@ -570,4 +588,20 @@ void nap_set_error(struct nap_vm *vm, int error_code)
     }
     vm->error_code = error_code;
     vm->error_message = error_table[error_code - 1];
+}
+
+
+const char *nap_get_type_description(StackEntryType t)
+{
+    switch(t)
+    {
+        case STACK_ENTRY_INT : return "int";
+        case STACK_ENTRY_REAL : return "real";
+        case STACK_ENTRY_STRING : return "string";
+        case STACK_ENTRY_CHAR : return "char";
+        case STACK_ENTRY_MARKER : return "mark";
+        case STACK_ENTRY_IMMEDIATE_INT : return "imm_int";
+        case STACK_ENTRY_MARKER_NAME : return "mark_name";
+        default: return "unk";
+    }
 }
