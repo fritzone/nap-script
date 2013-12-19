@@ -4,10 +4,11 @@
 #include "metatbl.h"
 #include "stack.h"
 #include "nbci_impl.h"
+#include "nap_consts.h"
 
 #include <stdlib.h>
 
-void nap_operation(struct nap_vm* vm)
+int nap_operation(struct nap_vm* vm)
 {
     uint8_t add_target = vm->content[vm->cc ++];   /* where we add (reg, var)*/
 
@@ -31,22 +32,9 @@ void nap_operation(struct nap_vm* vm)
             {
                 nap_index_t var_index = nap_fetch_index(vm);
                 struct variable_entry* var = nap_fetch_variable(vm, var_index);
-
-                if(var->instantiation == 0)
-                {
-                    fprintf(stderr,
-                            "variable %s not initialised correctly\n",
-                            var->name);
-                    exit(3);
-                }
-
-                if(var->instantiation->type != STACK_ENTRY_INT)
-                {
-                    fprintf(stderr,
-                            "variable %s has wrong type\n",
-                            var->name);
-                    exit(4);
-                }
+                ASSERT_NOT_NULL_VAR(var)
+                CHECK_VARIABLE_INSTANTIATON(var)
+                CHECK_VARIABLE_TYPE(var,STACK_ENTRY_INT)
 
                 /* and moving the value in the regsiter itself */
                 do_operation(vm, &vm->regi[register_index], *(int64_t*)var->instantiation->value, vm->current_opcode);
@@ -83,14 +71,8 @@ void nap_operation(struct nap_vm* vm)
         struct variable_entry* var = nap_fetch_variable(vm, var_index);
         uint8_t add_source = 0;
 
-        /* first time usage of this variable? */
-        if(var->instantiation == 0)
-        {
-            fprintf(stderr,
-                    "using variable [%s] without being on stack\n",
-                    var->name);
-            exit(6);
-        }
+        ASSERT_NOT_NULL_VAR(var)
+        CHECK_VARIABLE_INSTANTIATON(var)
 
         /* and now let's see what we move in the variable */
         add_source = vm->content[vm->cc ++];
@@ -125,15 +107,12 @@ void nap_operation(struct nap_vm* vm)
         }
         else
         {
-            fprintf(stderr, "only register can be added to var [%s]\n",
-                    var->name);
-            exit(5);
+            _NOT_IMPLEMENTED
         }
     }
-    else
+    else /* maybe adding (substracting) from an indexed value? */
     {
-        fprintf(stderr, "cannot add to a target\n");
-        exit(9);
+        _NOT_IMPLEMENTED
     }
-
+    return NAP_SUCCESS;
 }

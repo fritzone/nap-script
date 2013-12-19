@@ -27,6 +27,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+
 /******************************************************************************/
 /*                             Debugging section                              */
 /******************************************************************************/
@@ -107,7 +108,7 @@ nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found)
         }
     }
     *found = 0;
-    return 0x0BADF00D;
+    return NAP_NO_VALUE;
 }
 
 
@@ -119,94 +120,62 @@ void nap_vm_run(struct nap_vm* vm)
         vm->current_opcode = vm->content[vm->cc];
         vm->cc ++;
 
-        if(vm->current_opcode == OPCODE_PUSH)
+        if(vm->current_opcode == OPCODE_PUSH) /* push something onto the stack */
         {
-            nap_push(vm);
+            TRY_CALL(nap_push, ERR_VM_0015)
         }
         else
-        if(vm->current_opcode == OPCODE_EQ
+        if(vm->current_opcode == OPCODE_EQ                /* compare two things*/
                 || vm->current_opcode == OPCODE_LT
                 || vm->current_opcode == OPCODE_GT
                 || vm->current_opcode == OPCODE_NEQ
                 || vm->current_opcode == OPCODE_LTE
                 || vm->current_opcode == OPCODE_GTE)
         {
-            if(NAP_SUCCESS != nap_comparison(vm))
-            {
-                if(vm->environment == STANDALONE) /* only if not run in a library */
-                {
-                    /* free the allocated metatable */
-                    fprintf(stderr, "%s\n", vm->error_message);
-                    nap_vm_cleanup(vm);
-
-                    exit(0);
-                }
-                else
-                {
-                    return;
-                }
-
-            }
+            TRY_CALL(nap_comparison,ERR_VM_0005)
         }
         else
-        if(vm->current_opcode == OPCODE_MOV)
+        if(vm->current_opcode == OPCODE_MOV) /* move something into something else */
         {
-            nap_mov(vm) ;
+            TRY_CALL(nap_mov, ERR_VM_0011)
         }
         else
         if(vm->current_opcode == OPCODE_JLBF || vm->current_opcode == OPCODE_JMP)
         {
-            nap_jump(vm);
+            nap_jump(vm); /* jump somewhere (alsoconditional jump) */
         }
         else
-        if(vm->current_opcode == OPCODE_MARKS_NAME)
+        if(vm->current_opcode == OPCODE_MARKS_NAME) /* place a marker */
         {
-            nap_marks(vm);
+            TRY_CALL(nap_marks, ERR_VM_0016);
         }
         else
-        if(vm->current_opcode == OPCODE_CLRS_NAME)
+        if(vm->current_opcode == OPCODE_CLRS_NAME) /* clear the stack till the marker*/
         {
-            int t =  nap_clrs(vm);
-            if(t == NAP_FAILURE)
-            {
-                nap_set_error(vm, ERR_VM_0002);
-
-                if(vm->environment == STANDALONE) /* only if not run in a library */
-                {
-                    /* free the allocated metatable */
-                    fprintf(stderr, "%s\n", vm->error_message);
-                    nap_vm_cleanup(vm);
-
-                    exit(0);
-                }
-                else
-                {
-                    return;
-                }
-            }
+            TRY_CALL(nap_clrs, ERR_VM_0002)
         }
         else
-        if(vm->current_opcode == OPCODE_CALL)
+        if(vm->current_opcode == OPCODE_CALL) /* call a function */
         {
             nap_call(vm);
         }
         else
-        if(vm->current_opcode == OPCODE_PEEK)
+        if(vm->current_opcode == OPCODE_PEEK) /* peek the stack */
         {
-            nap_peek(vm);
+            TRY_CALL(nap_peek, ERR_VM_0013)
         }
         else
-        if(vm->current_opcode == OPCODE_POP)
+        if(vm->current_opcode == OPCODE_POP) /* pop from the stack */
         {
-            nap_pop(vm);
+            TRY_CALL(nap_pop, ERR_VM_0014)
         }
         else
-        if(vm->current_opcode == OPCODE_RETURN)
+        if(vm->current_opcode == OPCODE_RETURN) /* return a value */
         {
             nap_return(vm);
         }
         else
-        if(vm->current_opcode == OPCODE_EXIT)
+        if(vm->current_opcode == OPCODE_EXIT) /* quit the application ... */
         {
             if(vm->environment == STANDALONE) /* only if not run in a library */
             {
@@ -222,51 +191,51 @@ void nap_vm_run(struct nap_vm* vm)
         else
         if(vm->current_opcode == OPCODE_INC) /* increment */
         {
-            nap_inc(vm);
+            TRY_CALL(nap_inc, ERR_VM_0010)
         }
         else
         if(vm->current_opcode == OPCODE_DEC) /* decrement */
         {
-            nap_dec(vm);
+            TRY_CALL(nap_dec, ERR_VM_0009)
         }
         else
-        if(vm->current_opcode == OPCODE_CLIDX)
+        if(vm->current_opcode == OPCODE_CLIDX) /* clear indices */
         {
             nap_clidx(vm);
         }
         else
-        if(vm->current_opcode == OPCODE_LEAVE)
+        if(vm->current_opcode == OPCODE_LEAVE) /* leave the current call frame*/
         {
             vm->cc = vm->call_frames[-- vm->cfsize];
         }
         else
-        if(vm->current_opcode == OPCODE_POPALL)
+        if(vm->current_opcode == OPCODE_POPALL) /* pop all from internal stack*/
         {
-            nap_restore_registers(vm);
+            TRY_CALL(nap_restore_registers, ERR_VM_0007)
         }
         else
-        if(vm->current_opcode == OPCODE_PUSHALL)
+        if(vm->current_opcode == OPCODE_PUSHALL) /* psuh all to internal stack */
         {
-            nap_save_registers(vm);
+            TRY_CALL(nap_save_registers, ERR_VM_0006)
         }
         else
         if(vm->current_opcode == OPCODE_ADD
                 || vm->current_opcode == OPCODE_MUL
                 || vm->current_opcode == OPCODE_SUB
                 || vm->current_opcode == OPCODE_DIV
-                || vm->current_opcode == OPCODE_MOD )
+                || vm->current_opcode == OPCODE_MOD ) /* arithmetic operation */
         {
-            nap_operation(vm);
+            TRY_CALL(nap_operation, ERR_VM_0012)
         }
         else
-        if(vm->current_opcode == OPCODE_CLBF)
+        if(vm->current_opcode == OPCODE_CLBF) /* clear last boolean flag */
         {
             vm->lbf = UNDECIDED;
         }
         else
         if(vm->current_opcode == OPCODE_INTR) /* call an interrupt */
         {
-            nap_handle_interrupt(vm);
+            TRY_CALL(nap_handle_interrupt, ERR_VM_0017);
         }
         else
         {
@@ -274,8 +243,6 @@ void nap_vm_run(struct nap_vm* vm)
                     vm->current_opcode, vm->cc - 1, vm->cc - 1);
             nap_vm_cleanup(vm);
             exit(5);
-
         }
     }
-
 }

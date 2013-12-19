@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 /*
- * Read the metatable of the bytecode file. Exits on error.
+ * Read the metatable of the bytecode file.
  */
 int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len)
 {

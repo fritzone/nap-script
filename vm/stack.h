@@ -24,7 +24,7 @@ typedef enum TStackEntryType
  **/
 struct stack_entry
 {
-    /* the type of the entry 0 - int, 1 - real, 2 - string, 3 - reference*/
+    /* the type of the entry */
     StackEntryType type;
 
     /* the value of it. At this address usually there is:

@@ -3,6 +3,6 @@
 
 struct nap_vm;
 
-void nap_pop(struct nap_vm*);
+int nap_pop(struct nap_vm*);
 
 #endif

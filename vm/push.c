@@ -3,11 +3,12 @@
 #include "opcodes.h"
 #include "metatbl.h"
 #include "nbci_impl.h"
+#include "nap_consts.h"
 
 #include <stdlib.h>
 #include <stdint.h>
 
-void nap_push(struct nap_vm *vm)
+int nap_push(struct nap_vm *vm)
 {
     struct stack_entry* se = (struct stack_entry*)(
                                 calloc(sizeof(struct stack_entry), 1));
@@ -21,8 +22,7 @@ void nap_push(struct nap_vm *vm)
         {
             nap_index_t var_index = nap_fetch_index(vm);
             struct variable_entry* ve = nap_fetch_variable(vm, var_index);
-
-            /* TODO: is ve NULL? */
+            ASSERT_NOT_NULL_VAR(ve)
 
             if(ve->instantiation == NULL)
             {
@@ -65,8 +65,10 @@ void nap_push(struct nap_vm *vm)
         }
         else
         {
-            fprintf(stderr, "unknown push [push int 0x%x]", push_what);
-            exit(66);
+            char* s = (char*)calloc(64, sizeof(char));
+            snprintf(s, 64, "unknown push [0x%x]", push_what);
+            vm->error_description = s;
+            return NAP_FAILURE;
         }
     }
     else
@@ -103,16 +105,13 @@ void nap_push(struct nap_vm *vm)
     {
         nap_index_t var_index = nap_fetch_index(vm);
         struct variable_entry* ve = nap_fetch_variable(vm, var_index);
-        if(ve->instantiation == NULL)
-        {
-            fprintf(stderr, "invalid push of an undeclared variable [%s]\n", ve->name);
-            exit(9);
-        }
+        ASSERT_NOT_NULL_VAR(ve)
+        CHECK_VARIABLE_INSTANTIATON(ve)
+
         se->type = ve->instantiation->type; /* must match the stack entry */
 
         /* setting the value of the stack entry, nothing else is required here */
         se->value = ve;
-
     }
     else
     {
@@ -120,4 +119,5 @@ void nap_push(struct nap_vm *vm)
     }
 
     vm->stack[++ vm->stack_pointer] = se;
+    return NAP_SUCCESS;
 }

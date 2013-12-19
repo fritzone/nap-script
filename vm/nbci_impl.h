@@ -6,8 +6,31 @@ extern "C" {
 #endif
 
 #include "nap_types.h"
+#include "stack.h"
 
 struct nap_vm;
+
+#define CHECK_VARIABLE_INSTANTIATON(var)                                       \
+    if(var->instantiation == 0)                                                \
+    {                                                                          \
+        char* s = (char*)calloc(64, sizeof(char));                             \
+        snprintf(s, 64, "[ERR-INT-1] Variable [%s] not initialised correctly. "\
+                   "It has no instantiation.", var->name);                     \
+        vm->error_description = s;                                             \
+        return NAP_FAILURE;                                                    \
+    }
+
+#define CHECK_VARIABLE_TYPE(var, REQ_TYPE_CODE)                                \
+    if(var->instantiation->type != REQ_TYPE_CODE)                              \
+    {                                                                          \
+        char* s = (char*)calloc(64, sizeof(char));                             \
+        snprintf(s, 64, "[ERR-INT-2] Variable [%s] has wrong type."            \
+                   "Expected [%s] got[%s].", var->name,                        \
+                    nap_get_type_description(REQ_TYPE_CODE),                   \
+                    nap_get_type_description(var->instantiation->type));       \
+        vm->error_description = s;                                             \
+        return NAP_FAILURE;                                                    \
+    }
 
 /**
  * Returns 1 if the vm has a variable with the given name and populate the
@@ -60,12 +83,12 @@ nap_int_t nap_read_immediate(struct nap_vm* vm);
 /**
  * Saves the registers. Happens automatically on a "call"
  */
-void nap_save_registers(struct nap_vm*);
+int nap_save_registers(struct nap_vm*);
 
 /**
  * Restores the registers. Happens automatically on a "leave"
  */
-void nap_restore_registers(struct nap_vm*);
+int nap_restore_registers(struct nap_vm*);
 
 /**
  * Handles the interrupt which is next in the "content" of the VM
@@ -77,6 +100,11 @@ int nap_handle_interrupt(struct nap_vm*);
  * field of the VM, ie: allocates memory for it and copies the string over.
  */
 void nap_set_error(struct nap_vm*, int error_code);
+
+/**
+ * @brief Returns the description of the given type
+ */
+const char* nap_get_type_description(StackEntryType t);
 
 #ifdef __cplusplus
 }

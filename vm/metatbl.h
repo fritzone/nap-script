@@ -2,6 +2,7 @@
 #define _METATBL_H_
 
 #include "strtable.h"
+#include "stack.h"
 #include "nbci.h"
 
 #include <stdint.h>

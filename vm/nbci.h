@@ -29,16 +29,48 @@ extern "C" {
 #define STACK_INIT          4096       /* initially 4096 entries  */
 #define DEEPEST_RECURSION   4096       /* how deep we can dwelve into recursion */
 #define MAX_BYTECODE_CHUNKS 255        /* the number of bytecode chunks that can be allocated */
-/* Macro for leaving the application in case of an error */
-#define _NOT_IMPLEMENTED \
-    do {\
-    fprintf(stderr, "NI: file [%s] line [%d] instr [%x] "\
-                    "opcode [%x] at %"PRIu64" (%" PRIx64 ")\n\n", \
-            __FILE__, __LINE__, vm->content[vm->cc - 1], \
-            vm->current_opcode, vm->cc - 1, vm->cc - 1); \
-    exit(EXIT_FAILURE);\
+
+/* Macro for leaving the application in case of an unimplemented feature */
+#define _NOT_IMPLEMENTED                                                       \
+    do {                                                                       \
+    fprintf(stderr, "NI: file [%s] line [%d] instr [%x] "                      \
+                    "opcode [%x] at %"PRIu64" (%" PRIx64 ")\n\n",              \
+            __FILE__, __LINE__, vm->content[vm->cc - 1],                       \
+            vm->current_opcode, vm->cc - 1, vm->cc - 1);                       \
+    exit(EXIT_FAILURE);                                                        \
     } while(0);
 
+/* macro to try to call a function and leave the app in case of error with the
+ * given error code */
+#define TRY_CALL(func, err)                                                    \
+    do                                                                         \
+    {                                                                          \
+        if(func(vm) == NAP_FAILURE)                                            \
+        {                                                                      \
+            if(vm->error_code == 0) nap_set_error(vm, err);                    \
+            else vm->error_code = (vm->error_code << 16) + err;                \
+            if(vm->environment == STANDALONE)                                  \
+            {                                                                  \
+                fprintf(stderr, "%s\n", vm->error_message);                    \
+                if(vm->error_description)                                      \
+                    fprintf(stderr, "%s\n", vm->error_description);            \
+                nap_vm_cleanup(vm);                                            \
+                exit(0);                                                       \
+            }                                                                  \
+            else                                                               \
+            {                                                                  \
+                return;                                                        \
+            }                                                                  \
+        }                                                                      \
+    } while(0);
+
+/* macro for checking that a variable is not null */
+#define ASSERT_NOT_NULL_VAR(ve)                                                \
+    if(NULL == ve)                                                             \
+    {                                                                          \
+        nap_set_error(vm, ERR_VM_0008);                                        \
+        return NAP_FAILURE;                                                    \
+    }
 
 /* the lbf initially is undecided, the first operation sets it, and it is
  * AND-ed with the result of the next boolean operations as long as it is
@@ -135,8 +167,23 @@ struct nap_vm
     interrupt interrupts[255];
 
     /* error handling */
-    char* error_message;                    /* the last error message. Must be freed on cleanup */
-    int error_code;                         /* the last error code */
+
+    /* The last error message. Must NOT be freed on cleanup. In case of a secondary
+     * error it contains it's description not the main erros description. */
+    char* error_message;
+
+    /* sometimes there is an error description too, not only an error message.
+     * This must be freed, since it was allocated internally by methods wishing
+     * to report something funny. */
+    char* error_description;
+
+    /* The last error code. 0 if no error.
+     * First word (bits: 16->32): secondary error code (or 0 if no secondary
+     * error is present).
+     * Last word (bits 0->16): the main error code.
+     * A Word is 16 bits.
+     * Error codes in nap_consts.h or use nap_get_error_description(int) */
+    uint32_t error_code;
 };
 
 /**
