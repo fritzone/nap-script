@@ -26,15 +26,10 @@ typedef union{
     unsigned short s;
 }U2;
 
-//you can use the standard htons or this
 uint16_t htovm_16(uint16_t s);
 
-//you can use the standard htonl or this
 uint32_t htovm_32(uint32_t l);
 
-//for int64 you can use the int64 and do the same, or you can to do it with 2*4 like i did
-//you can give a void pointer as well..
 uint64_t htovm_64(uint64_t ll);
 
-#endif // BYTE_ORDER_H
-
+#endif

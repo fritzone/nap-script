@@ -119,7 +119,6 @@ int nap_comparison(struct nap_vm* vm)
         {
             _NOT_IMPLEMENTED
         }
-
     }
     else
     {

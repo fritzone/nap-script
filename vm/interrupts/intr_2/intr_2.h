@@ -7,8 +7,8 @@ extern "C" {
 
 #include  <stdint.h>
 
-const int CANNOT_SET_SOURCE = 1;
-const int CANNOT_COMPILE_SOURCE = 2;
+static const int CANNOT_SET_SOURCE = 1;
+static const int CANNOT_COMPILE_SOURCE = 2;
 
 struct nap_vm;
 

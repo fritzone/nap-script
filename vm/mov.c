@@ -8,6 +8,40 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* returns a number from the given string */
+static nap_int_t nap_int_string_to_number(const char* to_conv)
+{
+    int base = 10;
+    char* endptr = NULL;
+    if(strlen(to_conv) > 1)
+    {
+        if(to_conv[0] == '0') /* octal? */
+        {
+            to_conv ++;
+            base = 8;
+        }
+        if(strlen(to_conv) > 1)
+        {
+            if(to_conv[0] == 'x') /* hex */
+            {
+                to_conv ++;
+                base = 16;
+            }
+            else
+            if(to_conv[0] == 'b') /* binary */
+            {
+                to_conv ++;
+                base = 2;
+            }
+        }
+        else /* this was a simple "0" */
+        {
+            to_conv --; /* stepping back one */
+        }
+    }
+    return strtoll(to_conv, &endptr, base);
+}
+
 int nap_mov(struct nap_vm* vm)
 {
     uint8_t mov_target = vm->content[vm->cc ++];   /* where we move (reg, var)*/
@@ -17,7 +51,7 @@ int nap_mov(struct nap_vm* vm)
         uint8_t register_type = vm->content[vm->cc ++]; /* int/string/float...*/
 
         /* we are dealing with an INT type register */
-        if(register_type == OPCODE_INT)
+        if(register_type == OPCODE_INT)  /* to handle mov reg int x, <something> */
         {
             uint8_t register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
             uint8_t move_source = vm->content[vm->cc ++]; /* what are we moving in*/
@@ -43,9 +77,14 @@ int nap_mov(struct nap_vm* vm)
             if(move_source == OPCODE_RV)
             {
                 uint8_t return_type = vm->content[vm->cc ++]; /* int/string/float...*/
-                if(return_type == OPCODE_INT)
+                if(return_type == OPCODE_INT)                 /* handles: mov reg int 0, rv int*/
                 {
                     vm->regi[register_index] = vm->rvi;
+                }
+                else
+                if(return_type == OPCODE_STRING)              /* handles: mov reg int 0, rv string*/
+                {
+                    vm->regi[register_index] = nap_int_string_to_number(vm->rvs);
                 }
                 else
                 {
@@ -56,10 +95,17 @@ int nap_mov(struct nap_vm* vm)
             if(move_source == OPCODE_REG)
             {
                 uint8_t second_register_type = vm->content[vm->cc ++]; /* int/string/float...*/
-                if(second_register_type == OPCODE_INT) /* moving a register in another register */
+                if(second_register_type == OPCODE_INT) /* moving an int register in another int register */
                 {
                     uint8_t second_register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
                     vm->regi[register_index] = vm->regi[second_register_index];
+                }
+                else
+                if(second_register_type == OPCODE_STRING) /* moving a string into an int register */
+                {
+                    uint8_t second_register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
+                    vm->regi[register_index] = nap_int_string_to_number(
+                                vm->regs[second_register_index]);
                 }
                 else
                 {

@@ -377,9 +377,9 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
 
     //expwloc->location->start_line_number = expwloc->location->end_line_number;
 
-    fprintf(stderr, "BBB: %s \t\t\t|||start:%d end:%d\n", expwloc->expression,
+    /*fprintf(stderr, "BBB: %s \t\t\t|||start:%d end:%d\n", expwloc->expression,
             expwloc->location->start_line_number,
-            expwloc->location->end_line_number);
+            expwloc->location->end_line_number);*/
 
     return expwloc;
 }
