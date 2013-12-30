@@ -39,5 +39,7 @@ static const int ERR_VM_0015 = 0x0F; /* cannot push onto the stack */
 static const int ERR_VM_0016 = 0x10; /* cannot create a marker object */
 static const int ERR_VM_0017 = 0x11; /* unimplemented interrupt */
 static const int ERR_VM_0018 = 0x12; /* variable was not initialized correctly */
+static const int ERR_VM_0019 = 0x13; /* too deep recursion when calling */
+static const int ERR_VM_0020 = 0x14; /* invalid jump index */
 
 #endif // NAP_CONSTS_H

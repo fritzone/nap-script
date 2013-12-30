@@ -142,7 +142,7 @@ void nap_vm_run(struct nap_vm* vm)
         else
         if(vm->current_opcode == OPCODE_JLBF || vm->current_opcode == OPCODE_JMP)
         {
-            nap_jump(vm); /* jump somewhere (alsoconditional jump) */
+            TRY_CALL(nap_jump, ERR_VM_0020); /* jump somewhere (alsoconditional jump) */
         }
         else
         if(vm->current_opcode == OPCODE_MARKS_NAME) /* place a marker */
@@ -157,7 +157,7 @@ void nap_vm_run(struct nap_vm* vm)
         else
         if(vm->current_opcode == OPCODE_CALL) /* call a function */
         {
-            nap_call(vm);
+            TRY_CALL(nap_call, ERR_VM_0019);
         }
         else
         if(vm->current_opcode == OPCODE_PEEK) /* peek the stack */

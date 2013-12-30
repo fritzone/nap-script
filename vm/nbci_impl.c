@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include "string.h"
 
-#define ERROR_COUNT 18
+#define ERROR_COUNT 20
 
 /* section for defining the constants */
 static char* error_table[ERROR_COUNT] =
@@ -45,6 +45,8 @@ static char* error_table[ERROR_COUNT] =
     "[VM-0016] cannot create a temporay marker",
     "[VM-0017] unimplemented interrupt",
     "[VM-0018] a variable was not initialized correctly",
+    "[VM-0019] too deep recursion. Max 4096 nested calls are allowed",
+    "[VM-0020] Invalid jump index",
 };
 
 void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_int_t reg, nap_int_t immediate, uint8_t opcode)
@@ -142,7 +144,7 @@ void nap_vm_cleanup(struct nap_vm* vm)
         {
             if(vm->metatable[i]->instantiation->value)
             {
-                fprintf(stderr, "%s=%d\n", vm->metatable[i]->name, *(int*)vm->metatable[i]->instantiation->value);
+                /* fprintf(stderr, "%s=%d\n", vm->metatable[i]->name, *(int*)vm->metatable[i]->instantiation->value); */
                 MEM_FREE(vm->metatable[i]->instantiation->value);
             }
 
@@ -525,7 +527,14 @@ int nap_handle_interrupt(struct nap_vm* vm)
     }
     /* advance to the next position */
     vm->cc ++;
-    return int_res;
+    if(int_res == 0)
+    {
+        return NAP_SUCCESS;
+    }
+    char* s = (char*)calloc(64, sizeof(char));
+    sprintf(s, "interrupt [%d] failure code [%d]", intr, int_res);
+    vm->error_description = s;
+    return NAP_FAILURE;
 }
 
 

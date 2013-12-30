@@ -23,7 +23,7 @@ int nap_clrs(struct nap_vm* vm)
         {
             MEM_FREE(vm->stack[vm->stack_pointer]->value); /* this frees the stuff allocated at push */
             vm->stack[vm->stack_pointer]->value = NULL;
-            /* TODO: in case there are object on the stack call their desteructor */
+            /* TODO: in case there are object on the stack call their destructor */
         }
 
         MEM_FREE(vm->stack[vm->stack_pointer]);
@@ -36,6 +36,7 @@ int nap_clrs(struct nap_vm* vm)
         return NAP_FAILURE;
     }
 
+    /* and here delete the marker itself */
     if(vm->stack[vm->stack_pointer] != NULL
       && vm->stack[vm->stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
     {

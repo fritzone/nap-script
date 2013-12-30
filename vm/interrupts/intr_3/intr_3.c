@@ -12,7 +12,7 @@ uint8_t intr_3(struct nap_vm* vm)
     if(child_vm == NULL)
     {
         nap_set_error(vm, ERR_VM_0003);
-        return NAP_FAILURE;
+        return INTR_3_CANNOT_CREATE_VM;
     }
 
     /* no errors, run the new VM  */
@@ -27,10 +27,10 @@ uint8_t intr_3(struct nap_vm* vm)
         /* cleanup */
         nap_vm_cleanup(child_vm);
 
-        return NAP_FAILURE;
+        return INTR_3_COULD_NOT_RUN_CODE;
     }
 
     /* performs the cleanup */
     nap_vm_cleanup(child_vm);
-    return NAP_SUCCESS;
+    return 0;
 }

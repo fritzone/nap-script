@@ -80,7 +80,7 @@ int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
             new_var->index = index;
             new_var->name = name;
             new_var->type = type;
-            fprintf(stderr, "TY: %s:%d \n", new_var->name, new_var->type );
+            /* fprintf(stderr, "TY: %s:%d \n", new_var->name, new_var->type ); */
 
             new_var->instantiation = 0;
             vm->metatable[index] = new_var;

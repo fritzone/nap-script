@@ -16,8 +16,6 @@ static gb_releaser gbr;
 
 uint8_t intr_2(struct nap_vm* vm)
 {
-    std::cerr << "INTR2_STARTS" << std::endl;
-
     std::auto_ptr<nap_compiler> compiler = nap_compiler::create_compiler();
     compiler->set_vmchain(vm);
     bool success = true;
@@ -57,13 +55,9 @@ uint8_t intr_2(struct nap_vm* vm)
         return CANNOT_COMPILE_SOURCE;
     }
 
-    std::cerr << "INTR2_RELEASE" << std::endl;
-
     garbage_bin_bin::instance().empty(compiler.get());
     nap_compiler::release_compiler(compiler);
     vm->regi[0] = vm->chunk_counter - 1 ;
-
-    std::cerr << "INTR2_ENDS" << std::endl;
 
     return 0;
 }

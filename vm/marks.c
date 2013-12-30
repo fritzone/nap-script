@@ -16,6 +16,11 @@ int nap_marks(struct nap_vm *vm)
         return NAP_FAILURE;
 	}
     marker = (struct stack_entry*)(calloc(sizeof(struct stack_entry), 1));
+    if(!marker)
+    {
+        free(temp);
+        return NAP_FAILURE;
+    }
 
     *temp = marker_code;
 

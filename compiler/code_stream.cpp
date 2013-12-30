@@ -178,7 +178,7 @@ void code_stream::output_bytecode(const char* s)
     std::string expr = s;
     if(expr == " " || expr == "(" || expr == ")" || expr == ",")
     {
-        fprintf(stderr, "%s ", s);
+        /* fprintf(stderr, "%s ", s); */
         return;
     }
 
@@ -190,20 +190,20 @@ void code_stream::output_bytecode(const char* s)
 
     if(mcompiler->mlast_cmd_for_bytecode.empty())
     {
-        fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->location->expression,
+        /*fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->location->expression,
                 mcompiler->location->location->file_name.c_str(),
                 mcompiler->location->location->start_line_number,
-                mcompiler->location->location->end_line_number);
+                mcompiler->location->location->end_line_number);*/
         mcompiler->mlast_cmd_for_bytecode = mcompiler->location->expression;
     }
     else
     {
         if(mcompiler->mlast_cmd_for_bytecode != mcompiler->location->expression)
         {
-            fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->location->expression,
+            /*fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->location->expression,
                     mcompiler->location->location->file_name.c_str(),
                     mcompiler->location->location->start_line_number,
-                    mcompiler->location->location->end_line_number);
+                    mcompiler->location->location->end_line_number);*/
             mcompiler->mlast_cmd_for_bytecode = mcompiler->location->expression;
         }
     }

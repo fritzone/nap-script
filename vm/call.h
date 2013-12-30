@@ -6,6 +6,6 @@ struct nap_vm;
 /**
  * Performs a call operation on the given VM
  */
-void nap_call(struct nap_vm*);
+int nap_call(struct nap_vm*);
 
 #endif

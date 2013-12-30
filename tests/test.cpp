@@ -109,6 +109,42 @@ TEST(Definitions, InvalidVariableName)
     SCRIPT_SHUTDOWN
 }
 
+TEST(StringToIntConversion, DifferentBases)
+{
+    SCRIPT_START
+    "                                          \
+    int binary = 0;                            \
+    int decimal = 0;                           \
+    int zero = 1;                              \
+    int hexa = 0;                              \
+    int octal = 0;                             \
+    asm                                        \
+    {                                          \
+        mov reg string 0, \"9877\"             \
+        mov reg int 0, reg string 0            \
+        mov global.decimal, reg int 0          \
+        mov reg string 0, \"0xABCDE\"          \
+        mov reg int 0, reg string 0            \
+        mov global.hexa, reg int 0             \
+        mov reg string 0, \"0665544\"          \
+        mov reg int 0, reg string 0            \
+        mov global.octal, reg int 0            \
+        mov reg string 0, \"0b1001001\"        \
+        mov reg int 0, reg string 0            \
+        mov global.binary, reg int 0           \
+        mov reg string 0, \"0\"                \
+        mov reg int 0, reg string 0            \
+        mov global.zero, reg int 0             \
+    }                                          \
+    "
+    SCRIPT_END
+
+    ASSERT_TRUE(9877   == VAR_INT(decimal));
+    ASSERT_TRUE(703710 == VAR_INT(hexa));
+    ASSERT_TRUE(224100 == VAR_INT(octal));
+    ASSERT_TRUE(73     == VAR_INT(binary));
+    ASSERT_TRUE(0      == VAR_INT(zero));
+}
 
 TEST(Operations, PostPreIncrement)
 {

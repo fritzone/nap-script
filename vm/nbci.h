@@ -115,12 +115,13 @@ struct nap_vm
 
     /* return values */
     nap_int_t rvi;                          /* the integer return value      */
+    char* rvs;                              /* the string return value       */
 
     /* variables regarding the execution flow */
 
     uint8_t* content;                       /* the content of the file (ie the bytecodes)*/
     uint64_t cc;                            /* the instruction pointer */
-    uint64_t call_frames[STACK_INIT];       /* the jump back points, the first address after the calls' index */
+    uint64_t call_frames[DEEPEST_RECURSION];/* the jump back points, the first address after the calls' index */
     uint32_t cfsize;                        /* the size of the call frames vector */
     uint8_t  current_opcode;                /* the current opcode */
 
