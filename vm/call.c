@@ -21,7 +21,7 @@ int nap_call(struct nap_vm *vm)
     if(jmpt_index >= vm->jumptable_size)
     {
         char* s = (char*)calloc(256, sizeof(char));
-        snprintf(s, 256, "[ERR-INT-4] Invalid jump index [%d]."
+        SNPRINTF(s, 256, "[ERR-INT-4] Invalid jump index [%d]."
                  " Max is ["JL_SIZE_T_SPECIFIER"]",
                  jmpt_index, vm->jumptable_size);
         vm->error_description = s;

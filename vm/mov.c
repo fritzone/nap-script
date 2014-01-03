@@ -307,7 +307,7 @@ int nap_mov(struct nap_vm* vm)
                         if(real_index + strlen(vm->regs[register_index]) > strlen((char*)var->instantiation->value))
                         {
                             char* s = (char*)calloc(256, sizeof(char));
-                            snprintf(s, 256,
+                            SNPRINTF(s, 256,
                                     "[ERR-INT-3] Index overflow error for [%s]."
                                      "Requested index: [%" PRIu64 "] "
                                      "Available length: [%ld] "

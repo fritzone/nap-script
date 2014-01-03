@@ -113,7 +113,7 @@ nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found)
 
 
 
-void nap_vm_run(struct nap_vm* vm)
+NAP_LIB_API void nap_vm_run(struct nap_vm* vm)
 {
     while(vm->cc < vm->meta_location)
     {

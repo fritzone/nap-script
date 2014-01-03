@@ -14,7 +14,16 @@ class garbage_bin_bin;
 
 #include "type.h"
 
-#include <setjmp.h>
+#ifdef _WINDOWS
+	#ifdef NAP_CPL_BUILT_AS_SHARED
+		#include "nap_cpl_exp.h"
+	#elif defined NAP_CPL_BUILT_AS_STATIC
+		#include "nap_cpl_s_exp.h"
+	#else
+		#define NAP_LIB_API
+	#endif
+#endif
+
 /**
  * The named marks
  */
@@ -61,7 +70,7 @@ struct nap_vm ;
 /**
  * @brief The nap_compiler class represents a compiler.
  */
-class nap_compiler
+class NAP_LIB_API nap_compiler
 {
 
     nap_compiler();
