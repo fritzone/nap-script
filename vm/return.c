@@ -2,9 +2,11 @@
 #include "nbci.h"
 #include "opcodes.h"
 
+#include "nap_consts.h"
+
 #include <stdlib.h>
 
-void nap_return(struct nap_vm *vm)
+int nap_return(struct nap_vm *vm)
 {
     uint8_t return_what = vm->content[vm->cc ++];   /* return what? */
     if(return_what == OPCODE_REG) /* do we check a register? */
@@ -26,4 +28,5 @@ void nap_return(struct nap_vm *vm)
     {
         _NOT_IMPLEMENTED
     }
+    return NAP_SUCCESS;
 }

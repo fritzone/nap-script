@@ -29,6 +29,8 @@ extern "C" {
 #define STACK_INIT          4096       /* initially 4096 entries  */
 #define DEEPEST_RECURSION   4096       /* how deep we can dwelve into recursion */
 #define MAX_BYTECODE_CHUNKS 255        /* the number of bytecode chunks that can be allocated */
+#define OPCODE_COUNT        255        /* the number of possible opcodes */
+#define INTERRUPT_COUNT     255        /* the number of possible interrupts */
 
 /* Macro for leaving the application in case of an unimplemented feature */
 #define _NOT_IMPLEMENTED                                                       \
@@ -95,6 +97,8 @@ enum environments
 struct nap_vm;
 /* the function pointer for an interrupt function */
 typedef uint8_t (*interrupt)(struct nap_vm*);
+/* the function pointer for the handling of a byteocde operation */
+typedef int (*nap_op_handler)(struct nap_vm* vm);
 
 /**
  * The TNapVM struct represents an instance of a virtual machine.
@@ -162,10 +166,15 @@ struct nap_vm
     struct nap_vm* parent;                  /* the parent VM of this. NULL if main VM */
     size_t chunk_counter;                   /* counts the number of chunks */
     size_t allocated_chunks ;               /* how many chunks have we allocated */
-    /* interrupt handling */
 
     /* the interrupt vectors of the implementation */
-    interrupt interrupts[255];
+    interrupt interrupts[INTERRUPT_COUNT];
+
+    /* the array of opcode handlers */
+    nap_op_handler opcode_handlers[OPCODE_COUNT];
+
+    /* what error each opcode will report if not succesfully executed */
+    int opcode_error_codes[OPCODE_COUNT];
 
     /* error handling */
 

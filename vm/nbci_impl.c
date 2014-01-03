@@ -2,6 +2,8 @@
 /*                             Other functions section                        */
 /******************************************************************************/
 
+#include "nbci_impl.h"
+
 #include "nbci.h"
 #include "metatbl.h"
 #include "strtable.h"
@@ -12,10 +14,24 @@
 
 #include "nap_consts.h"
 
+/* interrupts */
 #include "intr_2.h"
 #include "intr_3.h"
 
-#include <nbci_impl.h>
+/* opcode handlers */
+#include "push.h"
+#include "comparison.h"
+#include "mov.h"
+#include "jump.h"
+#include "marks.h"
+#include "clrs.h"
+#include "call.h"
+#include "peek.h"
+#include "pop.h"
+#include "return.h"
+#include "inc.h"
+#include "dec.h"
+#include "operation.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -354,6 +370,35 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     /* and setting the interrupts */
     vm->interrupts[2] = intr_2;
     vm->interrupts[3] = intr_3;
+
+    /* setting the opcode handlers */
+    vm->opcode_handlers[OPCODE_PUSH] = nap_push; vm->opcode_error_codes[OPCODE_PUSH] = ERR_VM_0015;
+    vm->opcode_handlers[OPCODE_EQ] = nap_comparison; vm->opcode_error_codes[OPCODE_EQ] = ERR_VM_0005;
+    vm->opcode_handlers[OPCODE_LT] = nap_comparison; vm->opcode_error_codes[OPCODE_LT] = ERR_VM_0005;
+    vm->opcode_handlers[OPCODE_GT] = nap_comparison; vm->opcode_error_codes[OPCODE_GT] = ERR_VM_0005;
+    vm->opcode_handlers[OPCODE_NEQ] = nap_comparison; vm->opcode_error_codes[OPCODE_NEQ] = ERR_VM_0005;
+    vm->opcode_handlers[OPCODE_LTE] = nap_comparison; vm->opcode_error_codes[OPCODE_LTE] = ERR_VM_0005;
+    vm->opcode_handlers[OPCODE_GTE] = nap_comparison; vm->opcode_error_codes[OPCODE_GTE] = ERR_VM_0005;
+    vm->opcode_handlers[OPCODE_MOV] = nap_mov; vm->opcode_error_codes[OPCODE_MOV] = ERR_VM_0011;
+    vm->opcode_handlers[OPCODE_JLBF] = nap_jump; vm->opcode_error_codes[OPCODE_JLBF] = ERR_VM_0020;
+    vm->opcode_handlers[OPCODE_JMP] = nap_jump; vm->opcode_error_codes[OPCODE_JMP] = ERR_VM_0020;
+    vm->opcode_handlers[OPCODE_MARKS_NAME] = nap_marks; vm->opcode_error_codes[OPCODE_MARKS_NAME] = ERR_VM_0016;
+    vm->opcode_handlers[OPCODE_CLRS_NAME] = nap_clrs; vm->opcode_error_codes[OPCODE_CLRS_NAME] = ERR_VM_0002;
+    vm->opcode_handlers[OPCODE_CALL] = nap_call; vm->opcode_error_codes[OPCODE_CALL] = ERR_VM_0019;
+    vm->opcode_handlers[OPCODE_PEEK] = nap_peek; vm->opcode_error_codes[OPCODE_PEEK] = ERR_VM_0013;
+    vm->opcode_handlers[OPCODE_POP] = nap_pop; vm->opcode_error_codes[OPCODE_POP] = ERR_VM_0014;
+    vm->opcode_handlers[OPCODE_RETURN] = nap_return; vm->opcode_error_codes[OPCODE_RETURN] = 0;
+    vm->opcode_handlers[OPCODE_INC] = nap_inc; vm->opcode_error_codes[OPCODE_INC] = ERR_VM_0010;
+    vm->opcode_handlers[OPCODE_DEC] = nap_dec; vm->opcode_error_codes[OPCODE_DEC] = ERR_VM_0009;
+    vm->opcode_handlers[OPCODE_POPALL] = nap_restore_registers; vm->opcode_error_codes[OPCODE_POPALL] = ERR_VM_0007;
+    vm->opcode_handlers[OPCODE_PUSHALL] = nap_save_registers; vm->opcode_error_codes[OPCODE_PUSHALL] = ERR_VM_0006;
+    vm->opcode_handlers[OPCODE_ADD] = nap_operation; vm->opcode_error_codes[OPCODE_ADD] = ERR_VM_0012;
+    vm->opcode_handlers[OPCODE_MUL] = nap_operation; vm->opcode_error_codes[OPCODE_MUL] = ERR_VM_0012;
+    vm->opcode_handlers[OPCODE_SUB] = nap_operation; vm->opcode_error_codes[OPCODE_SUB] = ERR_VM_0012;
+    vm->opcode_handlers[OPCODE_DIV] = nap_operation; vm->opcode_error_codes[OPCODE_DIV] = ERR_VM_0012;
+    vm->opcode_handlers[OPCODE_MOD] = nap_operation; vm->opcode_error_codes[OPCODE_MOD] = ERR_VM_0012;
+    vm->opcode_handlers[OPCODE_INTR] = nap_handle_interrupt; vm->opcode_error_codes[OPCODE_INTR] = ERR_VM_0017;
+
 
     /* setting the container type of the VM*/
     vm->environment = target;
