@@ -10,21 +10,6 @@
 #include <typeinfo>
 #include <string.h>
 
-#ifndef _WINDOWS
-	#include <cxxabi.h>
-	#include <execinfo.h>
-#else
-	#ifdef NAP_CPL_BUILT_AS_SHARED
-		#include "nap_cpl_exp.h"
-	#elif defined NAP_CPL_BUILT_AS_STATIC
-		#include "nap_cpl_s_exp.h"
-	#else
-		#define NAP_LIB_API
-	#endif
-#endif
-
-
-
 // #define MEMORY_DEBUG
 
 #ifdef MEMORY_DEBUG
@@ -34,7 +19,7 @@ extern long int all_alloc;
 class garbage_bin_base;
 class nap_compiler;
 
-class NAP_LIB_API garbage_bin_bin 
+class garbage_bin_bin 
 {
 public:
 
@@ -51,7 +36,7 @@ private:
     friend class nap_compiler;
 };
 
-class NAP_LIB_API garbage_bin_base {
+class garbage_bin_base {
 public:
     virtual void empty(const nap_compiler*) = 0;
     garbage_bin_base() { garbage_bin_bin::instance().throwIn(this); }
@@ -59,7 +44,7 @@ public:
 };
 
 template <typename T>
-class NAP_LIB_API garbage_bin : public garbage_bin_base
+class garbage_bin : public garbage_bin_base
 {
 private:
 

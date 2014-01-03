@@ -19,16 +19,6 @@ extern "C" {
 #include "nap_types.h"
 #include "nap_structs.h"
 
-#ifdef _WINDOWS
-#ifdef NAP_BCI_BUILT_AS_SHARED
-#include "nap_bci_exp.h"
-#elif defined NAP_BCI_BUILT_AS_STATIC
-#include "nap_bci_s_exp.h"
-#else
-#define NAP_LIB_API
-#endif
-#endif
-
 #ifdef _MEM_DEBUG_
 #define _FREE(x) if((x)) { fprintf(stderr, "free:%p (%s:%d)\n", (x), __FILE__, __LINE__);  free((x)); }
 #else
@@ -113,7 +103,7 @@ typedef uint8_t (*interrupt)(struct nap_vm*);
  * of NAP Vm structures, each representing a virtual machine for a piece of code
  * that was started with the nap command "execute()"
  */
-struct NAP_LIB_API nap_vm
+struct nap_vm
 {
     /* Registers section */
 
@@ -201,7 +191,7 @@ struct NAP_LIB_API nap_vm
  * Does a system cleanup of the virtual machine (free memory, etc...)
  * @param vm - the  virtual machine
  */
-NAP_LIB_API void nap_vm_cleanup(struct nap_vm* vm);
+void nap_vm_cleanup(struct nap_vm* vm);
 
 /**
  * Dumps the stage of the VM into the given descriptor
@@ -214,13 +204,13 @@ void dump(struct nap_vm* vm, FILE *fp);
  * @param filename - the compiled bytecode
  * @return - the
  */
-NAP_LIB_API struct nap_vm* nap_vm_load(const char* filename);
+struct nap_vm* nap_vm_load(const char* filename);
 
 /**
  * Starts the processing cycle of the virtual machine, executes the bytecode
  * @param vm - the VM to run
  */
-NAP_LIB_API void nap_vm_run(struct nap_vm* vm);
+void nap_vm_run(struct nap_vm* vm);
 
 /**
  * @brief creates a new virtual machine and injects the given bytecode
@@ -228,7 +218,7 @@ NAP_LIB_API void nap_vm_run(struct nap_vm* vm);
  * @param bytecode_len
  * @return
  */
-NAP_LIB_API struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environments target);
+struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environments target);
 
 /**
  * @brief nap_vm_get_int return the value of the variable called "name"
@@ -237,7 +227,7 @@ NAP_LIB_API struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, en
  * @param [out] found - if we found it or not. Set to 1 or 0.
  * @return the value, or 0x0BADF00D if not found
  */
-NAP_LIB_API nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found);
+nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found);
 
 #ifdef __cplusplus
 }

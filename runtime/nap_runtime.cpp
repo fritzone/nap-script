@@ -32,14 +32,14 @@ struct nap_runtime
     std::string last_error;
 };
 
-nap_runtime* nap_runtime_create(const char* /*name*/)
+NAP_LIB_API nap_runtime* nap_runtime_create(const char* /*name*/)
 {
     struct nap_runtime* result = new nap_runtime;
 
     return result;
 }
 
-nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
+NAP_LIB_API nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
                                                const char* commands)
 {
     if(runtime != NULL)
@@ -72,7 +72,7 @@ nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
     return NULL;
 }
 
-int nap_runtime_execute(struct nap_runtime* runtime,
+NAP_LIB_API int nap_runtime_execute(struct nap_runtime* runtime,
                         struct nap_bytecode_chunk* bytecode)
 {
     runtime->vm = nap_vm_inject(bytecode->code, bytecode->length, EMBEDDED);
@@ -82,7 +82,7 @@ int nap_runtime_execute(struct nap_runtime* runtime,
 }
 
 
-nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
+NAP_LIB_API nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
                                  const char* variable_name, int *found)
 {
     char* t = (char*)calloc(strlen(variable_name) + 1, 1);
@@ -94,21 +94,21 @@ nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
 
 
 
-nap_real_t nap_runtime_get_real(nap_runtime * /*runtime*/,
+NAP_LIB_API nap_real_t nap_runtime_get_real(nap_runtime * /*runtime*/,
                                 const char * /*variable_name*/)
 {
     return 0;
 }
 
 
-nap_string_t nap_runtime_get_string(nap_runtime* /*runtime*/,
+NAP_LIB_API nap_string_t nap_runtime_get_string(nap_runtime* /*runtime*/,
                                     const char* /*variable_name*/)
 {
     return 0;
 }
 
 
-void nap_runtime_shutdown(nap_runtime **runtime)
+NAP_LIB_API void nap_runtime_shutdown(nap_runtime **runtime)
 {
     nap_compiler::release_compiler((*runtime)->compiler);
     if((*runtime)->vm)
