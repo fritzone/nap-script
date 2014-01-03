@@ -512,6 +512,7 @@ int nap_handle_interrupt(struct nap_vm* vm)
     /* CC points to the interrupt number */
     uint8_t intr = *(uint8_t*)(vm->content + vm->cc);
     uint8_t int_res = 0;
+	char* s = NULL;
 
     if(vm->interrupts[intr])
     {
@@ -531,7 +532,7 @@ int nap_handle_interrupt(struct nap_vm* vm)
     {
         return NAP_SUCCESS;
     }
-    char* s = (char*)calloc(64, sizeof(char));
+    s = (char*)calloc(64, sizeof(char));
     sprintf(s, "interrupt [%d] failure code [%d]", intr, int_res);
     vm->error_description = s;
     return NAP_FAILURE;

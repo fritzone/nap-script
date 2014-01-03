@@ -1,5 +1,7 @@
 set(project nap)
 
+include (GenerateExportHeader)
+
 set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/call_ctx.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/compiler.cpp
@@ -16,19 +18,24 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/code_output.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/code_stream.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/parameter.cpp
-    ../vm/byte_order.c
+    ${CMAKE_SOURCE_DIR}/vm/byte_order.c
 )
 
-include_directories(../vm)
+include_directories(${CMAKE_SOURCE_DIR}/vm 
+                    ${CMAKE_CURRENT_BINARY_DIR} 
+					${CMAKE_BINARY_DIR}/compiler
+)
 
-add_library(nap-cpl SHARED ${${project}_files} )
+list(APPEND compiler_files ${${project}_files})
+set(compiler_files ${${project}_files} CACHE INTERNAL "compiler_files" )
 
+add_library(nap_cpl_s STATIC ${${project}_files} )
 add_executable(nap
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )
 
-# LINK_DIRECTORIES(../vm)
+LINK_DIRECTORIES(${NAP_ROOT}/vm/$(ConfigurationName)/)
 
-target_link_libraries(nap-cpl nap-bci)
+target_link_libraries(nap_cpl_s nap_bci_s)
 
-target_link_libraries(nap nap-bci nap-cpl)
+target_link_libraries(nap nap_bci_s nap_cpl_s)

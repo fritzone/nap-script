@@ -14,7 +14,6 @@ class garbage_bin_bin;
 
 #include "type.h"
 
-#include <setjmp.h>
 /**
  * The named marks
  */

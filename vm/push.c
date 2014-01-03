@@ -66,7 +66,7 @@ int nap_push(struct nap_vm *vm)
         else
         {
             char* s = (char*)calloc(64, sizeof(char));
-            snprintf(s, 64, "unknown push [0x%x]", push_what);
+			SNPRINTF(s, 64, "unknown push [0x%x]", push_what);
             vm->error_description = s;
             return NAP_FAILURE;
         }
