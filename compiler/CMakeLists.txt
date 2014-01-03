@@ -29,22 +29,13 @@ include_directories(${CMAKE_SOURCE_DIR}/vm
 list(APPEND compiler_files ${${project}_files})
 set(compiler_files ${${project}_files} CACHE INTERNAL "compiler_files" )
 
-#add_library(nap_cpl SHARED ${${project}_files} )
 add_library(nap_cpl_s STATIC ${${project}_files} )
-
 add_executable(nap
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )
 
 LINK_DIRECTORIES(${NAP_ROOT}/vm/$(ConfigurationName)/)
 
-#target_link_libraries(nap_cpl nap_bci_s)
 target_link_libraries(nap_cpl_s nap_bci_s)
-
-#GENERATE_EXPORT_HEADER(nap_cpl_s
-#             BASE_NAME nap_cpl_s
-#             EXPORT_MACRO_NAME NAP_LIB_API
-#             EXPORT_FILE_NAME nap_cpl_exp.h
-#)
 
 target_link_libraries(nap nap_bci_s nap_cpl_s)

@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 2.6)
 project (nap-script)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON) 
+
 option(coverage-build "gcov/lcov test coverage analysis (make coverage_test)" OFF)
 
 if(NOT WIN32)

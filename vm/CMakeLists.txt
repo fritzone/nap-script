@@ -44,20 +44,12 @@ set(interrupt_files CACHE INTERNAL "interrupt_files" FORCE)
 add_subdirectory(interrupts)
 list(APPEND ${project}_files ${interrupt_files})
 
-#add_library(nap_bci SHARED ${${project}_files} )
 add_library(nap_bci_s STATIC ${${project}_files} )
-
-#GENERATE_EXPORT_HEADER(nap_bci
-#             BASE_NAME nap_bci
-#             EXPORT_MACRO_NAME NAP_LIB_API
-#             EXPORT_FILE_NAME nap_bci_exp.h
-#)
 
 add_executable(napi
     ${CMAKE_CURRENT_SOURCE_DIR}/main.c
 )
 
 target_link_libraries(nap_bci_s nap_cpl_s)
-#target_link_libraries(nap_bci nap_cpl_s)
 
 target_link_libraries(napi nap_bci_s nap_cpl_s)
