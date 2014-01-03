@@ -9,6 +9,13 @@ extern "C" {
 #include "nap_structs.h"
 #include "nap_consts.h"
 
+	
+#ifdef _WINDOWS
+#include "nap_rt_exp.h"
+#else
+#define NAP_LIB_API
+#endif
+
 /* The real runtime hidden in an opaque pointer  */
 struct nap_runtime;
 
@@ -22,7 +29,7 @@ struct nap_runtime;
  *
  * @return a new runtime environment or NULL (0) in case of error
  **/
-nap_runtime* nap_runtime_create(const char *name);
+NAP_LIB_API nap_runtime* nap_runtime_create(const char *name);
 
 /**
  * @brief Compiles the commands and creates a bytecode chunk for them.
@@ -53,7 +60,7 @@ nap_runtime* nap_runtime_create(const char *name);
  * @return a nap_bytecode_chunk object containing the compiled bytecode or 
  * NULL (0) in case of an error.
  **/
-nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime *runtime,
+NAP_LIB_API nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime *runtime,
                                         const char         *commands);
 /**
  * @brief The nap_runtime_execute executes the given bytecode chunk in the
@@ -66,7 +73,7 @@ nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime *runtime,
  * in case of failure. In case of failure you can call the method
  * nap_runtime_last_error() to get the last error
  **/ 
-int nap_runtime_execute(struct nap_runtime        *runtime,
+NAP_LIB_API int nap_runtime_execute(struct nap_runtime        *runtime,
                         struct nap_bytecode_chunk *bytecode);
 
 /**
@@ -88,14 +95,14 @@ int nap_runtime_execute(struct nap_runtime        *runtime,
  *         NAP_VARIABLE_NOT_FOUND in order to confirm that there is indeed no
  *         such variable, otherwise the value indeed is 0x0BADF00D.
  */
-nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
+NAP_LIB_API nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
                               const char *variable_name,
                               int* found);
 
-nap_real_t nap_runtime_get_real(struct nap_runtime* runtime,
+NAP_LIB_API nap_real_t nap_runtime_get_real(struct nap_runtime* runtime,
                                  const char* variable_name);
 
-nap_string_t nap_runtime_get_string(struct nap_runtime* runtime,
+NAP_LIB_API nap_string_t nap_runtime_get_string(struct nap_runtime* runtime,
                                  const char* variable_name);
 
 /**
@@ -108,7 +115,7 @@ nap_string_t nap_runtime_get_string(struct nap_runtime* runtime,
  *
  * @param runtime - the address of a nap_runtime object
  */
-void nap_runtime_shutdown(struct nap_runtime** runtime);
+NAP_LIB_API void nap_runtime_shutdown(struct nap_runtime** runtime);
 
 #ifdef __cplusplus
 }
