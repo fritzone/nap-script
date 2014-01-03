@@ -9,7 +9,6 @@ set(${project}_files
 )
 
 add_library(nap_rt SHARED ${${project}_files} )
-#add_library(nap_rt_s STATIC ${${project}_files} )
 
 include_directories(${CMAKE_SOURCE_DIR}/vm 
 					${CMAKE_BINARY_DIR}/vm 
@@ -19,7 +18,6 @@ include_directories(${CMAKE_SOURCE_DIR}/vm
 )
 
 target_link_libraries(nap_rt nap_cpl_s nap_bci_s)
-#target_link_libraries(nap_rt_s nap_cpl_s nap_bci_s)
 
 GENERATE_EXPORT_HEADER(nap_rt
              BASE_NAME nap_rt
