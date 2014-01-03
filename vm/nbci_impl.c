@@ -132,7 +132,7 @@ void do_operation(struct nap_vm* vm, nap_int_t* target, nap_int_t operand, uint8
 /**
  * Cleans the allocated memory
  */
-void nap_vm_cleanup(struct nap_vm* vm)
+NAP_LIB_API void nap_vm_cleanup(struct nap_vm* vm)
 {
     uint64_t i;
     int64_t tempst;
@@ -361,7 +361,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     return vm;
 }
 
-struct nap_vm *nap_vm_load(const char *filename)
+NAP_LIB_API struct nap_vm *nap_vm_load(const char *filename)
 {
     long fsize = 0;
     uint8_t* file_content;
@@ -512,6 +512,7 @@ int nap_handle_interrupt(struct nap_vm* vm)
     /* CC points to the interrupt number */
     uint8_t intr = *(uint8_t*)(vm->content + vm->cc);
     uint8_t int_res = 0;
+	char* s = NULL;
 
     if(vm->interrupts[intr])
     {
@@ -531,7 +532,7 @@ int nap_handle_interrupt(struct nap_vm* vm)
     {
         return NAP_SUCCESS;
     }
-    char* s = (char*)calloc(64, sizeof(char));
+    s = (char*)calloc(64, sizeof(char));
     sprintf(s, "interrupt [%d] failure code [%d]", intr, int_res);
     vm->error_description = s;
     return NAP_FAILURE;

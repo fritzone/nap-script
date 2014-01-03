@@ -1,5 +1,5 @@
 set(project nbci)
-
+include (GenerateExportHeader)
 set_source_files_properties(
     ${CMAKE_CURRENT_SOURCE_DIR}/*.c
     PROPERTIES COMPILE_FLAGS "-std=c90")
@@ -32,16 +32,40 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/operation.c
 )
 
-include_directories(${NAP-ROOT}/compiler)
+include_directories(${CMAKE_SOURCE_DIR}/vm 
+                    ${CMAKE_SOURCE_DIR}/compiler 
+					${CMAKE_BINARY_DIR}/vm 
+                    ${CMAKE_CURRENT_BINARY_DIR} 
+					${CMAKE_BINARY_DIR}/compiler
+)
+
 
 set(interrupt_files CACHE INTERNAL "interrupt_files" FORCE)
 add_subdirectory(interrupts)
 list(APPEND ${project}_files ${interrupt_files})
 
 add_library(nap-bci SHARED ${${project}_files} )
+add_library(nap-bci-s STATIC ${${project}_files} )
+
+GENERATE_EXPORT_HEADER( nap-bci-s
+             BASE_NAME nap-bci-s
+             EXPORT_MACRO_NAME NAP_LIB_API
+             EXPORT_FILE_NAME nap_bci_s_exp.h
+             STATIC_DEFINE NAP_BCI_BUILT_AS_STATIC
+)
+
+GENERATE_EXPORT_HEADER( nap-bci
+             BASE_NAME nap-bci
+             EXPORT_MACRO_NAME NAP_LIB_API
+             EXPORT_FILE_NAME nap_bci_exp.h
+             STATIC_DEFINE NAP_BCI_BUILT_AS_SHARED
+)
 
 add_executable(napi
     ${CMAKE_CURRENT_SOURCE_DIR}/main.c
 )
 
-target_link_libraries(napi nap-bci nap-cpl)
+target_link_libraries(nap-bci-s nap-cpl-s)
+target_link_libraries(nap-bci nap-cpl-s)
+
+target_link_libraries(napi nap-bci-s nap-cpl-s)
