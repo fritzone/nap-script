@@ -152,7 +152,7 @@ struct nap_vm
     /* variables for the stringtable */
 
     struct strtable_entry** stringtable;    /* the stringtable itself */
-    uint64_t strt_size;                     /* the size of the stringtable */
+    size_t strt_size;                       /* the size of the stringtable */
 
     enum environments environment;          /* whether this is run as embedded in an app or a standalone application */
     uint8_t flags;                          /* Some flags used by the VM */
@@ -186,25 +186,6 @@ struct nap_vm
      * Error codes in nap_consts.h or use nap_get_error_description(int) */
     uint32_t error_code;
 };
-
-/**
- * Sets the last boolean flag according to the operation found int current_opcode
- * @param vm - the virtual machine
- * @param reg - the registers value to check
- * @param immediate - against this value
- * @param current_opcode - the operation which is supposed to be executed
- */
-void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_int_t reg, nap_int_t immediate, uint8_t opcode);
-
-/**
- * Perform the given operation to be found in the opcode, stores the result in target
- * @param vm - the virtual machine
- * @param target - the target of the operation, and the first operand
- * @param operand - the operand on whcih we perform
- * @param opcode - the operation we perform
- * @throws a system error if the operation is division and the operand is zero
- */
-void do_operation(struct nap_vm* vm, nap_int_t *target, nap_int_t operand, uint8_t opcode);
 
 /**
  * Does a system cleanup of the virtual machine (free memory, etc...)

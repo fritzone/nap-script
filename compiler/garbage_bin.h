@@ -10,11 +10,6 @@
 #include <typeinfo>
 #include <string.h>
 
-#ifndef _WIN32
-#include <cxxabi.h>
-#include <execinfo.h>
-#endif
-
 // #define MEMORY_DEBUG
 
 #ifdef MEMORY_DEBUG
@@ -24,7 +19,8 @@ extern long int all_alloc;
 class garbage_bin_base;
 class nap_compiler;
 
-class garbage_bin_bin {
+class garbage_bin_bin 
+{
 public:
 
     void throwIn(garbage_bin_base* rubbish) { items.push_back(rubbish); }

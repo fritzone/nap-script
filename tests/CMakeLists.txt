@@ -8,7 +8,11 @@ if(WIN32)
     add_definitions("/D_VARIADIC_MAX=10")
 endif()
 
+include_directories(${CMAKE_BINARY_DIR}/compiler 					
+					${CMAKE_BINARY_DIR}/runtime
+)
+
 add_subdirectory(gtest)
 
-target_link_libraries(vmtest nap-bci nap-rt nap-cpl gtest)
+target_link_libraries(vmtest nap_rt nap_bci_s nap_cpl_s gtest)
 
