@@ -1,5 +1,6 @@
 #include "byte_order.h"
 
+// convert it to big endian
 uint32_t htovm_32(uint32_t l)
 {
     U4 mask,res;
@@ -12,6 +13,7 @@ uint32_t htovm_32(uint32_t l)
     return res.l;
 }
 
+// big endian
 uint64_t htovm_64(uint64_t ll)
 {
     U2 mask1;
@@ -32,6 +34,7 @@ uint64_t htovm_64(uint64_t ll)
     return res.ll;
 }
 
+// big endian
 uint16_t htovm_16(uint16_t s)
 {
     U2 mask,res;

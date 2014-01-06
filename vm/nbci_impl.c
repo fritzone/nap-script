@@ -37,6 +37,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "string.h"
+#include <locale.h>
+#include <errno.h>
+#include <iconv.h>
+#include <stddef.h>
 
 #define ERROR_COUNT 20
 
@@ -154,6 +158,7 @@ void nap_vm_cleanup(struct nap_vm* vm)
     int64_t tempst;
     int64_t tempjmi;
     //dump(vm, stdout);
+
     for(i=0; i<vm->meta_size; i++)
     {
         if(vm->metatable[i]->instantiation)
@@ -398,7 +403,6 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     vm->opcode_handlers[OPCODE_DIV] = nap_operation; vm->opcode_error_codes[OPCODE_DIV] = ERR_VM_0012;
     vm->opcode_handlers[OPCODE_MOD] = nap_operation; vm->opcode_error_codes[OPCODE_MOD] = ERR_VM_0012;
     vm->opcode_handlers[OPCODE_INTR] = nap_handle_interrupt; vm->opcode_error_codes[OPCODE_INTR] = ERR_VM_0017;
-
 
     /* setting the container type of the VM*/
     vm->environment = target;
@@ -659,4 +663,55 @@ const char *nap_get_type_description(StackEntryType t)
         case STACK_ENTRY_MARKER_NAME : return "mark_name";
         default: return "unk";
     }
+}
+
+char *convert_string_from_bytecode_file(char *src, size_t len, size_t dest_len)
+{
+    char* loc_orig = 0;
+    int len_loc = 0;
+    char* enc = 0;
+    char* loc_cp = 0;
+    char* converted = 0;
+    char* orig_converted = 0;
+    iconv_t converter;
+    int ret = -1;
+
+    setlocale(LC_ALL, "");
+    loc_orig = setlocale(LC_ALL, NULL);
+    len_loc = strlen(loc_orig);
+
+    loc_cp = (char*)calloc(len_loc + 1, sizeof(char));
+    strcpy(loc_cp, loc_orig);
+    enc = strchr(loc_cp, '.') + 1;
+    converter = iconv_open(enc, "UTF-32BE");
+
+    if((size_t)converter == (size_t)-1)
+    {
+        free(loc_cp);
+        if (errno == EINVAL)
+        {
+            fprintf(stderr, "[iconv] Conversion to %s is not supported\n", enc);
+            exit(1);
+        }
+        else
+        {
+            fprintf(stderr, "[iconv] Initialization failure");
+            exit(1);
+        }
+    }
+    converted = (char*)calloc(dest_len + 1, sizeof(char));
+    orig_converted = converted;
+
+    ret = iconv(converter, &src, &len, &converted, &dest_len);
+    iconv_close(converter);
+
+    free(loc_cp);
+
+    if(ret == -1)
+    {
+        perror("iconv");
+        return src;
+    }
+
+    return orig_converted;
 }

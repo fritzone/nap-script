@@ -2,6 +2,7 @@
 #include "nbci.h"
 #include "byte_order.h"
 #include "nap_consts.h"
+#include "nbci_impl.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -36,15 +37,17 @@ int interpret_stringtable(struct nap_vm *vm, uint8_t *start_location, uint32_t l
         {
             uint32_t len = htovm_32(*(uint32_t*)(cloc));
             char* str = NULL;
+            char* converted_str = NULL;
             struct strtable_entry* new_strentry = NULL;
+
             cloc += 4;
             str = (char*)calloc(sizeof(char), len + 1);
             if(str == NULL)
             {
                 return NAP_FAILURE;
             }
-            memcpy(str, cloc, len);
-            cloc += len;
+            memcpy(str, cloc, len * 4); /* UTF-32BE encoding */
+            cloc += len * 4;
 
             if(vm->strt_size < index + 1)
             {
@@ -58,15 +61,24 @@ int interpret_stringtable(struct nap_vm *vm, uint8_t *start_location, uint32_t l
                 vm->stringtable = tmp;
                 vm->strt_size = index + 1;
             }
-            new_strentry = (struct strtable_entry*)calloc(1, sizeof(struct strtable_entry));
+            new_strentry = (struct strtable_entry*)calloc(1,
+                                                 sizeof(struct strtable_entry));
             if(new_strentry == NULL)
             {
                 return NAP_FAILURE;
             }
+
+            converted_str = convert_string_from_bytecode_file(str, len * 4, len);
+
             new_strentry->index = index;
-            new_strentry->string = str;
+            new_strentry->string = converted_str;
             new_strentry->len = len;
             vm->stringtable[index] = new_strentry;
+
+            if(converted_str != str)
+            {
+                free(str);
+            }
         }
     }
 
