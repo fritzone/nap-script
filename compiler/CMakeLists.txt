@@ -17,6 +17,7 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/garbage_bin.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/code_output.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/code_stream.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/charconverter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/parameter.cpp
     ${CMAKE_SOURCE_DIR}/vm/byte_order.c
 )

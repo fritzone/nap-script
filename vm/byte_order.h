@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-//the same for 4 bytes
 typedef union{
     unsigned char c[4];
     unsigned short s[2];

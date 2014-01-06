@@ -3,6 +3,7 @@
 #include "type.h"
 #include "opcodes.h"
 #include "compiler.h"
+#include "charconverter.h"
 
 extern "C"
 {
@@ -54,9 +55,26 @@ public:
         mcompiler->place_bytes(pos, &netw, 1);
     }
 
-    void write_string_to_file(const char* s, int cnt, int pos = -1)
+    void write_string_to_file(const char* s, int cnt, int needs_conv, int pos = -1)
     {
-        mcompiler->place_bytes(pos, s, cnt);
+        // now convert the bytes to wchar_t
+        if(needs_conv)
+        {
+            char* t = to_nap_format(s, cnt);
+            if(t == 0)
+            {
+                mcompiler->place_bytes(pos, s, cnt);
+            }
+            else
+            {
+                mcompiler->place_bytes(pos, t, cnt  * 4);
+                free(t);
+            }
+        }
+        else
+        {
+            mcompiler->place_bytes(pos, s, cnt);
+        }
     }
 
     uint32_t ftell()
@@ -86,7 +104,7 @@ void code_finalizer::finalize()
 
     // write out the variables
     static const char METATABLE[] = ".meta";
-    f.write_string_to_file(METATABLE, 5);
+    f.write_string_to_file(METATABLE, 5, 0);
     uint32_t meta_count = mcompiler->variables().size();
     f.write_stuff_to_file_32(meta_count);
     for(unsigned int i=0; i<meta_count; i++)
@@ -116,7 +134,7 @@ void code_finalizer::finalize()
             f.write_stuff_to_file_16(var_name_length - globlen);
             const char* vname = mcompiler->variables()[i]->name.c_str();
             vname += globlen;
-            f.write_string_to_file(vname, var_name_length - globlen);
+            f.write_string_to_file(vname, var_name_length - globlen, 0);
         }
         else
         {
@@ -127,7 +145,7 @@ void code_finalizer::finalize()
     strtable_location = f.ftell();
     // write out the stringtable
     static const char STRINGTABLE[] = ".str";
-    f.write_string_to_file(STRINGTABLE, 4);
+    f.write_string_to_file(STRINGTABLE, 4, 0);
     uint32_t strtable_count = mcompiler->stringtable().size();
     f.write_stuff_to_file_32(strtable_count);
     for(unsigned int i=0; i<strtable_count; i++)
@@ -135,12 +153,12 @@ void code_finalizer::finalize()
         f.write_stuff_to_file_32( mcompiler->stringtable()[i]->index);
         f.write_stuff_to_file_32( mcompiler->stringtable()[i]->length);
         const char* str =  mcompiler->stringtable()[i]->the_string.c_str();
-        f.write_string_to_file(str,  mcompiler->stringtable()[i]->length);
+        f.write_string_to_file(str,  mcompiler->stringtable()[i]->length, 1);
     }
     jumptable_location = f.ftell();
     // write out the jumptable
     static const char JUMPTABLE[] = ".jmp";
-    f.write_string_to_file(JUMPTABLE, 4);
+    f.write_string_to_file(JUMPTABLE, 4, 0);
     uint32_t jumptable_count = mcompiler->jumptable().size();
     f.write_stuff_to_file_32(jumptable_count);
     for(unsigned int i=0; i<jumptable_count; i++)
@@ -153,7 +171,7 @@ void code_finalizer::finalize()
         if(je->type == 1 || je->type == 2)
         {
             f.write_stuff_to_file_16(l);            // The length of the name
-            f.write_string_to_file(je->name.c_str(), l);
+            f.write_string_to_file(je->name.c_str(), l, 0);
         }
     }
 
