@@ -665,43 +665,50 @@ const char *nap_get_type_description(StackEntryType t)
     }
 }
 
-char *convert_string_from_bytecode_file(char *src, size_t len, size_t dest_len)
+char *convert_string_from_bytecode_file(char *src, size_t len, size_t dest_len, size_t* real_len)
 {
-    char* loc_orig = 0;
-    int len_loc = 0;
-    char* enc = 0;
-    char* loc_cp = 0;
-    char* converted = 0;
-    char* orig_converted = 0;
-    iconv_t converter;
-    int ret = -1;
+    char* loc_orig = 0; /* the original locale string for LC_ALL */
+    int len_loc = 0;    /* the length of the loc_orig */
+    char* enc = 0;      /* the actual encoding */
+    char* loc_cp = 0;   /* copying over the loc_orig to not to mess with orig */
+    char* converted = 0; /* will be used by iconv */
+    char* orig_converted = 0; /* will have the beginning of the converted */
+    iconv_t converter;  /* the converter itself */
+    int ret = -1;       /* errorchecking */
+    size_t save_dest_len = dest_len; /* used in real lenth calcualtions */
+    char* to_return = NULL; /* what to return */
 
+    /* get the locale info */
     setlocale(LC_ALL, "");
     loc_orig = setlocale(LC_ALL, NULL);
     len_loc = strlen(loc_orig);
-
     loc_cp = (char*)calloc(len_loc + 1, sizeof(char));
     strcpy(loc_cp, loc_orig);
-    enc = strchr(loc_cp, '.') + 1;
-    converter = iconv_open(enc, "UTF-32BE");
 
+    /* the encoding of the locale */
+    enc = strchr(loc_cp, '.') + 1;
+
+    /* creating an iconv converter */
+    converter = iconv_open(enc, "UTF-32BE");
     if((size_t)converter == (size_t)-1)
     {
         free(loc_cp);
         if (errno == EINVAL)
         {
             fprintf(stderr, "[iconv] Conversion to %s is not supported\n", enc);
-            exit(1);
         }
         else
         {
             fprintf(stderr, "[iconv] Initialization failure");
-            exit(1);
         }
+        exit(1);
     }
-    converted = (char*)calloc(dest_len + 1, sizeof(char));
+
+    /* creating the work buffer for iconv */
+    converted = (char*)calloc(dest_len, sizeof(char));
     orig_converted = converted;
 
+    /* converting */
     ret = iconv(converter, &src, &len, &converted, &dest_len);
     iconv_close(converter);
 
@@ -710,8 +717,30 @@ char *convert_string_from_bytecode_file(char *src, size_t len, size_t dest_len)
     if(ret == -1)
     {
         perror("iconv");
-        return src;
+        switch(errno)
+        {
+        case EILSEQ:
+            fprintf(stderr,  "EILSEQ\n");
+            break;
+        case EINVAL:
+            fprintf(stderr,  "EINVAL\n");
+            break;
+        case E2BIG:
+            fprintf(stderr,  "E2BIG\n");
+            break;
+        }
+
+        free(orig_converted);
+        return NULL;
     }
 
-    return orig_converted;
+    /* calculating the length of the converted string */
+    *real_len = save_dest_len - dest_len;
+
+    /* and what to return */
+    to_return = (char*)calloc(*real_len + 1, sizeof(char));
+    strncpy(to_return, orig_converted, *real_len);
+
+    free(orig_converted);
+    return to_return;
 }

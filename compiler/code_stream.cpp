@@ -55,26 +55,30 @@ public:
         mcompiler->place_bytes(pos, &netw, 1);
     }
 
-    void write_string_to_file(const char* s, int cnt, int needs_conv, int pos = -1)
+    size_t write_string_to_file(const char* s, int cnt, int needs_conv, int pos = -1)
     {
         // now convert the bytes to wchar_t
         if(needs_conv)
         {
-            char* t = to_nap_format(s, cnt);
+            size_t used_len = cnt;
+            char* t = to_nap_format(s, cnt, used_len);
             if(t == 0)
             {
                 mcompiler->place_bytes(pos, s, cnt);
             }
             else
             {
-                mcompiler->place_bytes(pos, t, cnt  * 4);
+                mcompiler->place_bytes(pos, t, used_len);
                 free(t);
+                return used_len;
             }
         }
         else
         {
             mcompiler->place_bytes(pos, s, cnt);
         }
+
+        return cnt;
     }
 
     uint32_t ftell()
@@ -151,9 +155,11 @@ void code_finalizer::finalize()
     for(unsigned int i=0; i<strtable_count; i++)
     {
         f.write_stuff_to_file_32( mcompiler->stringtable()[i]->index);
-        f.write_stuff_to_file_32( mcompiler->stringtable()[i]->length);
+        f.write_stuff_to_file_32( 0 );
         const char* str =  mcompiler->stringtable()[i]->the_string.c_str();
-        f.write_string_to_file(str,  mcompiler->stringtable()[i]->length, 1);
+        size_t used_len = f.write_string_to_file(str,  mcompiler->stringtable()[i]->length, 1);
+        // and update the real size
+        f.write_stuff_to_file_32(used_len / 4, f.ftell() - used_len - 4);
     }
     jumptable_location = f.ftell();
     // write out the jumptable
