@@ -218,18 +218,22 @@ void code_stream::output_bytecode(const char* s)
                 mcompiler->location->location->file_name.c_str(),
                 mcompiler->location->location->start_line_number,
                 mcompiler->location->location->end_line_number);*/
-        mcompiler->mlast_cmd_for_bytecode = mcompiler->location->expression;
+		if(mcompiler->location)
+		{
+			mcompiler->mlast_cmd_for_bytecode = mcompiler->location->expression;
+		}
     }
     else
     {
-        if(mcompiler->mlast_cmd_for_bytecode != mcompiler->location->expression)
+
+        if(mcompiler->location && mcompiler->mlast_cmd_for_bytecode != mcompiler->location->expression)
         {
             /*fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->location->expression,
                     mcompiler->location->location->file_name.c_str(),
                     mcompiler->location->location->start_line_number,
                     mcompiler->location->location->end_line_number);*/
-            mcompiler->mlast_cmd_for_bytecode = mcompiler->location->expression;
-        }
+			mcompiler->mlast_cmd_for_bytecode = mcompiler->location->expression;
+		}
     }
 
     fprintf(stderr, "%s ", s);

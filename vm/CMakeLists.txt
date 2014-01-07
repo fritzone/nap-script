@@ -17,7 +17,7 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/push.c
     ${CMAKE_CURRENT_SOURCE_DIR}/nbci_impl.c
     ${CMAKE_CURRENT_SOURCE_DIR}/comparison.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/mov.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/mov.c 
     ${CMAKE_CURRENT_SOURCE_DIR}/marks.c
     ${CMAKE_CURRENT_SOURCE_DIR}/clrs.c
     ${CMAKE_CURRENT_SOURCE_DIR}/nbci.c
@@ -50,6 +50,10 @@ add_executable(napi
     ${CMAKE_CURRENT_SOURCE_DIR}/main.c
 )
 
-target_link_libraries(nap_bci_s nap_cpl_s)
-
-target_link_libraries(napi nap_bci_s nap_cpl_s)
+if(NOT WIN32)
+    target_link_libraries(nap_bci_s nap_cpl_s)
+    target_link_libraries(napi nap_bci_s nap_cpl_s)
+else()
+    target_link_libraries(nap_bci_s nap_cpl_s nap_iconv_s)
+    target_link_libraries(napi nap_bci_s nap_cpl_s nap_iconv_s)
+endif()
