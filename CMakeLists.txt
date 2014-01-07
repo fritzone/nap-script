@@ -37,7 +37,7 @@ set(NAP_ROOT ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "NAP_ROOT")
 
 set(compiler_files CACHE INTERNAL "compiler_files" FORCE)
 add_subdirectory(compiler)
-
+add_subdirectory(iconv)
 add_subdirectory(vm)
 add_subdirectory(runtime)
 add_subdirectory(tests)

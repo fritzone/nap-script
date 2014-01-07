@@ -163,7 +163,7 @@ void do_operation(struct nap_vm* vm, nap_int_t *target, nap_int_t operand, uint8
  * @param len
  * @return
  */
-char* convert_string_from_bytecode_file(char *src, size_t len, size_t dest_len);
+char* convert_string_from_bytecode_file(char *src, size_t len, size_t dest_len, size_t *real_len);
 
 #ifdef __cplusplus
 }
