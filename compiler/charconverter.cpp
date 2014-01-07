@@ -14,9 +14,16 @@ char* to_nap_format(const char* in, size_t in_len, size_t& used_len)
     char* locn = (char*)calloc(s.name().length() + 1, sizeof(char));
     strcpy(locn, s.name().c_str());
     const char* enc = strchr(locn, '.') + 1;
+
+#if _WINDOWS
+	std::string win = "WINDOWS-";
+	win += enc;
+	enc = win.c_str();
+#endif
+
     iconv_t foo = iconv_open("UTF-32BE", enc);
 
-    if(*(reinterpret_cast<int*>(foo)) == -1)
+    if(foo == (void*)-1)
     {
         if (errno == EINVAL)
         {

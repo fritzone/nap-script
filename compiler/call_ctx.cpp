@@ -198,6 +198,7 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
 
             q ++;
         }
+		_compiler->set_location(0);
         exit_app(_compiler);
     }
 

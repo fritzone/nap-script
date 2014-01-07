@@ -677,6 +677,7 @@ char *convert_string_from_bytecode_file(char *src, size_t len, size_t dest_len, 
     int ret = -1;       /* errorchecking */
     size_t save_dest_len = dest_len; /* used in real lenth calcualtions */
     char* to_return = NULL; /* what to return */
+	char* final_encoding = NULL;
 
     /* get the locale info */
     setlocale(LC_ALL, "");
@@ -688,8 +689,16 @@ char *convert_string_from_bytecode_file(char *src, size_t len, size_t dest_len, 
     /* the encoding of the locale */
     enc = strchr(loc_cp, '.') + 1;
 
+#ifdef _WINDOWS
+	final_encoding = (char*)calloc(8 + 1 + strlen(enc), sizeof(char)); /* WINDOWS- */
+	strcpy(final_encoding, "WINDOWS-");
+	strcat(final_encoding, enc);
+#else
+	final_encoding = enc;
+#endif
+
     /* creating an iconv converter */
-    converter = iconv_open(enc, "UTF-32BE");
+	converter = iconv_open(final_encoding, "UTF-32BE");
     if((size_t)converter == (size_t)-1)
     {
         free(loc_cp);
@@ -711,6 +720,10 @@ char *convert_string_from_bytecode_file(char *src, size_t len, size_t dest_len, 
     /* converting */
     ret = iconv(converter, &src, &len, &converted, &dest_len);
     iconv_close(converter);
+
+#ifdef _WINDOWS
+	free(final_encoding);
+#endif
 
     free(loc_cp);
 

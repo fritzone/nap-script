@@ -11,13 +11,14 @@ if(NOT WIN32)
   if(gprof-build)
     add_definitions("-pg")
   endif()
+  include_directories(inc vm)
 else()
   add_definitions(/W3)
   add_definitions(/D_CRT_SECURE_NO_WARNINGS)
   add_definitions(/D_SCL_SECURE_NO_WARNINGS)
+  include_directories(inc vm iconv)
 endif()
 
-include_directories(inc vm)
 
 if(coverage-build)
    set(CMAKE_BUILD_TYPE Debug)
@@ -37,7 +38,11 @@ set(NAP_ROOT ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "NAP_ROOT")
 
 set(compiler_files CACHE INTERNAL "compiler_files" FORCE)
 add_subdirectory(compiler)
-add_subdirectory(iconv)
+
+if(WIN32)
+    add_subdirectory(iconv)
+endif()
+
 add_subdirectory(vm)
 add_subdirectory(runtime)
 add_subdirectory(tests)
