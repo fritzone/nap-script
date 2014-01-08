@@ -101,25 +101,27 @@ typedef uint8_t (*interrupt)(struct nap_vm*);
 typedef int (*nap_op_handler)(struct nap_vm* vm);
 
 /**
- * The TNapVM struct represents an instance of a virtual machine.
+ * The nap_vm struct represents an instance of a virtual machine.
  * This structure contains all the necessary components that are used to
  * create a fully functional virtual machine. This actually is a linked list
  * of NAP Vm structures, each representing a virtual machine for a piece of code
- * that was started with the nap command "execute()"
+ * that was started with the nap command "nap_execute()"
  */
 struct nap_vm
 {
     /* Registers section */
 
-    nap_int_t       regi  [REGISTER_COUNT]; /* the integer registers         */
-    char*           regs  [REGISTER_COUNT]; /* the string registers          */
-    nap_int_t       regidx[REGISTER_COUNT]; /* the register indexes          */
-    enum flag_status lbf;                   /* the last boolean flag         */
-    uint8_t         mrc;                    /* number of registers of the VM */
+    nap_int_t       regi    [REGISTER_COUNT]; /* the integer registers             */
+    char*           regs    [REGISTER_COUNT]; /* the string registers, UTF-32BE    */
+    nap_int_t       regidx  [REGISTER_COUNT]; /* the register indexes              */
+    enum flag_status lbf;                     /* the last boolean flag             */
+    uint8_t         mrc;                      /* number of registers of the VM. Used by pushall/popall  */
+    size_t          regslens[REGISTER_COUNT]; /* the length of the string registers*/
 
     /* return values */
     nap_int_t rvi;                          /* the integer return value      */
     char* rvs;                              /* the string return value       */
+    size_t rvl;                             /* the string return value's length */
 
     /* variables regarding the execution flow */
 

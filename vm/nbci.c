@@ -6,7 +6,6 @@
 #include "stack.h"
 
 #include "nbci_impl.h"
-#include "clidx.h"
 #include "nap_consts.h"
 
 #include <stdio.h>
@@ -122,16 +121,6 @@ void nap_vm_run(struct nap_vm* vm)
             {
                 return;
             }
-        }
-        else
-        if(vm->current_opcode == OPCODE_CLIDX) /* clear indices */
-        {
-            nap_clidx(vm);
-        }
-        else
-        if(vm->current_opcode == OPCODE_LEAVE) /* leave the current call frame*/
-        {
-            vm->cc = vm->call_frames[-- vm->cfsize];
         }
         else
         if(vm->current_opcode == OPCODE_CLBF) /* clear last boolean flag */

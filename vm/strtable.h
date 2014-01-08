@@ -21,7 +21,7 @@ struct strtable_entry
     /* the length of th string*/
     uint32_t len;
 
-    /* the string itself */
+    /* the string itself, encoded into UTF-32BE */
     char* string;
 };
 

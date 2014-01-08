@@ -120,7 +120,7 @@ NAP_LIB_API void nap_runtime_shutdown(nap_runtime **runtime)
         free( (*runtime)->chunks.at(i)->code);
         free( (*runtime)->chunks.at(i));
     }
-    free(*runtime);
+    delete (*runtime);
     *runtime = 0;
     garbage_bin_bin::shutdown();
 }
