@@ -27,6 +27,7 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/pop.c
     ${CMAKE_CURRENT_SOURCE_DIR}/return.c
     ${CMAKE_CURRENT_SOURCE_DIR}/inc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/leave.c
     ${CMAKE_CURRENT_SOURCE_DIR}/dec.c
     ${CMAKE_CURRENT_SOURCE_DIR}/clidx.c
     ${CMAKE_CURRENT_SOURCE_DIR}/operation.c

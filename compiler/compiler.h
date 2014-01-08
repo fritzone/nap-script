@@ -131,7 +131,7 @@ public:
         mnamedmarks.push_back(mark);
     }
 
-    const std::vector<unsigned char>& opcodes() const
+    std::vector<unsigned char>& opcodes()
     {
         return mopcodes;
     }
@@ -139,6 +139,11 @@ public:
     void add_opcode(unsigned char opc)
     {
         mopcodes.push_back(opc);
+    }
+
+    void modify_last_opcode(unsigned char opc)
+    {
+        bytecode[bytecode.size() - 1] = opc;
     }
 
     // counts the opcodes
@@ -213,6 +218,11 @@ public:
         mvm_chain = vm;
     }
 
+    void print_assemblies()
+    {
+        print_assembly = true;
+    }
+
 private:
 
     call_context* cur_cc;
@@ -256,6 +266,7 @@ private:
 
     // the last command for the bytecode generation. Used for the debugging feature
     std::string mlast_cmd_for_bytecode;
+    bool print_assembly;
 
     friend class code_stream;
 };

@@ -2,6 +2,10 @@
 #include "utils.h"
 #include "gtest/gtest.h"
 
+/*
+ * Macros for making the life easier
+ */
+
 #define SCRIPT_START \
     nap_runtime* runtime = nap_runtime_create(0);                  \
     ASSERT_FALSE(runtime == NULL);                                 \
@@ -14,13 +18,16 @@
     int t = nap_runtime_execute(runtime, bytecode);                \
     ASSERT_EQ(1, t);                                               
 
-
 #define VAR_INT(a)    nap_runtime_get_int(runtime, #a, &found_indicator)
 
 #define SCRIPT_SHUTDOWN \
     nap_runtime_shutdown(&runtime);                                \
     ASSERT_TRUE(runtime == NULL);
-    
+
+/*
+ * TESTS
+ */
+
 TEST(VariableDefinitions, SimpleInt)
 {
     SCRIPT_START
@@ -34,7 +41,6 @@ TEST(VariableDefinitions, SimpleInt)
 
     SCRIPT_SHUTDOWN;
 }
-
 
 TEST(Operations, BasicVariableOperations)
 {
@@ -144,6 +150,8 @@ TEST(StringToIntConversion, DifferentBases)
     ASSERT_TRUE(224100 == VAR_INT(octal));
     ASSERT_TRUE(73     == VAR_INT(binary));
     ASSERT_TRUE(0      == VAR_INT(zero));
+
+    SCRIPT_SHUTDOWN
 }
 
 TEST(Operations, PostPreIncrement)

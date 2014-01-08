@@ -31,8 +31,11 @@
 #include "return.h"
 #include "inc.h"
 #include "dec.h"
+#include "clidx.h"
 #include "operation.h"
+#include "leave.h"
 
+/* system headers */
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -42,10 +45,10 @@
 #include <iconv.h>
 #include <stddef.h>
 
-#define ERROR_COUNT 20
+#define ERROR_COUNT 21
 
 /* section for defining the constants */
-static char* error_table[ERROR_COUNT] =
+static char* error_table[ERROR_COUNT + 1] =
 {
     "[VM-0001] not enough memory ",
     "[VM-0002] stack underflow",
@@ -67,6 +70,9 @@ static char* error_table[ERROR_COUNT] =
     "[VM-0018] a variable was not initialized correctly",
     "[VM-0019] too deep recursion. Max 4096 nested calls are allowed",
     "[VM-0020] Invalid jump index",
+    "[VM-0021] Cannot leave from the bottom of the call frame pit",
+
+    "LAST_ENTRY_FOR_FUNNY_COMPILERS_WHO_DONT_LIKE_COMMAS"
 };
 
 void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_int_t reg, nap_int_t immediate, uint8_t opcode)
@@ -403,6 +409,8 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     vm->opcode_handlers[OPCODE_DIV] = nap_operation; vm->opcode_error_codes[OPCODE_DIV] = ERR_VM_0012;
     vm->opcode_handlers[OPCODE_MOD] = nap_operation; vm->opcode_error_codes[OPCODE_MOD] = ERR_VM_0012;
     vm->opcode_handlers[OPCODE_INTR] = nap_handle_interrupt; vm->opcode_error_codes[OPCODE_INTR] = ERR_VM_0017;
+    vm->opcode_handlers[OPCODE_CLIDX] = nap_clidx; vm->opcode_error_codes[OPCODE_CLIDX] = 0;
+    vm->opcode_handlers[OPCODE_LEAVE] = nap_leave; vm->opcode_error_codes[OPCODE_LEAVE] = ERR_VM_0021;
 
     /* setting the container type of the VM*/
     vm->environment = target;
@@ -665,7 +673,7 @@ const char *nap_get_type_description(StackEntryType t)
     }
 }
 
-char *convert_string_from_bytecode_file(char *src, size_t len, size_t dest_len, size_t* real_len)
+char *convert_string_from_bytecode_file(const char *src, size_t len, size_t dest_len, size_t* real_len)
 {
     char* loc_orig = 0; /* the original locale string for LC_ALL */
     int len_loc = 0;    /* the length of the loc_orig */
@@ -678,6 +686,11 @@ char *convert_string_from_bytecode_file(char *src, size_t len, size_t dest_len, 
     size_t save_dest_len = dest_len; /* used in real lenth calcualtions */
     char* to_return = NULL; /* what to return */
 	char* final_encoding = NULL;
+    char* src_copy = (char*)calloc(len + 1, sizeof(char));
+    char* src_copy_save = src_copy;
+
+    /*copy the src*/
+    memcpy(src_copy, src, len);
 
     /* get the locale info */
     setlocale(LC_ALL, "");
@@ -718,7 +731,7 @@ char *convert_string_from_bytecode_file(char *src, size_t len, size_t dest_len, 
     orig_converted = converted;
 
     /* converting */
-    ret = iconv(converter, &src, &len, &converted, &dest_len);
+    ret = iconv(converter, &src_copy, &len, &converted, &dest_len);
     iconv_close(converter);
 
 #ifdef _WINDOWS
@@ -744,6 +757,7 @@ char *convert_string_from_bytecode_file(char *src, size_t len, size_t dest_len, 
         }
 
         free(orig_converted);
+        free(src_copy_save);
         return NULL;
     }
 
@@ -755,5 +769,6 @@ char *convert_string_from_bytecode_file(char *src, size_t len, size_t dest_len, 
     strncpy(to_return, orig_converted, *real_len);
 
     free(orig_converted);
+    free(src_copy_save);
     return to_return;
 }

@@ -37,9 +37,7 @@ int interpret_stringtable(struct nap_vm *vm, uint8_t *start_location, uint32_t l
         {
             uint32_t len = htovm_32(*(uint32_t*)(cloc));
             char* str = NULL;
-            char* converted_str = NULL;
             struct strtable_entry* new_strentry = NULL;
-            size_t real_len = 0;
 
             cloc += 4;
             str = (char*)calloc(sizeof(char), len * 4 + 1);
@@ -69,23 +67,10 @@ int interpret_stringtable(struct nap_vm *vm, uint8_t *start_location, uint32_t l
                 return NAP_FAILURE;
             }
 
-            /* len * 4 - the original length of the UTF-32, using an extra big
-               buffer (second len * 4) but the function will allocate as
-               appropriate */
-            converted_str = convert_string_from_bytecode_file(str, len * 4,
-                                                              len * 4,
-                                                              &real_len);
-
-
             new_strentry->index = index;
-            new_strentry->string = converted_str?converted_str:str;
-            new_strentry->len = real_len;
+            new_strentry->string = str;
+            new_strentry->len = len;
             vm->stringtable[index] = new_strentry;
-
-            if(converted_str != NULL)
-            {
-                free(str);
-            }
         }
     }
 

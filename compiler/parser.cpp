@@ -1035,6 +1035,7 @@ void parsed_file::load_next_assembly_block(call_context* par_cc)
         expression_with_location* expwloc = parser_next_phrase(&delim);
 
         expression_tree* tmp = new expression_tree(expwloc) ;
+        garbage_bin<expression_tree*>::instance(par_cc->compiler()).place(tmp, par_cc->compiler());
         tmp->op_type = ASM_BLOCK;
 
         par_cc->add_compiled_expression(tmp);

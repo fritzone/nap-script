@@ -9,37 +9,48 @@
 #include <string.h>
 
 /* returns a number from the given string */
-static nap_int_t nap_int_string_to_number(const char* to_conv)
+static nap_int_t nap_int_string_to_number(const char* to_conv, size_t len)
 {
     int base = 10;
     char* endptr = NULL;
-    if(strlen(to_conv) > 1)
+    size_t dest_len = len * 4, real_len = 0;
+    char* t = convert_string_from_bytecode_file((char*)to_conv,
+                                                len * 4, dest_len, &real_len);
+    char *save_t = t;
+    if(!t)
     {
-        if(to_conv[0] == '0') /* octal? */
+        return 0;
+    }
+
+    if(strlen(t) > 1)
+    {
+        if(t[0] == '0') /* octal? */
         {
-            to_conv ++;
+            t ++;
             base = 8;
         }
-        if(strlen(to_conv) > 1)
+        if(strlen(t) > 1)
         {
-            if(to_conv[0] == 'x') /* hex */
+            if(t[0] == 'x') /* hex */
             {
-                to_conv ++;
+                t ++;
                 base = 16;
             }
             else
-            if(to_conv[0] == 'b') /* binary */
+            if(t[0] == 'b') /* binary */
             {
-                to_conv ++;
+                t ++;
                 base = 2;
             }
         }
         else /* this was a simple "0" */
         {
-            to_conv --; /* stepping back one */
+            t --; /* stepping back one */
         }
     }
-    return strtoll(to_conv, &endptr, base);
+    nap_int_t v = strtoll(t, &endptr, base);;
+    free(save_t);
+    return v;
 }
 
 int nap_mov(struct nap_vm* vm)
@@ -84,7 +95,7 @@ int nap_mov(struct nap_vm* vm)
                 else
                 if(return_type == OPCODE_STRING)              /* handles: mov reg int 0, rv string*/
                 {
-                    vm->regi[register_index] = nap_int_string_to_number(vm->rvs);
+                    vm->regi[register_index] = nap_int_string_to_number(vm->rvs, vm->rvl);
                 }
                 else
                 {
@@ -105,7 +116,8 @@ int nap_mov(struct nap_vm* vm)
                 {
                     uint8_t second_register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
                     vm->regi[register_index] = nap_int_string_to_number(
-                                vm->regs[second_register_index]);
+                                vm->regs[second_register_index],
+                                vm->regslens[second_register_index]);
                 }
                 else
                 {
@@ -131,6 +143,7 @@ int nap_mov(struct nap_vm* vm)
                    should always be the same, never will be freed
                    till we exit */
                 vm->regs[register_index] = vm->stringtable[str_index]->string;
+                vm->regslens[register_index] = vm->stringtable[str_index]->len;
             }
             else
             if(move_source == OPCODE_VAR) /* movin a variable into a string reg*/
@@ -144,6 +157,7 @@ int nap_mov(struct nap_vm* vm)
 
                 /* and moving the value in the regsiter itself */
                 vm->regs[register_index] = (char*)var->instantiation->value;
+                vm->regslens[register_index] = var->instantiation->len;
             }
 
             else
@@ -223,23 +237,17 @@ int nap_mov(struct nap_vm* vm)
                     /* moving a register into the string variable */
                     if(var->instantiation->value)
                     {
-                        /* copy only if they are not the same */
-                        if(strcmp((char*)var->instantiation->value, vm->regs[register_index]))
-                        {
-                            char* temp = (char*)calloc(strlen(vm->regs[register_index]) + 1, sizeof(char));
-                            strcpy(temp, vm->regs[register_index]);
-                            MEM_FREE(var->instantiation->value);
-                            var->instantiation->value = temp;
-                            var->instantiation->len = strlen(vm->regs[register_index]);
-                        }
+                        MEM_FREE(var->instantiation->value);
                     }
-                    else /* allocate the memory for the value */
-                    {
-                        char* temp = (char*)calloc(strlen(vm->regs[register_index]), sizeof(char));
-                        strcpy(temp, vm->regs[register_index]);
-                        var->instantiation->value = temp;
-                        var->instantiation->len = strlen(vm->regs[register_index]);
-                    }
+                    char* temp = (char*)calloc(
+                                vm->regslens[register_index] * 4 + 1, /* UTF-32BE */
+                                sizeof(char));
+
+                    strncpy(temp, vm->regs[register_index],
+                            vm->regslens[register_index] * 4);
+
+                    var->instantiation->value = temp;
+                    var->instantiation->len = vm->regslens[register_index];
                 }
                 else
                 {
@@ -304,7 +312,7 @@ int nap_mov(struct nap_vm* vm)
                             real_index += vm->regidx[i];
                         }
 
-                        if(real_index + strlen(vm->regs[register_index]) > strlen((char*)var->instantiation->value))
+                        if(real_index + vm->regslens[register_index] > strlen((char*)var->instantiation->value))
                         {
                             char* s = (char*)calloc(256, sizeof(char));
                             SNPRINTF(s, 256,
@@ -315,14 +323,14 @@ int nap_mov(struct nap_vm* vm)
                                      var->name,
                                      real_index,
                                      strlen((char*)var->instantiation->value),
-                                     real_index + strlen(vm->regs[register_index]));
+                                     real_index + vm->regslens[register_index]);
                             vm->error_description = s;
                             return NAP_FAILURE;
                         }
                         /* and finally do a strcpy */
                         strncpy((char*)var->instantiation->value + real_index,
                                 vm->regs[register_index],
-                                strlen(vm->regs[register_index]));
+                                vm->regslens[register_index]);
 
                     }
                     else
