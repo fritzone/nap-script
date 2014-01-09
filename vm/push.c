@@ -12,7 +12,7 @@ int nap_push(struct nap_vm *vm)
 {
     struct stack_entry* se = (struct stack_entry*)(
                                 calloc(sizeof(struct stack_entry), 1));
-    se->type = (StackEntryType)vm->content[vm->cc ++];
+    se->type = (StackEntryType)vm->content[vm->cc ++]; /* push int/string/real */
 
     if(se->type == OPCODE_INT || se->type == OPCODE_STRING) /* or float*/
     {

@@ -1324,6 +1324,7 @@ void resolve_variable_definition(nap_compiler* _compiler,
                     if(q->dynamic)
                     {
                         vd->the_variable->dynamic_dimension = 1;
+                        resolve_variable_add_dynamic_dimension(_compiler,cc, vd->the_variable);
                     }
                     else
                     {

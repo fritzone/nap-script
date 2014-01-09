@@ -33,11 +33,25 @@ struct variable_entry
     /* the name of the variable */
     char* name;
 
-    /* the actual value of the variable */
+    /* the actual value of the variable
+     * The "value" of the stack_entry will contain the value of this variable
+     * and the type of the instantioation will hold the type of the variable.
+     */
     struct stack_entry* instantiation;
 
-    /* in case this variable is initialized to a string this points to it */
-    struct strtable_entry* string_initialization;
+    /* the dimensions of this variable. The scanning for dimensions begins at
+     * the first element ([0]) and as long as there is a p0sitive value (>0) we
+     * increment a dimension counter. If any of the elements is -1 the variable
+     * is considered to be with dynamic dimensions, and on runtime it is
+     * resized as per needs ofthe index. The scanning stops on the first 0 index
+     */
+    int32_t dimensions[256];
+
+    /* just stores the number of dimensions for easier access */
+    uint8_t dimension_count;
+
+    /* the size of the data for which we have allocated memory in the instantiation */
+    uint8_t data_size;
 };
 
 /*

@@ -28,17 +28,25 @@ struct stack_entry
     StackEntryType type;
 
     /* the value of it. At this address usually there is:
-     * 1. for imemdiate values:
-     *     - an int64_t (STACK_ENTRY_INT)
-     *     - a double   (STACK_ENTRY_REAL)
-     *     - a null terminated char* (STACK_ENTRY_STRING)
+     *
+     * 1. for imemdiate values, or variable instantiations:
+     *     - an int64_t       (STACK_ENTRY_INT)
+     *     - a double         (STACK_ENTRY_REAL)
+     *     - a unicode string (STACK_ENTRY_STRING)
      *     - or an object descriptor (TODO)
-     * 2. for variables:
+     *     - or a contiguos memory area allocated for an indexed
+     *       variable. The indexes however are stored in the variable_entry
+     *       which is referencing this stack entry in its instantiation
+     *
+     * 2. for variables (pushed on the stack):
      *     - a variable entry object
      */
     void* value;
 
-    /* if this contains a string this is the length of it */
+    /* if this contains a
+     *  1. string
+     *  2. an element with indexes
+     * this is the length of the allocated memory */
     uint32_t len;
 };
 

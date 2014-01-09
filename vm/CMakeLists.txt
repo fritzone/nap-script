@@ -23,6 +23,7 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/nbci.c
     ${CMAKE_CURRENT_SOURCE_DIR}/byte_order.c
     ${CMAKE_CURRENT_SOURCE_DIR}/call.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/call_intern.c
     ${CMAKE_CURRENT_SOURCE_DIR}/peek.c
     ${CMAKE_CURRENT_SOURCE_DIR}/pop.c
     ${CMAKE_CURRENT_SOURCE_DIR}/return.c
