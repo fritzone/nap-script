@@ -4,9 +4,45 @@
 #include "metatbl.h"
 #include "nbci_impl.h"
 #include "nap_consts.h"
+#include "nbci.h"
 
 #include <stdlib.h>
 #include <string.h>
+
+/* delviers the flat index according to the index regsiters of the vm for
+ * the given variable */
+static int64_t deliver_flat_index(struct nap_vm* vm,
+                                   const struct variable_entry* ve,
+                                   uint8_t used_indexes)
+{
+    int64_t to_ret = 0;
+    int i = 0;
+
+    /* moving block of arrays is not permitted yet :( */
+    if(used_indexes != ve->dimension_count)
+    {
+        return -1;
+    }
+
+    for(; i<used_indexes; i++)
+    {
+        int j = 0;
+        int64_t dim_multiplier = 1;
+
+        if(vm->regidx[i] >= ve->dimensions[i])
+        {
+            return -2; /* an index overflow */
+        }
+        while(j < used_indexes - i - 1)
+        {
+            dim_multiplier *= ve->dimensions[j ++];
+        }
+        dim_multiplier *= vm->regidx[i];
+        to_ret += dim_multiplier;
+    }
+
+    return to_ret;
+}
 
 /* returns a number from the given string */
 static nap_int_t nap_int_string_to_number(const char* to_conv, size_t len)
@@ -332,6 +368,33 @@ int nap_mov(struct nap_vm* vm)
                                 vm->regs[register_index],
                                 vm->regslens[register_index]);
 
+                    }
+                    else
+                    {
+                        _NOT_IMPLEMENTED
+                    }
+                }
+                else
+                if(register_type == OPCODE_INT)
+                {
+                    /* moving only if this int registers goes to an int var*/
+                    if(var->instantiation->type == OPCODE_INT)
+                    {
+                        int64_t idx = deliver_flat_index(vm, var, ctr_used_index_regs);
+                        if(idx == -1) /* not used all the indexes */
+                        {
+
+                        }
+                        else
+                        if(idx == -2) /* index overflow */
+                        {
+
+                        }
+                        else
+                        {
+                            /* casting it to nap_int_t is ok, since var->instantiation->type == OPCODE_INT */
+                            ((nap_int_t*)var->instantiation->value)[idx] = vm->regi[register_index];
+                        }
                     }
                     else
                     {

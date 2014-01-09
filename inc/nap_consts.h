@@ -42,5 +42,6 @@ static const int ERR_VM_0018 = 0x12; /* variable was not initialized correctly *
 static const int ERR_VM_0019 = 0x13; /* too deep recursion when calling */
 static const int ERR_VM_0020 = 0x14; /* invalid jump index */
 static const int ERR_VM_0021 = 0x15; /* cannot leave when there are no more call frame */
+static const int ERR_VM_0022 = 0x16; /* invalid internal call */
 
 #endif // NAP_CONSTS_H

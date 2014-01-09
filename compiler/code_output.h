@@ -41,6 +41,7 @@ void mov_reg(nap_compiler *_compiler, int reqd_type, int level);
 void operation_target_reg_source_reg(nap_compiler *_compiler, int req_type_1, int level_1, int req_type_2, int level_2 );
 void clidx(nap_compiler *_compiler);
 void resolve_variable_add_dimension_number(nap_compiler *_compiler, call_context* cc, variable* var, long int dimension);
+void resolve_variable_add_dynamic_dimension(nap_compiler *_compiler, call_context* cc, variable* var);
 void resolve_variable_add_dimension_regis(nap_compiler *_compiler, call_context* cc, variable* var, int level);
 void push_cc_start_marker(nap_compiler *_compiler, const char *marker_name);
 void push_cc_end_marker(nap_compiler *_compiler, const char* marker_name);

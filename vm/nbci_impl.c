@@ -34,6 +34,7 @@
 #include "clidx.h"
 #include "operation.h"
 #include "leave.h"
+#include "call_intern.h"
 
 /* system headers */
 #include <stdio.h>
@@ -45,7 +46,7 @@
 #include <iconv.h>
 #include <stddef.h>
 
-#define ERROR_COUNT 21
+#define ERROR_COUNT 22
 
 /* section for defining the constants */
 static char* error_table[ERROR_COUNT + 1] =
@@ -71,6 +72,7 @@ static char* error_table[ERROR_COUNT + 1] =
     "[VM-0019] too deep recursion. Max 4096 nested calls are allowed",
     "[VM-0020] Invalid jump index",
     "[VM-0021] Cannot leave from the bottom of the call frame pit",
+    "[VM-0022] Invalid internal call",
 
     "LAST_ENTRY_FOR_FUNNY_COMPILERS_WHO_DONT_LIKE_COMMAS"
 };
@@ -396,6 +398,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     vm->opcode_handlers[OPCODE_MARKS_NAME] = nap_marks; vm->opcode_error_codes[OPCODE_MARKS_NAME] = ERR_VM_0016;
     vm->opcode_handlers[OPCODE_CLRS_NAME] = nap_clrs; vm->opcode_error_codes[OPCODE_CLRS_NAME] = ERR_VM_0002;
     vm->opcode_handlers[OPCODE_CALL] = nap_call; vm->opcode_error_codes[OPCODE_CALL] = ERR_VM_0019;
+    vm->opcode_handlers[OPCODE_CALL_INT] = nap_call_intern; vm->opcode_error_codes[OPCODE_CALL_INT] = ERR_VM_0022;
     vm->opcode_handlers[OPCODE_PEEK] = nap_peek; vm->opcode_error_codes[OPCODE_PEEK] = ERR_VM_0013;
     vm->opcode_handlers[OPCODE_POP] = nap_pop; vm->opcode_error_codes[OPCODE_POP] = ERR_VM_0014;
     vm->opcode_handlers[OPCODE_RETURN] = nap_return; vm->opcode_error_codes[OPCODE_RETURN] = 0;

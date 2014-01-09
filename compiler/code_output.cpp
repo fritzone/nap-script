@@ -395,3 +395,17 @@ void jnlbf(nap_compiler* _compiler,const char *label)
 {
     code_stream(_compiler) << "jnlbf" << SPACE << label << NEWLINE;
 }
+
+
+void resolve_variable_add_dynamic_dimension(nap_compiler *_compiler, call_context *cc, variable *var)
+{
+    code_stream(_compiler) << call()
+                           << SPACE
+                           << grow()
+                           << C_PAR_OP
+                               << fully_qualified_varname(cc, var) <<
+                                  C_COMMA
+                               << -1
+                           << C_PAR_CL
+                           << NEWLINE ;
+}
