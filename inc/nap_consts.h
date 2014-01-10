@@ -20,6 +20,9 @@ static const int NAP_NO_VALUE = 0x0BADF00D;
 static const int NAP_SUCCESS = 1;
 static const int NAP_FAILURE = 0;
 
+static const int INVALID_INDEX_COUNT = -1;
+static const int INDEX_OUT_OF_RANGE  = -2;
+
 /* the error codes for the VM*/
 static const int ERR_VM_0001 = 0x01; /* cannot allocate enough memory error */
 static const int ERR_VM_0002 = 0x02; /* stack underflow error */

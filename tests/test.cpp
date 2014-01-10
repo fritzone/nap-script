@@ -268,3 +268,18 @@ TEST(RuntimeCompilation, SimpleCheck)
 
     SCRIPT_SHUTDOWN
 }
+
+TEST(VariableDefinitions, SimpleIndexedOperation)
+{
+    SCRIPT_START
+    "                               \
+        int a[10];                  \
+        a[1] = 2;                   \
+        int b = a[2];               \
+    "
+    SCRIPT_END
+
+    ASSERT_EQ(2, VAR_INT(b));
+
+    SCRIPT_SHUTDOWN;
+}

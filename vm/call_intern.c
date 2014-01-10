@@ -38,7 +38,7 @@ int nap_call_intern(struct nap_vm* vm)
                     {
                         char* s = (char*)calloc(256, sizeof(char));
                         SNPRINTF(s, 256,
-                                "[ERR-INT-1] Cannot grow with 0 index [%s].",
+                                "[ERR-INT] Cannot grow with 0 index [%s].",
                                  ve->name);
                         vm->error_description = s;
                         return NAP_FAILURE;
@@ -80,7 +80,7 @@ int nap_call_intern(struct nap_vm* vm)
                         {
                             char* s = (char*)calloc(256, sizeof(char));
                             SNPRINTF(s, 256,
-                                    "[ERR-INT-4] Cannot grow [%s]. Not enough memory.",
+                                    "[ERR-INT] Cannot grow [%s]. Not enough memory.",
                                      ve->name);
                             vm->error_description = s;
                             return NAP_FAILURE;

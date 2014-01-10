@@ -437,27 +437,25 @@ void code_stream::output_bytecode(const char* s)
         if(s[ 0 ] == '@') // function call
         {
             uint8_t last = mcompiler->getLastOpcode() ;
-            if(last == OPCODE_MOV)
-            { // possibly a @#ccidx, @#grow
-                if(s[1] == '#') // builtin function
+            if(s[1] == '#') // builtin function
+            {
+                if(expr == "@#ccidx")
                 {
-                    if(expr == "@#ccidx")
+                    f.write_stuff_to_file_8(OPCODE_CCIDX);
+                    mcompiler->setLastOpcode(OPCODE_CCIDX);
+                }
+                if(last == OPCODE_CALL)
+                {
+                    if(expr == "@#grow")
                     {
-                        f.write_stuff_to_file_8(OPCODE_CCIDX);
-                        mcompiler->setLastOpcode(OPCODE_CCIDX);
+                        // fix the last opcode to be the OPCODE GROW, however the
+                        // last opcode (the CALL) does not go in the bytecode stream
+                        mcompiler->modify_last_opcode(OPCODE_CALL_INT);
+                        f.write_stuff_to_file_8(OPCODE_GROW);
+                        mcompiler->setLastOpcode(OPCODE_GROW);
                     }
                 }
-            }
-            if(last == OPCODE_CALL)
-            {
-                if(expr == "@#grow")
-                {
-                    // fix the last opcode to be the OPCODE GROW, however the
-                    // last opcode (the CALL) does not go in the bytecode stream
-                    mcompiler->modify_last_opcode(OPCODE_CALL_INT);
-                    f.write_stuff_to_file_8(OPCODE_GROW);
-                    mcompiler->setLastOpcode(OPCODE_GROW);
-                }
+
             }
         }
         else

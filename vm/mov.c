@@ -13,7 +13,7 @@
  * the given variable */
 static int64_t deliver_flat_index(struct nap_vm* vm,
                                    const struct variable_entry* ve,
-                                   uint8_t used_indexes)
+                                   uint8_t used_indexes, char** error)
 {
     int64_t to_ret = 0;
     int i = 0;
@@ -21,7 +21,13 @@ static int64_t deliver_flat_index(struct nap_vm* vm,
     /* moving block of arrays is not permitted yet :( */
     if(used_indexes != ve->dimension_count)
     {
-        return -1;
+        char* s = (char*)calloc(256, sizeof(char));
+        SNPRINTF(s, 256,
+                "Invalid index count used for [%s]. "
+                 "Requested: %d available: %d",
+                 ve->name, used_indexes, ve->dimension_count);
+        *error = s;
+        return INVALID_INDEX_COUNT;
     }
 
     for(; i<used_indexes; i++)
@@ -29,9 +35,15 @@ static int64_t deliver_flat_index(struct nap_vm* vm,
         int j = 0;
         int64_t dim_multiplier = 1;
 
-        if(vm->regidx[i] >= ve->dimensions[i])
+        if(vm->regidx[i] >= ve->dimensions[i] || vm->regidx[i] < 0)
         {
-            return -2; /* an index overflow */
+            char* s = (char*)calloc(256, sizeof(char));
+            SNPRINTF(s, 256,
+                    "Index out of range for [%s]. "
+                     "Index: %d, requested: %" PRId64 " available: %d",
+                     ve->name, i, vm->regidx[i], ve->dimensions[i]);
+            *error = s;
+            return INDEX_OUT_OF_RANGE; /* an index overflow */
         }
         while(j < used_indexes - i - 1)
         {
@@ -352,7 +364,7 @@ int nap_mov(struct nap_vm* vm)
                         {
                             char* s = (char*)calloc(256, sizeof(char));
                             SNPRINTF(s, 256,
-                                    "[ERR-INT-3] Index overflow error for [%s]."
+                                    "Index overflow error for [%s]."
                                      "Requested index: [%" PRIu64 "] "
                                      "Available length: [%ld] "
                                      "Assumed length: [%" PRIu64 "]\n",
@@ -377,23 +389,25 @@ int nap_mov(struct nap_vm* vm)
                 else
                 if(register_type == OPCODE_INT)
                 {
-                    /* moving only if this int registers goes to an int var*/
+                    /* moving only if this int register goes to an int var*/
                     if(var->instantiation->type == OPCODE_INT)
                     {
-                        int64_t idx = deliver_flat_index(vm, var, ctr_used_index_regs);
-                        if(idx == -1) /* not used all the indexes */
+                        char* error = NULL;
+                        int64_t idx = deliver_flat_index(vm, var,
+                                                         ctr_used_index_regs,
+                                                         &error);
+                        if(idx < 0) /* error? */
                         {
-
+                            vm->error_description = error;
+                            return NAP_FAILURE;
                         }
                         else
-                        if(idx == -2) /* index overflow */
                         {
-
-                        }
-                        else
-                        {
-                            /* casting it to nap_int_t is ok, since var->instantiation->type == OPCODE_INT */
-                            ((nap_int_t*)var->instantiation->value)[idx] = vm->regi[register_index];
+                            /* casting it to nap_int_t is ok, since
+                             * var->instantiation->type == OPCODE_INT so we have
+                             * allocated nap_int_t variable in the grow */
+                            ((nap_int_t*)var->instantiation->value)[idx]
+                                    =  vm->regi[register_index];
                         }
                     }
                     else
