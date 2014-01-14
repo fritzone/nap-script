@@ -20,6 +20,8 @@
 
 #define VAR_INT(a)    nap_runtime_get_int(runtime, #a, &found_indicator)
 
+#define VAR_STRING(a)    nap_runtime_get_string(runtime, #a, &found_indicator)
+
 #define SCRIPT_SHUTDOWN \
     nap_runtime_shutdown(&runtime);                                \
     ASSERT_TRUE(runtime == NULL);
@@ -42,7 +44,7 @@ TEST(VariableDefinitions, SimpleInt)
     SCRIPT_SHUTDOWN;
 }
 
-TEST(Operations, BasicVariableOperations)
+TEST(Operations, BasicIntVariableOperations)
 {
 
     SCRIPT_START
@@ -74,6 +76,24 @@ TEST(Operations, BasicVariableOperations)
 
     SCRIPT_SHUTDOWN
 }
+
+TEST(Operations, BasicStringVariableOperations)
+{
+
+    SCRIPT_START
+    "                               \
+        string a = \"AA\";          \
+        string b = \"BB\";          \
+        string a_plus_b;            \
+        a_plus_b = a + b;           \
+    "
+    SCRIPT_END
+
+    ASSERT_STREQ("AABB", VAR_STRING(a_plus_b));
+
+    SCRIPT_SHUTDOWN
+}
+
 
 TEST(Operations, BasicImmediateOperations)
 {
@@ -269,13 +289,32 @@ TEST(RuntimeCompilation, SimpleCheck)
     SCRIPT_SHUTDOWN
 }
 
+TEST(RuntimeCompilation, CompoundedExpression)
+{
+    SCRIPT_START
+    "                                   \
+    int a = 2;                          \
+    int b = 3;                          \
+    int c;                              \
+    string sa = \"c=a\";                \
+    string sb = \"+b\";                 \
+    nap_execute(sa + sb);               \
+    "
+    SCRIPT_END
+
+    ASSERT_EQ(5, VAR_INT(c));
+
+    SCRIPT_SHUTDOWN
+}
+
+
 TEST(VariableDefinitions, SimpleIndexedOperation)
 {
     SCRIPT_START
     "                               \
         int a[10];                  \
         a[1] = 2;                   \
-        int b = a[2];               \
+        int b = a[1];               \
     "
     SCRIPT_END
 

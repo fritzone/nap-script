@@ -18,7 +18,7 @@ struct strtable_entry
     /* the index of the string as referred in the btyecode */
     uint64_t index;
 
-    /* the length of th string*/
+    /* the length of the string itself, not the length of the UTF-32 BE buffer*/
     uint32_t len;
 
     /* the string itself, encoded into UTF-32BE */

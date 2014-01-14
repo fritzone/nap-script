@@ -154,11 +154,11 @@ void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_int_t reg, nap_int_t imm
  * @param opcode - the operation we perform
  * @throws a system error if the operation is division and the operand is zero
  */
-void do_operation(struct nap_vm* vm, nap_int_t *target, nap_int_t operand, uint8_t opcode);
+void do_int_operation(struct nap_vm* vm, nap_int_t *target, nap_int_t operand, uint8_t opcode);
 
 /**
  * @brief convert_string_from_bytecode_file converts a string from the bytecode
- * file's UTF-16BE format to the system's internal format.
+ * file's UTF-32BE format to the system's internal format.
  * @param src
  * @param len
  * @return
