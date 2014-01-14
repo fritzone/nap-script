@@ -101,10 +101,14 @@ NAP_LIB_API nap_real_t nap_runtime_get_real(nap_runtime * /*runtime*/,
 }
 
 
-NAP_LIB_API nap_string_t nap_runtime_get_string(nap_runtime* /*runtime*/,
-                                    const char* /*variable_name*/)
+NAP_LIB_API nap_string_t nap_runtime_get_string(nap_runtime* runtime,
+                                    const char* variable_name, int *found)
 {
-    return 0;
+    char* t = (char*)calloc(strlen(variable_name) + 1, 1);
+    strcpy(t, variable_name);
+    char* temp = nap_vm_get_string(runtime->vm, t, found);
+    free(t);
+    return temp;
 }
 
 

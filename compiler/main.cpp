@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
     const char* file_name = "test.nap";
     const char* bc_file_name = "test.ncb";
 
-    bool print_asm = false;
+    bool print_asm = true;
     for(int i=0; i<argc; i++)
     {
         if(!strcmp(argv[i], "-a"))

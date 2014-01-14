@@ -232,13 +232,49 @@ void nap_vm_run(struct nap_vm* vm);
 struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environments target);
 
 /**
- * @brief nap_vm_get_int return the value of the variable called "name"
+ * @brief nap_vm_get_int returns the value of the int variable called "name"
+ *
+ * The variable must have been defined in the global namespace in the script
+ * otherwise it is not relevant.
+ *
+ * The method will populate the *found with 1 if the variable was found and with
+ * 0 if the variable was not found.
+ *
+ * The method will return the value of the variable if found or 0x0BADF00D if
+ * not found.
+ *
+ * The *found parameter should be used for error checking, not the return value.
+ *
  * @param vm - the VM in which this runs
  * @param name - the name of the variable
  * @param [out] found - if we found it or not. Set to 1 or 0.
  * @return the value, or 0x0BADF00D if not found
  */
 nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found);
+
+/**
+ * @brief nap_vm_get_string return the value of the variable called "name"
+ *
+ * The variable must have been defined in the global namespace in the script
+ * otherwise it is not relevant.
+ *
+ * The method will populate the *found with 1 if the variable was found and with
+ * 0 if the variable was not found.
+ *
+ * The nap VM internally stores the strings as UTF-32BE, however this method
+ * converts the internal string into the host encoding and returns that value,
+ * i.e. a \0 terminated local string. The user must free the returned value to
+ * avoid memory leaks. The string is allocated with calloc(), please use the
+ * corresponding free() call.
+ *
+ * @param vm - the VM in which this runs
+ * @param name - the name of the variable
+ * @param [out] found - if we found it or not. Set to 1 or 0.
+ *
+ * @return the value, or NULL if not found
+ */
+char* nap_vm_get_string(struct nap_vm* vm, char* name, int* found);
+
 
 #ifdef __cplusplus
 }

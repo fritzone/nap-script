@@ -103,7 +103,7 @@ NAP_LIB_API nap_real_t nap_runtime_get_real(struct nap_runtime* runtime,
                                  const char* variable_name);
 
 NAP_LIB_API nap_string_t nap_runtime_get_string(struct nap_runtime* runtime,
-                                 const char* variable_name);
+                                 const char* variable_name, int* found);
 
 /**
  * @brief Shuts down the runtime and frees the allocated memory.

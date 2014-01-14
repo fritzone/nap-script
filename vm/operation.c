@@ -25,7 +25,7 @@ int nap_operation(struct nap_vm* vm)
             if(add_source == OPCODE_IMMEDIATE) /* immediate value (1,..) added to register */
             {
                 nap_int_t imm_operand = nap_read_immediate(vm);
-                do_operation(vm, &vm->regi[register_index], imm_operand, vm->current_opcode);
+                do_int_operation(vm, &vm->regi[register_index], imm_operand, vm->current_opcode);
             }
             else
             if(add_source == OPCODE_VAR) /* adding a variable to the reg*/
@@ -37,7 +37,7 @@ int nap_operation(struct nap_vm* vm)
                 CHECK_VARIABLE_TYPE(var,STACK_ENTRY_INT)
 
                 /* and moving the value in the regsiter itself */
-                do_operation(vm, &vm->regi[register_index], *(int64_t*)var->instantiation->value, vm->current_opcode);
+                do_int_operation(vm, &vm->regi[register_index], *(int64_t*)var->instantiation->value, vm->current_opcode);
             }
             else
             if(add_source == OPCODE_REG) /* adding a register to a register */
@@ -47,7 +47,7 @@ int nap_operation(struct nap_vm* vm)
                 if(second_register_type == OPCODE_INT)
                 {
                     uint8_t second_register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
-                    do_operation(vm, &vm->regi[register_index], vm->regi[second_register_index], vm->current_opcode);
+                    do_int_operation(vm, &vm->regi[register_index], vm->regi[second_register_index], vm->current_opcode);
                 }
                 else
                 {
@@ -91,7 +91,7 @@ int nap_operation(struct nap_vm* vm)
                 if(var->instantiation->value)
                 {
                     int64_t* temp = (int64_t*)var->instantiation->value;
-                    do_operation(vm, temp, vm->regi[register_index], vm->current_opcode);
+                    do_int_operation(vm, temp, vm->regi[register_index], vm->current_opcode);
                 }
                 else /* allocate the memory for the value */
                 { /* this should generate some error, there should be a value before add */

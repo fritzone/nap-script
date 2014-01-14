@@ -125,7 +125,7 @@ void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_int_t reg, nap_int_t imm
     }
 }
 
-void do_operation(struct nap_vm* vm, nap_int_t* target, nap_int_t operand, uint8_t opcode)
+void do_int_operation(struct nap_vm* vm, nap_int_t* target, nap_int_t operand, uint8_t opcode)
 {
     if(opcode == OPCODE_ADD)
     {

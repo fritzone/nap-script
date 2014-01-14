@@ -1938,12 +1938,46 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
         {
             // generate code to call the interrupt 2 to compile regs(0)
             // and then interrupt 3 to execute the code
-            code_stream(_compiler) << mov() << SPACE
-                                   << reg() << "string" << SPACE << C_PAR_OP << 0 << C_PAR_CL
-                                   << C_COMMA ;
             int ty = -2;
-            compile(_compiler, node->left, the_method, cc, level + 1, ty, forced_mov, success);
+            if(is_atomic_type(node->left->op_type))
+            {
+                /* start a mov operation into the string register o fnext level */
+                code_stream(_compiler) << mov()
+                              << SPACE
+                              << reg() << "string" << C_PAR_OP << level + 1<< C_PAR_CL
+                              << C_COMMA;
 
+                /* compile what is in the node */
+                compile(_compiler,node->left, the_method, cc, level + 1, ty, forced_mov, success);
+                if(!success)
+                {
+                    psuccess = false;
+                    return;
+                }
+
+                /* move it to reg string 0 */
+                code_stream(_compiler) << mov() << SPACE
+                                       << reg() << "string" << SPACE << C_PAR_OP << 0 << C_PAR_CL
+                                       << C_COMMA
+                                       << reg() << "string" << SPACE << C_PAR_OP << level + 1 << C_PAR_CL;
+
+            }
+            else /* compiles the node, places in the next level string register */
+            {
+                compile(_compiler,node->left, the_method, cc, level + 1, ty, forced_mov, success);
+                if(!success)
+                {
+                    psuccess = false;
+                    return;
+                }
+
+                code_stream(_compiler) << mov() << SPACE
+                                       << reg() << "string" << SPACE << C_PAR_OP << 0 << C_PAR_CL
+                                       << C_COMMA
+                                       << reg() << "string" << SPACE << C_PAR_OP << level + 1 << C_PAR_CL;
+            }
+
+            /* and call the required interrupts */
             code_stream(_compiler) << NEWLINE
                                    << "intr" << SPACE << 2
                                    << NEWLINE

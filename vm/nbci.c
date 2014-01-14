@@ -66,10 +66,62 @@ void dump(struct nap_vm* vm, FILE *fp)
     }
 }
 
+
+/******************************************************************************/
+/*                             Access section                                 */
+/******************************************************************************/
+
+char *nap_vm_get_string(struct nap_vm* vm, char* name, int* found)
+{
+    uint64_t i;
+    char* finame = name;
+
+    if(name == NULL)
+    {
+        *found = 0;
+        return NULL;
+    }
+
+    for(i=0; i<vm->meta_size; i++)
+    {
+        if(vm->metatable[i]->instantiation)
+        {
+            if(vm->metatable[i]->instantiation->value)
+            {
+                if(vm->metatable[i]->instantiation->type == STACK_ENTRY_STRING)
+                {
+                    if(vm->metatable[i]->name && !strcmp(vm->metatable[i]->name, finame))
+                    {
+                        if(finame != name)
+                        {
+                            MEM_FREE(finame);
+                        }
+                        *found = 1;
+                        size_t dest_len = vm->metatable[i]->instantiation->len, real_len;
+                        return convert_string_from_bytecode_file((char*)(vm->metatable[i]->instantiation->value),
+                                                                 vm->metatable[i]->instantiation->len * 4,
+                                                                 dest_len,
+                                                                 &real_len);
+
+                    }
+                }
+            }
+        }
+    }
+    *found = 0;
+    return NULL;
+}
+
 nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found)
 {
     uint64_t i;
     char* finame = name;
+
+    if(name == NULL)
+    {
+        *found = 0;
+        return NAP_NO_VALUE;
+    }
 
     for(i=0; i<vm->meta_size; i++)
     {
@@ -95,6 +147,11 @@ nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found)
     *found = 0;
     return NAP_NO_VALUE;
 }
+
+
+/******************************************************************************/
+/*                             Execute section                                */
+/******************************************************************************/
 
 void nap_vm_run(struct nap_vm* vm)
 {
