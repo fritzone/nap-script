@@ -29,7 +29,7 @@ void dump(struct nap_vm* vm, FILE *fp)
             {
                 if(vm->metatable[i]->instantiation->type == STACK_ENTRY_INT)
                 {
-                    fprintf(fp, "E:[%s=%" PRId64 "](%" PRIu64 "/%" PRIu64 ")\n",
+                    fprintf(fp, "E:[%s=%" PRINT_d "](%" PRINT_u "/%" PRINT_st ")\n",
                            vm->metatable[i]->name,
                            *(nap_int_t*)(vm->metatable[i]->instantiation->value)
                            ,i, vm->meta_size);
@@ -37,14 +37,14 @@ void dump(struct nap_vm* vm, FILE *fp)
                 else
                 if(vm->metatable[i]->instantiation->type == STACK_ENTRY_STRING)
                 {
-                    fprintf(fp, "E:[%s=%s](%" PRIu64 "/%" PRIu64 ")\n",
+                    fprintf(fp, "E:[%s=%s](%" PRINT_u "/%" PRINT_st ")\n",
                            vm->metatable[i]->name,
                            (char*)(vm->metatable[i]->instantiation->value)
                            ,i, vm->meta_size);
                 }
                 else
                 {
-                    fprintf(fp, "X:[%s=%"PRId64"](%" PRIu64 "/%" PRIu64 ")\n",
+                    fprintf(fp, "X:[%s=%"PRINT_d"](%" PRINT_u "/%" PRINT_st ")\n",
                            vm->metatable[i]->name,
                            *(nap_int_t*)(vm->metatable[i]->instantiation->value)
                            ,i, vm->meta_size);
@@ -53,14 +53,14 @@ void dump(struct nap_vm* vm, FILE *fp)
             }
             else
             {
-                fprintf(fp, "N:[%s=??](%" PRIu64 "/%" PRIu64 ")\n", vm->metatable[i]->name,
+                fprintf(fp, "N:[%s=??](%" PRINT_u "/%" PRINT_st ")\n", vm->metatable[i]->name,
                        i, vm->meta_size);
 
             }
         }
         else
         {
-            fprintf(fp, "?:[%s=??](%"PRIu64"/%"PRIu64")\n", vm->metatable[i]->name,
+            fprintf(fp, "?:[%s=??](%" PRINT_u "/%" PRINT_st ")\n", vm->metatable[i]->name,
                    i, vm->meta_size);
         }
     }
@@ -186,7 +186,7 @@ void nap_vm_run(struct nap_vm* vm)
         }
         else
         {
-            fprintf(stderr, "invalid opcode [%x] at %"PRIu64" (%"PRIx64")\n",
+            fprintf(stderr, "invalid opcode [%x] at %"PRINT_u" (%"PRINT_x")\n",
                     vm->current_opcode, vm->cc - 1, vm->cc - 1);
             nap_vm_cleanup(vm);
             exit(5);

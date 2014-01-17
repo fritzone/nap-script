@@ -105,7 +105,7 @@ static int64_t deliver_flat_index(struct nap_vm* vm,
             char* s = (char*)calloc(256, sizeof(char));
             SNPRINTF(s, 256,
                     "Index out of range for [%s]. "
-                     "Index: %d, requested: %" PRId64 " available: %d",
+                     "Index: %d, requested: %" PRINT_d " available: %d",
                      ve->name, i, vm->regidx[i], ve->dimensions[i]);
             *error = s;
             return INDEX_OUT_OF_RANGE; /* an index overflow */
@@ -492,9 +492,9 @@ static int mov_into_indexed(struct nap_vm* vm)
                             char* s = (char*)calloc(256, sizeof(char));
                             SNPRINTF(s, 256,
                                      "Index overflow error for [%s]."
-                                     "Requested index: [%" PRIu64 "] "
-                                     "Available length: [%ld] "
-                                     "Assumed length: [%" PRIu64 "]\n",
+                                     "Requested index: [%" PRINT_u "] "
+                                     "Available length: [%" PRINT_st "] "
+                                     "Assumed length: [%" PRINT_u "]\n",
                                      var->name,
                                      real_index,
                                      strlen((char*)var->instantiation->value),
