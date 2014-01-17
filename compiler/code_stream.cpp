@@ -375,7 +375,7 @@ void code_stream::output_bytecode(const char* s)
                 uint8_t type = OPCODE_BYTE;
                 if(nr > 255) type = OPCODE_SHORT;
                 if(nr > 65535) type = OPCODE_LONG;
-                if(nr > 4294967294) type = OPCODE_HUGE;
+                if(nr > 4294967294u) type = OPCODE_HUGE;
                 
                 // if yes, switch on the first bit in the type
                 if(expr[0] == '-') type |= 0x80;

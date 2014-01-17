@@ -5,15 +5,45 @@
 extern "C" {
 #endif
 
+/* Check windows */
+#if _WIN32 || _WIN64
+#if _WIN64
+#define ENVIRONMENT64
+#else
+#define ENVIRONMENT32
+#endif
+#endif
+
+/* Check GCC */
+#if __GNUC__
+#if __x86_64__ || __ppc64__
+#define ENVIRONMENT64
+#else
+#define ENVIRONMENT32
+#endif
+#endif
+
 #include <stdio.h>
 #ifdef _WINDOWS
-#define PRId64 "lld"
-#define PRIu64 "lld"
-#define PRIx64 "x"
-#pragma warning (disable : 4127)
+ #define PRINT_d "lld"
+ #define PRINT_u "lld"
+ #define PRINT_x "x"
+ #define PRINT_st "u"
+ #pragma warning (disable : 4127)
 #else
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
+ #define __STDC_FORMAT_MACROS
+ #include <inttypes.h>
+ #if ENVIRONMENT64
+  #define PRINT_d PRId64
+  #define PRINT_u PRIu64
+  #define PRINT_x PRIx64
+ #define PRINT_st PRId64
+ #else
+  #define PRINT_d PRId64
+  #define PRINT_u PRIu64
+  #define PRINT_x PRIx64
+  #define PRINT_st "zu"
+ #endif
 #endif
 
 #include "nap_types.h"
@@ -36,7 +66,7 @@ extern "C" {
 #define _NOT_IMPLEMENTED                                                       \
     do {                                                                       \
     fprintf(stderr, "NI: file [%s] line [%d] instr [%x] "                      \
-                    "opcode [%x] at %"PRIu64" (%" PRIx64 ")\n\n",              \
+                    "opcode [%x] at %" PRINT_u " (%" PRINT_x ")\n\n",              \
             __FILE__, __LINE__, vm->content[vm->cc - 1],                       \
             vm->current_opcode, vm->cc - 1, vm->cc - 1);                       \
     exit(EXIT_FAILURE);                                                        \
