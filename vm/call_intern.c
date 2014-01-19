@@ -19,9 +19,10 @@ int nap_call_intern(struct nap_vm* vm)
         {
             nap_index_t var_index = nap_fetch_index(vm);
             struct variable_entry* ve = nap_fetch_variable(vm, var_index);
+			uint8_t grow_target_type = 0;
             ASSERT_NOT_NULL_VAR(ve)
 
-            uint8_t grow_target_type = vm->content[vm->cc ++];
+            grow_target_type = vm->content[vm->cc ++];
             if(grow_target_type == OPCODE_REG) /* grow with the value of a register */
             {
                 uint8_t register_type = vm->content[vm->cc ++]; /* int/string/float...*/
@@ -54,6 +55,7 @@ int nap_call_intern(struct nap_vm* vm)
                     if(ve->instantiation)
                     {
                         uint8_t data_size = sizeof(char);
+						void* t = NULL;
                         /* calculate the size of the var depending on its needs*/
 
                         /* an array of ints */
@@ -74,7 +76,7 @@ int nap_call_intern(struct nap_vm* vm)
                         }
 
                         ve->data_size = data_size;
-                        void* t = realloc(ve->instantiation->value,
+                        t = realloc(ve->instantiation->value,
                                           new_size * data_size);
                         if(!t)
                         {
