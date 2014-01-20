@@ -2,6 +2,7 @@
 #include "nbci.h"
 #include "garbage_bin.h"
 #include "compiler.h"
+#include "nap_consts.h"
 #include "nbci_impl.h"
 
 class gb_releaser
@@ -21,9 +22,9 @@ uint8_t intr_2(struct nap_vm* vm)
     compiler->set_vmchain(vm);
     bool success = true;
     /* the vm->regs[0] is a Unicode string, convert it to system representation*/
-    size_t dest_len = vm->regslens[0] * 4, real_len = 0;
+    size_t dest_len = vm->regslens[0] * CC_MUL, real_len = 0;
     char* t = convert_string_from_bytecode_file(vm->regs[0],
-            vm->regslens[0] * 4, dest_len, &real_len);
+            vm->regslens[0] * CC_MUL, dest_len, &real_len);
 
     bool source_set = compiler->set_source(t, success);
 

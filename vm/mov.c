@@ -29,19 +29,19 @@
 static char* init_string_register(struct nap_vm* vm, uint8_t reg_idx,
                                   const char* target, size_t target_len)
 {
-    char* tmp = (char*)(calloc(target_len * 4, sizeof(char)));
+    char* tmp = (char*)(calloc(target_len * CC_MUL, sizeof(char)));
     if(!tmp)
     {
         return NULL;
     }
 
-    memcpy(tmp, target, target_len * 4);
+    memcpy(tmp, target, target_len * CC_MUL);
 
 
     if(vm->regs[reg_idx])
     {
         /* set teh memory value to zero to avoid hacking */
-        memset(vm->regs[reg_idx], 0, vm->regslens[reg_idx] * 4);
+        memset(vm->regs[reg_idx], 0, vm->regslens[reg_idx] * CC_MUL);
         MEM_FREE(vm->regs[reg_idx]);
     }
 

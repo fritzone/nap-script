@@ -60,6 +60,36 @@ int nap_operation(struct nap_vm* vm)
             }
         }
         else
+        if(register_type == OPCODE_STRING)
+        {
+            uint8_t register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
+            uint8_t add_source = vm->content[vm->cc ++]; /* what are we adding to it*/
+            if(add_source == OPCODE_REG)
+            {
+                _NOT_IMPLEMENTED
+            }
+            else
+            if(add_source == OPCODE_VAR)
+            {
+                nap_index_t var_index = nap_fetch_index(vm);
+                struct variable_entry* var = nap_fetch_variable(vm, var_index);
+                ASSERT_NOT_NULL_VAR(var)
+                CHECK_VARIABLE_INSTANTIATON(var)
+                CHECK_VARIABLE_TYPE(var,STACK_ENTRY_STRING)
+
+                /* and moving the value in the regsiter itself */
+                do_string_operation(vm, &vm->regs[register_index],
+                                    &vm->regslens[register_index],
+                                    var->instantiation->value,
+                                    var->instantiation->len,
+                                    vm->current_opcode);
+            }
+            else
+            {
+                _NOT_IMPLEMENTED
+            }
+        }
+        else
         {
             _NOT_IMPLEMENTED
         }

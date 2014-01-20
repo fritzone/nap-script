@@ -40,13 +40,13 @@ int interpret_stringtable(struct nap_vm *vm, uint8_t *start_location, uint32_t l
             struct strtable_entry* new_strentry = NULL;
 
             cloc += 4;
-            str = (char*)calloc(sizeof(char), len * 4); /* NOT zero terminated */
+            str = (char*)calloc(sizeof(char), len * CC_MUL); /* NOT zero terminated */
             if(str == NULL)
             {
                 return NAP_FAILURE;
             }
-            memcpy(str, cloc, len * 4); /* UTF-32BE encoding */
-            cloc += len * 4;
+            memcpy(str, cloc, len * CC_MUL); /* UTF-32BE encoding */
+            cloc += len * CC_MUL;
 
             if(vm->strt_size < index + 1)
             {

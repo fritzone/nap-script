@@ -775,3 +775,26 @@ char *convert_string_from_bytecode_file(const char *src, size_t len, size_t dest
     free(src_copy_save);
     return to_return;
 }
+
+
+int do_string_operation(struct nap_vm *vm, nap_string_t *target, size_t *len, nap_string_t operand, size_t operand_len, uint8_t opcode)
+{
+    if(opcode == OPCODE_ADD) /* add two strings, result will be in target */
+    {
+        nap_string_t temp = (nap_string_t)calloc((*len + operand_len) * CC_MUL, sizeof(char));
+        if(temp == NULL)
+        {
+            return NAP_FAILURE;
+        }
+        memcpy(temp, *target, *len * CC_MUL);
+        memcpy(temp + (CC_MUL * *len), operand, operand_len * CC_MUL);
+
+        *len += operand_len;
+        MEM_FREE(*target);
+        *target = temp;
+
+        return NAP_SUCCESS;
+    }
+
+    return NAP_FAILURE;
+}

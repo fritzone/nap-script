@@ -150,11 +150,30 @@ void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_int_t reg, nap_int_t imm
  * Perform the given operation to be found in the opcode, stores the result in target
  * @param vm - the virtual machine
  * @param target - the target of the operation, and the first operand
- * @param operand - the operand on whcih we perform
+ * @param operand - the operand with which we perform
  * @param opcode - the operation we perform
  * @throws a system error if the operation is division and the operand is zero
  */
 void do_int_operation(struct nap_vm* vm, nap_int_t *target, nap_int_t operand, uint8_t opcode);
+
+/**
+ * @brief do_string_operation performs a string operation.
+ *
+ * @param vm the VM in which we perform the operation
+ * @param target the target which will be populated with the result of the operation.
+ * @param len The length of the target will be updated. Initially it contains the original length
+ * @param operand The second operand
+ * @param operand_len The length of the second operand
+ * @param opcode The actual operation
+ * @return NAP_SUCCESS if the operation succeeded, NAP_FAILURE otherwise. Internal error of VM
+ *         is updates in this case
+ */
+int do_string_operation(struct nap_vm* vm,
+                         nap_string_t *target,
+                         size_t* len,
+                         nap_string_t operand,
+                         size_t operand_len,
+                         uint8_t opcode);
 
 /**
  * @brief convert_string_from_bytecode_file converts a string from the bytecode
