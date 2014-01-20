@@ -136,6 +136,7 @@ static nap_int_t nap_int_string_to_number(const char* to_conv, size_t len)
     char* t = convert_string_from_bytecode_file((char*)to_conv,
                                                 len * 4, dest_len, &real_len);
     char *save_t = t;
+	nap_int_t v = 0;
     if(!t)
     {
         return 0;
@@ -167,7 +168,7 @@ static nap_int_t nap_int_string_to_number(const char* to_conv, size_t len)
             t --; /* stepping back one */
         }
     }
-    nap_int_t v = strtoll(t, &endptr, base);;
+	v = strtoll(t, &endptr, base);;
     free(save_t);
     return v;
 }
@@ -413,12 +414,13 @@ static int mov_into_variable(struct nap_vm* vm)
         {
             if(var->instantiation->type == OPCODE_STRING)
             {
+				char* temp = NULL;
                 /* moving a register into the string variable */
                 if(var->instantiation->value)
                 {
                     MEM_FREE(var->instantiation->value);
                 }
-                char* temp = (char*)calloc(
+                temp = (char*)calloc(
                             vm->regslens[register_index] * 4 + 1, /* UTF-32BE */
                             sizeof(char));
 
