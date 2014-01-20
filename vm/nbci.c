@@ -92,12 +92,13 @@ char *nap_vm_get_string(struct nap_vm* vm, char* name, int* found)
                 {
                     if(vm->metatable[i]->name && !strcmp(vm->metatable[i]->name, finame))
                     {
+						size_t dest_len = 0, real_len = 0;
                         if(finame != name)
                         {
                             MEM_FREE(finame);
                         }
                         *found = 1;
-                        size_t dest_len = vm->metatable[i]->instantiation->len, real_len;
+                        dest_len = vm->metatable[i]->instantiation->len;
                         return convert_string_from_bytecode_file((char*)(vm->metatable[i]->instantiation->value),
                                                                  vm->metatable[i]->instantiation->len * 4,
                                                                  dest_len,
