@@ -46,7 +46,7 @@
 #include <iconv.h>
 #include <stddef.h>
 
-#define ERROR_COUNT 22
+#define ERROR_COUNT 23
 
 /* section for defining the constants */
 static char* error_table[ERROR_COUNT + 1] =
@@ -73,89 +73,10 @@ static char* error_table[ERROR_COUNT + 1] =
     "[VM-0020] Invalid jump index",
     "[VM-0021] Cannot leave from the bottom of the call frame pit",
     "[VM-0022] Invalid internal call",
+    "[VM-0023] Division by zero",
 
     "LAST_ENTRY_FOR_FUNNY_COMPILERS_WHO_DONT_LIKE_COMMAS"
 };
-
-void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_int_t reg, nap_int_t immediate, uint8_t opcode)
-{
-    register uint8_t temp_lbf;
-
-    if(opcode == OPCODE_EQ)
-    {
-        temp_lbf = (reg == immediate);
-    }
-    else
-    if(opcode == OPCODE_NEQ)
-    {
-        temp_lbf = (reg != immediate);
-    }
-    else
-    if(opcode == OPCODE_LT)
-    {
-        temp_lbf = (reg <  immediate);
-    }
-    else
-    if(opcode == OPCODE_GT)
-    {
-        temp_lbf = (reg >  immediate);
-    }
-    else
-    if(opcode == OPCODE_LTE)
-    {
-        temp_lbf = (reg <= immediate);
-    }
-    else
-    if(opcode == OPCODE_GTE)
-    {
-        temp_lbf = (reg >= immediate);
-    }
-    else
-    {
-        _NOT_IMPLEMENTED
-    }
-
-    if(vm->lbf == UNDECIDED)
-    {
-        vm->lbf = temp_lbf;
-    }
-    else
-    {
-        vm->lbf &= temp_lbf;
-    }
-}
-
-void do_int_operation(struct nap_vm* vm, nap_int_t* target, nap_int_t operand, uint8_t opcode)
-{
-    if(opcode == OPCODE_ADD)
-    {
-        *target += operand;
-    }
-    else
-    if(opcode == OPCODE_SUB)
-    {
-        *target -= operand;
-    }
-    else
-    if(opcode == OPCODE_DIV)
-    {
-        *target /= operand;
-    }
-    else
-    if(opcode == OPCODE_MUL)
-    {
-        *target *= operand;
-    }
-    else
-    if(opcode == OPCODE_MOD)
-    {
-        *target %= operand;
-    }
-    else
-    {
-        _NOT_IMPLEMENTED
-    }
-}
 
 /**
  * Cleans the allocated memory
@@ -271,6 +192,12 @@ void nap_vm_cleanup(struct nap_vm* vm)
     if(vm->error_description)
     {
         MEM_FREE(vm->error_description);
+    }
+
+    /* the string registers */
+    for(i=0; i<REGISTER_COUNT; i++)
+    {
+        MEM_FREE(vm->regs[i]);
     }
 
     /* and the VM itself */
@@ -774,27 +701,4 @@ char *convert_string_from_bytecode_file(const char *src, size_t len, size_t dest
     free(orig_converted);
     free(src_copy_save);
     return to_return;
-}
-
-
-int do_string_operation(struct nap_vm *vm, nap_string_t *target, size_t *len, nap_string_t operand, size_t operand_len, uint8_t opcode)
-{
-    if(opcode == OPCODE_ADD) /* add two strings, result will be in target */
-    {
-        nap_string_t temp = (nap_string_t)calloc((*len + operand_len) * CC_MUL, sizeof(char));
-        if(temp == NULL)
-        {
-            return NAP_FAILURE;
-        }
-        memcpy(temp, *target, *len * CC_MUL);
-        memcpy(temp + (CC_MUL * *len), operand, operand_len * CC_MUL);
-
-        *len += operand_len;
-        MEM_FREE(*target);
-        *target = temp;
-
-        return NAP_SUCCESS;
-    }
-
-    return NAP_FAILURE;
 }

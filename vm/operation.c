@@ -7,6 +7,109 @@
 #include "nap_consts.h"
 
 #include <stdlib.h>
+#include <string.h>
+
+/**
+ * @brief Perform the given operation to be found in the opcode, stores the
+ *        result in target
+ *
+ * @param vm - the virtual machine
+ * @param target - the target of the operation, and the first operand
+ * @param operand - the operand with which we perform
+ * @param opcode - the operation we perform
+ *
+ * @throws a system error if the operation is division and the operand is zero
+ */
+int do_int_operation(struct nap_vm* vm, nap_int_t* target, nap_int_t operand,
+                      uint8_t opcode)
+{
+    if(opcode == OPCODE_ADD)
+    {
+        *target += operand;
+    }
+    else
+    if(opcode == OPCODE_SUB)
+    {
+        *target -= operand;
+    }
+    else
+    if(opcode == OPCODE_DIV)
+    {
+        if(operand == 0)
+        {
+            nap_set_error(vm, ERR_VM_0023);
+            return NAP_FAILURE;
+        }
+        else
+        {
+            *target /= operand;
+        }
+    }
+    else
+    if(opcode == OPCODE_MUL)
+    {
+        *target *= operand;
+    }
+    else
+    if(opcode == OPCODE_MOD)
+    {
+        if(operand == 0)
+        {
+            nap_set_error(vm, ERR_VM_0023);
+            return NAP_FAILURE;
+        }
+        else
+        {
+            *target %= operand;
+        }
+    }
+    else
+    {
+        _NOT_IMPLEMENTED
+    }
+    return NAP_SUCCESS;
+}
+
+/**
+ * @brief do_string_operation performs a string operation.
+ *
+ * @param vm the VM in which we perform the operation
+ * @param target the target which will be populated with the result of the
+ *               operation.
+ * @param len The length of the target will be updated. Initially it contains
+ *            the original length
+ * @param operand The second operand
+ * @param operand_len The length of the second operand
+ * @param opcode The actual operation
+ * @return NAP_SUCCESS if the operation succeeded, NAP_FAILURE otherwise.
+ *         Internal error of VM is updated in second case.
+ */
+static int do_string_operation(struct nap_vm *vm, nap_string_t *target,
+                               size_t *len, nap_string_t operand,
+                               size_t operand_len, uint8_t opcode)
+{
+    if(opcode == OPCODE_ADD) /* add two strings, result will be in target */
+    {
+        nap_string_t temp = (nap_string_t)calloc((*len + operand_len) * CC_MUL,
+                                                 sizeof(char));
+        size_t final_len = *len * CC_MUL;
+        if(temp == NULL)
+        {
+            return nap_vm_set_error_description(vm,
+                               "Cannot allocate memory for a string operation");
+        }
+        memcpy(temp, *target, final_len);
+        memcpy(temp + final_len, operand, operand_len * CC_MUL);
+
+        *len += operand_len;
+        MEM_FREE(*target);
+        *target = temp;
+
+        return NAP_SUCCESS;
+    }
+
+    return nap_vm_set_error_description(vm, "Invalid string operation");
+}
 
 int nap_operation(struct nap_vm* vm)
 {
@@ -25,7 +128,8 @@ int nap_operation(struct nap_vm* vm)
             if(add_source == OPCODE_IMMEDIATE) /* immediate value (1,..) added to register */
             {
                 nap_int_t imm_operand = nap_read_immediate(vm);
-                do_int_operation(vm, &vm->regi[register_index], imm_operand, vm->current_opcode);
+                return do_int_operation(vm, &vm->regi[register_index],
+                                        imm_operand, vm->current_opcode);
             }
             else
             if(add_source == OPCODE_VAR) /* adding a variable to the reg*/
@@ -37,7 +141,9 @@ int nap_operation(struct nap_vm* vm)
                 CHECK_VARIABLE_TYPE(var,STACK_ENTRY_INT)
 
                 /* and moving the value in the regsiter itself */
-                do_int_operation(vm, &vm->regi[register_index], *(int64_t*)var->instantiation->value, vm->current_opcode);
+                return do_int_operation(vm, &vm->regi[register_index],
+                                        *(int64_t*)var->instantiation->value,
+                                        vm->current_opcode);
             }
             else
             if(add_source == OPCODE_REG) /* adding a register to a register */
@@ -47,7 +153,9 @@ int nap_operation(struct nap_vm* vm)
                 if(second_register_type == OPCODE_INT)
                 {
                     uint8_t second_register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
-                    do_int_operation(vm, &vm->regi[register_index], vm->regi[second_register_index], vm->current_opcode);
+                    return do_int_operation(vm, &vm->regi[register_index],
+                                            vm->regi[second_register_index],
+                                            vm->current_opcode);
                 }
                 else
                 {
@@ -64,12 +172,7 @@ int nap_operation(struct nap_vm* vm)
         {
             uint8_t register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
             uint8_t add_source = vm->content[vm->cc ++]; /* what are we adding to it*/
-            if(add_source == OPCODE_REG)
-            {
-                _NOT_IMPLEMENTED
-            }
-            else
-            if(add_source == OPCODE_VAR)
+            if(add_source == OPCODE_VAR) /* add reg string (0), xyz */
             {
                 nap_index_t var_index = nap_fetch_index(vm);
                 struct variable_entry* var = nap_fetch_variable(vm, var_index);
@@ -83,6 +186,38 @@ int nap_operation(struct nap_vm* vm)
                                     var->instantiation->value,
                                     var->instantiation->len,
                                     vm->current_opcode);
+            }
+            else
+            if(add_source == OPCODE_STRING) /* add reg string (0), "B" */
+            {
+                /* fetch the index of the string */
+                nap_index_t string_index = nap_fetch_index(vm);
+
+                do_string_operation(vm, &vm->regs[register_index],
+                                    &vm->regslens[register_index],
+                                    vm->stringtable[string_index]->string,
+                                    vm->stringtable[string_index]->len,
+                                    vm->current_opcode);
+
+            }
+            else
+            if(add_source == OPCODE_REG) /* add reg string (0), reg string (1) */
+            {
+                /* fetch the index of the string */
+                uint8_t second_register_type = vm->content[vm->cc ++]; /* string, int, etc... */
+                if(second_register_type == OPCODE_STRING)
+                {
+                    uint8_t second_register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
+                    do_string_operation(vm, &vm->regs[register_index],
+                                        &vm->regslens[register_index],
+                                        vm->regs[second_register_index],
+                                        vm->regslens[second_register_index],
+                                        vm->current_opcode);
+                }
+                else
+                {
+                    _NOT_IMPLEMENTED
+                }
             }
             else
             {
@@ -121,7 +256,8 @@ int nap_operation(struct nap_vm* vm)
                 if(var->instantiation->value)
                 {
                     int64_t* temp = (int64_t*)var->instantiation->value;
-                    do_int_operation(vm, temp, vm->regi[register_index], vm->current_opcode);
+                    return do_int_operation(vm, temp, vm->regi[register_index],
+                                            vm->current_opcode);
                 }
                 else /* allocate the memory for the value */
                 { /* this should generate some error, there should be a value before add */

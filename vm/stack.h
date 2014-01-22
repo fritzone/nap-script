@@ -1,7 +1,7 @@
 #ifndef _STACK_H_
 #define _STACK_H_
 
-#include <stdint.h>
+#include <stddef.h>
 
 /******************************************************************************/
 /*                             Stack section                                  */
@@ -47,7 +47,7 @@ struct stack_entry
      *  1. string
      *  2. an element with indexes
      * this is the length of the allocated memory */
-    uint32_t len;
+    size_t len;
 };
 
 #endif

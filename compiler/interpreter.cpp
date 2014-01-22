@@ -830,6 +830,8 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
             while(qDimensionStrings != dimensions.end())
             {
                 expression_tree* dim_def_node = new expression_tree(expwloc);
+                garbage_bin<expression_tree*>::instance(mcompiler).place(dim_def_node, mcompiler);
+
                 if(qDimensionStrings->length() > 0)
                 {
                     bool success = true;
@@ -1943,11 +1945,15 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
             std::vector<std::string>::iterator q = entries.begin();
             std::vector<expression_tree*>* index_list = new std::vector<expression_tree*>();
+            garbage_bin< std::vector<expression_tree*>* >::instance(mcompiler).place(index_list, mcompiler);
             multi_dimension_index* dim = new_multi_dimension_index(expr_trim, mcompiler);
 
             node->info = STR_IDXID;
             node->left = new expression_tree(node, expwloc);
             node->right = new expression_tree(node, expwloc);
+            garbage_bin<expression_tree*>::instance(mcompiler).place(node->left, mcompiler);
+            garbage_bin<expression_tree*>::instance(mcompiler).place(node->right, mcompiler);
+
             bool success = true;
             build_expr_tree(indexed_elem, node->left, the_method, orig_expr, cc, result, expwloc, success);    /* to discover the indexed element */
             if(!success)
@@ -1963,6 +1969,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             while(q != entries.end())
             {
                 expression_tree* cur_indx = new expression_tree(expwloc);
+                garbage_bin<expression_tree*>::instance(mcompiler).place(cur_indx, mcompiler);
+
                 bool success = true;
                 build_expr_tree(q->c_str(), cur_indx, the_method, orig_expr, cc, result, expwloc, success);
                 if(!success)

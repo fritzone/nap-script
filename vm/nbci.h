@@ -62,48 +62,6 @@ extern "C" {
 #define OPCODE_COUNT        255        /* the number of possible opcodes */
 #define INTERRUPT_COUNT     255        /* the number of possible interrupts */
 
-/* Macro for leaving the application in case of an unimplemented feature */
-#define _NOT_IMPLEMENTED                                                       \
-    do {                                                                       \
-    fprintf(stderr, "NI: file [%s] line [%d] instr [%x] "                      \
-                    "opcode [%x] at %" PRINT_u " (%" PRINT_x ")\n\n",              \
-            __FILE__, __LINE__, vm->content[vm->cc - 1],                       \
-            vm->current_opcode, vm->cc - 1, vm->cc - 1);                       \
-    exit(EXIT_FAILURE);                                                        \
-    } while(0);
-
-/* macro to try to call a function and leave the app in case of error with the
- * given error code */
-#define TRY_CALL(func, err)                                                    \
-    do                                                                         \
-    {                                                                          \
-        if(func(vm) == NAP_FAILURE)                                            \
-        {                                                                      \
-            if(vm->error_code == 0) nap_set_error(vm, err);                    \
-            else vm->error_code = (vm->error_code << 16) + err;                \
-            if(vm->environment == STANDALONE)                                  \
-            {                                                                  \
-                fprintf(stderr, "%s\n", vm->error_message);                    \
-                if(vm->error_description)                                      \
-                    fprintf(stderr, "%s\n", vm->error_description);            \
-                nap_vm_cleanup(vm);                                            \
-                exit(0);                                                       \
-            }                                                                  \
-            else                                                               \
-            {                                                                  \
-                return;                                                        \
-            }                                                                  \
-        }                                                                      \
-    } while(0);
-
-/* macro for checking that a variable is not null */
-#define ASSERT_NOT_NULL_VAR(ve)                                                \
-    if(NULL == ve)                                                             \
-    {                                                                          \
-        nap_set_error(vm, ERR_VM_0008);                                        \
-        return NAP_FAILURE;                                                    \
-    }
-
 /* the lbf initially is undecided, the first operation sets it, and it is
  * AND-ed with the result of the next boolean operations as long as it is
  * not cleared by a jlbf or clbf */
@@ -305,6 +263,15 @@ nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found);
  */
 char* nap_vm_get_string(struct nap_vm* vm, char* name, int* found);
 
+/**
+ * @brief Sets the error description of the virtual machine.
+ *
+ * @param vm the target virtual machine
+ * @param error_desc the error description
+ *
+ * @return this function always return NAP_FAILURE
+ */
+int nap_vm_set_error_description(struct nap_vm *vm, const char* error_desc);
 
 #ifdef __cplusplus
 }

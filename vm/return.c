@@ -1,7 +1,7 @@
 #include "return.h"
 #include "nbci.h"
 #include "opcodes.h"
-
+#include "nbci_impl.h"
 #include "nap_consts.h"
 
 #include <stdlib.h>

@@ -19,6 +19,48 @@ struct nap_vm;
 #define SNPRINTF snprintf
 #endif
 
+/* Macro for leaving the application in case of an unimplemented opcode */
+#define _NOT_IMPLEMENTED                                                       \
+    do {                                                                       \
+    fprintf(stderr, "NI: file [%s] line [%d] instr [%x] "                      \
+                    "opcode [%x] at %" PRINT_u " (%" PRINT_x ")\n\n",          \
+            __FILE__, __LINE__, vm->content[vm->cc - 1],                       \
+            vm->current_opcode, vm->cc - 1, vm->cc - 1);                       \
+    exit(EXIT_FAILURE);                                                        \
+    } while(0);
+
+/* macro to try to call a function and leave the app in case of error with the
+ * given error code */
+#define TRY_CALL(func, err)                                                    \
+    do                                                                         \
+    {                                                                          \
+        if(func(vm) == NAP_FAILURE)                                            \
+        {                                                                      \
+            if(vm->error_code == 0) nap_set_error(vm, err);                    \
+            else vm->error_code = (vm->error_code << 16) + err;                \
+            if(vm->environment == STANDALONE)                                  \
+            {                                                                  \
+                fprintf(stderr, "%s\n", vm->error_message);                    \
+                if(vm->error_description)                                      \
+                    fprintf(stderr, "%s\n", vm->error_description);            \
+                nap_vm_cleanup(vm);                                            \
+                exit(0);                                                       \
+            }                                                                  \
+            else                                                               \
+            {                                                                  \
+                return;                                                        \
+            }                                                                  \
+        }                                                                      \
+    } while(0);
+
+/* macro for checking that a variable is not null */
+#define ASSERT_NOT_NULL_VAR(ve)                                                \
+    if(NULL == ve)                                                             \
+    {                                                                          \
+        nap_set_error(vm, ERR_VM_0008);                                        \
+        return NAP_FAILURE;                                                    \
+    }
+
 #define CHECK_VARIABLE_INSTANTIATON(var)                                       \
     if(var->instantiation == 0)                                                \
     {                                                                          \
@@ -135,45 +177,6 @@ void nap_set_error(struct nap_vm*, int error_code);
  * @brief Returns the description of the given type
  */
 const char* nap_get_type_description(StackEntryType t);
-
-
-/**
- * Sets the last boolean flag according to the operation found int current_opcode
- * @param vm - the virtual machine
- * @param reg - the registers value to check
- * @param immediate - against this value
- * @param current_opcode - the operation which is supposed to be executed
- */
-void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_int_t reg, nap_int_t immediate, uint8_t opcode);
-
-/**
- * Perform the given operation to be found in the opcode, stores the result in target
- * @param vm - the virtual machine
- * @param target - the target of the operation, and the first operand
- * @param operand - the operand with which we perform
- * @param opcode - the operation we perform
- * @throws a system error if the operation is division and the operand is zero
- */
-void do_int_operation(struct nap_vm* vm, nap_int_t *target, nap_int_t operand, uint8_t opcode);
-
-/**
- * @brief do_string_operation performs a string operation.
- *
- * @param vm the VM in which we perform the operation
- * @param target the target which will be populated with the result of the operation.
- * @param len The length of the target will be updated. Initially it contains the original length
- * @param operand The second operand
- * @param operand_len The length of the second operand
- * @param opcode The actual operation
- * @return NAP_SUCCESS if the operation succeeded, NAP_FAILURE otherwise. Internal error of VM
- *         is updates in this case
- */
-int do_string_operation(struct nap_vm* vm,
-                         nap_string_t *target,
-                         size_t* len,
-                         nap_string_t operand,
-                         size_t operand_len,
-                         uint8_t opcode);
 
 /**
  * @brief convert_string_from_bytecode_file converts a string from the bytecode

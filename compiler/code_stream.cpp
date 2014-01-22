@@ -192,7 +192,7 @@ void code_finalizer::finalize()
     f.write_stuff_to_file_32(meta_location, 0 + 1); // the meta location for variables
     f.write_stuff_to_file_32(strtable_location, 0 + 1 + 4); // the stringtable location
     f.write_stuff_to_file_32(jumptable_location, 0 + 1 + 4 + 4); // the jumptable location
-    f.write_stuff_to_file_8(max_reg_count, 0 + 1 + 4 + 4 + 4);
+    f.write_stuff_to_file_8(255, 0 + 1 + 4 + 4 + 4); /* max reg count, always 255*/
     f.write_stuff_to_file_8(0, 0 + 1 + 4 + 4 + 4); /* a dummy flag for now */
     }
 }
@@ -474,6 +474,7 @@ void code_stream::output_bytecode(const char* s)
             entry->the_string = expr.substr(1, expr.length() - 2);
             entry->length = expr.length() - 2;
             mcompiler->add_stringtable_entry(entry);
+            // write directly the opcode string, no immediate specifier
             f.write_stuff_to_file_8(OPCODE_STRING);
             f.write_stuff_to_file_32(entry->index);
             garbage_bin<bc_string_table_entry*>::instance(mcompiler).place(entry, mcompiler);
