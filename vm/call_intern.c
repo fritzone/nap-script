@@ -34,8 +34,8 @@ int nap_call_intern(struct nap_vm* vm)
                 /* we are dealing with an INT type register */
                 if(register_type == OPCODE_INT)
                 {
-                    nap_int_t grow_value = vm->regi[register_index];
-                    nap_int_t new_size = 1;
+                    size_t grow_value = (size_t)(vm->regi[register_index]);
+                    size_t new_size = 1;
                     uint8_t dim_counter = 0;
 
                     if(grow_value == 0)

@@ -100,7 +100,7 @@ static int64_t deliver_flat_index(struct nap_vm* vm,
         int64_t dim_multiplier = 1;
 
         /* is this a valid index? */
-        if(vm->regidx[i] >= ve->dimensions[i] || vm->regidx[i] < 0)
+        if( (vm->regidx[i] < 0) || (vm->regidx[i] >= (size_t)(ve->dimensions[i])) )
         {
             char* s = (char*)calloc(256, sizeof(char));
             SNPRINTF(s, 256,
@@ -127,7 +127,7 @@ static int64_t deliver_flat_index(struct nap_vm* vm,
     return to_ret;
 }
 
-static int move_string_into_substring(nap_int_t start_index, nap_int_t end_index,
+static int move_string_into_substring(size_t start_index, size_t end_index,
                                       char** target, size_t* target_len,
                                       char* source, size_t source_len,
                                       char* helper, char** error)
@@ -407,7 +407,7 @@ static int mov_into_register(struct nap_vm* vm)
         uint8_t move_source = vm->content[vm->cc ++]; /* the index definition */
         if(move_source == OPCODE_IMMEDIATE) /* immediate value (1,..) */
         {
-            vm->regidx[register_index] = nap_read_immediate(vm);
+            vm->regidx[register_index] = (size_t)nap_read_immediate(vm);
         }
         else
         {
@@ -595,8 +595,8 @@ static int mov_into_indexed(struct nap_vm* vm)
                     else
                     if(ctr_used_index_regs == 2) /* string[2,5] = "ABC" - removes from the string the substring [2,5] and puts in the new string */
                     {
-                        nap_int_t start_index = vm->regidx[0]; /* starting from this */
-                        nap_int_t end_index = vm->regidx[1];
+                        size_t start_index = vm->regidx[0]; /* starting from this */
+                        size_t end_index = vm->regidx[1];
                         char* error = NULL;
                         int ret = move_string_into_substring(start_index, end_index,
                                     (char**)&var->instantiation->value,
