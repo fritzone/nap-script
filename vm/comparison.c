@@ -9,6 +9,62 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+/**
+ * Sets the last boolean flag according to the operation found int current_opcode
+ * @param vm - the virtual machine
+ * @param reg - the registers value to check
+ * @param immediate - against this value
+ * @param current_opcode - the operation which is supposed to be executed
+ */
+static void nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_int_t reg,
+                                        nap_int_t immediate, uint8_t opcode)
+{
+    register uint8_t temp_lbf;
+
+    if(opcode == OPCODE_EQ)
+    {
+        temp_lbf = (reg == immediate);
+    }
+    else
+    if(opcode == OPCODE_NEQ)
+    {
+        temp_lbf = (reg != immediate);
+    }
+    else
+    if(opcode == OPCODE_LT)
+    {
+        temp_lbf = (reg <  immediate);
+    }
+    else
+    if(opcode == OPCODE_GT)
+    {
+        temp_lbf = (reg >  immediate);
+    }
+    else
+    if(opcode == OPCODE_LTE)
+    {
+        temp_lbf = (reg <= immediate);
+    }
+    else
+    if(opcode == OPCODE_GTE)
+    {
+        temp_lbf = (reg >= immediate);
+    }
+    else
+    {
+        _NOT_IMPLEMENTED
+    }
+
+    if(vm->lbf == UNDECIDED)
+    {
+        vm->lbf = temp_lbf;
+    }
+    else
+    {
+        vm->lbf &= temp_lbf;
+    }
+}
+
 int nap_comparison(struct nap_vm* vm)
 {
     uint8_t cmp_first = vm->content[vm->cc ++];   /* what to check (reg only)*/

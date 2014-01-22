@@ -24,8 +24,8 @@ int nap_call(struct nap_vm *vm)
         SNPRINTF(s, 256, "Invalid jump index [%d]."
                  " Max is ["JL_SIZE_T_SPECIFIER"]",
                  jmpt_index, vm->jumptable_size);
-        vm->error_description = s;
-
+        nap_vm_set_error_description(vm, s);
+        MEM_FREE(s);
         return NAP_FAILURE;
     }
     /* and simply set cc to be where we need to go */

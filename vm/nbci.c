@@ -194,3 +194,18 @@ void nap_vm_run(struct nap_vm* vm)
         }
     }
 }
+
+int nap_vm_set_error_description(struct nap_vm* vm, const char *error_desc)
+{
+    char* error = (char*)(calloc(strlen(error_desc) + 1, sizeof(char)));
+    if(error == NULL)
+    {
+        /* we are doomed anyway ... */
+        return NAP_FAILURE;
+    }
+
+    strcpy(error, error_desc);
+    vm->error_description = error;
+
+    return NAP_FAILURE;
+}

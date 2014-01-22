@@ -26,10 +26,17 @@
     nap_runtime_shutdown(&runtime);                                \
     ASSERT_TRUE(runtime == NULL);
 
+#define SCRIPT_ASSERT_STREQ(with,what)                             \
+    do {                                                           \
+        char* what = VAR_STRING(what);                             \
+        ASSERT_STREQ(with, what);                                  \
+        free(what);                                                \
+    } while(0);
 /*
  * TESTS
  */
 
+/* Define a simple integer type variable, assign a value to it. */
 TEST(VariableDefinitions, SimpleInt)
 {
     SCRIPT_START
@@ -43,6 +50,85 @@ TEST(VariableDefinitions, SimpleInt)
 
     SCRIPT_SHUTDOWN;
 }
+
+/* Define a string variable. Use the [] operator to change the second
+   character in it.*/
+TEST(VariableDefinitions, StringIndexedOperation)
+{
+    SCRIPT_START
+    "                               \
+        string b = \"AABB\";        \
+        b[1] = \"c\";               \
+    "
+    SCRIPT_END
+
+    SCRIPT_ASSERT_STREQ("AcBB", b);
+
+    SCRIPT_SHUTDOWN;
+}
+
+/* Define a string variable, use the [,] operator to change a part from it.
+   The second indexe should be greater than the first one */
+TEST(VariableDefinitions, StringSubstringIndexedOperation1)
+{
+    SCRIPT_START
+    "                               \
+        string b = \"AABB\";        \
+        b[1,2] = \"cc\";            \
+    "
+    SCRIPT_END
+
+    SCRIPT_ASSERT_STREQ("AccB", b);
+
+    SCRIPT_SHUTDOWN;
+}
+
+/* Define a string variable, use the [,] operator to change a part of it.
+   The second index should be greater than the length of the string.
+   Expected outcome is that the end of the string will be removed and
+   it will end with the new string. */
+TEST(VariableDefinitions, StringSubstringIndexedOperation2)
+{
+    SCRIPT_START
+    "                               \
+        string b = \"AABB\";        \
+        b[1,5] = \"cc\";            \
+    "
+    SCRIPT_END
+
+    SCRIPT_ASSERT_STREQ("Acc", b);
+
+    SCRIPT_SHUTDOWN;
+}
+
+TEST(VariableDefinitions, StringSubstringIndexedOperation3)
+{
+    SCRIPT_START
+    "                               \
+        string b = \"AABB\";        \
+        b[1,3] = \"cc\";            \
+    "
+    SCRIPT_END
+
+    SCRIPT_ASSERT_STREQ("Acc", b);
+
+    SCRIPT_SHUTDOWN;
+}
+
+TEST(VariableDefinitions, StringSubstringIndexedOperationInsertion)
+{
+    SCRIPT_START
+    "                               \
+        string b = \"ABCD\";        \
+        b[1,1] = \"cc\";            \
+    "
+    SCRIPT_END
+
+    SCRIPT_ASSERT_STREQ("AccCD", b);
+
+    SCRIPT_SHUTDOWN;
+}
+
 
 TEST(Operations, BasicIntVariableOperations)
 {
@@ -77,7 +163,7 @@ TEST(Operations, BasicIntVariableOperations)
     SCRIPT_SHUTDOWN
 }
 
-TEST(Operations, BasicStringVariableOperations)
+TEST(Operations, BasicStringVariableOperations1)
 {
 
     SCRIPT_START
@@ -89,10 +175,48 @@ TEST(Operations, BasicStringVariableOperations)
     "
     SCRIPT_END
 
-    ASSERT_STREQ("AABB", VAR_STRING(a_plus_b));
+    SCRIPT_ASSERT_STREQ("AABB", a_plus_b);
 
     SCRIPT_SHUTDOWN
 }
+
+TEST(Operations, BasicStringVariableOperations2)
+{
+
+    SCRIPT_START
+    "                               \
+        string a = \"A\";           \
+        string b = a + \"B\";       \
+    "
+    SCRIPT_END
+
+    SCRIPT_ASSERT_STREQ("AB", b);
+
+    SCRIPT_SHUTDOWN
+}
+
+TEST(Operations, BasicStringVariableOperations4)
+{
+
+    SCRIPT_START
+    "                                      \
+        string sa = \"A\";                 \
+        string sb ;                        \
+        asm                                \
+        {                                  \
+        mov reg string(0), global.sa       \
+        mov reg string(1), \"B\"           \
+        add reg string(0), reg string(1)   \
+        mov global.sb, reg string(0)       \
+        }                                  \
+    "
+    SCRIPT_END
+
+    SCRIPT_ASSERT_STREQ("AB", sb);
+
+    SCRIPT_SHUTDOWN
+}
+
 
 
 TEST(Operations, BasicImmediateOperations)

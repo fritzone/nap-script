@@ -127,6 +127,63 @@ static int64_t deliver_flat_index(struct nap_vm* vm,
     return to_ret;
 }
 
+static int move_string_into_substring(nap_int_t start_index, nap_int_t end_index,
+                                      char** target, size_t* target_len,
+                                      char* source, size_t source_len,
+                                      char* helper, char** error)
+{
+    char* first_part; /* from 0 to start_index (excluding), but at the end the final value */
+    size_t new_len = 0;
+    /* in these scenarios nothing will be done*/
+    if(end_index < start_index || end_index < 0 || start_index < 0)
+    {
+        return NAP_SUCCESS;
+    }
+
+    if(end_index >= *target_len)
+    {
+        end_index = *target_len - 1;
+    }
+
+    /* calculate the new length of the target */
+    new_len = *target_len -
+            (end_index - start_index - 1) +
+            source_len; /* the new length of the var*/
+
+    if(start_index >= *target_len)
+    {
+        char* s = (char*)calloc(256, sizeof(char));
+        SNPRINTF(s, 256,
+                 "Index overflow error for [%s]."
+                 "Requested index: [%" PRINT_u "] "
+                 "Available length: [%" PRINT_st "] ",
+                 helper,
+                 start_index,
+                 *target_len);
+        *error = s;
+        return NAP_FAILURE;
+    }
+
+    first_part = (char*)calloc(new_len * CC_MUL, sizeof(char));
+
+    /* and fill up the memory */
+    memcpy(first_part, *target,
+           start_index * CC_MUL); /* taking the first part from the string */
+
+    memcpy(first_part + start_index * CC_MUL,
+           source,
+           source_len * CC_MUL); /* the second part */
+
+    memcpy(first_part + (start_index + source_len )* CC_MUL,
+           *target + (end_index + 1) * CC_MUL, /* +1 because we don't include end_index*/
+           (*target_len - end_index - 1) * CC_MUL); /* and fetching in what remained, -1 see above */
+
+    MEM_FREE(*target);
+    *target = first_part;
+    *target_len = new_len;
+    return NAP_SUCCESS;
+}
+
 /* returns a number from the given string */
 static nap_int_t nap_int_string_to_number(const char* to_conv, size_t len)
 {
@@ -448,6 +505,18 @@ static int mov_into_variable(struct nap_vm* vm)
     return NAP_SUCCESS;
 }
 
+/*
+ * Resolves moving into indexed destinations. The following scenarios apply:
+ * 1. mov string[x], something -> will move into the target string starting
+ *    from position x the something. If the length of something is greater than
+ *    the remaining space from x till the end of the string, an error will be
+ *    signaled
+ * 2. mov string[x,y], something -> will remove the characters between [x,y]
+ *    from the string and will instead insert the something. If x == y it
+ *    removes only one character.
+ * 3. mov int[x1,x2, ... ,xn], something -> will put in the array of ints at
+ *    the given position the given something value.
+ */
 static int mov_into_indexed(struct nap_vm* vm)
 {
     uint8_t ccidx_target = vm->content[vm->cc ++];  /* should be a variable */
@@ -478,7 +547,7 @@ static int mov_into_indexed(struct nap_vm* vm)
             if(register_type == OPCODE_STRING)
             {
                 /* moving a string register into a string variable at a specific location */
-                if(var->instantiation->type == OPCODE_STRING)
+                if(var->instantiation->type == OPCODE_STRING) /* mov v[x,y], regs(0) */
                 {
                     if(ctr_used_index_regs == 1)
                     {
@@ -486,7 +555,20 @@ static int mov_into_indexed(struct nap_vm* vm)
                          so calculate the "real" index ofthe variable based
                          on the regidx vector and ctr_used_index_regs
                         */
-                        uint64_t real_index = vm->regidx[0];
+                        nap_int_t real_index = vm->regidx[0];
+                        if(real_index >= var->instantiation->len)
+                        {
+                            char* s = (char*)calloc(256, sizeof(char));
+                            SNPRINTF(s, 256,
+                                     "Index overflow error for [%s]."
+                                     "Requested index: [%" PRINT_u "] "
+                                     "Available length: [%" PRINT_st "] ",
+                                     var->name,
+                                     real_index,
+                                     var->instantiation->len);
+                            vm->error_description = s;
+                            return NAP_FAILURE;
+                        }
 
                         /* do we fit in? */
                         if(real_index + vm->regslens[register_index] > var->instantiation->len)
@@ -499,20 +581,42 @@ static int mov_into_indexed(struct nap_vm* vm)
                                      "Assumed length: [%" PRINT_u "]\n",
                                      var->name,
                                      real_index,
-                                     strlen((char*)var->instantiation->value),
+                                     var->instantiation->len,
                                      real_index + vm->regslens[register_index]);
                             vm->error_description = s;
                             return NAP_FAILURE;
                         }
 
                         /* and finally do a memcpy */
-                        memcpy((char*)var->instantiation->value + real_index * 4,
+                        memcpy((char*)var->instantiation->value + real_index * CC_MUL,
                                vm->regs[register_index],
-                               vm->regslens[register_index] * 4); /* UTF-32 BE */
+                               vm->regslens[register_index] * CC_MUL); /* UTF-32 BE */
                     }
-                    else /* string[2,5] = "ABC" - removes from the string the substring [2,5] and puts in the new string */
+                    else
+                    if(ctr_used_index_regs == 2) /* string[2,5] = "ABC" - removes from the string the substring [2,5] and puts in the new string */
                     {
-                        _NOT_IMPLEMENTED
+                        nap_int_t start_index = vm->regidx[0]; /* starting from this */
+                        nap_int_t end_index = vm->regidx[1];
+                        char* error = NULL;
+                        int ret = move_string_into_substring(start_index, end_index,
+                                    (char**)&var->instantiation->value,
+                                    &var->instantiation->len,
+                                    vm->regs[register_index],
+                                    vm->regslens[register_index],
+                                    var->name, &error);
+                        if(ret == NAP_FAILURE)
+                        {
+                            if(error)
+                            {
+                                vm->error_description = error;
+                                return NAP_FAILURE;
+                            }
+                        }
+                    }
+                    else /* string [x,y,z] make no sense */
+                    {
+                        return nap_vm_set_error_description(vm,
+                                  "Cannot have more than 2 indexes on strings");
                     }
                 }
                 else
@@ -583,11 +687,11 @@ int nap_mov(struct nap_vm* vm)
         return mov_into_variable(vm);
     }
     else
-    if(mov_target == OPCODE_CCIDX)
+    if(mov_target == OPCODE_CCIDX) /* we move into an indexed variable */
     {
         return mov_into_indexed(vm);
     }
-    else
+    else /* what comes is moving in a structure member, etc ...*/
     {
         _NOT_IMPLEMENTED
     }

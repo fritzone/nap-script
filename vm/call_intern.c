@@ -8,6 +8,9 @@
 
 #include <stdlib.h>
 
+/* This method implements internal calls such as grow, create, etc ...
+ * Noone is supposed to call this method
+ */
 int nap_call_intern(struct nap_vm* vm)
 {
     uint8_t call_what = vm->content[vm->cc ++];
