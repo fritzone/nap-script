@@ -101,7 +101,7 @@ struct nap_vm
 
     nap_int_t       regi    [REGISTER_COUNT]; /* the integer registers             */
     char*           regs    [REGISTER_COUNT]; /* the string registers, UTF-32BE    */
-    size_t          regidx  [REGISTER_COUNT]; /* the register indexes              */
+    nap_int_t       regidx  [REGISTER_COUNT]; /* the register indexes              */
     enum flag_status lbf;                     /* the last boolean flag             */
     uint8_t         mrc;                      /* number of registers of the VM. Used by pushall/popall  */
     size_t          regslens[REGISTER_COUNT]; /* the length of the string registers*/

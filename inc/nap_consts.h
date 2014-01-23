@@ -51,4 +51,5 @@ static const int ERR_VM_0023 = 0x17; /* division by zero */
 /* the character conversion multiplier when converting to UTF-32BE*/
 static const int CC_MUL = 4;
 
-#endif // NAP_CONSTS_H
+#endif
+

@@ -127,7 +127,7 @@ static int64_t deliver_flat_index(struct nap_vm* vm,
     return to_ret;
 }
 
-static int move_string_into_substring(size_t start_index, size_t end_index,
+static int move_string_into_substring(nap_int_t start_index, nap_int_t end_index,
                                       char** target, size_t* target_len,
                                       char* source, size_t source_len,
                                       char* helper, char** error)

@@ -5,4 +5,5 @@ struct nap_vm;
 
 int nap_call_intern(struct nap_vm*);
 
-#endif // CALL_INTERN_H
+#endif
+
