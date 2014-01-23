@@ -92,7 +92,7 @@ struct nap_vm;
   #define JL_SSIZE_T_SPECIFIER   "%zd"
   #define JL_PTRDIFF_T_SPECIFIER "%zd"
 #else
-  // TODO figure out which to use.
+  /* TODO figure out which to use. */
   #if NUMBITS == 32
     #define JL_SIZE_T_SPECIFIER    something_unsigned
     #define JL_SSIZE_T_SPECIFIER   something_signed

@@ -86,7 +86,7 @@ void nap_vm_cleanup(struct nap_vm* vm)
     uint64_t i;
     int64_t tempst;
     int64_t tempjmi;
-    //dump(vm, stdout);
+    /* dump(vm, stdout); */
 
     for(i=0; i<vm->meta_size; i++)
     {

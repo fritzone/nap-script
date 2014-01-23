@@ -6,7 +6,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 option(coverage-build "gcov/lcov test coverage analysis (make coverage_test)" OFF)
 
 if(NOT WIN32)
-  add_definitions(-Wall -Wextra)
+  add_definitions(-Wall -Wextra -Wcomment -Wformat -Winit-self -pedantic-errors -Wno-long-long -Wmissing-include-dirs)
   option(gprof-build "enable gprof" OFF)
   if(gprof-build)
     add_definitions("-pg")
