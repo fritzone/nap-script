@@ -22,8 +22,8 @@ void parsed_file::remove_comments()
     while (cloc < content_size)
     {
         /* grab a whole bunch of comments at once ... */
-        /* first comment style: Unix style # and C++'s //. Both of these go till end of line*/
-        if (C_HASH == content[cloc] || (C_SLASH == content[cloc] && cloc + 1 < content_size && content[cloc + 1] == C_SLASH))
+        /* first comment style: Unix style # (removed) and C++'s //. Both of these go till end of line*/
+        if (/*C_HASH == content[cloc] ||*/ (C_SLASH == content[cloc] && cloc + 1 < content_size && content[cloc + 1] == C_SLASH))
         {
             while (cloc < content_size && (content[cloc] != '\n' && content[cloc] != '\r'))    /* End-line ... */
             {

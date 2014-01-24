@@ -97,6 +97,8 @@ typedef int (*nap_op_handler)(struct nap_vm* vm);
  */
 struct nap_vm
 {
+    uint64_t cc;                            /* the instruction pointer */
+
     /* Registers section */
 
     nap_int_t       regi    [REGISTER_COUNT]; /* the integer registers             */
@@ -114,7 +116,6 @@ struct nap_vm
     /* variables regarding the execution flow */
 
     uint8_t* content;                       /* the content of the file (ie the bytecodes)*/
-    uint64_t cc;                            /* the instruction pointer */
     uint64_t call_frames[DEEPEST_RECURSION];/* the jump back points, the first address after the calls' index */
     uint32_t cfsize;                        /* the size of the call frames vector */
     uint8_t  current_opcode;                /* the current opcode */
