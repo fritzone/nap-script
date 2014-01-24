@@ -217,6 +217,52 @@ TEST(Operations, BasicStringVariableOperations4)
     SCRIPT_SHUTDOWN
 }
 
+/* Define a string variable, copy out one character from it into an int register
+   see that the conversion succeeded.*/
+TEST(Operations, BasicStringVariableOperations5)
+{
+
+    SCRIPT_START
+    "                                        \
+        string sa = \"A123B\";               \
+        int ib = 9;                          \
+        asm                                  \
+        {                                    \
+        mov reg idx(0), 1                    \
+        mov reg int(0), @#ccidx(global.sa, 1)\
+        mov global.ib, reg int (0)           \
+        }                                    \
+    "
+    SCRIPT_END
+
+    ASSERT_EQ(1, VAR_INT(ib));
+
+    SCRIPT_SHUTDOWN
+}
+
+/* Define a string variable, copy out a substring from it into an int register
+   see that the conversion succeeded.*/
+TEST(Operations, BasicStringVariableOperations6)
+{
+
+    SCRIPT_START
+    "                                        \
+        string sa = \"A123B\";               \
+        int ib = 9;                          \
+        asm                                  \
+        {                                    \
+        mov reg idx(0), 1                    \
+        mov reg idx(1), 3                    \
+        mov reg int(0), @#ccidx(global.sa, 2)\
+        mov global.ib, reg int (0)           \
+        }                                    \
+    "
+    SCRIPT_END
+
+    ASSERT_EQ(123, VAR_INT(ib));
+
+    SCRIPT_SHUTDOWN
+}
 
 
 TEST(Operations, BasicImmediateOperations)

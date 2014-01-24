@@ -5,9 +5,25 @@
 #include "nbci_impl.h"
 #include "nap_consts.h"
 #include "nbci.h"
+#include <errno.h>
 
 #include <stdlib.h>
 #include <string.h>
+
+
+static int nap_int_set_index_overflow(struct nap_vm* vm, const char* var_name, nap_int_t requested, size_t available)
+{
+    char* s = (char*)calloc(256, sizeof(char));
+    SNPRINTF(s, 256,
+             "Index out of range for [%s]."
+             "Requested index: [%" PRINT_u "] "
+             "Available length: [%" PRINT_st "] ",
+             var_name,
+             requested,
+             available);
+    vm->error_description = s;
+    return NAP_FAILURE;
+}
 
 /**
  * @brief init_string_register initializes the string register to a given value.
@@ -36,7 +52,6 @@ static char* init_string_register(struct nap_vm* vm, uint8_t reg_idx,
     }
 
     memcpy(tmp, target, target_len * CC_MUL);
-
 
     if(vm->regs[reg_idx])
     {
@@ -104,8 +119,8 @@ static int64_t deliver_flat_index(struct nap_vm* vm,
         {
             char* s = (char*)calloc(256, sizeof(char));
             SNPRINTF(s, 256,
-                    "Index out of range for [%s]. "
-                     "Index: %d, requested: %" PRINT_d " available: %d",
+                    "Multi dim index out of range for [%s]. "
+                     "Dim Index: %d, requested: %" PRINT_d " available: %d",
                      ve->name, i, vm->regidx[i], ve->dimensions[i]);
             *error = s;
             return INDEX_OUT_OF_RANGE; /* an index overflow */
@@ -127,10 +142,10 @@ static int64_t deliver_flat_index(struct nap_vm* vm,
     return to_ret;
 }
 
-static int move_string_into_substring(nap_int_t start_index, nap_int_t end_index,
+static int move_string_into_substring(struct nap_vm* vm, nap_int_t start_index, nap_int_t end_index,
                                       char** target, size_t* target_len,
                                       char* source, size_t source_len,
-                                      char* helper, char** error)
+                                      char* helper)
 {
     char* first_part; /* from 0 to start_index (excluding), but at the end the final value */
     size_t new_len = 0;
@@ -152,16 +167,7 @@ static int move_string_into_substring(nap_int_t start_index, nap_int_t end_index
 
     if(start_index >= *target_len)
     {
-        char* s = (char*)calloc(256, sizeof(char));
-        SNPRINTF(s, 256,
-                 "Index overflow error for [%s]."
-                 "Requested index: [%" PRINT_u "] "
-                 "Available length: [%" PRINT_st "] ",
-                 helper,
-                 start_index,
-                 *target_len);
-        *error = s;
-        return NAP_FAILURE;
+        return nap_int_set_index_overflow(vm, helper, start_index, *target_len);
     }
 
     first_part = (char*)calloc(new_len * CC_MUL, sizeof(char));
@@ -184,19 +190,34 @@ static int move_string_into_substring(nap_int_t start_index, nap_int_t end_index
     return NAP_SUCCESS;
 }
 
-/* returns a number from the given string */
-static nap_int_t nap_int_string_to_number(const char* to_conv, size_t len)
+/**
+ * @brief nap_int_string_to_number returns a number from the given string
+ *
+ * @param to_conv this is the string that will be converted into a number.
+ *        It is encoded with UTF-32BE
+ * @param len the length of the string, not the length of the memory area
+ * @param error [out] will be populated with NAP_SUCCESS in case of success
+ *        or NAP_FAILURE in case of failure
+ *
+ * @return NAP_NO_VALUE in case of memory allocation error (in this case *error
+ *        is populated to NAP_FAILURE) or the number as converted by strtoll and
+ *        *error populated to NAP_FAILURE in case of strtoll failed, or the
+ *        number as converted by strtoll and the *error set to NAP_SUCCESS in
+ *        case of a succesfull conversion
+ */
+static nap_int_t nap_int_string_to_number(const char* to_conv, size_t len, int* error)
 {
     int base = 10;
     char* endptr = NULL;
-    size_t dest_len = len * 4, real_len = 0;
-    char* t = convert_string_from_bytecode_file((char*)to_conv,
-                                                len * 4, dest_len, &real_len);
+    size_t dest_len = len * CC_MUL, real_len = 0;
+    char* t = convert_string_from_bytecode_file((char*)to_conv, len * CC_MUL,
+                                                dest_len, &real_len);
     char *save_t = t;
 	nap_int_t v = 0;
     if(!t)
     {
-        return 0;
+        *error = NAP_FAILURE;
+        return NAP_NO_VALUE;
     }
 
     if(strlen(t) > 1)
@@ -225,8 +246,17 @@ static nap_int_t nap_int_string_to_number(const char* to_conv, size_t len)
             t --; /* stepping back one */
         }
     }
-	v = strtoll(t, &endptr, base);;
+    v = strtoll(t, &endptr, base);
     free(save_t);
+
+    if(errno == ERANGE || errno == EINVAL)
+    {
+        *error = NAP_FAILURE;
+    }
+    else
+    {
+        *error = NAP_SUCCESS;
+    }
     return v;
 }
 
@@ -268,7 +298,9 @@ static int mov_into_register(struct nap_vm* vm)
             else
             if(return_type == OPCODE_STRING)              /* handles: mov reg int 0, rv string*/
             {
-                vm->regi[register_index] = nap_int_string_to_number(vm->rvs, vm->rvl);
+                int error = NAP_SUCCESS;
+                vm->regi[register_index] = nap_int_string_to_number(vm->rvs,
+                                                                    vm->rvl, &error);
             }
             else
             {
@@ -288,9 +320,10 @@ static int mov_into_register(struct nap_vm* vm)
             if(second_register_type == OPCODE_STRING) /* moving a string into an int register */
             {
                 uint8_t second_register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
+                int error = NAP_SUCCESS;
                 vm->regi[register_index] = nap_int_string_to_number(
                             vm->regs[second_register_index],
-                            vm->regslens[second_register_index]);
+                            vm->regslens[second_register_index], &error);
             }
             else
             {
@@ -333,6 +366,45 @@ static int mov_into_register(struct nap_vm* vm)
                          * allocated nap_int_t variable in the grow */
                         vm->regi[register_index] =
                                 ((nap_int_t*)var->instantiation->value)[idx];
+                    }
+                }
+                else
+                if(var->instantiation->type == OPCODE_STRING) /* possibly: mov reg int(0), string[2]*/
+                {
+                    if(ctr_used_index_regs == 1)
+                    {
+                        int error = NAP_SUCCESS;
+                        /* this is a string, accessing a character from it:
+                         so calculate the "real" index ofthe variable based
+                         on the regidx vector and ctr_used_index_regs
+                        */
+                        nap_int_t real_index = vm->regidx[0];
+                        if(real_index >= var->instantiation->len)
+                        {
+                            return nap_int_set_index_overflow(vm, var->name,
+                                           real_index, var->instantiation->len);
+                        }
+
+                        /* and finally put the "character" in the register */
+                        vm->regi[register_index] = nap_int_string_to_number(
+                                    (char*)var->instantiation->value + real_index * CC_MUL,
+                                    1, &error); /* taking only one character */
+                    }
+                    else
+                    if(ctr_used_index_regs == 2) /* string[2,5] = "ABC" - removes from the string the substring [2,5] and puts in the new string */
+                    {
+                        size_t start_index = vm->regidx[0]; /* starting from this */
+                        size_t end_index = vm->regidx[1];
+                        size_t temp_len = end_index - start_index + 1;
+                        int error_ind = NAP_SUCCESS;
+                        vm->regi[register_index] = nap_int_string_to_number(
+                                    (char*)var->instantiation->value + start_index * CC_MUL,
+                                    temp_len, &error_ind);
+                    }
+                    else /* string [x,y,z] make no sense */
+                    {
+                        return nap_vm_set_error_description(vm,
+                                  "Cannot use more than 2 indexes on strings");
                     }
                 }
                 else
@@ -538,18 +610,16 @@ static int mov_into_indexed(struct nap_vm* vm)
 
         /* and find what is moved into this vm->ccidx destination*/
         move_src = vm->content[vm->cc ++];
-        if(move_src == OPCODE_REG)
+        if(move_src == OPCODE_REG) /* moving a register in the indexed destination */
         {
-            /* moving a register in the indexed destination */
             uint8_t register_type = vm->content[vm->cc ++]; /* int/string/float...*/
             uint8_t register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
 
-            if(register_type == OPCODE_STRING)
+            if(register_type == OPCODE_STRING) /* moving a string register into an indexed variable at a specific location */
             {
-                /* moving a string register into a string variable at a specific location */
-                if(var->instantiation->type == OPCODE_STRING) /* mov v[x,y], regs(0) */
+                if(var->instantiation->type == OPCODE_STRING) /*moving in a string type variable a string register to a given pos: mov string[x [,y] ], regs(0) */
                 {
-                    if(ctr_used_index_regs == 1)
+                    if(ctr_used_index_regs == 1) /* mov string[x], regs(0) */
                     {
                         /* this is a string, accessing a character from it:
                          so calculate the "real" index ofthe variable based
@@ -558,16 +628,8 @@ static int mov_into_indexed(struct nap_vm* vm)
                         nap_int_t real_index = vm->regidx[0];
                         if(real_index >= var->instantiation->len)
                         {
-                            char* s = (char*)calloc(256, sizeof(char));
-                            SNPRINTF(s, 256,
-                                     "Index overflow error for [%s]."
-                                     "Requested index: [%" PRINT_u "] "
-                                     "Available length: [%" PRINT_st "] ",
-                                     var->name,
-                                     real_index,
-                                     var->instantiation->len);
-                            vm->error_description = s;
-                            return NAP_FAILURE;
+                            return nap_int_set_index_overflow(vm, var->name,
+                                           real_index, var->instantiation->len);
                         }
 
                         /* do we fit in? */
@@ -597,26 +659,17 @@ static int mov_into_indexed(struct nap_vm* vm)
                     {
                         size_t start_index = vm->regidx[0]; /* starting from this */
                         size_t end_index = vm->regidx[1];
-                        char* error = NULL;
-                        int ret = move_string_into_substring(start_index, end_index,
+                        return move_string_into_substring(vm, start_index, end_index,
                                     (char**)&var->instantiation->value,
                                     &var->instantiation->len,
                                     vm->regs[register_index],
                                     vm->regslens[register_index],
-                                    var->name, &error);
-                        if(ret == NAP_FAILURE)
-                        {
-                            if(error)
-                            {
-                                vm->error_description = error;
-                                return NAP_FAILURE;
-                            }
-                        }
+                                    var->name);
                     }
                     else /* string [x,y,z] make no sense */
                     {
                         return nap_vm_set_error_description(vm,
-                                  "Cannot have more than 2 indexes on strings");
+                                  "Cannot use more than 2 indexes on strings");
                     }
                 }
                 else
@@ -628,7 +681,7 @@ static int mov_into_indexed(struct nap_vm* vm)
             if(register_type == OPCODE_INT)
             {
                 /* moving only if this int register goes to an int var*/
-                if(var->instantiation->type == OPCODE_INT)
+                if(var->instantiation->type == OPCODE_INT) /* mov int_var [x,y,z], reg int (register_index) */
                 {
                     char* error = NULL;
                     int64_t idx = deliver_flat_index(vm, var,
