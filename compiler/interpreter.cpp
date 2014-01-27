@@ -688,7 +688,7 @@ method* interpreter::define_method(const char* expr, int expr_len, expression_tr
         return 0;
     }
 
-    if(!strcmp(ret_type, "int")) created_method->ret_type = BASIC_TYPE_INT;
+    if(!strcmp(created_method->return_type.c_str(), "int")) created_method->ret_type = BASIC_TYPE_INT;
     // TODO: the others too
 
     cc->add_method(created_method);
