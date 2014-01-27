@@ -1,134 +1,6 @@
-#include "nap_runtime.h"
-#include "utils.h"
+#include "tests.h"
+
 #include "gtest/gtest.h"
-
-/*
- * Macros for making the life easier
- */
-
-#define SCRIPT_START \
-    nap_runtime* runtime = nap_runtime_create(0);                  \
-    ASSERT_FALSE(runtime == NULL);                                 \
-    int found_indicator;                                           \
-    nap_bytecode_chunk* bytecode = nap_runtime_compile(runtime,    
-    
-#define SCRIPT_END \
-    );                                                             \
-    ASSERT_FALSE(bytecode == NULL);                                \
-    int t = nap_runtime_execute(runtime, bytecode);                \
-    ASSERT_EQ(1, t);                                               
-
-#define VAR_INT(a)    nap_runtime_get_int(runtime, #a, &found_indicator)
-
-#define VAR_STRING(a)    nap_runtime_get_string(runtime, #a, &found_indicator)
-
-#define SCRIPT_SHUTDOWN \
-    nap_runtime_shutdown(&runtime);                                \
-    ASSERT_TRUE(runtime == NULL);
-
-#define SCRIPT_ASSERT_STREQ(with,what)                             \
-    do {                                                           \
-        char* what = VAR_STRING(what);                             \
-        ASSERT_STREQ(with, what);                                  \
-        free(what);                                                \
-    } while(0);
-/*
- * TESTS
- */
-
-/* Define a simple integer type variable, assign a value to it. */
-TEST(VariableDefinitions, SimpleInt)
-{
-    SCRIPT_START
-    "                               \
-        int a;                      \
-        a = 2;                      \
-    "                               
-    SCRIPT_END
-    
-    ASSERT_EQ(2, VAR_INT(a));
-
-    SCRIPT_SHUTDOWN;
-}
-
-/* Define a string variable. Use the [] operator to change the second
-   character in it.*/
-TEST(VariableDefinitions, StringIndexedOperation)
-{
-    SCRIPT_START
-    "                               \
-        string b = \"AABB\";        \
-        b[1] = \"c\";               \
-    "
-    SCRIPT_END
-
-    SCRIPT_ASSERT_STREQ("AcBB", b);
-
-    SCRIPT_SHUTDOWN;
-}
-
-/* Define a string variable, use the [,] operator to change a part from it.
-   The second indexe should be greater than the first one */
-TEST(VariableDefinitions, StringSubstringIndexedOperation1)
-{
-    SCRIPT_START
-    "                               \
-        string b = \"AABB\";        \
-        b[1,2] = \"cc\";            \
-    "
-    SCRIPT_END
-
-    SCRIPT_ASSERT_STREQ("AccB", b);
-
-    SCRIPT_SHUTDOWN;
-}
-
-/* Define a string variable, use the [,] operator to change a part of it.
-   The second index should be greater than the length of the string.
-   Expected outcome is that the end of the string will be removed and
-   it will end with the new string. */
-TEST(VariableDefinitions, StringSubstringIndexedOperation2)
-{
-    SCRIPT_START
-    "                               \
-        string b = \"AABB\";        \
-        b[1,5] = \"cc\";            \
-    "
-    SCRIPT_END
-
-    SCRIPT_ASSERT_STREQ("Acc", b);
-
-    SCRIPT_SHUTDOWN;
-}
-
-TEST(VariableDefinitions, StringSubstringIndexedOperation3)
-{
-    SCRIPT_START
-    "                               \
-        string b = \"AABB\";        \
-        b[1,3] = \"cc\";            \
-    "
-    SCRIPT_END
-
-    SCRIPT_ASSERT_STREQ("Acc", b);
-
-    SCRIPT_SHUTDOWN;
-}
-
-TEST(VariableDefinitions, StringSubstringIndexedOperationInsertion)
-{
-    SCRIPT_START
-    "                               \
-        string b = \"ABCD\";        \
-        b[1,1] = \"cc\";            \
-    "
-    SCRIPT_END
-
-    SCRIPT_ASSERT_STREQ("AccCD", b);
-
-    SCRIPT_SHUTDOWN;
-}
-
 
 TEST(Operations, BasicIntVariableOperations)
 {
@@ -361,37 +233,6 @@ TEST(Operations, PostPreIncrement)
     SCRIPT_SHUTDOWN
 }
 
-TEST(Functions, MessyCodeTest)
-{
-    SCRIPT_START
-    "                             \
-    int func(int a, int b)        \
-    {                             \
-        if(a == 4)                \
-        {                         \
-            int rr = 9;           \
-            return 5;             \
-        }                         \
-    }                             \
-    int func2()                   \
-    {                             \
-    }                             \
-    int z = 3;                    \
-    if(z == 3)                    \
-    {                             \
-      int y = 2;                  \
-      z = 4;                      \
-    }                             \
-    int g = func(z, 66);          \
-    int ll = func2();             \
-    int y = 1;                    \
-    "
-    SCRIPT_END
-    ASSERT_EQ(5, VAR_INT(g));
-
-    SCRIPT_SHUTDOWN
-}
-
 TEST(Keywords, Break)
 {
     SCRIPT_START
@@ -408,21 +249,6 @@ TEST(Keywords, Break)
     "
     SCRIPT_END
     ASSERT_EQ(8, VAR_INT(y));
-
-    SCRIPT_SHUTDOWN
-}
-
-TEST(Functions, DefaultReturnValue)
-{
-    SCRIPT_START
-    "                             \
-    int func()                    \
-    {                             \
-    }                             \
-    int z = func();               \
-    "
-    SCRIPT_END
-    ASSERT_EQ(0, VAR_INT(z));
 
     SCRIPT_SHUTDOWN
 }
@@ -477,18 +303,45 @@ TEST(RuntimeCompilation, CompoundedExpression)
     SCRIPT_SHUTDOWN
 }
 
+/*
+ * TESTS FOR FUNCTIONS AND THEIR ASSOCIATED BEHAVIOUR
+ */
 
-TEST(VariableDefinitions, SimpleIndexedOperation)
+/* Define a function returning an in which takes in an int parameter. Return the
+ next value of the parameter (ie: par + 1). Check in the calling code the
+ value. */
+TEST(Functions, SimpleFunctionCall)
 {
     SCRIPT_START
     "                               \
-        int a[10];                  \
-        a[1] = 2;                   \
-        int b = a[1];               \
+        int func(int a)             \
+        {                           \
+            return a + 1;           \
+        }                           \
+        int a = 5;                  \
+        a = func(a);                \
     "
     SCRIPT_END
 
-    ASSERT_EQ(2, VAR_INT(b));
+    ASSERT_EQ(6, VAR_INT(a));
 
     SCRIPT_SHUTDOWN;
+}
+
+/* Define a function returning and int. Do not put return statements in the body.
+ * Use the function, see that it returns the default return value (0).
+ */
+TEST(Functions, DefaultReturnValue)
+{
+    SCRIPT_START
+    "                             \
+    int func()                    \
+    {                             \
+    }                             \
+    int z = func();               \
+    "
+    SCRIPT_END
+    ASSERT_EQ(0, VAR_INT(z));
+
+    SCRIPT_SHUTDOWN
 }

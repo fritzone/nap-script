@@ -23,7 +23,7 @@
 /**
  * Creates a new method
  */
-method::method(nap_compiler* _compiler, char* name, char* preturn_type, call_context* cc) : return_type("")
+method::method(nap_compiler* _compiler, char* name, char* preturn_type, call_context* cc) : return_type(""), mcompiler(_compiler)
 {
     call_context* method_main_cc = NULL;
     std::stringstream ss;
@@ -65,11 +65,17 @@ variable* method::add_new_variable(const std::string& pname,
                                    const expression_with_location* expwloc,
                                    bool& psuccess)
 {
-    if(!is_valid_variable_name(pname.c_str()))
+    if(pname.empty())
     {
-        mcompiler->throw_error(E0018_INVIDENT, pname, NULL);
-        psuccess = false;
-        return 0;
+        if(def_loc == DEF_INTERN)
+        {
+            if(!is_valid_variable_name(pname.c_str()))
+            {
+                mcompiler->throw_error(E0018_INVIDENT, pname, NULL);
+                psuccess = false;
+                return 0;
+            }
+        }
     }
     bool success = true;
     variable* v = main_cc->variable_list_add_variable(pname.c_str(),
@@ -274,7 +280,7 @@ void method::feed_parameter_list(char* par_list, const expression_with_location*
             {
                 i++;
             }
-            if(i == q->length())
+            if(i == q->length() && def_loc != DEF_EXTERN)
             {
                 mcompiler->throw_error(E0009_PARAMISM, par_list);
                 psuccess = false;
@@ -294,18 +300,30 @@ void method::feed_parameter_list(char* par_list, const expression_with_location*
             strim(par_name);
             strim(par_type);
             bool success = true;
-            parameter* new_par_decl = add_parameter(par_name, par_type, 1, expwloc, main_cc, success);
-            if(!success)
+            if(def_loc == DEF_INTERN)
             {
-                psuccess = false;
-                return;
-            }
+                parameter* new_par_decl = add_parameter(par_name, par_type, 1, expwloc, main_cc, success);
+                if(!success)
+                {
+                    psuccess = false;
+                    return;
+                }
 
-            /* here we should identify the dimension of the parameter */
-            if(par_type.find(C_SQPAR_CL) != std::string::npos
-                    && par_type.find(C_SQPAR_OP) != std::string::npos)
+                /* here we should identify the dimension of the parameter */
+                if(par_type.find(C_SQPAR_CL) != std::string::npos
+                        && par_type.find(C_SQPAR_OP) != std::string::npos)
+                {
+                    new_par_decl->simple_value = 0;
+                }
+            }
+            else
             {
-                new_par_decl->simple_value = 0;
+                add_parameter("", par_type, 1, expwloc, main_cc, success);
+                if(!success)
+                {
+                    psuccess = false;
+                    return;
+                }
             }
         }
         q ++;
