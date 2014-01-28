@@ -22,7 +22,7 @@
 
 ////nap_ext_v__i
 //typedef void (*nap_ext_v__i)(nap_int_t);
-//void nap_ext_call_v__i(void* fun, nap_ext_par_desc* pars)
+//void nap_ext_caller_v__i(void* fun, nap_ext_par_desc* pars)
 //{
 //    nap_ext_v__i local_fun = (nap_ext_v__i)fun;
 //    local_fun( *((int*)(pars->p1)) );

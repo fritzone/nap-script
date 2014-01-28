@@ -7,6 +7,7 @@ set_source_files_properties(
 include_directories(
     interrupts/intr_2
     interrupts/intr_3
+    interrupts/intr_4
 )
 
 set(${project}_files
@@ -36,15 +37,22 @@ set(${project}_files
 
 include_directories(${CMAKE_SOURCE_DIR}/vm 
                     ${CMAKE_SOURCE_DIR}/compiler 
-					${CMAKE_BINARY_DIR}/vm 
+                    ${CMAKE_BINARY_DIR}/vm
                     ${CMAKE_CURRENT_BINARY_DIR} 
-					${CMAKE_BINARY_DIR}/compiler
+                    ${CMAKE_BINARY_DIR}/compiler
 )
 
 
 set(interrupt_files CACHE INTERNAL "interrupt_files" FORCE)
 add_subdirectory(interrupts)
 list(APPEND ${project}_files ${interrupt_files})
+
+add_custom_command(
+  OUTPUT ${NAP_ROOT}/build/ext_gen/nap_ext_def.c ${NAP_ROOT}/build/ext_gen/nap_ext_def.h
+  COMMAND nap-ext-gen -n 4 -d ${NAP_ROOT}/build/ext_gen
+  COMMENT "Running generator"
+  VERBATIM
+)
 
 add_library(nap_bci_s STATIC ${${project}_files} )
 

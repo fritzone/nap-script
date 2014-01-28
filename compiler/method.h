@@ -85,6 +85,10 @@ struct method
     /* the name of the method */
     std::string method_name;
 
+    /* the name of the library where the method is. If empty, the current
+     * executable is queried*/
+    std::string library_name;
+
     /* the return type of the function */
     std::string return_type;
 

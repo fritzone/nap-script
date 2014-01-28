@@ -36,6 +36,8 @@ endif()
 
 set(NAP_ROOT ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "NAP_ROOT")
 
+add_subdirectory(ext_gen)
+
 set(compiler_files CACHE INTERNAL "compiler_files" FORCE)
 add_subdirectory(compiler)
 

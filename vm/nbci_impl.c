@@ -17,6 +17,7 @@
 /* interrupts */
 #include "intr_2.h"
 #include "intr_3.h"
+#include "intr_4.h"
 
 /* opcode handlers */
 #include "push.h"
@@ -310,6 +311,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     /* and setting the interrupts */
     vm->interrupts[2] = intr_2;
     vm->interrupts[3] = intr_3;
+    vm->interrupts[4] = intr_4;
 
     /* setting the opcode handlers */
     vm->opcode_handlers[OPCODE_PUSH] = nap_push; vm->opcode_error_codes[OPCODE_PUSH] = ERR_VM_0015;
