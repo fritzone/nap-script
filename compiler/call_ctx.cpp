@@ -175,6 +175,33 @@ void call_context::compile_standalone(nap_compiler* _compiler, int level, int re
     }
 }
 
+// warning! the numbers are not the same as from nap_Ext_gen
+static const char* get_type_code(int el)
+{
+    switch(el)
+    {
+    case 1: return "i";
+    case 2: return "r";
+    case 3: return "s";
+    default:return "v";
+    }
+}
+
+static int signature_to_number(const std::string& sig)
+{
+    int res = 0;
+    std::string base4 = "";
+    for(size_t i=0; i<sig.length(); i++)
+    {
+        if(sig[i] == 'i') base4 += "1";
+        if(sig[i] == 'r') base4 += "2";
+        if(sig[i] == 's') base4 += "3";
+        if(sig[i] == 'v') base4 += "0";
+    }
+    char *t = 0;
+    res = strtol(base4.c_str(), &t, 4);
+    return res;
+}
 
 /**
  * This runs the global context. Loads the environment variables (from OS), and starts executingthe commands
@@ -207,39 +234,84 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
     std::vector<method*>::iterator ccs_methods = methods.begin();
     while(ccs_methods != methods.end())
     {
+        method* m = *ccs_methods;
+
         code_stream(_compiler) << NEWLINE << fully_qualified_label(std::string(std::string((*ccs_methods)->main_cc->father->name) +
                                                                       '.' +
                                                                       (*ccs_methods)->method_name).c_str()) << NEWLINE;
         code_stream(_compiler) << "pushall" << NEWLINE;
-        // now pop off the variables from the stack
-        std::vector<variable*>::const_reverse_iterator vlist = (*ccs_methods)->get_variables().rbegin();
-        int pctr = 0;
-        while(vlist != (*ccs_methods)->get_variables().rend())
-        {
-            peek(_compiler, (*ccs_methods)->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name.c_str());
-            vlist ++;
-        }
 
-        std::string fun_hash = generate_unique_hash();
-        push_cc_start_marker(_compiler, fun_hash.c_str());
-        std::vector<expression_tree*>::const_iterator q1 = (*ccs_methods)->main_cc->get_expressions().begin();
-        while(q1 != (*ccs_methods)->main_cc->get_expressions().end())
+        if(m->def_loc == DEF_INTERN)
         {
-            int unknown_type = -1;
-            bool success = true;
-            ::compile(_compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0, success);
-            if(!success)
+            // now pop off the variables from the stack
+            std::vector<variable*>::const_reverse_iterator vlist = (*ccs_methods)->get_variables().rbegin();
+            int pctr = 0;
+            while(vlist != (*ccs_methods)->get_variables().rend())
             {
-                psuccess = false;
-                return;
+                peek(_compiler, (*ccs_methods)->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name.c_str());
+                vlist ++;
             }
 
-            q1 ++;
+            // marker
+            std::string fun_hash = generate_unique_hash();
+            push_cc_start_marker(_compiler, fun_hash.c_str());
+
+            // and compile the isntructions
+            std::vector<expression_tree*>::const_iterator q1 = (*ccs_methods)->main_cc->get_expressions().begin();
+            while(q1 != (*ccs_methods)->main_cc->get_expressions().end())
+            {
+                int unknown_type = -1;
+                bool success = true;
+                ::compile(_compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0, success);
+                if(!success)
+                {
+                    psuccess = false;
+                    return;
+                }
+
+                q1 ++;
+            }
+
+            // end marker
+            push_cc_end_marker(_compiler, fun_hash.c_str());
         }
-        ccs_methods ++;
-        push_cc_end_marker(_compiler, fun_hash.c_str());
+        else
+        {
+            // determine the fun ptr number (the index from the nap_int_init_ext_func_array
+            std::string type_encoding = get_type_code(m->ret_type);
+
+            // now the types of the parameters
+            std::vector<variable*>::const_iterator vlist = m->get_variables().begin();
+            while(vlist != m->get_variables().end())
+            {
+                variable* v = *vlist;
+                type_encoding += get_type_code(v->i_type);
+                vlist ++;
+            }
+
+            // now create the deciaml number from the string below (that being bsae 4)
+            code_stream(_compiler) << mov() <<
+                                      reg() << "string" << '(' << 0 << ')' <<
+                                      ',' << "\"" + type_encoding + "\"" << NEWLINE;
+
+            code_stream(_compiler) << mov() <<
+                                      reg() << "string" << '(' << 1 << ')' <<
+                                      ',' << "\"" + m->method_name + "\"" << NEWLINE;
+
+            code_stream(_compiler) << mov() <<
+                                      reg() << "string" << '(' << 2 << ')' <<
+                                      ',' << "\"" + m->library_name + "\"" << NEWLINE;
+
+            code_stream(_compiler) << mov () << reg() << "int" << '(' << 0 << ')' <<
+                                      ',' << signature_to_number(type_encoding) << NEWLINE;
+
+            code_stream(_compiler) << "intr" << 4 << NEWLINE;
+        }
         code_stream(_compiler) << "popall" << NEWLINE;
         code_stream(_compiler) << "leave" << NEWLINE;
+
+        // nest method
+        ccs_methods ++;
     }
     }
 
