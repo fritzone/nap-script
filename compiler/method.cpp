@@ -227,6 +227,17 @@ parameter* method::add_parameter(std::string pname,
         func_par->type = BASIC_TYPE_INT;
     }
 
+    if(ptype == "string")
+    {
+        func_par->type = BASIC_TYPE_STRING;
+    }
+
+    if(ptype == "real")
+    {
+        func_par->type = BASIC_TYPE_REAL;
+    }
+
+
     func_par->name = pname;
     parameters.push_back(func_par);
     return func_par;

@@ -9,6 +9,9 @@ extern "C" {
 
 struct nap_vm;
 
+static const int CANNOT_LOAD_LIBRARY = 1;
+static const int CANNOT_LOAD_FUNCTION = 2;
+
 uint8_t intr_4(struct nap_vm*);
 
 #ifdef __cplusplus
