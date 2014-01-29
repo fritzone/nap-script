@@ -1861,7 +1861,11 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                 expression_tree* t = p->expr;
                 if(t->op_type <= BASIC_TYPE_CLASS_VAR)
                 {
-                    code_stream(_compiler) << mov() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
+                    code_stream(_compiler) << mov()
+                                           << SPACE
+                                           << reg() << get_reg_type(fp->type)
+                                           << C_PAR_OP << level << C_PAR_CL
+                                           << C_COMMA;
                 }
                 compile(_compiler,t, the_method, cc, level, fp->type, forced_mov, success);
                 if(!success)
@@ -1870,7 +1874,10 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                     return;
                 }
 
-                code_stream(_compiler) << NEWLINE << push() << SPACE << reg() << get_reg_type(fp->type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
+                code_stream(_compiler) << NEWLINE << push()
+                                       << SPACE << reg() << get_reg_type(fp->type)
+                                       << C_PAR_OP << level << C_PAR_CL
+                                       << NEWLINE;
 
                 ingoing_parameters ++;
                 pc ++;

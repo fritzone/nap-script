@@ -426,7 +426,7 @@ variable* call_context::variable_list_add_variable(const char *var_name,
                                      call_context* cc,
                                      const expression_with_location* expwloc, bool&psuccess)
 {
-    if(!valid_variable_name(var_name) && the_method->def_loc == DEF_INTERN)
+    if(!valid_variable_name(var_name) && the_method && the_method->def_loc == DEF_INTERN)
     {
         mcompiler->throw_error("Invalid variable name", var_name, var_type);
         psuccess = false;

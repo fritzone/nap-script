@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 int nap_push(struct nap_vm *vm)
 {
@@ -84,6 +85,15 @@ int nap_push(struct nap_vm *vm)
 
             /* setting the value of the stack entry */
             se->value = temp;
+        }
+        else
+        if(reg_type == OPCODE_STRING) /* pushing a string register */
+        {
+            size_t len = vm->regslens[reg_idx] * CC_MUL;
+            char* temp = (char*)(calloc(len,  sizeof(char)));
+            memcpy(temp, vm->regs[reg_idx], len);
+            se->value = temp;
+            se->len = vm->regslens[reg_idx];
         }
         else
         {

@@ -345,3 +345,23 @@ TEST(Functions, DefaultReturnValue)
 
     SCRIPT_SHUTDOWN
 }
+
+/* Define a function returning and int. Do not put return statements in the body.
+ * Use the function, see that it returns the default return value (0).
+ */
+TEST(Functions, ExternalCalling)
+{
+    SCRIPT_START
+    "                               \
+    extern void external_callee(int, int); \
+    external_callee(1,2);           \
+    "
+    SCRIPT_END
+
+    SCRIPT_SHUTDOWN
+}
+
+extern "C"
+void external_callee(int a, int b)
+{
+}

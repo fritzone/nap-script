@@ -212,7 +212,7 @@ static void print_function(unsigned char* vec, int also_body, FILE* fp)
         if(vec[i] != 0)
         {
             more_than_zero_par = true;
-            fprintf(fp, "        *((%s*)(pars->p%d))", get_type(vec[i], 0), i);
+            fprintf(fp, "        *((%s*)(pars->p%d))", get_type(vec[i], 0), par_counter - 1);
             if(i < NUM_PARMS-1)
             {
                 fprintf(fp, ", // par %d as %s \n", par_counter,
@@ -264,6 +264,7 @@ int main(int argc, char* argv[])
         t = 8;
     }
     NUM_PARMS = t;
+    printf("support for %d parameters\n", NUM_PARMS);
 
     unsigned char *vector     = NULL; //where the current figure is stored
     int           gen_result;         //return value of generation functions
@@ -319,6 +320,8 @@ int main(int argc, char* argv[])
     fputs("\ntypedef void (*nap_ext_caller)(void*, struct nap_ext_par_desc*, void*);\n", fp_header);
     fputs("\nextern nap_ext_caller ext_callers[", fp_header);
     fprintf(fp_header, "%lu];\n", max_array);
+
+    fprintf(fp_header, "void nap_int_init_ext_func_array();\n");
 
     // close the headers
     fputs("\n#ifdef __cplusplus\n}\n#endif", fp_header);

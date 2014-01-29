@@ -9,5 +9,3 @@ set(${project}_files
 add_executable(${project}
     ${${project}_files}
 )
-
-MESSAGE(${CMAKE_CURRENT_BINARY_DIR})
