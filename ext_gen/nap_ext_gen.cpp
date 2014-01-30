@@ -288,6 +288,7 @@ int main(int argc, char* argv[])
 
     FILE* fp_body = fopen(cpp_file.c_str(), "wt+");
     fputs("#include \"nap_ext_def.h\"\n\n", fp_body);
+    fputs("#include <stdlib.h>\n\n", fp_body);
 
     // parameters
     fputs("struct nap_ext_par_desc\n{", fp_header);
@@ -321,7 +322,9 @@ int main(int argc, char* argv[])
     fputs("\nextern nap_ext_caller ext_callers[", fp_header);
     fprintf(fp_header, "%lu];\n", max_array);
 
-    fprintf(fp_header, "void nap_int_init_ext_func_array();\n");
+    fputs("void nap_int_init_ext_func_array();\n", fp_header);
+    fputs("void nap_populate_par_desc(struct nap_ext_par_desc* pd, int index, void* new_data);\n", fp_header);
+    fputs("void nap_free_parameter_descriptor(struct nap_ext_par_desc** pd);\n", fp_header);
 
     // close the headers
     fputs("\n#ifdef __cplusplus\n}\n#endif", fp_header);
@@ -342,6 +345,22 @@ int main(int argc, char* argv[])
         }
     }
     fputs("}\n\n", fp_body);
+
+    // the nap_populate_parameter_descriptor function
+    fputs("void nap_populate_par_desc(struct nap_ext_par_desc* pd, int index, void* new_data)\n{\n", fp_body);
+    for(int i=0; i<NUM_PARMS; i++)
+    {
+        fprintf(fp_body, "    if(index == %d)\n    {\n    pd->p%d=new_data;\n}\n", i, i);
+    }
+    fprintf(fp_body, "}\n\n");
+
+    // the nap_free_parameter_descriptor function
+    fputs("void nap_free_parameter_descriptor(struct nap_ext_par_desc** pd)\n{\n", fp_body);
+    for(int i=0; i<NUM_PARMS; i++)
+    {
+        fprintf(fp_body, "    if( (*pd)->p%d )\n    {\n        free( (*pd)->p%d );\n    }", i, i);
+    }
+    fputs("    free(*pd);\n}", fp_body);
 
     fclose(fp_header);
     fclose(fp_body);
