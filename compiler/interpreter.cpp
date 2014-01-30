@@ -744,7 +744,7 @@ int interpreter::accepted_variable_name(const std::string& name)
     {
         if(name == keywords[i]) return 0;
     }
-    return 1;
+    return is_valid_variable_name(name.c_str());
 }
 
 /**
@@ -778,13 +778,6 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
     {
         multi_dimension_def* mdd = NULL, *qm;    /* will contain the dimension definitions if any */
         std::string name = *q;
-
-        if(!accepted_variable_name(name))
-        {
-            mcompiler->throw_error(E0037_INV_IDENTF, name);
-            psuccess = false;
-            return 0;
-        }
         variable* added_var = NULL;    /* will be used if we'll need to implement the definition */
         const char* idx_def_start = strchr(name.c_str(), C_SQPAR_OP);
         const char* const pos_eq = strchr(name.c_str(), C_EQ);
@@ -896,6 +889,13 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
             {
                 name = tmpname;
             }
+        }
+
+        if(!accepted_variable_name(name))
+        {
+            mcompiler->throw_error(E0037_INV_IDENTF, name);
+            psuccess = false;
+            return 0;
         }
 
         if(cc)
