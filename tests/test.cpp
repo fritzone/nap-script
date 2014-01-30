@@ -1,5 +1,5 @@
 #include "tests.h"
-
+#include "nbci.h"
 #include "gtest/gtest.h"
 
 TEST(Operations, BasicIntVariableOperations)
@@ -359,9 +359,13 @@ TEST(Functions, ExternalCalling)
     SCRIPT_END
 
     SCRIPT_SHUTDOWN
+
+    UNUSED(found_indicator);
 }
 
 extern "C"
-void external_callee(int a, int b)
+void external_callee(nap_int_t a, nap_int_t b)
 {
+    printf("a=%"PRINT_d", b=%"PRINT_d, a, b);
+    if(a != 1 || b != 2) FAIL();
 }

@@ -1,6 +1,8 @@
 #ifndef TESTS_H
 #define TESTS_H
 
+#define UNUSED(x) (void)x;
+
 #include "nap_runtime.h"
 #include "utils.h"
 
