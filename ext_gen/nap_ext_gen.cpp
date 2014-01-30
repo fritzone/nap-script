@@ -191,9 +191,14 @@ static void print_function(unsigned char* vec, int also_body, FILE* fp)
     }
 
     // typedef
-    fprintf(fp, "\n{%s\n    %s\n", valid_params == 0?"\n    UNUSED(pars);":"",to_print.c_str());
+    fprintf(fp, "\n{\n    %s\n",to_print.c_str());
     // function pointer
     fprintf(fp, "    %s local_fun = (%s)(fun);\n", typedef_name.c_str(), typedef_name.c_str());
+	// unused parameters? No warnings please.
+	if(valid_params == 0)
+	{
+		fprintf(fp, "\n    UNUSED(pars);\n");
+	}
     // calling the local function
     if(vec[0] != 0) // populating the return value
     {
@@ -203,6 +208,7 @@ static void print_function(unsigned char* vec, int also_body, FILE* fp)
     {
         fprintf(fp, "    UNUSED(retv);\n    ");
     }
+
     fprintf(fp, "local_fun(\n");
     // and the parameters
     bool more_than_zero_par = false;
