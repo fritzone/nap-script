@@ -58,12 +58,13 @@ add_custom_command(
   COMMENT "Running generator"
   VERBATIM
 )
-
 add_library(nap_bci_s STATIC ${${project}_files} )
 
 add_executable(napi
     ${CMAKE_CURRENT_SOURCE_DIR}/main.c
 )
+
+add_dependencies(nap_bci_s nap-ext-gen)
 
 if(NOT WIN32)
     target_link_libraries(nap_bci_s nap_cpl_s dl)

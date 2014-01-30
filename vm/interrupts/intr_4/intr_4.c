@@ -10,25 +10,8 @@
 
 #include <dlfcn.h>
 
-void extfun(nap_int_t a, nap_int_t b)
-{
-    printf("YOO %"PRINT_d", %"PRINT_d"\n", a, b);
-}
-
-void populate_par_desc(struct nap_ext_par_desc* pd, int index, void* new_data)
-{
-    if(index == 0)
-    {
-        pd->p0 = new_data;
-    }
-    if(index == 1)
-    {
-        pd->p1 = new_data;
-    }
-}
-
 /*
- * regs 0 -> teh signature, first character is the return type
+ * regs 0 -> the signature, first character is the return type
  * regs 1 -> the name of the function
  * regs 2 -> the name of the library (- if none)
  * regi 0 -> the index in the pregenerated table
@@ -62,7 +45,7 @@ uint8_t intr_4(struct nap_vm* vm)
         {
             int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
             *temp = *(int64_t*)vm->stack[vm->stack_pointer - cur_stack_peeker]->value; /* STACK VALUE FROM peek_index */
-            populate_par_desc(pd, strlen(signature) - cur_stack_peeker - 1 - 1, temp);
+            nap_populate_par_desc(pd, strlen(signature) - cur_stack_peeker - 1 - 1, temp);
             /* first -1: because we remvoe the return type,
                second -1: because it's zero based */
         }
@@ -83,7 +66,6 @@ uint8_t intr_4(struct nap_vm* vm)
     {
         return CANNOT_LOAD_LIBRARY;
     }
-    dlerror();
 
     void* function_to_call = dlsym(lib_handle, function_name);
     char* error;
@@ -91,11 +73,24 @@ uint8_t intr_4(struct nap_vm* vm)
     {
          fprintf(stderr, "%s\n", error);
          dlclose(lib_handle);
+
+         free(library_name);
+         free(signature);
+         free(function_name);
+         nap_free_parameter_descriptor(&pd);
+
          return CANNOT_LOAD_FUNCTION;
      }
 
     nec(function_to_call, pd, 0);
 
+    dlclose(lib_handle);
+
     /* load the library (if any) fetch the address of the function */
+    free(library_name);
+    free(signature);
+    free(function_name);
+
+    nap_free_parameter_descriptor(&pd);
     return 0;
 }
