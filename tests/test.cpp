@@ -21,7 +21,7 @@ TEST(Operations, BasicIntVariableOperations)
         a_mul_b = a * b;            \
         a_div_b = a / b;            \
         a_mod_b = a % b;            \
-    "                               
+    "
     SCRIPT_END
 
     ASSERT_TRUE( 9 == VAR_INT(a));
@@ -151,15 +151,15 @@ TEST(Operations, BasicImmediateOperations)
         a_mul_b = 9 * 3;            \
         a_div_b = 9 / 3;            \
         a_mod_b = 9 % 3;            \
-    "                               
+    "
     SCRIPT_END
-    
+
     ASSERT_TRUE(12 == VAR_INT(a_plus_b));
     ASSERT_TRUE( 6 == VAR_INT(a_minus_b));
     ASSERT_TRUE( 3 == VAR_INT(a_div_b));
     ASSERT_TRUE(27 == VAR_INT(a_mul_b));
     ASSERT_TRUE( 0 == VAR_INT(a_mod_b));
-    
+
     SCRIPT_SHUTDOWN
 }
 
@@ -363,8 +363,7 @@ TEST(Functions, ExternalCalling)
     UNUSED(found_indicator);
 }
 
-extern "C"
-__declspec(dllexport)
+NAP_EXPORTS
 void external_callee(nap_int_t a, nap_int_t b)
 {
     fprintf(stderr, "\na=%"PRINT_d", b=%"PRINT_d"\n", a, b);

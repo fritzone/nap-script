@@ -53,9 +53,10 @@ set(parameter_counts 2 3 4 5 6 7 8)
 set_property(CACHE parameter_count PROPERTY STRINGS ${parameter_counts})
 
 add_custom_command(
+  MAIN_DEPENDENCY ../ext_gen/nap_ext_gen.cpp
   OUTPUT ${NAP_ROOT}/build/ext_gen/nap_ext_def.c ${NAP_ROOT}/build/ext_gen/nap_ext_def.h
   COMMAND nap-ext-gen -n ${parameter_count} -d ${NAP_ROOT}/build/ext_gen
-  COMMENT "Running generator"
+  COMMENT "Running generator: ${parameter_count} parameters"
   VERBATIM
 )
 add_library(nap_bci_s STATIC ${${project}_files} )
