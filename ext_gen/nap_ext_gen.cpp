@@ -1,16 +1,12 @@
 /* 24.12.2008 last modification: 26.06.2013
-Copyright (c) 2008-2013 by Siegfried Koepf
+   Copyright (c) 2008-2013 by Siegfried Koepf
 
-This file is distributed under the terms of the GNU General Public License
-version 3 as published by the Free Software Foundation.
-For information on usage and redistribution and for a disclaimer of all
-warranties, see the file COPYING in this distribution.
+   This file is distributed under the terms of the GNU General Public License
+   version 3 as published by the Free Software Foundation.
+   For information on usage and redistribution and for a disclaimer of all
+   warranties, see the file COPYING in this distribution.
 
-testing
-gen_vari_rep_lex_init() and gen_vari_rep_lex_next()
-
-compile
-gcc -o vari_rep_lex_example vari_rep_lex_example.c vari_rep_lex.c
+   Modified by fritzone to suit the purpose of the nap-project.
 */
 
 #include <stdio.h>
