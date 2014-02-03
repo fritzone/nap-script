@@ -227,6 +227,11 @@ parameter* method::add_parameter(std::string pname,
         func_par->type = BASIC_TYPE_INT;
     }
 
+    if(ptype == "byte")
+    {
+        func_par->type = BASIC_TYPE_BYTE;
+    }
+
     if(ptype == "string")
     {
         func_par->type = BASIC_TYPE_STRING;

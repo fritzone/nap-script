@@ -128,15 +128,16 @@ const char* STR_UNDEFINED_VARIABLE    = "Undefined variable";
 const char* STR_REAL_FORMAT    =    "%.8G";
 
 /* the string representatives of the basic types */
-const char* STR_INT                = "int";
+const char* STR_INT                 = "int";
+const char* STR_BYTE                = "byte";
 const char* STR_REAL                = "real";
-const char* STR_STRING                = "string";
-const char* STR_CHAR                            = "char";
-const char* STR_BOOL                            = "bool";
-const char* STR_VOID                            = "void";
-const char* STR_NULL                            = "null";
+const char* STR_STRING              = "string";
+const char* STR_CHAR                = "char";
+const char* STR_BOOL                = "bool";
+const char* STR_VOID                = "void";
+const char* STR_NULL                = "null";
 
-const char* STR_UNKNOWN                = "unknown";
+const char* STR_UNKNOWN             = "unknown";
 
 m_optype NO_OPERATOR = -1;
 
@@ -155,7 +156,8 @@ const char* keywords[] =
     STR_INT,
     STR_REAL,
     STR_STRING,
-    STR_NULL
+    STR_NULL,
+    STR_BYTE
 };
 
 char* EMPTY = (char*)"";

@@ -67,6 +67,12 @@ int nap_call_intern(struct nap_vm* vm)
                             data_size = sizeof(nap_int_t);
                         }
                         else
+                        /* an array of bytes */
+                        if(ve->instantiation->type == STACK_ENTRY_BYTE)
+                        {
+                            data_size = sizeof(nap_byte_t);
+                        }
+                        else
                         /* an array of doubles */
                         if(ve->instantiation->type == STACK_ENTRY_REAL)
                         {

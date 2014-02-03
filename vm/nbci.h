@@ -107,16 +107,18 @@ struct nap_vm
 
     /* Registers section */
 
-    nap_int_t       regi    [REGISTER_COUNT]; /* the integer registers             */
-    char*           regs    [REGISTER_COUNT]; /* the string registers, UTF-32BE    */
-    nap_int_t       regidx  [REGISTER_COUNT]; /* the register indexes              */
+    nap_byte_t       regb    [REGISTER_COUNT]; /* the byte registers             */
+    nap_int_t        regi    [REGISTER_COUNT]; /* the integer registers             */
+    char*            regs    [REGISTER_COUNT]; /* the string registers, UTF-32BE    */
+    nap_int_t        regidx  [REGISTER_COUNT]; /* the register indexes              */
     enum flag_status lbf;                     /* the last boolean flag             */
-    uint8_t         mrc;                      /* number of registers of the VM. Used by pushall/popall  */
-    size_t          regslens[REGISTER_COUNT]; /* the length of the string registers*/
+    uint8_t          mrc;                      /* number of registers of the VM. Used by pushall/popall  */
+    size_t           regslens[REGISTER_COUNT]; /* the length of the string registers*/
 
     /* return values */
     nap_int_t rvi;                          /* the integer return value      */
-    char* rvs;                              /* the string return value       */
+    nap_byte_t rvb;                         /* the byte return value         */
+    nap_string_t rvs;                       /* the string return value       */
     size_t rvl;                             /* the string return value's length */
 
     /* variables regarding the execution flow */
@@ -235,7 +237,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
  * The method will populate the *found with 1 if the variable was found and with
  * 0 if the variable was not found.
  *
- * The method will return the value of the variable if found or 0x0BADF00D if
+ * The method will return the value of the variable if found or NAP_NO_VALUE if
  * not found.
  *
  * The *found parameter should be used for error checking, not the return value.
@@ -243,9 +245,30 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
  * @param vm - the VM in which this runs
  * @param name - the name of the variable
  * @param [out] found - if we found it or not. Set to 1 or 0.
- * @return the value, or 0x0BADF00D if not found
+ * @return the value, or NAP_NO_VALUE if not found
  */
 nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found);
+
+/**
+ * @brief nap_vm_get_byte returns the value of the byte variable called "name"
+ *
+ * The variable must have been defined in the global namespace in the script
+ * otherwise it is not relevant.
+ *
+ * The method will populate the *found with 1 if the variable was found and with
+ * 0 if the variable was not found.
+ *
+ * The method will return the value of the variable if found or 0x0F if
+ * not found.
+ *
+ * The *found parameter should be used for error checking, not the return value.
+ *
+ * @param vm - the VM in which this runs
+ * @param name - the name of the variable
+ * @param [out] found - if we found it or not. Set to 1 or 0.
+ * @return the value, or NAP_NO_VALUE if not found
+ */
+nap_byte_t nap_vm_get_byte(struct nap_vm* vm, char* name, int* found);
 
 /**
  * @brief nap_vm_get_string return the value of the variable called "name"

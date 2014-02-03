@@ -207,6 +207,7 @@ extern const char *STR_REAL_FORMAT;
 
 /* the string representatives of the basic types */
 extern const char *STR_INT;
+extern const char *STR_BYTE;
 extern const char *STR_REAL;
 extern const char *STR_STRING;
 extern const char *STR_VOID;
@@ -216,7 +217,7 @@ extern const char *STR_NULL;
 
 extern const char *STR_UNKNOWN;
 
-extern const char *keywords[14];
+extern const char *keywords[15];
 extern char *EMPTY;
 
 #endif

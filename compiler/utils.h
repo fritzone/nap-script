@@ -55,6 +55,9 @@ int is_whitespace(char c);
 
 int is_valid_variable_name(const char* name);
 
+/* check for an immediate byte value expressed as character: 'A' -> 65*/
+int is_immediate_byte(const char* t);
+
 /*
  * Utility functions
  */

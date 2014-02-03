@@ -14,7 +14,7 @@ static const int NAP_VARIABLE_FOUND     = 1;
 static const int NAP_VARIABLE_NOT_FOUND = 0;
 
 /** Represents that there is no such value*/
-static const int NAP_NO_VALUE = 0x0BADF00D;
+static const int NAP_NO_VALUE = 0xFF;
 
 /* Success and failure indicators */
 static const int NAP_SUCCESS = 1;

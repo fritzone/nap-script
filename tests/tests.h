@@ -24,6 +24,8 @@
 
 #define VAR_INT(a)    nap_runtime_get_int(runtime, #a, &found_indicator)
 
+#define VAR_BYTE(a)    nap_runtime_get_byte(runtime, #a, &found_indicator)
+
 #define VAR_STRING(a)    nap_runtime_get_string(runtime, #a, &found_indicator)
 
 #define SCRIPT_SHUTDOWN \
