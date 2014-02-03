@@ -7,7 +7,7 @@
 
 /* Define a one dim array, set the first element to a value, and see that it
    is as expected */
-TEST(VariableDefinitions, SimpleIndexedOperation)
+TEST(VariableDefinitions, SimpleIndexedOperationInt)
 {
     SCRIPT_START
     "                               \
@@ -18,6 +18,24 @@ TEST(VariableDefinitions, SimpleIndexedOperation)
     SCRIPT_END
 
     ASSERT_EQ(2, VAR_INT(b));
+
+    SCRIPT_SHUTDOWN;
+}
+
+
+/* Define a one dim array, set the first element to a value, and see that it
+   is as expected */
+TEST(VariableDefinitions, SimpleIndexedOperationByte)
+{
+    SCRIPT_START
+    "                               \
+        byte a[10];                 \
+        a[1] = 2;                   \
+        byte b = a[1];              \
+    "
+    SCRIPT_END
+
+    ASSERT_EQ(2, VAR_BYTE(b));
 
     SCRIPT_SHUTDOWN;
 }
@@ -33,6 +51,22 @@ TEST(VariableDefinitions, SimpleInt)
     SCRIPT_END
 
     ASSERT_EQ(2, VAR_INT(a));
+
+    SCRIPT_SHUTDOWN;
+}
+
+
+/* Define a simple byte type variable, assign a value to it. */
+TEST(VariableDefinitions, SimpleByte)
+{
+    SCRIPT_START
+    "                               \
+        byte a;                      \
+        a = 2;                      \
+    "
+    SCRIPT_END
+
+    ASSERT_EQ(2, VAR_BYTE(a));
 
     SCRIPT_SHUTDOWN;
 }

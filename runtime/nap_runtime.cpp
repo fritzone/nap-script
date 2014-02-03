@@ -81,6 +81,15 @@ NAP_LIB_API int nap_runtime_execute(struct nap_runtime* runtime,
     return 1;
 }
 
+NAP_LIB_API nap_byte_t nap_runtime_get_byte(struct nap_runtime* runtime,
+                                 const char* variable_name, int *found)
+{
+    char* t = (char*)calloc(strlen(variable_name) + 1, 1);
+    strcpy(t, variable_name);
+    nap_byte_t temp = nap_vm_get_byte(runtime->vm, t, found);
+    free(t);
+    return temp;
+}
 
 NAP_LIB_API nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
                                  const char* variable_name, int *found)

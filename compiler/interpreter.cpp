@@ -689,6 +689,11 @@ method* interpreter::define_method(const char* expr, int expr_len, expression_tr
     }
 
     if(!strcmp(created_method->return_type.c_str(), "int")) created_method->ret_type = BASIC_TYPE_INT;
+    if(!strcmp(created_method->return_type.c_str(), "byte")) created_method->ret_type = BASIC_TYPE_BYTE;
+    if(!strcmp(created_method->return_type.c_str(), "real")) created_method->ret_type = BASIC_TYPE_REAL;
+    if(!strcmp(created_method->return_type.c_str(), "string")) created_method->ret_type = BASIC_TYPE_STRING;
+    if(!strcmp(created_method->return_type.c_str(), "bool")) created_method->ret_type = BASIC_TYPE_BOOL;
+
     // TODO: the others too
 
     cc->add_method(created_method);
@@ -2076,7 +2081,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 return 0;
             }
             node->info = expr_trim;
-            while(tlen > 0 && !isalnum( t[tlen - 1]) && t[tlen -1] != '\"' && t[tlen - 1] != '(' && t[tlen - 1] != ')' )
+            while(tlen > 0 && !isalnum( t[tlen - 1]) && t[tlen -1] != '\"'
+                  && t[tlen -1] != '\'' && t[tlen - 1] != '(' && t[tlen - 1] != ')' )
             {
                 t[tlen - 1] = 0 ;
                 t = trim(t, mcompiler);
@@ -2093,6 +2099,17 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             if(isnumber(t))
             {
                 number* nr = new number(t, cc->compiler());
+                garbage_bin<number*>::instance(cc->compiler()).place(nr, cc->compiler());
+                envl = new_envelope(nr, nr->type(), cc->compiler());
+                node->op_type = nr->type();
+            }
+            else
+            if(is_immediate_byte(expr_trim))
+            {
+                uint8_t temp = (uint8_t)(t[1]);
+                char s[12];
+                sprintf(s, "%d", temp);
+                number* nr = new number(s, cc->compiler());
                 garbage_bin<number*>::instance(cc->compiler()).place(nr, cc->compiler());
                 envl = new_envelope(nr, nr->type(), cc->compiler());
                 node->op_type = nr->type();

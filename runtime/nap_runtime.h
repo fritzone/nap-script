@@ -89,13 +89,36 @@ NAP_LIB_API int nap_runtime_execute(struct nap_runtime        *runtime,
  *                     found in the runtime or to NAP_VARIABLE_NOT_FOUND (0) if
  *                     the variable was not found.
  *
- * @return The value of the variable, or NAP_NO_VALUE (0x0BADF00D) if the
+ * @return The value of the variable, or NAP_NO_VALUE (NAP_NO_VALUE) if the
  *         variable was not found. If the runtime returns the NAP_NO_VALUE then
  *         also the found parameter should be populated to the value of
  *         NAP_VARIABLE_NOT_FOUND in order to confirm that there is indeed no
- *         such variable, otherwise the value indeed is 0x0BADF00D.
+ *         such variable, otherwise the value indeed is NAP_NO_VALUE.
  */
 NAP_LIB_API nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
+                              const char *variable_name,
+                              int* found);
+
+/**
+ * @brief The nap_runtime_get_byte returns the value of the byte type variable
+ *        called variable_name.
+ *
+ * The method returns the value of the byte type variable called
+ * variable_name. Only variables from the global namespace can be retrieved.
+ *
+ * @param[in]  runtime The runtime which has the variable defined.
+ * @param[in]  name    The name of the variable.
+ * @param[out] found   Populated to NAP_VARIABLE_FOUND (1) if the variable was
+ *                     found in the runtime or to NAP_VARIABLE_NOT_FOUND (0) if
+ *                     the variable was not found.
+ *
+ * @return The value of the variable, or NAP_NO_VALUE (NAP_NO_VALUE) if the
+ *         variable was not found. If the runtime returns the NAP_NO_VALUE then
+ *         also the found parameter should be populated to the value of
+ *         NAP_VARIABLE_NOT_FOUND in order to confirm that there is indeed no
+ *         such variable, otherwise the value indeed is NAP_NO_VALUE.
+ */
+NAP_LIB_API nap_byte_t nap_runtime_get_byte(struct nap_runtime* runtime,
                               const char *variable_name,
                               int* found);
 

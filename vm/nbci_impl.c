@@ -400,6 +400,26 @@ nap_index_t nap_fetch_index(struct nap_vm* vm)
     return htovm_32(*p_var_index);
 }
 
+nap_byte_t nap_read_byte(struct nap_vm* vm)
+{
+    uint8_t imm_size = vm->content[vm->cc ++];
+    nap_byte_t nr = 0;
+    /* and now read the number according to the size */
+    if(imm_size == OPCODE_BYTE)
+    {
+        nap_byte_t* immediate = (nap_byte_t*)(vm->content + vm->cc);
+        nr = *immediate;
+        vm->cc ++;
+    }
+    else
+    {
+        printf("invalid mov into byte size [mov]: 0x%x", imm_size);
+        _NOT_IMPLEMENTED
+    }
+
+    return nr;
+}
+
 nap_int_t nap_read_immediate(struct nap_vm* vm)
 {
     uint8_t imm_size = vm->content[vm->cc ++];
@@ -446,31 +466,55 @@ nap_int_t nap_read_immediate(struct nap_vm* vm)
 
 /* the register "stack" used to save and restore the registers */
 static nap_int_t* regi_stack[DEEPEST_RECURSION] = {0};
+static nap_byte_t* regb_stack[DEEPEST_RECURSION] = {0};
 static nap_index_t regi_stack_idx = 0;
+static nap_index_t regb_stack_idx = 0;
 
 int nap_save_registers(struct nap_vm* vm)
 {
-    nap_int_t* tmp = calloc(REGISTER_COUNT, sizeof(nap_int_t));
-    memcpy(tmp, vm->regi, vm->mrc * sizeof(nap_int_t));
-    regi_stack[regi_stack_idx] = tmp;
+    nap_int_t* tmp_ints = NULL;
+    nap_byte_t* tmp_bytes = NULL;
+
+    /* save the int registers */
+    tmp_ints = calloc(REGISTER_COUNT, sizeof(nap_int_t));
+    memcpy(tmp_ints, vm->regi, vm->mrc * sizeof(nap_int_t));
+    regi_stack[regi_stack_idx] = tmp_ints;
     regi_stack_idx ++;
     if(regi_stack_idx == DEEPEST_RECURSION)
     {
         return NAP_FAILURE;
     }
+
+    /* save the byte registers */
+    tmp_bytes = calloc(REGISTER_COUNT, sizeof(nap_byte_t));
+    memcpy(tmp_bytes, vm->regb, vm->mrc * sizeof(nap_byte_t));
+    regb_stack[regb_stack_idx] = tmp_bytes;
+    regb_stack_idx ++;
+    if(regb_stack_idx == DEEPEST_RECURSION)
+    {
+        return NAP_FAILURE;
+    }
+
     return NAP_SUCCESS;
 }
 
 int nap_restore_registers(struct nap_vm* vm)
 {
-    if(regi_stack_idx == 0)
+    if(regi_stack_idx == 0 || regb_stack_idx == 0)
     {
         return NAP_FAILURE;
     }
 
+    /* restore the int registers */
     regi_stack_idx --;
     memcpy(vm->regi, regi_stack[regi_stack_idx], vm->mrc * sizeof(nap_int_t));
     MEM_FREE(regi_stack[regi_stack_idx]);
+
+    /* restore the byte registers */
+    regb_stack_idx --;
+    memcpy(vm->regb, regb_stack[regb_stack_idx], vm->mrc * sizeof(nap_byte_t));
+    MEM_FREE(regb_stack[regb_stack_idx]);
+
     return NAP_SUCCESS;
 }
 
@@ -595,6 +639,7 @@ const char *nap_get_type_description(StackEntryType t)
     switch(t)
     {
         case STACK_ENTRY_INT : return "int";
+        case STACK_ENTRY_BYTE : return "byte";
         case STACK_ENTRY_REAL : return "real";
         case STACK_ENTRY_STRING : return "string";
         case STACK_ENTRY_CHAR : return "char";

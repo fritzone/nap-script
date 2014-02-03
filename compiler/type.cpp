@@ -10,6 +10,7 @@
 int get_typeid(const std::string &type)
 {
     if(type == STR_INT) return BASIC_TYPE_INT;
+    if(type == STR_BYTE) return BASIC_TYPE_BYTE;
     if(type == STR_REAL) return BASIC_TYPE_REAL;
     if(type == STR_CHAR) return BASIC_TYPE_CHAR;
     if(type == STR_BOOL) return BASIC_TYPE_BOOL;

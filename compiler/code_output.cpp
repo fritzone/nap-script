@@ -16,6 +16,8 @@ const char* get_reg_type(int req_type)
     {
     case BASIC_TYPE_INT:
         return "int";
+    case BASIC_TYPE_BYTE:
+        return "byte";
     case BASIC_TYPE_REAL:
         return "real";
     case BASIC_TYPE_BOOL:

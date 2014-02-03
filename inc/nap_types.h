@@ -12,5 +12,6 @@ typedef uint32_t nap_index_t;   /* the type of an index */
 typedef int64_t  nap_int_t;     /* the NAP type of an integer number */
 typedef double   nap_real_t;    /* the NAP type of a real number */
 typedef char*    nap_string_t;  /* the NAP type of a string */
+typedef uint8_t  nap_byte_t;    /* the NAP type of a string */
 
 #endif

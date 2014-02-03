@@ -13,9 +13,9 @@ int nap_push(struct nap_vm *vm)
 {
     struct stack_entry* se = (struct stack_entry*)(
                                 calloc(sizeof(struct stack_entry), 1));
-    se->type = (StackEntryType)vm->content[vm->cc ++]; /* push int/string/real */
+    se->type = (StackEntryType)vm->content[vm->cc ++]; /* push int/string/real/byte */
 
-    if(se->type == OPCODE_INT || se->type == OPCODE_STRING) /* or float*/
+    if(se->type == OPCODE_INT || se->type == OPCODE_STRING || se->type == OPCODE_BYTE) /* or real */
     {
         uint8_t push_what = vm->content[vm->cc ++];
 
@@ -35,12 +35,25 @@ int nap_push(struct nap_vm *vm)
             {
                 if(ve->instantiation->value) /* to not to create another value if we have it*/
                 {                            /* such as variable declaration in a loop */
-                    *(int64_t*)ve->instantiation->value = 0;
+                    *(nap_int_t*)ve->instantiation->value = 0;
                 }
                 else
                 {
-                    ve->instantiation->value = calloc(1, sizeof(int64_t));
-                    *(int64_t*)ve->instantiation->value = 0;
+                    ve->instantiation->value = calloc(1, sizeof(nap_int_t));
+                    *(nap_int_t*)ve->instantiation->value = 0;
+                }
+            }
+            else
+            if(se->type == OPCODE_BYTE) /* pushing a byte */
+            {
+                if(ve->instantiation->value) /* to not to create another value if we have it*/
+                {                            /* such as variable declaration in a loop */
+                    *(nap_byte_t*)ve->instantiation->value = 0;
+                }
+                else
+                {
+                    ve->instantiation->value = calloc(1, sizeof(nap_byte_t));
+                    *(nap_byte_t*)ve->instantiation->value = 0;
                 }
             }
             else
@@ -48,12 +61,12 @@ int nap_push(struct nap_vm *vm)
             {
                 if(ve->instantiation->value)
                 {
-                    *(char*)ve->instantiation->value = 0;
+                    *(nap_string_t)ve->instantiation->value = 0;
                 }
                 else
                 {
                     ve->instantiation->value = (char*)calloc(1, sizeof(char));
-                    *(char*)ve->instantiation->value = 0;
+                    *(nap_int_t*)ve->instantiation->value = 0;
                 }
             }
             else

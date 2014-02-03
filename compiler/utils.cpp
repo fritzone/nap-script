@@ -491,3 +491,12 @@ std::vector<std::string> string_list_create_bsep(const std::string& instr, char 
     free(cur_elem);
     return head;
 }
+
+
+int is_immediate_byte(const char *t)
+{
+    if(strlen(t) != 3) return 0;
+    if(t[0] != t[2]) return 0;
+    if(t[0] != '\'') return 0;
+    return 1;
+}

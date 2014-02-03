@@ -20,6 +20,12 @@ int nap_return(struct nap_vm *vm)
             vm->rvi = vm->regi[register_index];
         }
         else
+        if(register_type == OPCODE_BYTE)
+        {
+            uint8_t register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
+            vm->rvb = vm->regb[register_index];
+        }
+        else
         {
             _NOT_IMPLEMENTED
         }

@@ -275,8 +275,9 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "push") opcode = OPCODE_PUSH;
     if(expr == "ref")  opcode = OPCODE_REF;
     if(expr == "int")  opcode = OPCODE_INT;
+    if(expr == "byte")  opcode = OPCODE_BYTE;
     if(expr == "bool")  opcode = OPCODE_INT; /*bool treated as int in the bytecode*/
-    if(expr == "char")  opcode = OPCODE_CHAR;
+    if(expr == "char")  opcode = OPCODE_STRING;
     if(expr == "real") opcode = OPCODE_FLOAT;
     if(expr == "string")  opcode = OPCODE_STRING;
     if(expr == "idx")  opcode = OPCODE_IDX;

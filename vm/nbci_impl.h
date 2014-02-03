@@ -153,6 +153,14 @@ struct variable_entry* nap_fetch_variable(struct nap_vm* vm, nap_index_t var_ind
 nap_int_t nap_read_immediate(struct nap_vm* vm);
 
 /**
+ * Read an immediate byte from the bytecode stream and return it
+ * @param vm
+ * @return
+ */
+nap_byte_t nap_read_byte(struct nap_vm* vm);
+
+
+/**
  * Saves the registers. Happens automatically on a "call"
  */
 int nap_save_registers(struct nap_vm*);
