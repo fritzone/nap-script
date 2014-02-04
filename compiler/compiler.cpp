@@ -210,6 +210,16 @@ std::string nap_compiler::prepare_location() const
     mErrorCode = 1;
     return ss.str();
 }
+call_context *nap_compiler::getGlobalCc() const
+{
+    return global_cc;
+}
+
+void nap_compiler::setGlobal_cc(call_context *value)
+{
+    global_cc = value;
+}
+
 
 void nap_compiler::throw_error(const char* error) const
 {

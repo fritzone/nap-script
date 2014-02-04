@@ -31,6 +31,8 @@ struct nap_runtime;
  **/
 NAP_LIB_API nap_runtime* nap_runtime_create(const char *name);
 
+/******************************************************************************/
+
 /**
  * @brief Compiles the commands and creates a bytecode chunk for them.
  *
@@ -61,7 +63,10 @@ NAP_LIB_API nap_runtime* nap_runtime_create(const char *name);
  * NULL (0) in case of an error.
  **/
 NAP_LIB_API nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime *runtime,
-                                        const char         *commands);
+                                                    const char *commands);
+
+/******************************************************************************/
+
 /**
  * @brief The nap_runtime_execute executes the given bytecode chunk in the
  *        virtual machine of the runtime.
@@ -73,8 +78,10 @@ NAP_LIB_API nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime *runtime,
  * in case of failure. In case of failure you can call the method
  * nap_runtime_last_error() to get the last error
  **/ 
-NAP_LIB_API int nap_runtime_execute(struct nap_runtime        *runtime,
-                        struct nap_bytecode_chunk *bytecode);
+NAP_LIB_API int nap_runtime_execute(struct nap_runtime *runtime,
+                                    struct nap_bytecode_chunk *bytecode);
+
+/******************************************************************************/
 
 /**
  * @brief The nap_runtime_get_int returns the value of the integer type variable
@@ -89,7 +96,7 @@ NAP_LIB_API int nap_runtime_execute(struct nap_runtime        *runtime,
  *                     found in the runtime or to NAP_VARIABLE_NOT_FOUND (0) if
  *                     the variable was not found.
  *
- * @return The value of the variable, or NAP_NO_VALUE (NAP_NO_VALUE) if the
+ * @return The value of the variable, or NAP_NO_VALUE if the
  *         variable was not found. If the runtime returns the NAP_NO_VALUE then
  *         also the found parameter should be populated to the value of
  *         NAP_VARIABLE_NOT_FOUND in order to confirm that there is indeed no
@@ -98,6 +105,8 @@ NAP_LIB_API int nap_runtime_execute(struct nap_runtime        *runtime,
 NAP_LIB_API nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
                               const char *variable_name,
                               int* found);
+
+/******************************************************************************/
 
 /**
  * @brief The nap_runtime_get_byte returns the value of the byte type variable
@@ -112,21 +121,66 @@ NAP_LIB_API nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
  *                     found in the runtime or to NAP_VARIABLE_NOT_FOUND (0) if
  *                     the variable was not found.
  *
- * @return The value of the variable, or NAP_NO_VALUE (NAP_NO_VALUE) if the
+ * @return The value of the variable, or NAP_NO_VALUE if the
  *         variable was not found. If the runtime returns the NAP_NO_VALUE then
  *         also the found parameter should be populated to the value of
  *         NAP_VARIABLE_NOT_FOUND in order to confirm that there is indeed no
  *         such variable, otherwise the value indeed is NAP_NO_VALUE.
  */
 NAP_LIB_API nap_byte_t nap_runtime_get_byte(struct nap_runtime* runtime,
-                              const char *variable_name,
-                              int* found);
+                                            const char *variable_name,
+                                            int* found);
 
+/******************************************************************************/
+
+/**
+ * @brief The nap_runtime_get_real returns the value of the real type variable
+ *        called variable_name.
+ *
+ * The method returns the value of the real type variable called
+ * variable_name. Only variables from the global namespace can be retrieved.
+ *
+ * @param[in]  runtime The runtime which has the variable defined.
+ * @param[in]  name    The name of the variable.
+ * @param[out] found   Populated to NAP_VARIABLE_FOUND (1) if the variable was
+ *                     found in the runtime or to NAP_VARIABLE_NOT_FOUND (0) if
+ *                     the variable was not found.
+ *
+ * @return The value of the variable, or NAP_NO_VALUE if the
+ *         variable was not found. If the runtime returns the NAP_NO_VALUE then
+ *         also the found parameter should be populated to the value of
+ *         NAP_VARIABLE_NOT_FOUND in order to confirm that there is indeed no
+ *         such variable, otherwise the value indeed is NAP_NO_VALUE.
+ */
 NAP_LIB_API nap_real_t nap_runtime_get_real(struct nap_runtime* runtime,
-                                 const char* variable_name);
+                                            const char* variable_name);
 
+/******************************************************************************/
+
+/**
+ * @brief The nap_runtime_get_byte returns the value of the string type variable
+ *        called variable_name.
+ *
+ * The method returns the value of the string type variable called
+ * variable_name. Only variables from the global namespace can be retrieved.
+ *
+ * @param[in]  runtime The runtime which has the variable defined.
+ * @param[in]  name    The name of the variable.
+ * @param[out] found   Populated to NAP_VARIABLE_FOUND (1) if the variable was
+ *                     found in the runtime or to NAP_VARIABLE_NOT_FOUND (0) if
+ *                     the variable was not found.
+ *
+ * @return The value of the variable, or NULL (0) if the
+ *         variable was not found. If the runtime returns the NULL then
+ *         also the found parameter should be populated to the value of
+ *         NAP_VARIABLE_NOT_FOUND in order to confirm that there is indeed no
+ *         such variable, otherwise the value indeed is NULL.
+ */
 NAP_LIB_API nap_string_t nap_runtime_get_string(struct nap_runtime* runtime,
-                                 const char* variable_name, int* found);
+                                                const char* variable_name,
+                                                int* found);
+
+/******************************************************************************/
 
 /**
  * @brief Shuts down the runtime and frees the allocated memory.

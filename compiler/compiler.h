@@ -53,6 +53,8 @@ struct label_entry
 
     // and the name of it
     std::string name;
+
+    method* m;
 };
 
 struct nap_vm ;
@@ -222,6 +224,9 @@ public:
     {
         print_assembly = true;
     }
+
+    call_context *getGlobalCc() const;
+    void setGlobal_cc(call_context *value);
 
 private:
 
