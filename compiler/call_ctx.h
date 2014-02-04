@@ -209,6 +209,11 @@ struct call_context
                                          call_context* cc,
                                          const expression_with_location* expwloc, bool &psuccess);
 
+
+public:
+    std::vector<method *> getMethods() const;
+    void setMethods(const std::vector<method *> &value);
+
 private:
 
     /* the type of the call context: 0 - global, 1 - named*/

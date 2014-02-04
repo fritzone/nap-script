@@ -100,6 +100,7 @@ void code_finalizer::finalize()
     uint32_t meta_location ;
     uint32_t strtable_location ;
     uint32_t jumptable_location ;
+    uint32_t funtable_location ;
 
     {
     file_abstraction f(mcompiler);
@@ -181,6 +182,33 @@ void code_finalizer::finalize()
         }
     }
 
+    funtable_location = f.ftell();
+    // write out the function table
+    call_context* cc = mcompiler->getGlobalCc();
+    std::vector<method *> ccs_methods = cc->getMethods();
+    static const char FUNTABLE[] = ".fun";
+    f.write_string_to_file(FUNTABLE, 4, 0);
+    uint32_t funtable_count = ccs_methods.size();
+    f.write_stuff_to_file_32(funtable_count);
+
+    for(size_t mc=0; mc<funtable_count; mc++)
+    {
+        method* m = ccs_methods[mc];
+
+        for(unsigned int jc=0; jc<jumptable_count; jc++)
+        {
+            label_entry* je = mcompiler->jumptable()[jc];
+            const char *n = je->name.c_str();
+            if(je->name.find("global.") != std::string::npos)
+            {
+                n += 7;
+            }
+            fprintf(stderr, "---- %s --> %s --> %s\n", m->method_name.c_str(), n, je->name.c_str());
+        }
+
+    }
+
+
     }
 
     {
@@ -192,8 +220,9 @@ void code_finalizer::finalize()
     f.write_stuff_to_file_32(meta_location, 0 + 1); // the meta location for variables
     f.write_stuff_to_file_32(strtable_location, 0 + 1 + 4); // the stringtable location
     f.write_stuff_to_file_32(jumptable_location, 0 + 1 + 4 + 4); // the jumptable location
-    f.write_stuff_to_file_8(255, 0 + 1 + 4 + 4 + 4); /* max reg count, always 255*/
-    f.write_stuff_to_file_8(0, 0 + 1 + 4 + 4 + 4); /* a dummy flag for now */
+    f.write_stuff_to_file_32(funtable_location, 0 + 1 + 4 + 4 + 4); // the funtable location
+    f.write_stuff_to_file_8(255, 0 + 1 + 4 + 4 + 4 + 4); /* max reg count, always 255*/
+    f.write_stuff_to_file_8(0, 0 + 1 + 4 + 4 + 4 + 4 + 1); /* a dummy flag for now */
     }
 }
 
@@ -266,6 +295,7 @@ void code_stream::output_bytecode(const char* s)
         f.write_stuff_to_file_32(temp); // the meta location for variables
         f.write_stuff_to_file_32(temp); // the stringtable location
         f.write_stuff_to_file_32(temp); // the jumptable location
+        f.write_stuff_to_file_32(temp); // the funtable location
         f.write_stuff_to_file_8(bits);  // extra for the max reg count
         f.write_stuff_to_file_8(0);     // extra for the flags
     }

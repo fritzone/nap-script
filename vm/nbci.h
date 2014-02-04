@@ -88,6 +88,15 @@ enum environments
     INTERRUPT  = 2
 };
 
+/* the type of a label as present in the jump table
+ */
+enum label_type
+{
+    JUMP_DESTINATION = 0,
+    FUNCTION         = 1,
+    CLASS_METHOD     = 2
+};
+
 struct nap_vm;
 /* the function pointer for an interrupt function */
 typedef uint8_t (*interrupt)(struct nap_vm*);

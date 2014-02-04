@@ -31,7 +31,7 @@ int interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
     for(;;)
     {
         uint32_t index = 0;
-        uint8_t type = 0;
+        enum label_type type = 0;
         uint16_t loc_name_length = 0;
         char* name = NULL;
 
@@ -47,10 +47,10 @@ int interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
         cloc += 4;
 
         /* the type */
-        type = *cloc;
+        type = (enum label_type)*cloc;
         cloc ++;
 
-        if(type != 0)
+        if(type != JUMP_DESTINATION)
         {
             /* the length */
             loc_name_length = htovm_16(*(uint16_t*)(cloc));
