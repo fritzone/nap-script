@@ -203,7 +203,11 @@ void code_finalizer::finalize()
             {
                 n += 7;
             }
-            fprintf(stderr, "---- %s --> %s --> %s\n", m->method_name.c_str(), n, je->name.c_str());
+
+            if(m->method_name == n)
+            {
+                fprintf(stderr, "---- %s --> %s --> %s\n", m->method_name.c_str(), n, je->name.c_str());
+            }
         }
 
     }

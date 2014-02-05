@@ -183,6 +183,7 @@ static const char* get_type_code(int el)
     case 1: return "i";
     case 2: return "r";
     case 3: return "s";
+    case 4: return "b";
     default:return "v";
     }
 }
@@ -197,9 +198,10 @@ static int signature_to_number(const std::string& sig)
         if(sig[i] == 'r') base4 += "2";
         if(sig[i] == 's') base4 += "3";
         if(sig[i] == 'v') base4 += "0";
+        if(sig[i] == 'b') base4 += "4";
     }
     char *t = 0;
-    res = strtol(base4.c_str(), &t, 4);
+    res = strtol(base4.c_str(), &t, 5);
     return res;
 }
 
