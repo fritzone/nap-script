@@ -17,7 +17,7 @@
 #include <map>
 #include <algorithm>
 
-static const unsigned char m                   = 4;    //How many types
+static const unsigned char NUM_PAR_TYPES       = 5;    //How many types
 static unsigned char NUM_PARMS                 = 8;    //How many parameters
 static std::vector<std::string> useds;
 static std::map<unsigned long, std::string> mappings;
@@ -81,6 +81,7 @@ static const char* get_type_code(unsigned char el, int print_void)
     case 1: return "i";
     case 2: return "r";
     case 3: return "s";
+    case 4: return "b";
     default:
         if(print_void) return "v";
         else return "";
@@ -95,6 +96,7 @@ static const char* get_type(unsigned char el, int print_void)
     case 1: return "nap_int_t";
     case 2: return "nap_real_t";
     case 3: return "nap_string_t";
+    case 4: return "nap_byte_t";
     default:
         if(print_void)
         {
@@ -123,7 +125,7 @@ static void print_function(unsigned char* vec, int also_body, FILE* fp)
     to_print += " (*";
 
     signature = get_type_code(vec[0], 1); // for the return type we need also the void
-    signature += "__";
+    signature += "_";
     
     for(int i=1; i<NUM_PARMS; i++)
     {
@@ -169,7 +171,7 @@ static void print_function(unsigned char* vec, int also_body, FILE* fp)
     }
 
     char *end = 0;
-    unsigned long l = strtol(nr, &end, 4);
+    unsigned long l = strtol(nr, &end, NUM_PAR_TYPES);
 
     // create a mapping
     mappings[l] = func_name;
@@ -301,7 +303,7 @@ int main(int argc, char* argv[])
     fputs("\n};\n\n", fp_header);
 
     //initialize
-    gen_result = gen_vari_rep_lex_init(vector, m, NUM_PARMS);
+    gen_result = gen_vari_rep_lex_init(vector, NUM_PAR_TYPES, NUM_PARMS);
 
     if(gen_result == GEN_EMPTY)
     {
@@ -316,7 +318,7 @@ int main(int argc, char* argv[])
         print_function(vector, 0, fp_header);
         print_function(vector, 1, fp_body);
 
-        gen_result = gen_vari_rep_lex_next(vector, m, NUM_PARMS);
+        gen_result = gen_vari_rep_lex_next(vector, NUM_PAR_TYPES, NUM_PARMS);
     }
 
     // define the typedef for the function pointers and their array
