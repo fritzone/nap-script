@@ -40,7 +40,8 @@ NAP_LIB_API nap_runtime* nap_runtime_create(const char* /*name*/)
 }
 
 NAP_LIB_API nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
-                                               const char* commands)
+                                                    const char* commands,
+                                                    const char *name)
 {
     if(runtime != NULL)
     {
@@ -55,6 +56,12 @@ NAP_LIB_API nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
                                        calloc(sizeof(struct nap_bytecode_chunk), 1);
                 runtime->compiler->deliver_bytecode(chunk->code, chunk->length);
                 runtime->chunks.push_back(chunk);
+                if(name != NULL)
+                {
+                    size_t len = strlen(name);
+                    chunk->name = (char*)(calloc(len, sizeof(char)));
+                    strncpy(chunk->name, name, len);
+                }
                 return chunk;
             }
             else
@@ -131,6 +138,11 @@ NAP_LIB_API void nap_runtime_shutdown(nap_runtime **runtime)
     for(size_t i=0; i<(*runtime)->chunks.size(); i++)
     {
         free( (*runtime)->chunks.at(i)->code);
+        if((*runtime)->chunks.at(i)->name)
+        {
+            free((*runtime)->chunks.at(i)->name);
+        }
+
         free( (*runtime)->chunks.at(i));
     }
     delete (*runtime);

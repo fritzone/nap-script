@@ -142,32 +142,35 @@ struct nap_vm
     uint32_t  meta_location;                /* the location of the metatable in the file */
     uint32_t  stringtable_location;         /* the location of the stringtable in the file */
     uint32_t  jumptable_location;           /* the location of the jumptable in the file */
+    uint32_t  funtable_location;            /* the location of the fun table in the file */
     uint8_t   file_bitsize;                 /* the bit size: 0x32, 0x64*/
 
-    /* variables for the meta table */
 
+    /* variables for the meta table */
     struct variable_entry** metatable;      /* the variables */
     size_t meta_size;                       /* the size of  the variables vector */
 
     /* variables for the stack */
-
     struct stack_entry** stack;             /* in this stack */
     uint64_t stack_size;                    /* initial stack size */
     int64_t stack_pointer;                  /* the stack pointer */
 
     /* variables for the jumptable */
-
     struct jumptable_entry** jumptable;     /* the jumptable itself */
     size_t jumptable_size;                  /* the size of the jumptable */
     uint32_t jmpc;                          /* counts the jumptable entries on loading*/
 
     /* variables for the stringtable */
-
     struct strtable_entry** stringtable;    /* the stringtable itself */
     size_t strt_size;                       /* the size of the stringtable */
 
+    /* variables for the funtable */
+    struct funtable_entry** funtable;       /* the function table */
+    size_t funtable_entries;                /* how many entries in the function table */
+
+    /* other variables */
     enum environments environment;          /* whether this is run as embedded in an app or a standalone application */
-    uint8_t flags;                          /* Some flags used by the VM */
+    uint8_t flags;                          /* Some flags used by the VM, not used right now */
 
     /* runtime code execution support */
     struct nap_bytecode_chunk** btyecode_chunks; /* holds all the compiled bytechunks */

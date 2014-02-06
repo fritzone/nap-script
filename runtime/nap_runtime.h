@@ -58,12 +58,22 @@ NAP_LIB_API nap_runtime* nap_runtime_create(const char *name);
  * @param[in] commands  The commands the runtime will execute. These are
  *                      standard nap-script commands, you would place in a
  *                      .nap source file.
+ * @param[in] name      An identifier which will be assigned to the bytecode
+ *                      chunk in case of success. Optional, pass in NULL if
+ *                      you don't need this functionality.
  *
  * @return a nap_bytecode_chunk object containing the compiled bytecode or 
  * NULL (0) in case of an error.
  **/
-NAP_LIB_API nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime *runtime,
-                                                    const char *commands);
+NAP_LIB_API struct nap_bytecode_chunk* nap_runtime_compile(
+                                                    struct nap_runtime *runtime,
+                                                    const char *commands,
+                                                    const char* name);
+
+NAP_LIB_API struct nap_bytecode_chunk* nap_runtime_load(
+                                                 struct nap_runtime *runtime,
+                                                 const char *file);
+
 
 /******************************************************************************/
 
@@ -181,6 +191,11 @@ NAP_LIB_API nap_string_t nap_runtime_get_string(struct nap_runtime* runtime,
                                                 int* found);
 
 /******************************************************************************/
+
+NAP_LIB_API int nap_execute_method(struct nap_runtime* runtime,
+                                   struct nap_bytecode_chunk*,
+                                   void* return_value,
+                                   const char* method_name, ...);
 
 /**
  * @brief Shuts down the runtime and frees the allocated memory.

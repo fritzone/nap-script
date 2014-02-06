@@ -20,8 +20,8 @@ static const int BASIC_TYPE_BOOL            = 10;
 static const int BASIC_TYPE_INT             = 1; // same as in the opcodes
 static const int BASIC_TYPE_REAL            = 2; // same as in the opcodes
 static const int BASIC_TYPE_STRING          = 3; // same as in the opcodes
-static const int BASIC_TYPE_CHAR            = 4; // same as in the opcodes
-static const int BASIC_TYPE_BYTE            = 8; // same as in the opcodes
+static const int BASIC_TYPE_CHAR            = 6; // same as in the opcodes
+static const int BASIC_TYPE_BYTE            = 4; // same as in the opcodes
 
 static const int BASIC_TYPE_VARIABLE        = 60;
 static const int BASIC_TYPE_EXTERN_VARIABLE = 61;
