@@ -44,6 +44,13 @@ int interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
 
         /* read the index */
         index = htovm_32(*(uint32_t*)(cloc));
+
+        /* is this the start of the function table? */
+        if(index == htovm_32(778466670))
+        {
+            return NAP_SUCCESS;
+        }
+
         cloc += 4;
 
         /* the type */

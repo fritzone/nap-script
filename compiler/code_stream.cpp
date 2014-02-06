@@ -4,6 +4,7 @@
 #include "opcodes.h"
 #include "compiler.h"
 #include "charconverter.h"
+#include "parameter.h"
 
 extern "C"
 {
@@ -195,7 +196,7 @@ void code_finalizer::finalize()
     {
         method* m = ccs_methods[mc];
 
-        for(unsigned int jc=0; jc<jumptable_count; jc++)
+        for(uint32_t jc=0; jc<jumptable_count; jc++)
         {
             label_entry* je = mcompiler->jumptable()[jc];
             const char *n = je->name.c_str();
@@ -207,6 +208,21 @@ void code_finalizer::finalize()
             if(m->method_name == n)
             {
                 fprintf(stderr, "---- %s --> %s --> %s\n", m->method_name.c_str(), n, je->name.c_str());
+
+                //write the jumptable index to the file
+                f.write_stuff_to_file_32(jc);
+
+                // write the function name
+                uint16_t name_len = strlen(n);
+                f.write_stuff_to_file_16(name_len);
+                f.write_string_to_file(n, name_len, 0);
+                // write the parameter count to file
+                uint8_t pars = m->parameters.size();
+                f.write_stuff_to_file_8(pars);
+                for(uint8_t pi = 0; pi < pars; pi++)
+                {
+                    f.write_stuff_to_file_8((uint8_t)(m->parameters[pi]->type));
+                }
             }
         }
 

@@ -266,6 +266,10 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     vm->jumptable_location = htovm_32(*(uint32_t*)(cloc));
     cloc += 4;
 
+    /* funtable location */
+    vm->funtable_location = htovm_32(*(uint32_t*)(cloc));
+    cloc += 4;
+
     /* registers used */
     vm->mrc = *cloc;
     cloc ++;
@@ -295,10 +299,10 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     /* cc is the instruction pointer:
      * skip the:
      * - startbyte            - 8 bits
-     * - 3 addresses          - 3 * 32 (64) bits
+     * - 3 addresses          - 4 * 32 (64) bits
      * - the register count   - 8 bits
      * - the flags            - 8 bits */
-    vm->cc = 1 + 3 * vm->file_bitsize + 1
+    vm->cc = 1 + 4 * vm->file_bitsize + 1
             + 1; /* to point to the first instruction */
 
     /* initially the last boolean flag is in an unknow state */

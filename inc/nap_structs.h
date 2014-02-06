@@ -9,11 +9,14 @@
  * mechanism which will compile and execute code runtime */
 struct nap_bytecode_chunk
 {
+    /* the length of the bytecode */
+    size_t length;
+
     /* the bytecode */
     uint8_t* code;
 
-    /* the length of the bytecode */
-    size_t length;
+    /* the name of the bytecode chunk */
+    char* name;
 };
 
 #endif

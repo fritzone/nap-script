@@ -17,7 +17,7 @@
     nap_bytecode_chunk* bytecode = nap_runtime_compile(runtime,
 
 #define SCRIPT_END \
-    );                                                             \
+    ,0);                                                             \
     ASSERT_FALSE(bytecode == NULL);                                \
     int t = nap_runtime_execute(runtime, bytecode);                \
     ASSERT_EQ(1, t);

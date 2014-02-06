@@ -171,7 +171,7 @@ TEST(Definitions, InvalidVariableName)
     "              \
     int a_ plus_b; \
     "
-    );
+    ,0);
 
     ASSERT_TRUE(bytecode == NULL);
     SCRIPT_SHUTDOWN
@@ -263,7 +263,7 @@ TEST(InvalidSyntax, PostPreIncMess)
      int z = 3;                    \
      int g = z++ ++;               \
     "
-    );
+    ,0);
 
     ASSERT_TRUE(bytecode == NULL);
     SCRIPT_SHUTDOWN

@@ -9,14 +9,16 @@
 
 typedef enum TStackEntryType
 {
-    STACK_ENTRY_INT = 1,                /* same as OPCODE_INT */
-    STACK_ENTRY_REAL = 2,               /* same as OPCODE_FLOAT */
-    STACK_ENTRY_STRING = 3,             /* same as OPCODE_STRING */
-    STACK_ENTRY_CHAR = 4,               /* same as OPCODE_CHAR */
-    STACK_ENTRY_MARKER = 5,
-    STACK_ENTRY_IMMEDIATE_INT = 6,
-    STACK_ENTRY_MARKER_NAME = 7,
-    STACK_ENTRY_BYTE = 8                /* same as OPCODE_BYTE */
+    STACK_ENTRY_INT           = 1,                /* same as OPCODE_INT */
+    STACK_ENTRY_REAL          = 2,                /* same as OPCODE_FLOAT */
+    STACK_ENTRY_STRING        = 3,                /* same as OPCODE_STRING */
+    STACK_ENTRY_BYTE          = 4,                /* same as OPCODE_BYTE */
+    STACK_ENTRY_IDX           = 5,
+    STACK_ENTRY_CHAR          = 6,                /* same as OPCODE_CHAR */
+    STACK_ENTRY_IMMEDIATE_INT = 7,
+    STACK_ENTRY_MARKER_NAME   = 8,
+    STACK_ENTRY_MARKER        = 9,
+
 } StackEntryType;
 
 /**
