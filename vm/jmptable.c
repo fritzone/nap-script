@@ -14,11 +14,12 @@ int interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
     size_t indx_ctr = 0;
 
     count = htovm_32(*(uint32_t*)(cloc));
-    cloc += 4;
     if(count == 0)
     {
         return NAP_SUCCESS;
     }
+
+    cloc += 4;
     vm->jumptable_size = count;
     vm->jumptable = (struct jumptable_entry**) calloc(vm->jumptable_size + 1,
                                               sizeof(struct jumptable_entry*));

@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+struct nap_vm;
+
 /* an entry in the function table loaded from the file */
 struct funtable_entry
 {
