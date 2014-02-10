@@ -7,6 +7,7 @@
 #include "nbci.h"
 #include "metatbl.h"
 #include "strtable.h"
+#include "funtable.h"
 #include "jmptable.h"
 #include "opcodes.h"
 #include "stack.h"
@@ -291,6 +292,12 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     }
 
     if(NAP_SUCCESS != interpret_jumptable(vm, vm->content + vm->jumptable_location, bytecode_len))
+    {
+        nap_vm_cleanup(vm);
+        return NULL;
+    }
+
+    if(NAP_SUCCESS != interpret_funtable(vm, vm->content + vm->jumptable_location, bytecode_len))
     {
         nap_vm_cleanup(vm);
         return NULL;

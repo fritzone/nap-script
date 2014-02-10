@@ -66,7 +66,7 @@ int interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
 
             if(loc_name_length != 0)
             {
-                name = (char*)calloc(sizeof(char), loc_name_length + 1);
+                name = (char*)calloc(loc_name_length + 1, sizeof(char));
                 if(name == NULL)
                 {
                     return NAP_FAILURE;
