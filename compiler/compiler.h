@@ -228,6 +228,8 @@ public:
     call_context *getGlobalCc() const;
     void setGlobal_cc(call_context *value);
 
+    struct nap_vm *mvm_chain;
+
 private:
 
     call_context* cur_cc;
@@ -266,8 +268,6 @@ private:
     mutable std::string mfinalError;
     mutable int mErrorCode;
     bool mEmbedded;
-
-    const struct nap_vm *mvm_chain;
 
     // the last command for the bytecode generation. Used for the debugging feature
     std::string mlast_cmd_for_bytecode;

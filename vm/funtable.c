@@ -64,6 +64,10 @@ int interpret_funtable(struct nap_vm *vm, uint8_t *start_location, uint32_t len)
         cloc += fun_name_len;
         entry->function_name = fun_name;
 
+        /* read the return type */
+        entry->return_type= *cloc;
+        cloc ++;
+
         /* read the number of parameters*/
         entry->parameter_count = *cloc;
         cloc ++;

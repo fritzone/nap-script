@@ -11,6 +11,10 @@
 #include "code_stream.h"
 #include "expression_tree.h"
 #include "compiler.h"
+
+#include "nbci.h"
+#include "funtable.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <string>
@@ -84,6 +88,7 @@ variable* call_context::add_variable(const char* name, const char* type,
  */
 method* call_context::get_method(const string &pname)
 {
+    // first check, see if this is a method from the current VM
     std::vector<method*>::const_iterator q = methods.begin();
     while(q != methods.end())
     {
@@ -96,6 +101,22 @@ method* call_context::get_method(const string &pname)
     if(father)
     {
         return father->get_method(pname);
+    }
+
+    // then try to get it from the vm chain of the compiler ... if any
+    struct nap_vm* chain = mcompiler->mvm_chain;
+    while(chain)
+    {
+        struct funtable_entry* fe = nap_vm_get_method(chain, pname.c_str());
+        if(fe)
+        {
+            call_context* chain_cc = new call_context(mcompiler, 2, "-", 0, 0);
+            method* m = new method(mcompiler, pname.c_str(), "int", chain_cc);
+
+            // and populate the method's parameters from the funtable :)
+            return m;
+        }
+        chain = chain->parent;
     }
     return NULL;
 }
@@ -176,7 +197,7 @@ void call_context::compile_standalone(nap_compiler* _compiler, int level, int re
 }
 
 // warning! the numbers are not the same as from nap_Ext_gen
-static const char* get_type_code(int el)
+static const char* get_type_code(uint8_t el)
 {
     switch(el)
     {

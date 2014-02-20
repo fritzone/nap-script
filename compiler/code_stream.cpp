@@ -216,6 +216,8 @@ void code_finalizer::finalize()
                 uint16_t name_len = strlen(n);
                 f.write_stuff_to_file_16(name_len);
                 f.write_string_to_file(n, name_len, 0);
+                // the return type
+                f.write_stuff_to_file_8((uint8_t)m->ret_type);
                 // write the parameter count to file
                 uint8_t pars = m->parameters.size();
                 f.write_stuff_to_file_8(pars);

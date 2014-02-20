@@ -27,7 +27,7 @@ struct method
      * @param return_type
      * @param cc
      */
-    method(nap_compiler *_compiler, char* name, char* preturn_type, call_context* cc);
+    method(nap_compiler *_compiler, const char *name, char* preturn_type, call_context* cc);
 
     /**
      * Adds a new parameter to the method
@@ -106,7 +106,7 @@ struct method
     /* the definition location 0 - normal, 1 - extern*/
     int def_loc;
 
-    int ret_type;
+    uint8_t ret_type;
 
 private:
     /* the list of struct variables that are defined in the method. This list is used in two situations:

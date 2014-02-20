@@ -346,8 +346,8 @@ TEST(Functions, DefaultReturnValue)
     SCRIPT_SHUTDOWN
 }
 
-/* Define a function returning and int. Do not put return statements in the body.
- * Use the function, see that it returns the default return value (0).
+/* Define an external function, also implement it in the test file.
+ * Use the function, see that it does not fail.
  */
 TEST(Functions, ExternalCalling)
 {
@@ -362,6 +362,28 @@ TEST(Functions, ExternalCalling)
 
     UNUSED(found_indicator);
 }
+
+
+/* Define a function. Call it via the runtime API
+ * Use the function, see that it returns the default return value (0).
+ */
+TEST(Functions, ExternalCallingOfInternalMethod)
+{
+    nap_runtime* runtime = nap_runtime_create(0);
+    ASSERT_FALSE(runtime == NULL);
+
+    nap_bytecode_chunk* bytecode = nap_runtime_compile(runtime,
+    "int method(int a , int b)      \
+    {                               \
+        return a + b;               \
+    }" ,0);
+
+    ASSERT_FALSE(bytecode == NULL);
+    nap_runtime_inject(runtime, bytecode);
+    nap_execute_method(runtime, 0, "method", 1, 2);
+
+    nap_runtime_shutdown(&runtime);
+    ASSERT_TRUE(runtime == NULL);}
 
 NAP_EXPORTS
 void external_callee(nap_int_t a, nap_int_t b)

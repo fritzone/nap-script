@@ -216,7 +216,7 @@ public:
 
 private:
 
-    /* the type of the call context: 0 - global, 1 - named*/
+    /* the type of the call context: 0 - global, 1 - named, 2 - chained*/
     int type;
 
     /* the name of the call context */

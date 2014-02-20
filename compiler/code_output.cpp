@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <string>
 
-const char* get_reg_type(int req_type)
+const char* get_reg_type(uint8_t req_type)
 {
     switch(req_type)
     {

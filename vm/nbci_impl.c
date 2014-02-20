@@ -297,7 +297,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
         return NULL;
     }
 
-    if(NAP_SUCCESS != interpret_funtable(vm, vm->content + vm->jumptable_location, bytecode_len))
+    if(NAP_SUCCESS != interpret_funtable(vm, vm->content + vm->funtable_location, bytecode_len))
     {
         nap_vm_cleanup(vm);
         return NULL;
@@ -633,6 +633,30 @@ struct variable_entry *nap_vmi_get_variable(const struct nap_vm *vm, const char 
     }
     return NULL;
 }
+
+struct funtable_entry* nap_vm_get_method(struct nap_vm* vm, const char* method_name)
+{
+    /* fist step: fetch the method with the given name */
+    size_t i = 0;
+    int meth_idx = -1;
+    for(i =0; i<vm->funtable_entries; i++)
+    {
+        if(!strcmp(method_name, vm->funtable[i]->function_name))
+        {
+            meth_idx = i;
+            break; /* TODO: later: method overloading, differrent parameters count*/
+        }
+    }
+
+    if(meth_idx == -1)
+    {
+        /* no method found */
+        return NULL;
+    }
+
+    return vm->funtable[i];
+}
+
 
 void nap_set_error(struct nap_vm *vm, int error_code)
 {

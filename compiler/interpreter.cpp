@@ -1035,7 +1035,7 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
     node->info = func_call->method_name;
     node->op_type = FUNCTION_CALL + type_of_call; // TODO: This is tricky and ugly
     node->reference = new_envelope(cfe, FUNCTION_CALL + type_of_call, cc->compiler());
-    cfe->the_method = cc->get_method(func_call->method_name);
+    cfe->the_method = func_call; //TODO: why was this: cc->get_method(func_call->method_name);
     return cfe;
 }
 
