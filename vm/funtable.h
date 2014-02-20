@@ -14,6 +14,9 @@ struct funtable_entry
     /* the name of the function. ASCII encoding */
     char* function_name;
 
+    /* the return type */
+    uint8_t return_type;
+
     /* the number of parameters this function takes */
     uint8_t parameter_count;
 

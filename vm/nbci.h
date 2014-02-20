@@ -85,7 +85,8 @@ enum environments
 {
     EMBEDDED   = 0,
     STANDALONE = 1,
-    INTERRUPT  = 2
+    INTERRUPT  = 2,
+    FUN_CALL   = 3
 };
 
 /* the type of a label as present in the jump table
@@ -314,6 +315,8 @@ char* nap_vm_get_string(struct nap_vm* vm, char* name, int* found);
  * @return this function always return NAP_FAILURE
  */
 int nap_vm_set_error_description(struct nap_vm *vm, const char* error_desc);
+
+struct funtable_entry* nap_vm_get_method(struct nap_vm* vm, const char* method_name);
 
 #ifdef __cplusplus
 }

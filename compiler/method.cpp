@@ -23,7 +23,7 @@
 /**
  * Creates a new method
  */
-method::method(nap_compiler* _compiler, char* name, char* preturn_type, call_context* cc) :
+method::method(nap_compiler* _compiler, const char* name, char* preturn_type, call_context* cc) :
     library_name("-"), return_type(""), ret_type(0), mcompiler(_compiler)
 {
     call_context* method_main_cc = NULL;

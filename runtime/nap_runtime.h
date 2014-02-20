@@ -70,10 +70,31 @@ NAP_LIB_API struct nap_bytecode_chunk* nap_runtime_compile(
                                                     const char *commands,
                                                     const char* name);
 
-NAP_LIB_API struct nap_bytecode_chunk* nap_runtime_load(
+/**
+ * @brief nap_runtime_load loads a script file from the disk
+ * @param runtime
+ * @param file
+ * @return
+ */
+NAP_LIB_API struct nap_bytecode_chunk* nap_runtime_load_script(
                                                  struct nap_runtime *runtime,
                                                  const char *file);
 
+
+/******************************************************************************/
+/**
+ * @brief The nap_runtime_inject injects the given bytecode chunk in the
+ *        virtual machine of the runtime.
+ *
+ * @param[in] runtime The runtime whose vm will get the bytecode
+ * @param[in] bytecode The bytecode that will be executed.
+ *
+ * @return NAP_EXECUTE_SUCCESS (1) in case of succes, or NAP_EXECUTE_FAILURE (0)
+ * in case of failure. In case of failure you can call the method
+ * nap_runtime_last_error() to get the last error
+ **/
+NAP_LIB_API int nap_runtime_inject(struct nap_runtime *runtime,
+                                    struct nap_bytecode_chunk *bytecode);
 
 /******************************************************************************/
 
@@ -192,10 +213,44 @@ NAP_LIB_API nap_string_t nap_runtime_get_string(struct nap_runtime* runtime,
 
 /******************************************************************************/
 
+/**
+ * @brief Executes a method from the given runtime's given chunk.
+ *
+ * The method executes a function which was declared in the given runtime.If the
+ * method was forward declared in the runtime, the dependency will be resolved
+ * if possible (ie: the method was defined at some other point). You also can
+ * execute external (native) methods declared in the script via this mechanism.
+ *
+ * The return value must be the \b address of a:
+ *
+ *   - a \c nap_int_t in case the method returns an \c int
+ *   - a \c nap_string_t in case the method returns a \c string (ie: \c char**)
+ *   - a \c nap_real_t in case of a \c real return type from the method.
+ *   - a \c nap_byte_t in case of a \c byte return type from the method.
+ *
+ * @param[in]  runtime      The runtime in which the method was defined.
+ * @param[out] return_value The address of the return value.
+ * @param[in]  method_name  The method to execute
+ * @param[in]  ...          The arguments to be passed to the method.
+ *
+ * The arguments passed in to the method in the variablae arguments list
+ * must be one of the following:
+ *
+ *   - a \c nap_int_t where the method expects an \c int
+ *   - a \c nap_string_t where the method expects a \c string (ie: \c char*)
+ *   - a \c nap_real_t where the method expects a \c real
+ *   - a \c nap_byte_t where the method expects a \c byte
+ *
+ * @return NAP_EXECUTE_SUCCESS (1) in case of succes, or NAP_EXECUTE_FAILURE (0)
+ * in case of failure. In case of failure you can call the method
+ * nap_runtime_last_error() to get the last error
+ */
 NAP_LIB_API int nap_execute_method(struct nap_runtime* runtime,
-                                   struct nap_bytecode_chunk*,
                                    void* return_value,
-                                   const char* method_name, ...);
+                                   const char* method_name,
+                                   ...);
+
+/******************************************************************************/
 
 /**
  * @brief Shuts down the runtime and frees the allocated memory.

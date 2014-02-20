@@ -135,8 +135,12 @@ const int CALL_CONTEXT_TYPE_ELSE        = 5;
 const int CALL_CONTEXT_TYPE_WHILE        = 6;
 const int CALL_CONTEXT_TYPE_FOR            = 7;
 
-const int DEF_INTERN = 0;
-const int DEF_EXTERN                = 1;
+const int DEF_INTERN                           = 0; // a normal method
+const int DEF_EXTERN                           = 1; // an "extern" method defined in native code/library
+// a method defined in the VM chain. Used when compiling a code used by the runtime
+// when calling a method from a VM via nap_runtime_call_method
+const int DEF_VMCHAIN                          = 2;
+
 const int MAX_NR_AS_STR_LEN            = 32;
 
 const int NO_INDEX                = -1;
