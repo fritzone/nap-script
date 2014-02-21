@@ -257,7 +257,7 @@ NAP_LIB_API int nap_execute_method(struct nap_runtime* runtime,
  * @brief Executes the given nap commands (nap-script) in the runtime.
  *
  * @param[in] runtime The runtime which will run the code.
- * @param[in] code The code that will be executed.
+ * @param[in] script The code that will be executed.
  *
  * @return NAP_EXECUTE_SUCCESS (1) in case of succes, or NAP_EXECUTE_FAILURE (0)
  * in case of failure. In case of failure you can call the method
