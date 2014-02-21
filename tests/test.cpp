@@ -370,17 +370,21 @@ TEST(Functions, ExternalCalling)
 TEST(Functions, ExternalCallingOfInternalMethod)
 {
     nap_runtime* runtime = nap_runtime_create(0);
+    int found_indicator = 0;
+
     ASSERT_FALSE(runtime == NULL);
 
     nap_bytecode_chunk* bytecode = nap_runtime_compile(runtime,
-    "int method(int a , int b)      \
-    {                               \
-        return a + b;               \
-    }" ,0);
+    "int c = 0;                     \
+     int method(int a , int b)      \
+     {                              \
+         c = a + b;                 \
+     }" ,0);
 
     ASSERT_FALSE(bytecode == NULL);
     nap_runtime_inject(runtime, bytecode);
     nap_execute_method(runtime, 0, "method", 1, 2);
+    ASSERT_EQ(3, VAR_INT(c));
 
     nap_runtime_shutdown(&runtime);
     ASSERT_TRUE(runtime == NULL);}

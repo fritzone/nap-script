@@ -164,6 +164,7 @@ void code_finalizer::finalize()
         f.write_stuff_to_file_32(used_len / 4, f.ftell() - used_len - 4);
     }
     jumptable_location = f.ftell();
+
     // write out the jumptable
     static const char JUMPTABLE[] = ".jmp";
     f.write_string_to_file(JUMPTABLE, 4, 0);
@@ -175,8 +176,16 @@ void code_finalizer::finalize()
         uint16_t l = je->name.length();
 
         f.write_stuff_to_file_32(je->bytecode_location); // the actual location in code
+
+        // see if this is a call from the parent
+        if(je->name[0] == '-') // indicates the parent
+        {
+            je->type = 3;
+            je->name = je->name.substr(je->name.find('.') + 1);
+            l = je->name.length();
+        }
         f.write_stuff_to_file_8(je->type);      // 0, 1, 2 .. .see there
-        if(je->type == 1 || je->type == 2)
+        if(je->type == 1 || je->type == 2 || je->type == 3)
         {
             f.write_stuff_to_file_16(l);            // The length of the name
             f.write_string_to_file(je->name.c_str(), l, 0);
@@ -207,7 +216,7 @@ void code_finalizer::finalize()
 
             if(m->method_name == n)
             {
-                fprintf(stderr, "---- %s --> %s --> %s\n", m->method_name.c_str(), n, je->name.c_str());
+                //fprintf(stderr, "---- %s --> %s --> %s\n", m->method_name.c_str(), n, je->name.c_str());
 
                 //write the jumptable index to the file
                 f.write_stuff_to_file_32(jc);
@@ -250,6 +259,9 @@ void code_finalizer::finalize()
 
 void code_stream::output_bytecode(const char* s)
 {
+
+    fprintf(stderr, "%s ", s);
+
     std::string expr = s;
     if(expr == " " || expr == "(" || expr == ")" || expr == ",")
     {

@@ -111,8 +111,12 @@ method* call_context::get_method(const string &pname)
         if(fe)
         {
             call_context* chain_cc = new call_context(mcompiler, 2, "-", 0, 0);
-            method* m = new method(mcompiler, pname.c_str(), "int", chain_cc);
-
+            method* m = new method(mcompiler, pname.c_str(), (char*)get_reg_type(fe->return_type), chain_cc);
+            for(int i=0; i<fe->parameter_count; i++)
+            {
+                bool success;
+                m->add_parameter(std::string("par_") +  get_reg_type(fe->parameter_types[i]), get_reg_type(fe->parameter_types[i]), 1, 0, chain_cc, success);
+            }
             // and populate the method's parameters from the funtable :)
             return m;
         }
