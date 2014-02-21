@@ -4,6 +4,7 @@ extern "C"
 {
 #include "nbci.h"
 #include "nap_structs.h"
+#include "funtable.h"
 }
 
 #include "garbage_bin.h"
@@ -99,16 +100,7 @@ NAP_LIB_API int nap_runtime_execute(struct nap_runtime* runtime,
 NAP_LIB_API int nap_runtime_inject(struct nap_runtime* runtime,
                         struct nap_bytecode_chunk* bytecode)
 {
-    if(runtime != NULL)
-    {
-        runtime->vm = nap_vm_inject(bytecode->code, bytecode->length, EMBEDDED);
-
-        return NAP_EXECUTE_SUCCESS;
-    }
-    else
-    {
-        return NAP_EXECUTE_FAILURE;
-    }
+    return nap_runtime_execute(runtime, bytecode);
 }
 
 NAP_LIB_API nap_byte_t nap_runtime_get_byte(struct nap_runtime* runtime,
@@ -211,19 +203,46 @@ int nap_execute_method(nap_runtime *runtime, void *return_value, const char *met
 {
     if(runtime != NULL)
     {
-        int temp = 1;
+        funtable_entry* fe = nap_vm_get_method(runtime->vm, method_name);
+        if(!fe)
+        {
+            return NAP_EXECUTE_FAILURE;
+        }
+
         va_list argptr;
         char* t = "method(1,2)"; // <- will contain the call method command
+        std::string method_cmd = method_name;
+        method_cmd += "(";
         va_start(argptr, method_name);
+        for(int i=0; i<fe->parameter_count; i++)
+        {
+
+        }
         // build up a string, which is just a method call
         va_end(argptr);
+
+        return nap_execute_code(runtime, t);
+    }
+    else
+    {
+        return NAP_EXECUTE_FAILURE;
+    }
+
+}
+
+
+int nap_execute_code(nap_runtime *runtime, const char *script)
+{
+    if(runtime != NULL)
+    {
+        int temp = 1;
 
         // create a compiler
         std::auto_ptr<nap_compiler> compiler = nap_compiler::create_compiler();
         compiler->set_vmchain(runtime->vm);
         bool success = true;
 
-        bool source_set = compiler->set_source(t, success);
+        bool source_set = compiler->set_source(script, success);
 
         if(!source_set)
         {
@@ -287,7 +306,16 @@ int nap_execute_method(nap_runtime *runtime, void *return_value, const char *met
             return 0;
         }
 
-        // fetch the return value depending on the return value of the function
+        /* just fetch the return values of child_vm into runtime->vm, someone
+         * might use them */
+        runtime->vm->rvb = child_vm->rvb;
+        runtime->vm->rvi = child_vm->rvi;
+        runtime->vm->rvl = child_vm->rvl;
+        if(runtime->vm->rvl)
+        {
+            runtime->vm->rvs = (char*)calloc(runtime->vm->rvl + 1, sizeof(char));
+            memcpy(runtime->vm->rvs, child_vm->rvs, runtime->vm->rvl);
+        }
 
         /* performs the cleanup */
         nap_vm_cleanup(child_vm);
@@ -298,5 +326,5 @@ int nap_execute_method(nap_runtime *runtime, void *return_value, const char *met
     {
         return NAP_EXECUTE_FAILURE;
     }
-
 }
+

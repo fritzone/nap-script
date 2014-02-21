@@ -86,8 +86,11 @@ NAP_LIB_API struct nap_bytecode_chunk* nap_runtime_load_script(
  * @brief The nap_runtime_inject injects the given bytecode chunk in the
  *        virtual machine of the runtime.
  *
+ * This is just simply calling the @see nap_runtime_execute method in order to
+ * perform global variable initialization.
+ *
  * @param[in] runtime The runtime whose vm will get the bytecode
- * @param[in] bytecode The bytecode that will be executed.
+ * @param[in] bytecode The bytecode that will be injected.
  *
  * @return NAP_EXECUTE_SUCCESS (1) in case of succes, or NAP_EXECUTE_FAILURE (0)
  * in case of failure. In case of failure you can call the method
@@ -249,6 +252,19 @@ NAP_LIB_API int nap_execute_method(struct nap_runtime* runtime,
                                    void* return_value,
                                    const char* method_name,
                                    ...);
+
+/**
+ * @brief Executes the given nap commands (nap-script) in the runtime.
+ *
+ * @param[in] runtime The runtime which will run the code.
+ * @param[in] code The code that will be executed.
+ *
+ * @return NAP_EXECUTE_SUCCESS (1) in case of succes, or NAP_EXECUTE_FAILURE (0)
+ * in case of failure. In case of failure you can call the method
+ * nap_runtime_last_error() to get the last error
+ */
+NAP_LIB_API int nap_execute_code(struct nap_runtime* runtime,
+                                 const char* script);
 
 /******************************************************************************/
 

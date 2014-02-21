@@ -95,7 +95,8 @@ enum label_type
 {
     JUMP_DESTINATION = 0,
     FUNCTION         = 1,
-    CLASS_METHOD     = 2
+    CLASS_METHOD     = 2,
+    PARENT_FUNCTION  = 3
 };
 
 struct nap_vm;
@@ -154,7 +155,7 @@ struct nap_vm
     /* variables for the stack */
     struct stack_entry** stack;             /* in this stack */
     uint64_t stack_size;                    /* initial stack size */
-    int64_t stack_pointer;                  /* the stack pointer */
+    int64_t stack_pointer;                  /* the stack pointer, starts from 0, grows */
 
     /* variables for the jumptable */
     struct jumptable_entry** jumptable;     /* the jumptable itself */

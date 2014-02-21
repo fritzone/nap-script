@@ -6,6 +6,14 @@
 
 struct nap_vm;
 
+enum JmptableEntryType
+{
+    JMPTABLE_ENTRY_TYPE_SIMPLE      = 0,
+    JMPTABLE_ENTRY_TYPE_FUNCTION    = 1,
+    JMPTABLE_ENTRY_TYPE_CLASSMETHOD = 2,
+    JMPTABLE_ENTRY_TYPE_FROM_PARENT = 3
+};
+
 /******************************************************************************/
 /*                             Jumptable section                              */
 /******************************************************************************/
@@ -21,8 +29,9 @@ struct jumptable_entry
     /* the type of this label:
      * 0 - simple jump label
      * 1 - a function
-     * 2 - a method of a class */
-    uint8_t type;
+     * 2 - a method of a class
+     * 3 - a method from the VM chain (the parent VM) */
+    enum JmptableEntryType type;
 
     /* the name of the label if it is a function or method */
     char* label_name;

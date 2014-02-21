@@ -228,7 +228,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
 
     /* create the stack */
     vm->stack_size = STACK_INIT;
-    vm->stack_pointer = 0;
+    vm->stack_pointer = -1; /* this is first ++'d then used */
     vm->stack = (struct stack_entry**)calloc(sizeof(struct stack_entry*), STACK_INIT);
     if(vm->stack == NULL)
     {
