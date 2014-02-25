@@ -706,7 +706,7 @@ char *convert_string_from_bytecode_file(const char *src, size_t len, size_t dest
 
     /* get the locale info */
     setlocale(LC_ALL, "");
-    loc_orig = setlocale(LC_ALL, NULL);
+    loc_orig = setlocale(LC_CTYPE, NULL);
     len_loc = strlen(loc_orig);
     loc_cp = (char*)calloc(len_loc + 1, sizeof(char));
     strcpy(loc_cp, loc_orig);
