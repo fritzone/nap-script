@@ -10,9 +10,10 @@
 
 char* to_nap_format(const char* in, size_t in_len, size_t& used_len)
 {
-    std::locale s("");
-    char* locn = (char*)calloc(s.name().length() + 1, sizeof(char));
-    strcpy(locn, s.name().c_str());
+    setlocale(LC_ALL, "");
+    char* t1 = setlocale(LC_CTYPE, "");
+    char* locn = (char*)calloc(strlen(t1), sizeof(char));
+    strcpy(locn, t1);
     const char* enc = strchr(locn, '.') + 1;
 
 #if _WINDOWS
