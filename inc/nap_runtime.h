@@ -1,6 +1,12 @@
 #ifndef _NAP_RUNTIME_H_
 #define _NAP_RUNTIME_H_
 
+/**
+ * @file nap_runtime.h
+ *
+ * The Nap Runtime header
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,16 +25,39 @@ extern "C" {
 /* The real runtime hidden in an opaque pointer  */
 struct nap_runtime;
 
-/**
+/*!
  * @brief Create a new nap runtime environment.
  *
  * Creates a new runtime environment which can execute nap-script code. 
- * Optionally you can specify a name for the new environment.
+ * Optionally you can specify a name for the new environment, if nothing is
+ * specified, "naprt_"X will be used where X is an increasing counter starting
+ * from 1.
+ *
+ * The following important parts are in a \c nap_runtime object:
+ *
+ *  1. a nap compiler - this is used to compile nap-script into nap-bytecode.
+ *                      The compiler is created automatically by the call to the
+ *                      \c nap_runtime_create method
+ *
+ *  2. a nap virtual machine - this is created by the @see nap_runtime_execute
+ *                      when a bytecode chunk is to be executed. The VM created
+ *                      is alive till another call of the \c nap_runtime_execute
+ *
+ * The nap runtime keeps track of several bytecode chunks and each of them
+ * can be executed separately from the other using @see nap_runtime_execute,
+ * however they are sealed from each other (they cannot call methods or
+ * reference variables from another bytecode chunk).
+ *
+ * All the bytecode chunks are being executed by the same VM, on execution the
+ * data of the previous bytecode chunk is purged, and the new one is injected
+ * into the internal structures of the nap virtual machine.
+ *
+ * The \c nap_runtime_create does not
  *
  * @param[in] name The name of the environment. If NULL means not used.
  *
  * @return a new runtime environment or NULL (0) in case of error
- **/
+ */
 NAP_LIB_API nap_runtime* nap_runtime_create(const char *name);
 
 /******************************************************************************/
@@ -39,17 +68,15 @@ NAP_LIB_API nap_runtime* nap_runtime_create(const char *name);
  * Compiles the nap-script commands and creates a new code chunk object for 
  * the compiled bytecode. The runtime takes care of the compiled bytecode 
  * and you do NOT need to free it. The function will return NULL in case of
- * failure. In this case use the nap_runtime_last_error() to get the text
+ * failure. In this case use the @see nap_runtime_last_error to get the text
  * of the error that occured.
  *
- * After compilation you can access the variables and the methods from the 
- * bytecode chunk using the respective APIs.
- *
- * The nap runtime keeps track of several bytecode chunks and each of them  
- * can be executed separately from the other, however they are sealed from 
- * each other. In case you want to merge two chunks use the merge() method.
- * This will create another chunk and will make it possible for you to run  
- * the two chunks as if they were one.
+ * After compilation you can not access yet the variables and call the methods
+ * from bytecode chunk using the respective APIs, first you need to execute the
+ * resulted bytecode chunk using @see nap_runtime_execute. By executing the
+ * bytecode the VM sets up its internal structures, creates the variables
+ * on the VM's stack, and executes the instructions found in the global call
+ * context of the script.
  *
  * The format of the returned bytcode chunk is the same as of a compiled 
  * nap bytecode file.
@@ -62,7 +89,7 @@ NAP_LIB_API nap_runtime* nap_runtime_create(const char *name);
  *                      chunk in case of success. Optional, pass in NULL if
  *                      you don't need this functionality.
  *
- * @return a nap_bytecode_chunk object containing the compiled bytecode or 
+ * @return a \c nap_bytecode_chunk object containing the compiled bytecode or
  * NULL (0) in case of an error.
  **/
 NAP_LIB_API struct nap_bytecode_chunk* nap_runtime_compile(
@@ -71,39 +98,30 @@ NAP_LIB_API struct nap_bytecode_chunk* nap_runtime_compile(
                                                     const char* name);
 
 /**
- * @brief nap_runtime_load loads a script file from the disk
- * @param runtime
- * @param file
- * @return
- */
+ * @brief Loads a nap-script file from the disk, and compiles it.
+ *
+ * Loads a nap-script file from the location given in the \c file parameter
+ * compiles it
+ *
+ * @param[in] runtime  The runtime on which the file will be compiled
+ * @param[in] file     The name of the script file
+ *
+ * @return a \c nap_bytecode_chunk object containing the compiled bytecode or
+ * NULL (0) in case of an error.
+ **/
 NAP_LIB_API struct nap_bytecode_chunk* nap_runtime_load_script(
                                                  struct nap_runtime *runtime,
                                                  const char *file);
-
-
-/******************************************************************************/
-/**
- * @brief The nap_runtime_inject injects the given bytecode chunk in the
- *        virtual machine of the runtime.
- *
- * This is just simply calling the @see nap_runtime_execute method in order to
- * perform global variable initialization.
- *
- * @param[in] runtime The runtime whose vm will get the bytecode
- * @param[in] bytecode The bytecode that will be injected.
- *
- * @return NAP_EXECUTE_SUCCESS (1) in case of succes, or NAP_EXECUTE_FAILURE (0)
- * in case of failure. In case of failure you can call the method
- * nap_runtime_last_error() to get the last error
- **/
-NAP_LIB_API int nap_runtime_inject(struct nap_runtime *runtime,
-                                    struct nap_bytecode_chunk *bytecode);
 
 /******************************************************************************/
 
 /**
  * @brief The nap_runtime_execute executes the given bytecode chunk in the
  *        virtual machine of the runtime.
+ *
+ * You can obtain \c nap_bytecode_chunk objects by compiling nap-script using
+ * @see nap_runtime_compile or by loading already compiled bytecode files from
+ * the disk using @see nap_runtime_load_script
  *
  * @param[in] runtime The runtime which will execute the bytecode
  * @param[in] bytecode The bytecode that will be executed.
@@ -135,7 +153,7 @@ NAP_LIB_API int nap_runtime_execute(struct nap_runtime *runtime,
  *         also the found parameter should be populated to the value of
  *         NAP_VARIABLE_NOT_FOUND in order to confirm that there is indeed no
  *         such variable, otherwise the value indeed is NAP_NO_VALUE.
- */
+ **/
 NAP_LIB_API nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
                               const char *variable_name,
                               int* found);
@@ -160,7 +178,7 @@ NAP_LIB_API nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
  *         also the found parameter should be populated to the value of
  *         NAP_VARIABLE_NOT_FOUND in order to confirm that there is indeed no
  *         such variable, otherwise the value indeed is NAP_NO_VALUE.
- */
+ **/
 NAP_LIB_API nap_byte_t nap_runtime_get_byte(struct nap_runtime* runtime,
                                             const char *variable_name,
                                             int* found);
@@ -185,7 +203,7 @@ NAP_LIB_API nap_byte_t nap_runtime_get_byte(struct nap_runtime* runtime,
  *         also the found parameter should be populated to the value of
  *         NAP_VARIABLE_NOT_FOUND in order to confirm that there is indeed no
  *         such variable, otherwise the value indeed is NAP_NO_VALUE.
- */
+ **/
 NAP_LIB_API nap_real_t nap_runtime_get_real(struct nap_runtime* runtime,
                                             const char* variable_name);
 
@@ -209,7 +227,7 @@ NAP_LIB_API nap_real_t nap_runtime_get_real(struct nap_runtime* runtime,
  *         also the found parameter should be populated to the value of
  *         NAP_VARIABLE_NOT_FOUND in order to confirm that there is indeed no
  *         such variable, otherwise the value indeed is NULL.
- */
+ **/
 NAP_LIB_API nap_string_t nap_runtime_get_string(struct nap_runtime* runtime,
                                                 const char* variable_name,
                                                 int* found);
@@ -247,7 +265,7 @@ NAP_LIB_API nap_string_t nap_runtime_get_string(struct nap_runtime* runtime,
  * @return NAP_EXECUTE_SUCCESS (1) in case of succes, or NAP_EXECUTE_FAILURE (0)
  * in case of failure. In case of failure you can call the method
  * nap_runtime_last_error() to get the last error
- */
+ **/
 NAP_LIB_API int nap_execute_method(struct nap_runtime* runtime,
                                    void* return_value,
                                    const char* method_name,
@@ -262,7 +280,7 @@ NAP_LIB_API int nap_execute_method(struct nap_runtime* runtime,
  * @return NAP_EXECUTE_SUCCESS (1) in case of succes, or NAP_EXECUTE_FAILURE (0)
  * in case of failure. In case of failure you can call the method
  * nap_runtime_last_error() to get the last error
- */
+ **/
 NAP_LIB_API int nap_execute_code(struct nap_runtime* runtime,
                                  const char* script);
 
@@ -277,7 +295,7 @@ NAP_LIB_API int nap_execute_code(struct nap_runtime* runtime,
  * all the allocated memory.
  *
  * @param runtime - the address of a nap_runtime object
- */
+ **/
 NAP_LIB_API void nap_runtime_shutdown(struct nap_runtime** runtime);
 
 #ifdef __cplusplus

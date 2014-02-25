@@ -9,16 +9,19 @@ extern "C"
 
 #include "garbage_bin.h"
 #include "compiler.h"
+#include "opcodes.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include <string>
+#include <sstream>
 
 /* The nap runtime environment. There can be multiple runtimes */
 struct nap_runtime
 {
     nap_runtime() : compiler(nap_compiler::create_compiler()), vm(0), chunks(),
-        last_error("[NAP_OK] no error")
+        last_error("[NAP_OK] no error"), name("")
     {}
 
     // the compiler of the runtime
@@ -32,11 +35,25 @@ struct nap_runtime
 
     // the last error
     std::string last_error;
+
+    std::string name;
 };
 
-NAP_LIB_API nap_runtime* nap_runtime_create(const char* /*name*/)
+NAP_LIB_API nap_runtime* nap_runtime_create(const char* name)
 {
+    static size_t runtime_counter = 0;
+
     struct nap_runtime* result = new nap_runtime;
+    if(name)
+    {
+        result->name = name;
+    }
+    else
+    {
+        std::stringstream ss;
+        ss << ++runtime_counter;
+        result->name = std::string("naprt_") + ss.str();
+    }
 
     return result;
 }
@@ -95,12 +112,6 @@ NAP_LIB_API int nap_runtime_execute(struct nap_runtime* runtime,
     {
         return NAP_EXECUTE_FAILURE;
     }
-}
-
-NAP_LIB_API int nap_runtime_inject(struct nap_runtime* runtime,
-                        struct nap_bytecode_chunk* bytecode)
-{
-    return nap_runtime_execute(runtime, bytecode);
 }
 
 NAP_LIB_API nap_byte_t nap_runtime_get_byte(struct nap_runtime* runtime,
@@ -210,17 +221,52 @@ int nap_execute_method(nap_runtime *runtime, void *return_value, const char *met
         }
 
         va_list argptr;
-        char* t = "method(1,2)"; // <- will contain the call method command
         std::string method_cmd = method_name;
         method_cmd += "(";
         va_start(argptr, method_name);
         for(int i=0; i<fe->parameter_count; i++)
         {
+            if(fe->parameter_types[i] == OPCODE_INT)
+            {
+                nap_int_t v = va_arg(argptr, nap_int_t);
+                std::stringstream ss;
+                ss << v;
+                method_cmd += ss.str();
+            }
 
+            if(fe->parameter_types[i] == OPCODE_BYTE)
+            {
+                nap_byte_t v = (nap_byte_t)va_arg(argptr, int);
+                std::stringstream ss;
+                ss << v;
+                method_cmd += ss.str();
+            }
+
+            if(fe->parameter_types[i] == OPCODE_FLOAT)
+            {
+                nap_real_t v = va_arg(argptr, nap_real_t);
+                std::stringstream ss;
+                ss << v;
+                method_cmd += ss.str();
+            }
+
+            if(fe->parameter_types[i] == OPCODE_STRING)
+            {
+                nap_string_t v = va_arg(argptr, nap_string_t);
+                std::stringstream ss;
+                ss << v;
+                method_cmd += ss.str();
+            }
+
+            if(i < fe->parameter_count - 1)
+            {
+                method_cmd += ",";
+            }
         }
         // build up a string, which is just a method call
         va_end(argptr);
-
+        method_cmd += ")";
+        const char* t = method_cmd.c_str();
         return nap_execute_code(runtime, t);
     }
     else
