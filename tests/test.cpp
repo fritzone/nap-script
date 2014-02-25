@@ -382,7 +382,7 @@ TEST(Functions, ExternalCallingOfInternalMethod)
      }" ,0);
 
     ASSERT_FALSE(bytecode == NULL);
-    nap_runtime_inject(runtime, bytecode);
+    nap_runtime_execute(runtime, bytecode);
     nap_execute_method(runtime, 0, "method", 1, 2);
     ASSERT_EQ(3, VAR_INT(c));
 
