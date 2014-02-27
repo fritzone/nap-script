@@ -1,0 +1,18 @@
+int test_1 = 8;
+int test_2 = 9;
+
+int f(int a, int b)
+{
+ if(a == 8)
+ {
+   test_1 = 5;
+ }
+ if(b == 9)
+ {
+   a = 6;
+   test_2 = 7;
+ }
+}
+
+f(test_1, test_2);
+

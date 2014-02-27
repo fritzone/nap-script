@@ -1,0 +1,26 @@
+int z;
+
+int func(int a, int b)
+{
+    if(a == 7777777)
+    {
+        int rr = 9;
+        return 5;
+    }
+
+}
+
+int func2()
+{
+}
+
+z = 3;
+
+if(z == 3)
+{
+  int y = 2;
+  z = 4;
+}
+
+int g = func(z, 66);
+int ll = func2();

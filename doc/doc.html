@@ -1,0 +1,4037 @@
+<html>
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=Generator content="Microsoft Word 14 (filtered)">
+<title>Nap virtual machine op-codes descript....docx</title>
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+    {font-family:Wingdings;
+    panose-1:5 0 0 0 0 0 0 0 0 0;}
+@font-face
+    {font-family:Wingdings;
+    panose-1:5 0 0 0 0 0 0 0 0 0;}
+@font-face
+    {font-family:Cambria;
+    panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+    {font-family:Calibri;
+    panose-1:2 15 5 2 2 2 4 3 2 4;}
+@font-face
+    {font-family:Verdana;
+    panose-1:2 11 6 4 3 5 4 4 2 4;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+    {margin-top:0in;
+    margin-right:0in;
+    margin-bottom:10.0pt;
+    margin-left:0in;
+    line-height:115%;
+    font-size:11.0pt;
+    font-family:"Calibri","sans-serif";}
+h1
+    {mso-style-link:"Heading 1 Char";
+    margin-top:24.0pt;
+    margin-right:0in;
+    margin-bottom:0in;
+    margin-left:0in;
+    margin-bottom:.0001pt;
+    line-height:115%;
+    page-break-after:avoid;
+    font-size:14.0pt;
+    font-family:"Cambria","serif";
+    color:#365F91;
+    font-weight:bold;}
+h2
+    {mso-style-link:"Heading 2 Char";
+    margin-top:6.0pt;
+    margin-right:0in;
+    margin-bottom:6.0pt;
+    margin-left:0in;
+    line-height:115%;
+    page-break-after:avoid;
+    font-size:13.0pt;
+    font-family:"Cambria","serif";
+    color:#4F81BD;
+    font-weight:bold;}
+h3
+    {mso-style-link:"Heading 3 Char";
+    margin-top:10.0pt;
+    margin-right:0in;
+    margin-bottom:6.0pt;
+    margin-left:0in;
+    line-height:115%;
+    page-break-after:avoid;
+    font-size:12.0pt;
+    font-family:"Cambria","serif";
+    color:#4F81BD;
+    font-weight:bold;
+    text-decoration:underline;}
+h4
+    {mso-style-link:"Heading 4 Char";
+    margin-top:10.0pt;
+    margin-right:0in;
+    margin-bottom:6.0pt;
+    margin-left:0in;
+    line-height:115%;
+    page-break-after:avoid;
+    font-size:10.0pt;
+    font-family:"Cambria","serif";
+    color:#4F81BD;
+    font-weight:bold;
+    font-style:italic;}
+h5
+    {mso-style-link:"Heading 5 Char";
+    margin-top:10.0pt;
+    margin-right:0in;
+    margin-bottom:0in;
+    margin-left:0in;
+    margin-bottom:.0001pt;
+    line-height:115%;
+    page-break-after:avoid;
+    font-size:11.0pt;
+    font-family:"Cambria","serif";
+    color:#243F60;
+    font-weight:normal;}
+h6
+    {mso-style-link:"Heading 6 Char";
+    margin-top:10.0pt;
+    margin-right:0in;
+    margin-bottom:0in;
+    margin-left:0in;
+    margin-bottom:.0001pt;
+    line-height:115%;
+    page-break-after:avoid;
+    font-size:11.0pt;
+    font-family:"Cambria","serif";
+    color:#243F60;
+    font-weight:normal;
+    font-style:italic;}
+p.MsoHeading7, li.MsoHeading7, div.MsoHeading7
+    {mso-style-link:"Heading 7 Char";
+    margin-top:10.0pt;
+    margin-right:0in;
+    margin-bottom:0in;
+    margin-left:0in;
+    margin-bottom:.0001pt;
+    line-height:115%;
+    page-break-after:avoid;
+    font-size:11.0pt;
+    font-family:"Cambria","serif";
+    color:#404040;
+    font-style:italic;}
+p.MsoHeading8, li.MsoHeading8, div.MsoHeading8
+    {mso-style-link:"Heading 8 Char";
+    margin-top:10.0pt;
+    margin-right:0in;
+    margin-bottom:0in;
+    margin-left:0in;
+    margin-bottom:.0001pt;
+    line-height:115%;
+    page-break-after:avoid;
+    font-size:10.0pt;
+    font-family:"Cambria","serif";
+    color:#4F81BD;}
+p.MsoHeading9, li.MsoHeading9, div.MsoHeading9
+    {mso-style-link:"Heading 9 Char";
+    margin-top:10.0pt;
+    margin-right:0in;
+    margin-bottom:0in;
+    margin-left:0in;
+    margin-bottom:.0001pt;
+    line-height:115%;
+    page-break-after:avoid;
+    font-size:10.0pt;
+    font-family:"Cambria","serif";
+    color:#404040;
+    font-style:italic;}
+p.MsoCaption, li.MsoCaption, div.MsoCaption
+    {margin-top:0in;
+    margin-right:0in;
+    margin-bottom:10.0pt;
+    margin-left:0in;
+    font-size:9.0pt;
+    font-family:"Calibri","sans-serif";
+    color:#4F81BD;
+    font-weight:bold;}
+p.MsoTitle, li.MsoTitle, div.MsoTitle
+    {mso-style-link:"Title Char";
+    margin-top:0in;
+    margin-right:0in;
+    margin-bottom:15.0pt;
+    margin-left:0in;
+    border:none;
+    padding:0in;
+    font-size:26.0pt;
+    font-family:"Cambria","serif";
+    color:#17365D;
+    letter-spacing:.25pt;}
+p.MsoTitleCxSpFirst, li.MsoTitleCxSpFirst, div.MsoTitleCxSpFirst
+    {mso-style-link:"Title Char";
+    margin:0in;
+    margin-bottom:.0001pt;
+    border:none;
+    padding:0in;
+    font-size:26.0pt;
+    font-family:"Cambria","serif";
+    color:#17365D;
+    letter-spacing:.25pt;}
+p.MsoTitleCxSpMiddle, li.MsoTitleCxSpMiddle, div.MsoTitleCxSpMiddle
+    {mso-style-link:"Title Char";
+    margin:0in;
+    margin-bottom:.0001pt;
+    border:none;
+    padding:0in;
+    font-size:26.0pt;
+    font-family:"Cambria","serif";
+    color:#17365D;
+    letter-spacing:.25pt;}
+p.MsoTitleCxSpLast, li.MsoTitleCxSpLast, div.MsoTitleCxSpLast
+    {mso-style-link:"Title Char";
+    margin-top:0in;
+    margin-right:0in;
+    margin-bottom:15.0pt;
+    margin-left:0in;
+    border:none;
+    padding:0in;
+    font-size:26.0pt;
+    font-family:"Cambria","serif";
+    color:#17365D;
+    letter-spacing:.25pt;}
+p.MsoSubtitle, li.MsoSubtitle, div.MsoSubtitle
+    {mso-style-link:"Subtitle Char";
+    margin-top:0in;
+    margin-right:0in;
+    margin-bottom:10.0pt;
+    margin-left:0in;
+    line-height:115%;
+    font-size:12.0pt;
+    font-family:"Cambria","serif";
+    color:#4F81BD;
+    letter-spacing:.75pt;
+    font-style:italic;}
+p
+    {margin-right:0in;
+    margin-left:0in;
+    font-size:12.0pt;
+    font-family:"Times New Roman","serif";}
+p.MsoNoSpacing, li.MsoNoSpacing, div.MsoNoSpacing
+    {margin:0in;
+    margin-bottom:.0001pt;
+    font-size:11.0pt;
+    font-family:"Calibri","sans-serif";}
+p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph
+    {margin-top:0in;
+    margin-right:0in;
+    margin-bottom:10.0pt;
+    margin-left:.5in;
+    line-height:115%;
+    font-size:11.0pt;
+    font-family:"Calibri","sans-serif";}
+p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst
+    {margin-top:0in;
+    margin-right:0in;
+    margin-bottom:0in;
+    margin-left:.5in;
+    margin-bottom:.0001pt;
+    line-height:115%;
+    font-size:11.0pt;
+    font-family:"Calibri","sans-serif";}
+p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle
+    {margin-top:0in;
+    margin-right:0in;
+    margin-bottom:0in;
+    margin-left:.5in;
+    margin-bottom:.0001pt;
+    line-height:115%;
+    font-size:11.0pt;
+    font-family:"Calibri","sans-serif";}
+p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast
+    {margin-top:0in;
+    margin-right:0in;
+    margin-bottom:10.0pt;
+    margin-left:.5in;
+    line-height:115%;
+    font-size:11.0pt;
+    font-family:"Calibri","sans-serif";}
+p.MsoQuote, li.MsoQuote, div.MsoQuote
+    {mso-style-link:"Quote Char";
+    margin-top:0in;
+    margin-right:0in;
+    margin-bottom:10.0pt;
+    margin-left:0in;
+    line-height:115%;
+    font-size:11.0pt;
+    font-family:"Calibri","sans-serif";
+    color:black;
+    font-style:italic;}
+p.MsoIntenseQuote, li.MsoIntenseQuote, div.MsoIntenseQuote
+    {mso-style-link:"Intense Quote Char";
+    margin-top:10.0pt;
+    margin-right:.65in;
+    margin-bottom:14.0pt;
+    margin-left:.65in;
+    line-height:115%;
+    border:none;
+    padding:0in;
+    font-size:11.0pt;
+    font-family:"Calibri","sans-serif";
+    color:#4F81BD;
+    font-weight:bold;
+    font-style:italic;}
+span.MsoSubtleEmphasis
+    {color:gray;
+    font-style:italic;}
+span.MsoIntenseEmphasis
+    {color:#4F81BD;
+    font-weight:bold;
+    font-style:italic;}
+span.MsoSubtleReference
+    {font-variant:small-caps;
+    color:#C0504D;
+    text-decoration:underline;}
+span.MsoIntenseReference
+    {font-variant:small-caps;
+    color:#C0504D;
+    letter-spacing:.25pt;
+    font-weight:bold;
+    text-decoration:underline;}
+span.MsoBookTitle
+    {font-variant:small-caps;
+    letter-spacing:.25pt;
+    font-weight:bold;}
+p.MsoTocHeading, li.MsoTocHeading, div.MsoTocHeading
+    {margin-top:24.0pt;
+    margin-right:0in;
+    margin-bottom:0in;
+    margin-left:0in;
+    margin-bottom:.0001pt;
+    line-height:115%;
+    page-break-after:avoid;
+    font-size:14.0pt;
+    font-family:"Cambria","serif";
+    color:#365F91;
+    font-weight:bold;}
+span.Heading1Char
+    {mso-style-name:"Heading 1 Char";
+    mso-style-link:"Heading 1";
+    font-family:"Cambria","serif";
+    color:#365F91;
+    font-weight:bold;}
+span.Heading2Char
+    {mso-style-name:"Heading 2 Char";
+    mso-style-link:"Heading 2";
+    font-family:"Cambria","serif";
+    color:#4F81BD;
+    font-weight:bold;}
+span.Heading3Char
+    {mso-style-name:"Heading 3 Char";
+    mso-style-link:"Heading 3";
+    font-family:"Cambria","serif";
+    color:#4F81BD;
+    font-weight:bold;
+    text-decoration:underline;}
+span.Heading4Char
+    {mso-style-name:"Heading 4 Char";
+    mso-style-link:"Heading 4";
+    font-family:"Cambria","serif";
+    color:#4F81BD;
+    font-weight:bold;
+    font-style:italic;}
+span.Heading5Char
+    {mso-style-name:"Heading 5 Char";
+    mso-style-link:"Heading 5";
+    font-family:"Cambria","serif";
+    color:#243F60;}
+span.Heading6Char
+    {mso-style-name:"Heading 6 Char";
+    mso-style-link:"Heading 6";
+    font-family:"Cambria","serif";
+    color:#243F60;
+    font-style:italic;}
+span.Heading7Char
+    {mso-style-name:"Heading 7 Char";
+    mso-style-link:"Heading 7";
+    font-family:"Cambria","serif";
+    color:#404040;
+    font-style:italic;}
+span.Heading8Char
+    {mso-style-name:"Heading 8 Char";
+    mso-style-link:"Heading 8";
+    font-family:"Cambria","serif";
+    color:#4F81BD;}
+span.Heading9Char
+    {mso-style-name:"Heading 9 Char";
+    mso-style-link:"Heading 9";
+    font-family:"Cambria","serif";
+    color:#404040;
+    font-style:italic;}
+span.TitleChar
+    {mso-style-name:"Title Char";
+    mso-style-link:Title;
+    font-family:"Cambria","serif";
+    color:#17365D;
+    letter-spacing:.25pt;}
+span.SubtitleChar
+    {mso-style-name:"Subtitle Char";
+    mso-style-link:Subtitle;
+    font-family:"Cambria","serif";
+    color:#4F81BD;
+    letter-spacing:.75pt;
+    font-style:italic;}
+span.QuoteChar
+    {mso-style-name:"Quote Char";
+    mso-style-link:Quote;
+    color:black;
+    font-style:italic;}
+span.IntenseQuoteChar
+    {mso-style-name:"Intense Quote Char";
+    mso-style-link:"Intense Quote";
+    color:#4F81BD;
+    font-weight:bold;
+    font-style:italic;}
+p.Code, li.Code, div.Code
+    {mso-style-name:Code;
+    mso-style-link:"Code Char";
+    margin:0in;
+    margin-bottom:.0001pt;
+    line-height:115%;
+    font-size:11.0pt;
+    font-family:"Courier New";}
+p.Keyword, li.Keyword, div.Keyword
+    {mso-style-name:Keyword;
+    mso-style-link:"Keyword Char";
+    margin:0in;
+    margin-bottom:.0001pt;
+    line-height:115%;
+    font-size:11.0pt;
+    font-family:"Courier New";
+    color:blue;
+    font-weight:bold;}
+span.CodeChar
+    {mso-style-name:"Code Char";
+    mso-style-link:Code;
+    font-family:"Courier New";}
+p.MachineId, li.MachineId, div.MachineId
+    {mso-style-name:MachineId;
+    mso-style-link:"MachineId Char";
+    margin:0in;
+    margin-bottom:.0001pt;
+    line-height:115%;
+    font-size:11.0pt;
+    font-family:"Courier New";
+    color:#E36C0A;
+    font-weight:bold;}
+span.KeywordChar
+    {mso-style-name:"Keyword Char";
+    mso-style-link:Keyword;
+    font-family:"Courier New";
+    color:blue;
+    font-weight:bold;}
+p.AssemblyKeyword, li.AssemblyKeyword, div.AssemblyKeyword
+    {mso-style-name:AssemblyKeyword;
+    mso-style-link:"AssemblyKeyword Char";
+    margin:0in;
+    margin-bottom:.0001pt;
+    line-height:115%;
+    font-size:11.0pt;
+    font-family:"Courier New";
+    font-weight:bold;}
+span.MachineIdChar
+    {mso-style-name:"MachineId Char";
+    mso-style-link:MachineId;
+    font-family:"Courier New";
+    color:#E36C0A;
+    font-weight:bold;}
+span.AssemblyKeywordChar
+    {mso-style-name:"AssemblyKeyword Char";
+    mso-style-link:AssemblyKeyword;
+    font-family:"Courier New";
+    font-weight:bold;}
+.MsoChpDefault
+    {font-family:"Calibri","sans-serif";}
+.MsoPapDefault
+    {margin-bottom:10.0pt;
+    line-height:115%;}
+@page WordSection1
+    {size:8.5in 11.0in;
+    margin:1.0in 1.0in 1.0in 1.0in;}
+div.WordSection1
+    {page:WordSection1;}
+ /* List Definitions */
+ ol
+    {margin-bottom:0in;}
+ul
+    {margin-bottom:0in;}
+-->
+</style>
+
+</head>
+
+<body bgcolor=white lang=EN-US>
+
+<div class=WordSection1>
+
+<h1>Nap virtual machine description and behavior</h1>
+
+<p class=MsoNormal>The nap virtual machine is an application virtual machine
+designed and implemented to run the compiled bytecode of the nap scripting
+language. It is a virtual machine based on the specifications of a hypothetical
+computer: the nap machine. From a technical point of view it is a process
+running on a (real) host operating system, interpreting the bytecode commands
+of the virtual machine and performing specific actions.</p>
+
+<p class=MsoNormal>The virtual machine is created when the process starts, and
+it is destroyed when the application it runs ends, or there is an unrecoverable
+error.</p>
+
+<h2>Components</h2>
+
+<p class=MsoNormal>The Nap virtual machine has the following components:</p>
+
+<p class=MsoNormal style='margin-top:0in;margin-right:0in;margin-bottom:11.25pt;
+margin-left:.5in;text-indent:-17.95pt'>&#9679;<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>registers – to move data around</p>
+
+<p class=MsoNormal style='margin-top:0in;margin-right:0in;margin-bottom:11.25pt;
+margin-left:.5in;text-indent:-17.95pt'>&#9679;<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>flags – to handle the result of Boolean operations</p>
+
+<p class=MsoNormal style='margin-top:0in;margin-right:0in;margin-bottom:11.25pt;
+margin-left:.5in;text-indent:-17.95pt'>&#9679;<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>stack – for tracking the variables</p>
+
+<p class=MsoNormal style='margin-top:0in;margin-right:0in;margin-bottom:11.25pt;
+margin-left:.5in;text-indent:-17.95pt'>&#9679;<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>built in functions – for easy approach of complex notions</p>
+
+<p class=MsoNormal style='margin-top:0in;margin-right:0in;margin-bottom:11.25pt;
+margin-left:.5in;text-indent:-17.95pt'>&#9679;<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>opcodes – to be executed</p>
+
+<p class=MsoNormal style='margin-top:0in;margin-right:0in;margin-bottom:11.25pt;
+margin-left:.5in;text-indent:-17.95pt'>&#9679;<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>return value – to be populated at the return from a function</p>
+
+<h2 style='margin-top:0in'>Registers</h2>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>There are 256 registers in the
+virtual machine for the basic types supported by the VM </p>
+
+<p class=MsoNormal style='margin-top:0in;margin-right:0in;margin-bottom:11.25pt;
+margin-left:.5in;text-indent:-17.95pt'><span lang=NO-BOK style='font-size:10.0pt;
+line-height:115%;font-family:"Verdana","sans-serif";color:black'>&#9679;<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span
+class=AssemblyKeywordChar><span lang=NO-BOK>int</span></span><span lang=NO-BOK>:
+reg integer(0) ... reg integer (255)</span></p>
+
+<p class=MsoNormal style='margin-top:0in;margin-right:0in;margin-bottom:11.25pt;
+margin-left:.5in;text-indent:-17.95pt'><span lang=NO-BOK style='font-size:10.0pt;
+line-height:115%;font-family:"Verdana","sans-serif";color:black'>&#9679;<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span
+class=AssemblyKeywordChar><span lang=NO-BOK>byte</span></span><span
+lang=NO-BOK>: reg byte(0) ... reg byte (255)</span></p>
+
+<p class=MsoNormal style='margin-top:0in;margin-right:0in;margin-bottom:11.25pt;
+margin-left:.5in;text-indent:-17.95pt'><span style='font-size:10.0pt;
+line-height:115%;font-family:"Verdana","sans-serif";color:black'>&#9679;<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span
+class=AssemblyKeywordChar>real</span>: reg real(0) ... reg real(255)</p>
+
+<p class=MsoNormal style='margin-top:0in;margin-right:0in;margin-bottom:11.25pt;
+margin-left:.5in;text-indent:-17.95pt'><span lang=NO-BOK style='font-size:10.0pt;
+line-height:115%;font-family:"Verdana","sans-serif";color:black'>&#9679;<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span
+class=AssemblyKeywordChar><span lang=NO-BOK>string</span></span><span
+lang=NO-BOK>: reg string(0) ... reg string(255)</span></p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>There are also another 255
+registers for generic types: reg gen(0) .. reg gen(255). These are used for
+moving object references.</p>
+
+<h2>Underlying architecture</h2>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>The <span
+class=AssemblyKeywordChar>int</span> registers are represented as <span
+class=KeywordChar>int64_t</span> C types. Generally, every number (ie:
+variable) you use in <i>nap</i> maps to <span class=KeywordChar>int64_t</span>.
+</p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>The <span
+class=AssemblyKeywordChar>real</span> registers and values are represented as <span
+class=KeywordChar>double</span>.</p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>The <span
+class=AssemblyKeywordChar>bool</span> values at the internal implementation map
+to <span class=AssemblyKeywordChar>int</span>. </p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>The <span
+class=AssemblyKeywordChar>byte</span> values map to an uint8_t value. They can
+be specified in the script in either as a normal number or as a character in
+single quotes (‘A’ -&gt; 65). The compiler automatically transofrms the
+character into its numeric value.</p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>The <span
+class=AssemblyKeywordChar>string</span> registers on the internal
+implementation map to a Unicode string (encoding is UTF-32 Big Endian) however
+when used with the <i>nap</i> runtime API you will get strings as per your
+default system encoding and character representation (ie: null terminated <span
+class=KeywordChar>char*</span>).</p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>On the implementation side the
+string registers always hold a copy of the actual string that was passed into
+them. Firstly we de-allocate the memory of a string register (free) and then
+allocate the required size (as per UTF-32 BE encoding) and copy the required
+data in the register itself. This is valid for all initializations.</p>
+
+<h2>Index registers</h2>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>Index registers: there are 256
+available index registers (thus allowing arrays with 256 dimensions to be
+used). They are populated by the interpreter and they are NOT automatically
+cleaned by a <span style='font-family:"Courier New"'>@ccidx </span>call, but
+the user must manually insert a <span style='font-family:"Courier New"'>clidx</span>
+instruction to clear the index registers.</p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>Registers are owned by the
+threads operating them, so there is no such thing as context swap on thread
+swapping.</p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>Each bytecode file contains
+the layout of the classes defined in them, this way the executor knows how to
+handle the class methods, specifically the attributes.</p>
+
+<h2><a name=h.i99h3fg3k1us></a>Binary codes for type specifiers</h2>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Table 1:
+bytecode types</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=262
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=176 valign=top style='width:132.0pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>int</span></p>
+  </td>
+  <td width=86 valign=top style='width:64.5pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0x01</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=176 valign=top style='width:132.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>real</span></p>
+  </td>
+  <td width=86 valign=top style='width:64.5pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0x02</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=176 valign=top style='width:132.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>string</span></p>
+  </td>
+  <td width=86 valign=top style='width:64.5pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0x03</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=176 valign=top style='width:132.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>char</span></p>
+  </td>
+  <td width=86 valign=top style='width:64.5pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0x04</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=176 valign=top style='width:132.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>byte</span></p>
+  </td>
+  <td width=86 valign=top style='width:64.5pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0x08</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=176 valign=top style='width:132.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>immediate value</span></p>
+  </td>
+  <td width=86 valign=top style='width:64.5pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0x11</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=176 valign=top style='width:132.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>ref</span></p>
+  </td>
+  <td width=86 valign=top style='width:64.5pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0xEF</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=176 valign=top style='width:132.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>variable</span></p>
+  </td>
+  <td width=86 valign=top style='width:64.5pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0xFE</span></p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Immediate
+value size specifier:</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=624
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>byte</span></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0x8</span></p>
+  </td>
+  <td width=82 valign=top style='width:61.75pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>A byte
+  type, 8 bit </p>
+  </td>
+  <td width=82 valign=top style='width:61.75pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>uint8_t</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>short</span></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0x16</span></p>
+  </td>
+  <td width=82 valign=top style='width:61.75pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>A short
+  type, 16 bit</p>
+  </td>
+  <td width=82 valign=top style='width:61.75pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=Code>uint16_t</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>long</span></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0x32</span></p>
+  </td>
+  <td width=82 valign=top style='width:61.75pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>A long
+  type 32 bits</p>
+  </td>
+  <td width=82 valign=top style='width:61.75pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>uint32_t</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>huge</span></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0x64</span></p>
+  </td>
+  <td width=82 valign=top style='width:61.75pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>A 64 bit
+  value</p>
+  </td>
+  <td width=82 valign=top style='width:61.75pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>uint64_t</span></p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Immediate
+values are always written as unsigned values to the bytecode stream, and they
+are preceded by a size specifier. If the first bit of the size specifier is
+set, the value is to be interpreted as a signed value.</p>
+
+<h2 style='margin-top:0in'>Stack</h2>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>The Nap stack is local to each
+active thread in the system. It contains:</p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-bottom:11.25pt;text-indent:
+-.25in'><span style='font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>the variables that the current operations can access</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-bottom:11.25pt;text-indent:
+-.25in'><span style='font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>call context delimiters (named markers) - on each call-context
+opening a new opening delimiter is pushed on the stack, and on each call
+context closing operation the variables are purged from the stack. For objects the
+destructor if any is called.</p>
+
+<p class=MsoListParagraphCxSpLast style='margin-bottom:11.25pt;text-indent:
+-.25in'><span style='font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>The stack has an internal stack pointer, which always starts from
+zero and grows. This stack pointer is not supposed to be accessed by either the
+application programming interface or any assembly level commands.</p>
+
+<h2 style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'>Strings to number conversion</h2>
+
+<p class=MsoNormal>When converting a string to a number the following
+conventions are used:</p>
+
+<p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span
+style='font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>String starts with <span class=CodeChar>0</span>, it is
+considered octal</p>
+
+<p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span
+style='font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>String starts with <span class=CodeChar>0x</span> it is
+considered hexadecimal</p>
+
+<p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span
+style='font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>String starts with <span class=CodeChar>0b</span> it is
+considered to be binary</p>
+
+<p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span
+style='font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Anything else is considered decimal</p>
+
+<h2 style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'>Flags</h2>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>The results of logical
+operations is stored in a boolean flag, called the LBF (Last Boolean Flag) and
+it is modified automatically by the operations that compare things (eq, lt, gt,
+...) and the first <span class=AssemblyKeywordChar>jlbf</span> (Jump if Last
+Boolean Flag is set) or <span class=AssemblyKeywordChar>clbf</span> (clear
+Boolean flag) clears this flag, so that it can be used safely by the next
+operation.</p>
+
+<h3>lbf </h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The last boolean result flag.
+This flag is set by the first comparison operator (<span
+class=AssemblyKeywordChar>eq</span>, <span class=AssemblyKeywordChar>neq</span>,
+<span class=AssemblyKeywordChar>gt</span>, <span class=AssemblyKeywordChar>lt</span>,
+...) and cleared by the first access via <span class=AssemblyKeywordChar>jlbf</span>
+or by <span class=AssemblyKeywordChar>clbf</span> command.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>This flag has three states:</p>
+
+<p class=Keyword style='margin-left:.5in;text-indent:-.25in'><span
+style='font-family:"Calibri","sans-serif";font-weight:normal'>-<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>true</p>
+
+<p class=Keyword style='margin-left:.5in;text-indent:-.25in'><span
+style='font-family:"Calibri","sans-serif";color:windowtext;font-weight:normal'>-<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>false</p>
+
+<p class=Keyword style='margin-left:.5in;text-indent:-.25in'><span
+style='font-family:"Calibri","sans-serif";font-weight:normal'>-<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>undecided</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>&nbsp;</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The default state of this flag
+is <span class=KeywordChar>undecided</span>. The <span
+class=AssemblyKeywordChar>jlbf</span> or by <span class=AssemblyKeywordChar>clbf</span>
+commands set the flag state to <span class=KeywordChar>undecided</span>.</p>
+
+<h1 style='margin-top:0in'>Return values</h1>
+
+<p class=MsoNormal>The special registers <span class=AssemblyKeywordChar>rv</span><span
+class=CodeChar> &lt;type&gt;</span> denote a return value. They are
+automatically populated by the <span class=AssemblyKeywordChar>return</span>
+opcode and their value must be fetched from the <span
+class=AssemblyKeywordChar>rv</span> registerrs in order for it to be usable by
+the code.</p>
+
+<h1 style='margin-top:0in'>Built in functions</h1>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The following built in functions
+are interpreted by the virtual machine</p>
+
+<h3 style='margin-top:0in'>@#ccidx</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Returns the value of the multi
+dimensioned variable var_name at the position <span class=CodeChar>[reg_idx(0),
+reg_idx(1), ... , reg_idx(number_of_indexes - 1)]</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>In case one of the indexes is
+out of range for the variable it throws an exception and halts the executin of
+the application.</p>
+
+<h5>Syntax</h5>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><b><span style='font-family:
+"Courier New"'>@#ccidx</span></b><span style='font-family:"Courier New"'>(&lt;var_name&gt;,
+&lt;number_of_indexes&gt;)</span></p>
+
+<h5>Parameters</h5>
+
+<p class=MsoNormal><span class=CodeChar>var_name</span> - the name of the
+variable. In the nap source file it was declared as <span class=CodeChar>&lt;type&gt;
+var_name[x,y,..,z] </span>where x, y, …, z are the dimensions of the indexes.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span class=CodeChar>number_of_indexes</span>
+- the number of indexes that were used in the call. For a two dimensional
+matrix this is two.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>In case you use this function
+on a dynamic dimension variable and the index is greater than the current size
+the following will happen:</p>
+
+<h3 style='margin-top:0in'>@#grow</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Adds a new dimension to the
+variable and updates the internal data structures of the bytecode interpreter
+application.  Does not guarantee to preserve the existing data.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>In the output bytecode the <span
+class=AssemblyKeywordChar>@#grow</span> always must be preceded with a <span
+class=AssemblyKeywordChar>call</span> mnemonic, but the compiler will replace
+the <span class=AssemblyKeywordChar>call</span> opcode with an internal opcode.
+Do NOT use the internal opcode (if you have reverse engineered it from the
+bytecode file). It’s internal and undocumented.</p>
+
+<h5>Syntax </h5>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><b><span style='font-family:
+"Courier New"'>call @#grow</span></b><span style='font-family:"Courier New"'>(&lt;var_name&gt;,
+&lt;dimensions&gt;)</span></p>
+
+<h5>Parameters</h5>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span class=CodeChar>var_name</span>
+- the name of the variable</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span class=CodeChar>dimension</span>
+- the new dimension. In case the dimension is -1 the variable will be treated
+as dynamic dimension variable and in case of access appropriate operations will
+be taken (the variable will be resized to fit the largest index that was
+requested. If this happens on a read the returned value will be zero, on a
+write it will put the required value at the (newly) allocated space). Multi
+dimension variables may not have dynamic dimensions, if they have the
+application might behave</p>
+
+<h3 style='margin-top:0in'><a name=h.ccknwd3avsn3></a>@#crea</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Creates an instance of the
+given class into the given variable name. It will NOT call the default
+constructor, all the properties of the class will be initialized to a default
+value of 0 for numbers and &quot;&quot; (empty) for strings. If the class
+contains other class type variables, they will be initialized with another <span
+class=CodeChar>@#crea</span> call.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The layout of the class is
+stored in the <span class=CodeChar><b>.class</b></span> section of the bytecode
+file.</p>
+
+<h5><span lang=NO-BOK>Syntax </span></h5>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><b><span lang=NO-BOK
+style='font-family:"Courier New"'>@#crea</span></b><span lang=NO-BOK
+style='font-family:"Courier New"'>(&lt;class_name&gt;, &lt;var_name&gt;)</span></p>
+
+<h5>Parameters</h5>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span class=CodeChar>class_name</span>
+– the name of the class which is supposed to be created</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span class=CodeChar>var_name</span>
+– the target variable.</p>
+
+<h3 style='margin-top:0in'><a name=h.70z19l1fm4w9></a>@#len</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Returns the length of the
+parameter which can only be a string variable</p>
+
+<h5>Syntax </h5>
+
+<p class=MsoNormal><b><span style='font-family:"Courier New"'>@#len</span></b><span
+style='font-family:"Courier New"'>(&lt;string_variable&gt;</span></p>
+
+<h5>Parameters</h5>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>string_variable – the variable
+whose length is supposed to be calculated</p>
+
+<h1 style='margin-top:0in'>Op-codes</h1>
+
+<p class=MsoNormal>The nap-vm is an opcode based virtual machine similar to
+real life hardware. The following groups of opcodes are in the emulated
+hardware:</p>
+
+<p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span
+style='font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Mathematical operations</p>
+
+<p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span
+style='font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Bitwise operations</p>
+
+<p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span
+style='font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Data manipulation operations</p>
+
+<p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span
+style='font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Comparison operations</p>
+
+<p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span
+style='font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Jumping operations</p>
+
+<p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span
+style='font-family:Symbol'>·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Stack handling operations</p>
+
+<h2 style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'>Mathematical operations</h2>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The following mathematical operations
+do three things:</p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-bottom:12.0pt;text-indent:
+-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>do an operation between the target and source</p>
+
+<p class=MsoListParagraphCxSpLast style='margin-bottom:12.0pt;text-indent:-.25in'>2.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Store
+the result in target</p>
+
+<h3 style='margin-top:0in'>add</h3>
+
+<p class=Code>add target, source</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Adds the source to the target,
+stores the result in target.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span class=CodeChar>target</span>
+- register/variable/indexed</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span class=CodeChar>source</span>
+- register/variable/indexed/number</p>
+
+<h4 style='margin-top:0in'><a name=h.5ldvn4cwe5uc></a>Binary opcode</h4>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=130
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>add</span></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0xAD</span></p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<h3 style='margin-top:0in'>sub</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>sub
+target, source</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Subtracts the source from the
+target, stores the result in target.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target -
+register/variable/indexed</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>source -
+register/variable/indexed/number</p>
+
+<h4 style='margin-top:0in'><a name=h.dh1u9u6fh9q2></a>Binary opcode</h4>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=130
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>sub</span></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0x8D</span></p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<h3 style='margin-top:0in'>mul</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>mul
+target, source</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Multiplies the source with the
+target, stores the result in target.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target -
+register/variable/indexed</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>source -
+register/variable/indexed/number</p>
+
+<h4 style='margin-top:0in'><a name=h.qnnj44awbue4></a>Binary opcode</h4>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=130
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>mul</span></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0xA8</span></p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<h3 style='margin-top:0in'>div</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>div
+target, source</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Divides the source with the
+target, stores the result in target. In case source is zero, an Exception is
+thrown</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target -
+register/variable/indexed</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>source -
+register/variable/indexed/number</p>
+
+<h4 style='margin-top:0in'><a name=h.ssigru2msu4n></a>Binary opcode</h4>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=130
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>div</span></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0xD8</span></p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<h3 style='margin-top:0in'>mod</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>mod<span style='font-family:
+"Courier New"'> target, source</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Performs the modulus operation
+between the source and the target, stores the result in target.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target -
+register/variable/indexed</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>source -
+register/variable/indexed/number</p>
+
+<h3 style='margin-top:0in'>inc</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>inc
+target</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The target is incremented and
+the result is stored in the same location.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target -
+register/variable/indexed</p>
+
+<h4 style='margin-top:0in'><a name=h.ssflg984cxyw></a>Binary opcode</h4>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=130
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>inc</span></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0x1C</span></p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<h3 style='margin-top:0in'>dec</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>dec
+target</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The target is decremented and
+the result is stored in the same location.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target -
+register/variable/indexed</p>
+
+<h3 style='margin-top:0in'>neg</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>neg
+target</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Negates the sign of the target
+and stores the result in the same location.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target -
+register/variable/indexed</p>
+
+<h3 style='margin-top:0in'>pos</h3>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'><span style='font-family:"Courier New"'>pos
+target</span></p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>Makes the sign of the target
+to be positive, and stores the result in the same location.</p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>target -
+register/variable/indexed</p>
+
+<h2 style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'>Bitwise operations</h2>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The following operations do
+three things:</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>1. do the operation between the
+target and source</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>2. Store the result in target</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>3. Store the result of the
+operation in the LBF</p>
+
+<h3 style='margin-top:0in'>and</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>and
+target, source</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Performs the &quot;and&quot;
+operation between the source and the target, stores the result in target.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target -
+register/variable/indexed</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>source -
+register/variable/indexed/number</p>
+
+<h3 style='margin-top:0in'>or</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>or
+target, source</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Performs the &quot;or&quot;
+operation between the source and the target, stores the result in target.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target -
+register/variable/indexed</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>source -
+register/variable/indexed/number</p>
+
+<h3 style='margin-top:0in'>xor</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>xor
+target, source</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Performs the &quot;xor&quot;
+operation between the source and the target, stores the result in target.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target -
+register/variable/indexed</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>source -
+register/variable/indexed/number</p>
+
+<h3 style='margin-top:0in'>shl</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>shl
+target, count</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Shifts left the target count
+times, stores the result in target.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target -
+register/variable/indexed</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>count -
+register/variable/indexed/number</p>
+
+<h3 style='margin-top:0in'>shr</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>shr
+target, count</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Shifts right the target count
+times, stores the result in target.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target -
+register/variable/indexed</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>count -
+register/variable/indexed/number</p>
+
+<h3 style='margin-top:0in'>bcom</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>bcom
+target, source</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Performs the bitwise
+complementary operation between the source and the target, stores the result in
+target.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target -
+register/variable/indexed</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>source -
+register/variable/indexed/number</p>
+
+<h3 style='margin-top:0in'>not</h3>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'><span style='font-family:"Courier New"'>not
+target</span></p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>The &quot;not&quot; operation
+is applied to the target and the result is stored in the same location.</p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>target -
+register/variable/indexed</p>
+
+<h2 style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'>Data opcodes</h2>
+
+<h3 style='margin-top:0in'>mov</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>mov
+target, source</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Moves the source into the
+target </p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target - can be any
+register/variable/indexed</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>source - can be
+register/variable/indexed/number</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>One of the operands always
+needs to be a register, moving variable into another variable is not allowed.</p>
+
+<h4 style='margin-top:0in'><a name=h.iqh2aszmqsr></a>Binary opcode</h4>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=130
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>mov</span></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0xB8</span></p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Format of the bytecode stream.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>0xB8 &lt;TARGET&gt;
+&lt;SOURCE&gt;</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>where TARGET is:</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>EE &lt;REGISTER_SPECIFIERS&gt;</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>FE &lt;VARIABLE_SPECIFIERS&gt;</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Where</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>REGISTER_SPECIFIER is:</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>&lt;01|02|03&gt;&lt;8BIT_INDEX&gt;
+depending on the type (int, real, string)</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>VARIABLE_SPECIFIER is:</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>&lt;32BIT_INDEX&gt;</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>and SOURCE is:</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>11 &lt;IMMEDIATE_DESCRIPTOR&gt;</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>FE &lt;VARIABLE_SPECIFIER&gt;</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>where IMMEDIATE_DESCRIPTOR is:</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>&lt;SIZE_SPECIFIER&gt;&lt;VALUE&gt;</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>where SIZE_SPECIFIER is either
+0x08, 0x16, 0x32, 0x64 and VALUE is a value 8, 16, 32, 64 bits long</p>
+
+<h3 style='margin-top:0in'>clidx</h3>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'><span style='font-family:"Courier New"'>clidx</span></p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>Clears the index registers to
+default 0</p>
+
+<h2 style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'>Comparison opcodes</h2>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The following operations do
+things:</p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-bottom:12.0pt;text-indent:
+-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>do the comparison operation</p>
+
+<p class=MsoListParagraphCxSpLast style='margin-bottom:12.0pt;text-indent:-.25in'>2.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>If
+the <span class=CodeChar>lbf</span> is either <span class=KeywordChar>true</span>
+or <span class=KeywordChar>false</span> they perform an “<span
+class=KeywordChar>and</span>” operation between the result obtained at 1 else Store
+the result of the comparison in the LBF</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>This logic allows code like: 1
+&lt; a &lt; 5 to be interpreted correctly. The nap-script compiler generates
+code for “full” boolean operations (such as 1 &lt; a and a &lt; 5) which does
+not use this shortcut, but this quick comparison will result in code using this
+feature.</p>
+
+<h3 style='margin-top:0in'>gt</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>gt
+target, source</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Performs the greater than
+comparison operation between the source and the target, stores the result in target
+in lbf.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target - register</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>source -
+register/variable/indexed/number</p>
+
+<h3 style='margin-top:0in'>gte</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>gte
+target, source</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Performs the greater than or
+equal comparison operation between the source and the target, stores the result
+in target in lbf.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target - register</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>source - register/variable/indexed/number</p>
+
+<h3 style='margin-top:0in'>lt</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>lt
+target, source</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Performs the less than
+comparison operation between the source and the target, stores the result in
+target in lbf.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target - register</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>source -
+register/variable/indexed/number</p>
+
+<h3 style='margin-top:0in'>lte</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>lte
+target, source</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Performs the less than or equal
+comparison operation between the source and the target, stores the result in
+target in lbf.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target - register</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>source -
+register/variable/indexed/number</p>
+
+<h3 style='margin-top:0in'>eq</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-family:"Courier New"'>eq
+target, source</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Checks if the source and the
+target are equal or not, stores the result in target in lbf.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>target - register</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>source -
+register/variable/indexed/number</p>
+
+<h4 style='margin-top:0in'><a name=h.uhkql29el7bf></a>Binary opcode</h4>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=130
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>eq</span></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0xE0</span></p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<h3 style='margin-top:0in'>neq</h3>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'><span
+class=AssemblyKeywordChar>neq</span><span style='font-family:"Courier New"'>
+target, source</span></p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>Checks if the source and the
+target are equal or not, stores the result in target in lbf.</p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>target - register</p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>source -
+register/variable/indexed/number</p>
+
+<h2 style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'>Jump opcodes</h2>
+
+<h3 style='margin-top:0in'>jlbf</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span
+class=AssemblyKeywordChar>jlbf</span><span style='font-family:"Courier New"'>
+label</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Performs a jump to the given
+label if the last boolean flag is set to <span class=KeywordChar>true</span>,
+and sets the value of the last boolean flag to <span class=KeywordChar>undecided</span>.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>label - is the label where the
+jump will go.</p>
+
+<h3 style='margin-top:0in'>jmp</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span
+class=AssemblyKeywordChar>jmp</span><span style='font-family:"Courier New"'>
+label</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Performs an unconditional jump.
+label - is the label where the jump will go.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>label - is the label where the
+jump will go.</p>
+
+<h3 style='margin-top:0in'>call</h3>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>Calls the procedure specified
+in the first parameter. The procedure can be either internal (i.e.: defined in
+this source file), or external (i.e.: defined in an imported file) or can be a
+bound procedure to the host application (defined via the nap API).</p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>In case of the bytecode
+generated by the standard nap compiler upon a <span class=AssemblyKeywordChar>call</span>
+the code will also contain a <span class=AssemblyKeywordChar>pushall</span> and
+<span class=AssemblyKeywordChar>popall</span> command in order to ensure the
+correct state of the registers.</p>
+
+<h4>Syntax</h4>
+
+<p class=MsoNormal>For calling a simple procedure or a function:</p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'><span
+class=AssemblyKeywordChar>call</span><span class=CodeChar> @procedure</span></p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>For calling members methods of
+objects:</p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'><span
+class=AssemblyKeywordChar>call</span><span class=CodeChar> $object@Class.method</span></p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>This will initialize the
+“this” object of the executor thread to the value after the $ sign</p>
+
+<h4 style='margin-top:0in'><a name=h.e7yzyn2w8mw5></a>Binary opcode</h4>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=130
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=AssemblyKeyword>call</p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=Code>0xCA</p>
+  </td>
+ </tr>
+</table>
+
+<h4>Bytecode representation</h4>
+
+<p class=MsoNormal>The call opcode in the bytecode file is followed by a 32 bit
+index value representing the location in the bytecode stream where the called
+method is to be found.</p>
+
+<h3>leave</h3>
+
+<p class=MsoNormal>Leaves the current procedure and returns to the caller. </p>
+
+<h2>Stack handling commands</h2>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The following commands are
+responsible for handling the stack:</p>
+
+<h3 style='margin-top:0in'>marksn</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Puts a named marker on the
+stack for the virtual machine bytecode interpreter to mark the location of a section
+where new variables are to be declared. This marker is put there automatically
+on every block start by the compiled code which is generated by the compiler
+but you can also insert markers manually. In this case you are responsible for
+manually managing these markers. The virtual machine will know that on a <span
+class=AssemblyKeywordChar>clrsn</span> operation it needs to delete the content
+of the stack till this point. </p>
+
+<h4>Opcode</h4>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=130
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>marksn</span></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0xB7</span></p>
+  </td>
+ </tr>
+</table>
+
+<h4>Syntax</h4>
+
+<p class=MsoNormal><span class=AssemblyKeywordChar>marksn</span><span
+class=CodeChar> &lt;marker_name&gt;</span></p>
+
+<p class=MsoNormal>Places a marker called marker_name on the stack</p>
+
+<h4>Example</h4>
+
+<p class=Code><span class=AssemblyKeywordChar>marksn</span> test_marker</p>
+
+<h3 style='margin-top:0in'>clrsn</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Instructs the virtual machine
+to erase all the objects on the stack till it finds a specific marker (set by <span
+class=AssemblyKeywordChar>marksn</span>). In case there is no matching marker
+found on the stack the VM will exit with a stack underflow error message. Also
+will remove the marker object itself.</p>
+
+<h4>Opcode</h4>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=130
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>clrsn</span></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0xB6</span></p>
+  </td>
+ </tr>
+</table>
+
+<h4>Syntax</h4>
+
+<p class=MsoNormal><span class=AssemblyKeywordChar>clrsn</span><span
+class=CodeChar> &lt;marker_name&gt;</span></p>
+
+<p class=MsoNormal>Removes the objects from the stack till the marker called
+marker_name.</p>
+
+<h4>Example</h4>
+
+<p class=Code><span class=AssemblyKeywordChar>clrsn</span> test_marker</p>
+
+<h3 style='margin-top:0in'>push</h3>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Pushes is a
+multi-purpose command, and it’s used to push a variable, a register or an
+immediate value onto the stack (For variables also has a mode of declaring the variable
+name for further access). A variable can be pushed more than once onto the
+stack, but only the specific declaration push will declare it. </p>
+
+<h4>Opcode</h4>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=130
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>push</span><a name=h.rzeawjpfab8></a></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0xBC</span></p>
+  </td>
+ </tr>
+</table>
+
+<h4>Syntax</h4>
+
+<p class=MsoNormal>The <span class=AssemblyKeywordChar>push</span> mnemonic has
+a non-uniform parameterization depending on what is being achieved. It can be
+used to declare a variable, or simply push a value onto the stack. </p>
+
+<h5>Declaring a variable using push </h5>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>After the <span
+class=AssemblyKeywordChar>push</span> instruction comes the type specifier for
+the value being initialized (<span class=KeywordChar>int</span>, <span
+class=KeywordChar>float</span>, <span class=KeywordChar>string</span>). After
+the type specifier follows the fully qualified name of the variable. </p>
+
+<h6>Example</h6>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+class=AssemblyKeywordChar>push</span><span class=CodeChar> </span><span
+class=KeywordChar>int</span><span class=CodeChar> global.z</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Will declare
+a variable z in the global namespace</p>
+
+<h5>Pushing a register on the stack</h5>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+class=AssemblyKeywordChar>push</span> <span class=MachineIdChar>reg</span> <span
+class=KeywordChar>int</span><span class=CodeChar> (0)</span></p>
+
+<h5><a name=h.5y8086w9c8z6></a>Pushing a variable on the stack</h5>
+
+<p class=Code><span class=AssemblyKeywordChar>push</span> global.z</p>
+
+<h5>Pushing an immediate value on the stack</h5>
+
+<p class=Code><span class=AssemblyKeywordChar>push</span> 23</p>
+
+<h5>Bytecode stream</h5>
+
+<p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>1.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Pushing
+a variable: <span class=AssemblyKeywordChar>0xBC</span><span class=CodeChar>
+&lt;</span><span class=KeywordChar>uint8_t</span><span class=CodeChar>:
+var_type&gt; </span><span class=AssemblyKeywordChar>0xFE</span><span
+class=CodeChar> &lt;</span><span class=KeywordChar>uint32_t</span><span
+class=CodeChar>: index&gt;</span> </p>
+
+<p class=MsoListParagraphCxSpMiddle>where</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-left:1.0in;text-indent:-.25in'>a.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=AssemblyKeywordChar>0xBC</span> – the bytecode for the push</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-left:1.0in;text-indent:-.25in'>b.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=CodeChar>&lt;var_type&gt;</span> is from Table 1</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-left:1.0in;text-indent:-.25in'>c.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=AssemblyKeywordChar>0xFE</span> – indicates that we are pushing a
+variable</p>
+
+<p class=MsoListParagraphCxSpLast style='margin-left:1.0in;text-indent:-.25in'>d.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=CodeChar>&lt;index&gt;</span> is the index of the variable from the meta section</p>
+
+<h3 style='margin-top:0in'>peek</h3>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Peeks a
+variable with a specified type from the stack from a given position (also it
+declares it for further access). Peek does not remove the variable from the
+stack. The typical usage of peek is at a function call, where it declares the
+parameters of the function as local variables without removing them</p>
+
+<h4>Opcode</h4>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=130
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>peek</span></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0xCD</span></p>
+  </td>
+ </tr>
+</table>
+
+<h4>Syntax</h4>
+
+<p class=Code><span class=AssemblyKeywordChar>peek</span> &lt;type&gt;
+&lt;immediate&gt; &lt;variable&gt;          </p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The <span
+class=AssemblyKeywordChar>peek</span> command is followed by a type identifier
+(<span class=KeywordChar>int</span>, <span class=KeywordChar>real</span>, <span
+class=KeywordChar>string</span>) and an immediate value (a number, representing
+the zero based index of the variable from the top of the stack), then the name
+of the variable we want to put the value in.</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The index is
+like: 0 – for the last element pushed on the stack, 1 for the previous, etc…</p>
+
+<h3 style='margin-top:0in'><a name=h.ehe0mzj026e0></a>retv</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Instructs the virtual machine
+to populate the return value of the current function with the parameter of the
+command.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>&nbsp;</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=130
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>retv</span></p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0xFD</span></p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<h3>leave</h3>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Instructs
+the virtual machine to leave the current function and jump to the last entry in
+the call frames vector, decreasing the call frame counter.</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<h3 style='margin-top:0in'><a name=h.efgflrecqpwd></a>pop</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Instructs the virtual machine
+to fetch the last element from the stack and place it in the target of the
+operation. Also removes the element from the stack.</p>
+
+<h4>Opcode</h4>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=130
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=70 valign=top style='width:52.5pt;border:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=AssemblyKeyword>pop</p>
+  </td>
+  <td width=60 valign=top style='width:45.0pt;border:solid black 1.0pt;
+  border-left:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'><span
+  style='font-family:"Courier New"'>0xCB</span></p>
+  </td>
+ </tr>
+</table>
+
+<h4>Syntax</h4>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>After the <span
+class=AssemblyKeywordChar>pop</span> mnemonic comes the type indicator.:</p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-bottom:0in;margin-bottom:.0001pt;
+text-indent:-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Popping a register – the keyword <span class=MachineIdChar>reg</span>
+followed by the type of it (<span class=KeywordChar>int</span>, <span
+class=KeywordChar>real</span>, <span class=KeywordChar>string</span>) and the
+index, which to improve readability can be enclosed in parentheses</p>
+
+<p class=MsoListParagraphCxSpLast style='margin-bottom:0in;margin-bottom:.0001pt;
+text-indent:-.25in'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Popping a variable – the mnemonic is followed by the variable name with
+full context</p>
+
+<h5>Example – popping a register</h5>
+
+<p class=Code><b>pop</b> <span class=MachineIdChar>reg</span><span
+style='color:#E36C0A'> </span><span class=KeywordChar>int</span>  (0)</p>
+
+<h5>Example – popping a variable</h5>
+
+<p class=Code><b>pop</b> global.y</p>
+
+<h4>Example</h4>
+
+<div style='border:solid windowtext 1.0pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'>
+
+<p class=Code style='border:none;padding:0in'><span class=KeywordChar>int</span>
+y = 1;</p>
+
+<p class=Code style='border:none;padding:0in'>&nbsp;</p>
+
+</div>
+
+<p class=Keyword>asm</p>
+
+<div style='border:solid windowtext 1.0pt;padding:1.0pt 4.0pt 1.0pt 4.0pt'>
+
+<p class=Code style='border:none;padding:0in'>{</p>
+
+<p class=Code style='border:none;padding:0in'> <span class=AssemblyKeywordChar>mov</span> 
+<span class=MachineIdChar>reg</span> <span class=KeywordChar>int</span> (0), global.y</p>
+
+<p class=Code style='border:none;padding:0in'> <b>add</b>  <span
+class=MachineIdChar>reg</span> <span class=KeywordChar>int</span> (0), 32</p>
+
+<p class=Code style='border:none;padding:0in'> <b>push</b> <span
+class=MachineIdChar>reg</span> <span class=KeywordChar>int</span> (0)</p>
+
+<p class=Code style='border:none;padding:0in'> <span class=AssemblyKeywordChar>pop</span>
+global.y</p>
+
+<p class=Code style='border:none;padding:0in'>}</p>
+
+</div>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+
+<p class=MsoNormal><a name=h.acqx72rp7f77></a>After running the example above
+the value of the y variable should be 33.</p>
+
+<h3 style='margin-top:0in'>pushref</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Pushes the reference of an
+object onto the stack</p>
+
+<h3>pushall</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Pushes all the registers in the
+internal stack</p>
+
+<h3>popall</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Pops the registers from the
+internal stack</p>
+
+<h2 style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'>Miscellaneous </h2>
+
+<h3>clbf</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Clears the Last Boolean Flag,
+resetting its state to unknown.</p>
+
+<h2 style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'><a name=h.okqidmga0joe></a>Construction of objects</h2>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The constructor of a class
+always has to push a “this” onto the stack in case it was invoked with an
+assignment. If it was not invoked with an assignment, but with a @crea function
+call, it will not invoke a push to the stack of the this.</p>
+
+<h2 style='margin-top:0in'><a name=h.uz3fusmzujg7></a>Format of the bytecode
+file</h2>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=648
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=69 valign=top style='width:51.75pt;border:solid black 1.0pt;
+  background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Start</p>
+  </td>
+  <td width=154 valign=top style='width:115.5pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Field</p>
+  </td>
+  <td width=63 valign=top style='width:47.25pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Size</p>
+  </td>
+  <td width=362 valign=top style='width:271.5pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Explanation</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=69 valign=top style='width:51.75pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>0x00</p>
+  </td>
+  <td width=154 valign=top style='width:115.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>file type</p>
+  </td>
+  <td width=63 valign=top style='width:47.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>8 bits</p>
+  </td>
+  <td width=362 valign=top style='width:271.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>it is
+  either 0x32 or 0x64 depending on the size of the addresses</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=69 valign=top style='width:51.75pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>0x01</p>
+  </td>
+  <td width=154 valign=top style='width:115.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>meta
+  address </p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>MA</p>
+  </td>
+  <td width=63 valign=top style='width:47.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32bits</p>
+  </td>
+  <td width=362 valign=top style='width:271.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The
+  address of the meta section of the file. </p>
+  </td>
+ </tr>
+ <tr>
+  <td width=69 valign=top style='width:51.75pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>0x05</p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=154 valign=top style='width:115.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>stringtable
+  address</p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>SA</p>
+  </td>
+  <td width=63 valign=top style='width:47.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32bits</p>
+  </td>
+  <td width=362 valign=top style='width:271.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The
+  address of the stringtable of the file. All the strings that were extracted
+  in the application will go to this specific location.</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=69 valign=top style='width:51.75pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>0x09</p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=154 valign=top style='width:115.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>jumptable
+  address</p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>JA</p>
+  </td>
+  <td width=63 valign=top style='width:47.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32bits</p>
+  </td>
+  <td width=362 valign=top style='width:271.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The
+  address of the jumptable</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=69 valign=top style='width:51.75pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>0x0d</p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=154 valign=top style='width:115.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Function
+  table address</p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>FA</p>
+  </td>
+  <td width=63 valign=top style='width:47.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32bits</p>
+  </td>
+  <td width=362 valign=top style='width:271.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The
+  address of the function table</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=69 valign=top style='width:51.75pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>0x11 </p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=154 valign=top style='width:115.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Register
+  count</p>
+  </td>
+  <td width=63 valign=top style='width:47.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>8 bits</p>
+  </td>
+  <td width=362 valign=top style='width:271.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>How many
+  registers are needed when running this application</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=69 valign=top style='width:51.75pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>0x12</p>
+  </td>
+  <td width=154 valign=top style='width:115.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Flags</p>
+  </td>
+  <td width=63 valign=top style='width:47.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>8 bits</p>
+  </td>
+  <td width=362 valign=top style='width:271.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>A reserved
+  set of flags that will be used for various purposes, such as to denote if
+  there is debug information in the file, etc…</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=69 valign=top style='width:51.75pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>0x13</p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=154 valign=top style='width:115.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Bytecode
+  of the application</p>
+  </td>
+  <td width=63 valign=top style='width:47.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>...</p>
+  </td>
+  <td width=362 valign=top style='width:271.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>This is 
+  the bytecode of the application.</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=69 valign=top style='width:51.75pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$MA</p>
+  </td>
+  <td width=154 valign=top style='width:115.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The meta
+  section</p>
+  </td>
+  <td width=63 valign=top style='width:47.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>??</p>
+  </td>
+  <td width=362 valign=top style='width:271.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The meta
+  section contains the variables of the application in a full call context
+  qualified name.</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=69 valign=top style='width:51.75pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$SA</p>
+  </td>
+  <td width=154 valign=top style='width:115.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The
+  stringtable of the application</p>
+  </td>
+  <td width=63 valign=top style='width:47.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>??</p>
+  </td>
+  <td width=362 valign=top style='width:271.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Contains
+  the strings of the application. All string entries are in UTF-32BE format,
+  and upon load they will be converted to the system locale using the iconv
+  library. </p>
+  </td>
+ </tr>
+ <tr>
+  <td width=69 valign=top style='width:51.75pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$JA</p>
+  </td>
+  <td width=154 valign=top style='width:115.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The jumptable
+  of the application</p>
+  </td>
+  <td width=63 valign=top style='width:47.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>??</p>
+  </td>
+  <td width=362 valign=top style='width:271.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Contains
+  the jump locations of the application</p>
+  </td>
+ </tr>
+</table>
+
+<h3 style='margin-top:0in'><a name=h.otoobetsqg5w></a>The Meta section</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The meta section is formatted
+like the text “.meta” followed by a list of entries.</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=648
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=52 valign=top style='width:39.0pt;border:solid black 1.0pt;
+  background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=155 valign=top style='width:116.25pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Start</p>
+  </td>
+  <td width=116 valign=top style='width:87.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Field</p>
+  </td>
+  <td width=88 valign=top style='width:66.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Size</p>
+  </td>
+  <td width=237 valign=top style='width:177.75pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Explanation</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=52 valign=top style='width:39.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=155 valign=top style='width:116.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$MA</p>
+  </td>
+  <td width=116 valign=top style='width:87.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>.meta</p>
+  </td>
+  <td width=88 valign=top style='width:66.0pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>5 bytes</p>
+  </td>
+  <td width=237 valign=top style='width:177.75pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The <span
+  style='font-family:"Courier New"'>.meta</span> string indicating the start of
+  the meta section</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=52 valign=top style='width:39.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=155 valign=top style='width:116.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$MA + 0x05
+  bytes</p>
+  </td>
+  <td width=116 valign=top style='width:87.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>count</p>
+  </td>
+  <td width=88 valign=top style='width:66.0pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32 bits</p>
+  </td>
+  <td width=237 valign=top style='width:177.75pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The number
+  of variable in the file</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=52 valign=top style='width:39.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>LIST</p>
+  </td>
+  <td width=155 valign=top style='width:116.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$MA + 0x05
+  bytes + 32 bits</p>
+  </td>
+  <td width=116 valign=top style='width:87.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>var_index</p>
+  </td>
+  <td width=88 valign=top style='width:66.0pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32/64 bits</p>
+  </td>
+  <td width=237 valign=top style='width:177.75pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>the index
+  of the variable on the stack</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=52 valign=top style='width:39.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=155 valign=top style='width:116.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$MA +
+  0x05  bytes  + 32/64bits + 32 bits</p>
+  </td>
+  <td width=116 valign=top style='width:87.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>var_type</p>
+  </td>
+  <td width=88 valign=top style='width:66.0pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>8 bits</p>
+  </td>
+  <td width=237 valign=top style='width:177.75pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The type
+  of  this variable: 0 this is a variable from this VM, 1 this is a variable
+  from a VM up in the VM chain</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=52 valign=top style='width:39.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=155 valign=top style='width:116.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$MA +
+  0x05  bytes  + 32/64bits + 32 bits + 8bits</p>
+  </td>
+  <td width=116 valign=top style='width:87.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>var_name_len</p>
+  </td>
+  <td width=88 valign=top style='width:66.0pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>16 bits</p>
+  </td>
+  <td width=237 valign=top style='width:177.75pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The length
+  of the name of the variable, only if this is a global variable. If it’s not
+  global, it will be zero.      </p>
+  </td>
+ </tr>
+ <tr>
+  <td width=52 valign=top style='width:39.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=155 valign=top style='width:116.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$MA +
+  0x05  bytes  + 32/64bits + 16 bits + 32 bits + 8bits</p>
+  </td>
+  <td width=116 valign=top style='width:87.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>var_name</p>
+  </td>
+  <td width=88 valign=top style='width:66.0pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$var_name_len
+  bytes</p>
+  </td>
+  <td width=237 valign=top style='width:177.75pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The name
+  of the variable, but only f it is a global variable ie: var_name_leng != 0</p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>&nbsp;</p>
+
+<h3 style='margin-top:0in'><a name=h.90j3klwoxntk></a>The string table</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The string table is similar to
+the meta section.</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=625
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Start</p>
+  </td>
+  <td width=102 valign=top style='width:76.5pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Field</p>
+  </td>
+  <td width=115 valign=top style='width:86.25pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Size</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Explanation</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$SA</p>
+  </td>
+  <td width=102 valign=top style='width:76.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>.str</p>
+  </td>
+  <td width=115 valign=top style='width:86.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>4 bytes</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The <span
+  style='font-family:"Courier New"'>.str </span>string indicating the start of
+  the string section</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$SA + 0x04
+  bytes</p>
+  </td>
+  <td width=102 valign=top style='width:76.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>count</p>
+  </td>
+  <td width=115 valign=top style='width:86.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The number
+  of stringtable entries</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>LIST</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$SA + 0x04
+  bytes + 32 bits</p>
+  </td>
+  <td width=102 valign=top style='width:76.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>string_index</p>
+  </td>
+  <td width=115 valign=top style='width:86.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32/64 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>the index
+  of the string as referred to in the bytecode</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$SA + 0x04
+  bytes + 32/64 bits + 32 bits</p>
+  </td>
+  <td width=102 valign=top style='width:76.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>string_length</p>
+  </td>
+  <td width=115 valign=top style='width:86.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>the length
+  of this specific string</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$SA + 0x04
+  bytes + 32/64 bits + 32 bits + 32 bits</p>
+  </td>
+  <td width=102 valign=top style='width:76.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>the_string</p>
+  </td>
+  <td width=115 valign=top style='width:86.25pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$string_length
+  bytes</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The string
+  itself</p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>&nbsp;</p>
+
+<h3 style='margin-top:0in'><a name=h.sv3cie85yrx2></a>The jumptable</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>the jumptable looks like</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=624
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=51 colspan=2 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Start</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Field</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Size</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Explanation</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 colspan=2 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$JA</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>.jmp</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>4 bytes</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The <span
+  style='font-family:"Courier New"'>.jmp </span>string indicating the start of
+  the jumptable section</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 colspan=2 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$JA + 0x04
+  bytes</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>count</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>the number
+  of elements in the jumptable</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 colspan=2 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>LIST</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$JA + 0x04
+  bytes + 32 bits</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>bytecode_location</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32/64 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>the
+  location in the bytecode</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 colspan=2 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$JA + 0x04
+  bytes + 32 bits  + 32 bits </p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>label_type</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>8 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>0 if this
+  is a simple jump label, 1 if this is a function, 2 if this is the method of a
+  class</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=15 valign=top style='width:11.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=36 valign=top style='width:27.0pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:0in .5pt 0in .5pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>type</p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>1</p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>||</p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>2</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$JA + 0x04
+  bytes + 32 bits  + 32 bits + 8</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>label_length</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>16 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The length
+  of the name of the label. Used only if this label represents a method,
+  function call</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=15 valign=top style='width:11.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=36 valign=top style='width:27.0pt;border-top:none;border-left:none;
+  border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;padding:0in .5pt 0in .5pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>type</p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>1</p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>||</p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>2</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$JA + 0x04
+  bytes + 32 bits  + 32 bits + 16 bits + 8bits</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>label_name</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&lt;label_length&gt;
+  bytes</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The fully
+  qualified label name, used only if the label represents a method/function
+  call</p>
+  </td>
+ </tr>
+</table>
+
+<h3 style='margin-top:0in'><a name=h.opqsq2una5v0></a>The function table</h3>
+
+<p class=MsoNormal>The function table looks like:</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=624
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=85 valign=top style='width:63.5pt;border:solid black 1.0pt;
+  background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=115 valign=top style='width:86.5pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Start</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Field</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Size</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Explanation</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=85 valign=top style='width:63.5pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=115 valign=top style='width:86.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$FA</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>.fun</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>4 bytes</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The <span
+  style='font-family:"Courier New"'>.fun </span>string indicating the start of
+  the function table section</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=85 valign=top style='width:63.5pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=115 valign=top style='width:86.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$FA + 4
+  bytes</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>count</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>the number
+  of elements in the fun table</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=85 valign=top style='width:63.5pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>LIST &lt;
+  count&gt; elements</p>
+  </td>
+  <td width=115 valign=top style='width:86.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$FA + 4
+  bytes + 32 bits</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Jumptable
+  index</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The index
+  of the function in the jumptable</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=85 valign=top style='width:63.5pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=115 valign=top style='width:86.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$FA + 4
+  bytes + 32 bits + 32 bits</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Fun name
+  length</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>16 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The length
+  of the function name</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=85 valign=top style='width:63.5pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=115 valign=top style='width:86.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$FA + 4
+  bytes + 32 bits + 32 bits</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Function
+  name</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&lt;Fun
+  name length&gt; bytes</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The
+  function name. ASCII only</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=85 valign=top style='width:63.5pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=115 valign=top style='width:86.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$FA + 4
+  bytes + 32 bits + 32 bits + 16bits + &lt;Fun name length&gt; bytes</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Return
+  type</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>8 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The return
+  type</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=85 valign=top style='width:63.5pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=115 valign=top style='width:86.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$FA + 4
+  bytes + 32 bits + 32 bits + 16bits + 8bits &lt;Fun name length&gt; bytes</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Number of
+  parameters</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>8 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The number
+  of parameters</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=85 valign=top style='width:63.5pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>LIST1 &lt;
+  Number of parameters&gt; elements</p>
+  </td>
+  <td width=115 valign=top style='width:86.5pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$FA + 4
+  bytes + 32 bits + 32 bits + 8bits + 8 bits + 16 bits &lt;Fun name length&gt;
+  bytes + &lt;number of parameters before this&gt; bytes</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Parameter
+  type</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>8 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The type
+  of a parameter:</p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Same as
+  from the opcodes list</p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<h3 style='margin-top:0in'>Variable handling in the bytecode</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Every time a variable is being
+referred to in the bytecode during the code generation the application searches
+for the variable and if it’s the first time it’s used it creates a new entry in
+the meta table. Into the bytecode stream what goes out is the meta_location of
+the variable (which is effectively the index of the variable in the meta
+vector, not the location of the variable).</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Same is valid for jumptable and
+string table objects: index is used in bytecode instead of real value.</p>
+
+<h3 style='margin-top:0in;margin-right:0in;margin-bottom:11.25pt;margin-left:
+0in'><a name=h.n2wj321pyms3></a>FUTURE STUFF: The binary file</h3>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>Each method has its own stack.
+Written to the binary file. The application on quit might save the stacks. Next
+time will continue from where it left last time.</p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>Each variable is identified by
+a unique number generated at compile time, this is written to the file. The
+variables are referred with this number later during compile</p>
+
+<p class=MsoNormal style='margin-bottom:11.25pt'>They are being pushed to the
+proper stack obtained at compile time. There is a map of variable id's and
+stacks.</p>
+
+<h1>The nap runtime</h1>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The nap runtime is a library
+binding the compiler and the virtual machine in order to allow the clients of
+the library to execute nap script in an embedded environment.</p>
+
+<h1>Interrupts</h1>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The interrupt system is
+responsible for handling out of VM requests, such as mounting a file in the
+virtual file system or printing output to the screen. Extensions to the
+interrupt system are stored either in external DLLs and loaded as necessary
+upon user invocation, or represented as a series of assembler commands.</p>
+
+<h3>Interrupt 4</h3>
+
+<p class=MsoNormal>Executes an external function. Load</p>
+
+<h1><span style='font-size:11.0pt;line-height:115%;font-family:"Calibri","sans-serif";
+color:windowtext;font-weight:normal'>regs 0 -&gt; teh signature, first
+character is the return type</span></h1>
+
+<h1><span style='font-size:11.0pt;line-height:115%;font-family:"Calibri","sans-serif";
+color:windowtext;font-weight:normal'>regs 1 -&gt; the name of the function</span></h1>
+
+<h1><span style='font-size:11.0pt;line-height:115%;font-family:"Calibri","sans-serif";
+color:windowtext;font-weight:normal'>regs 2 -&gt; the name of the library (- if
+none)</span></h1>
+
+<h1><span style='font-size:11.0pt;line-height:115%;font-family:"Calibri","sans-serif";
+color:windowtext;font-weight:normal'>regi 0 -&gt; the index in the pregenerated
+table</span></h1>
+
+<h1>Run Time compilation</h1>
+
+<p class=MsoNormal>This is invoked by the “execute” nap script command. This
+command takes in a string or a number, indicating the nap commands or the nap
+command block.</p>
+
+<p class=MsoNormal>This command always returns a number, indicating the
+bytecode block id where the compiled code resides.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The VM has two dedicated
+interrupts (2 and 3) which points back to the compiler. Interrupt 2 takes in
+the regs(0) and produces a full nap bytecode file, with the following
+exception:</p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-bottom:12.0pt;text-indent:
+-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>It takes a reference to the already running VM stack (not the stack of
+the VM, but the list of VMs that are running), and when searching for a function
+or variable it extends its search towards this stack.</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-bottom:12.0pt;text-indent:
+-.25in'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Methods declared in the “sub” will be visible from the OTHER “subs” but
+not from the main, since at the time of compilation those methods do not exist,
+but at the next level of compilation they do.</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0in;margin-right:0in;
+margin-bottom:12.0pt;margin-left:1.0in;text-indent:-.25in'>a.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Unless
+in the “main” these methods were declared with “forward”. </p>
+
+<p class=MsoListParagraphCxSpLast style='margin-top:0in;margin-right:0in;
+margin-bottom:12.0pt;margin-left:1.5in;text-indent:-1.5in'><span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>i.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>If during the execution of a “main” VM a “forward” method was executed,
+but it had no definition in the “sub”-compiled VMs the execution will either
+stop or do nothing …</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Interrupt 2 returns a value in
+regi(0) indicating the bytecode block id.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Interrupt 3 takes in an integer
+in regi(0) and executes the bytecode found at the given location.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>In the nap compiler generated
+code these two are outputted as the result of compiling nap_execute()
+immediately one after the other.</p>
+
+<h2>How the nap VM runs an application</h2>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>An application is represented
+by a single bytecode file.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>// TODO</p>
+
+<h2>Debug information in the file</h2>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The nap compiler can compile in
+debug info in the file if requested. </p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>In this case the names of the
+“inner” variables will be put in the meta table.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The following is the debug
+section of the file:</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=624
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Start</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Field</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Size</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Explanation</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$DBG</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>.dbg</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>4 bytes</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The <span
+  style='font-family:"Courier New"'>.dbg </span>string indicating the start of
+  the debug section</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$DBG + 4
+  bytes</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>dbg_count</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The number
+  of debug info objects in the file</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$DBG + 4
+  +32 bits</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>dbg_file_count</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>16bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The number
+  of participating files in this bytecode file (ie: how many files were
+  imported while compiling this file)</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>LiST1</p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>DBG_FILES</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$DBG + 4
+  bytes + 32 bits + 16 bits</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>file_index</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>16 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The index
+  of the participating file</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$DBG + 4
+  bytes + 32 bits + 16 bits + 16 bits</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>file_name_length</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>16 bits </p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The length
+  of the file name</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$DBG + 4
+  bytes + 32 bits + 16 bits + 16 bits + 16 bits</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>file_name</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>file_name_length
+  * 8bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The name
+  of the file</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>LIST2</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>$DBG + 4
+  bytes + 32 bits + 16 bits + sizeof(LIST1)</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>debug_info</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>dbg_count
+  * sizeof(debug_info) </p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>A list of
+  debug_info structures</p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>&nbsp;</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The Debug section comes after
+the jumptable.</p>
+
+<h3>The Debug Info structure</h3>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>The following is the debug info
+structure:</p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=624
+ style='margin-left:4.5pt;border-collapse:collapse;border:none'>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Field Name</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Field type</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Size</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border:solid black 1.0pt;
+  border-left:none;background:#999999;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Explanation</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>bytecode_start</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>uint32_t</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The
+  location in the bytecode stream of where the bytecode for this debug_info
+  starts. </p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>bytecode_end</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>uint32_t</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The
+  location in the bytecode stream of where the bytecode for this debug_info
+  ends. </p>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Between
+  bytecode_start and bytecode_end there can be more assembly commands each
+  participating in the current operation</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>file_index</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>int16_t</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>16 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The index
+  of the file in which the command was found. Reference to DBG_FILES section.</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>start_line</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>int16_t</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>16 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The start
+  line in the file where the command is</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>end_line</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>int16_t</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>16 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The end
+  line in the file where the command is</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>command_length</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>int32_t</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The length
+  of the command</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>command</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>string</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&lt;command_length&gt;
+  bytes</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The actual
+  command for the debugging without source. These last two fields are enabled
+  with a special compiler switch (enable sourceless debug or similar)</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>patch_command_length</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>int32_t</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>32 bits</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The length
+  of the patch command</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=51 valign=top style='width:38.0pt;border:solid black 1.0pt;
+  border-top:none;padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&nbsp;</p>
+  </td>
+  <td width=149 valign=top style='width:112.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>Patch
+  command</p>
+  </td>
+  <td width=101 valign=top style='width:76.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>string</p>
+  </td>
+  <td width=115 valign=top style='width:86.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>&lt;patch:command_length&gt;
+  bytes</p>
+  </td>
+  <td width=208 valign=top style='width:156.0pt;border-top:none;border-left:
+  none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  padding:5.0pt 5.0pt 5.0pt 5.0pt'>
+  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>The actual
+  patch command for the original command. See below. </p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>&nbsp;</p>
+
+<h2>Patching the debug file</h2>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>When the sourceless debug
+feature is enabled while debugging it is possible to modify the commands that
+are stored in the file. This is the workflow</p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-bottom:12.0pt;text-indent:
+-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>User debugs</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-bottom:12.0pt;text-indent:
+-.25in'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>User finds bug in a line of code</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-bottom:12.0pt;text-indent:
+-.25in'>3.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>User chooses to patch a line</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0in;margin-right:0in;
+margin-bottom:12.0pt;margin-left:1.0in;text-indent:-.25in'>a.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Writes
+the commands in the debugger shell</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0in;margin-right:0in;
+margin-bottom:12.0pt;margin-left:1.0in;text-indent:-.25in'>b.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>The
+debugger calls the compiler to compile the modified commands (in the same
+manner as the “nap_execute” is being compiled). </p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0in;margin-right:0in;
+margin-bottom:12.0pt;margin-left:1.0in;text-indent:-.25in'>c.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>The
+debugger fetches out from the newly compiled the exact bytecodes for the new
+command.</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0in;margin-right:0in;
+margin-bottom:12.0pt;margin-left:1.0in;text-indent:-.25in'>d.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>The
+debugger fetches the bytecodes for the “old” command and compares the length
+with the length of the bytecodes of the new command.</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0in;margin-right:0in;
+margin-bottom:12.0pt;margin-left:1.5in;text-indent:-1.5in'><span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>i.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>If they are equal, simply replaces them in the memory and in the file</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0in;margin-right:0in;
+margin-bottom:12.0pt;margin-left:1.5in;text-indent:-1.5in'><span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>ii.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>If they differ (new is longer(shorter):</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0in;margin-right:0in;
+margin-bottom:12.0pt;margin-left:2.0in;text-indent:-.25in'>1.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Creates
+a new mem buffer with correct size</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0in;margin-right:0in;
+margin-bottom:12.0pt;margin-left:2.0in;text-indent:-.25in'>2.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Copies
+the old content till the start of the command</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0in;margin-right:0in;
+margin-bottom:12.0pt;margin-left:2.0in;text-indent:-.25in'>3.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Copies
+the new commands’ bytecodes</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0in;margin-right:0in;
+margin-bottom:12.0pt;margin-left:2.0in;text-indent:-.25in'>4.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Copies
+the old content after the old command bytecodes</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0in;margin-right:0in;
+margin-bottom:12.0pt;margin-left:2.0in;text-indent:-.25in'>5.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Patches
+the jumptable to have the correct values (ie: adds  (substracts) the difference
+between new size / old size to the values)</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0in;margin-right:0in;
+margin-bottom:12.0pt;margin-left:2.0in;text-indent:-.25in'>6.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Patches
+the debug_info structures to have the correct value</p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0in;margin-right:0in;
+margin-bottom:12.0pt;margin-left:1.0in;text-indent:-.25in'>e.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>The
+debugger writes the memory back to the disk</p>
+
+<p class=MsoListParagraphCxSpLast style='margin-bottom:12.0pt;text-indent:-.25in'>4.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>The
+debugger can restart</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>&nbsp;</p>
+
+<h2>How to save floats in the binary file</h2>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>When the application reads a
+float value from the source file it splits it in two parts: first is the number
+without the decimal points (ie: multiplied with 10 on the Nth) and the second
+is the N:</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>1.2345 = 12345 * 10^(-4)</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>What goes to the file:</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>12345</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>4</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<h2>External functions</h2>
+
+<p style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'><span style='font-size:10.0pt;font-family:"Verdana","sans-serif";
+color:black'>1. in the .out file write the definiton of the external methods (a
+new section in the file is requried for this)</span></p>
+
+<p style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'><span style='font-size:10.0pt;font-family:"Verdana","sans-serif";
+color:black'>2. when calling an external function instead:</span></p>
+
+<p style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'><span style='font-size:10.0pt;font-family:"Verdana","sans-serif";
+color:black'>&nbsp;&nbsp;&nbsp; a. move in regs[0] the name of the function</span></p>
+
+<p style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'><span style='font-size:10.0pt;font-family:"Verdana","sans-serif";
+color:black'>&nbsp;&nbsp;&nbsp; b. push the variables normally on the stack</span></p>
+
+<p style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'><span style='font-size:10.0pt;font-family:"Verdana","sans-serif";
+color:black'>&nbsp;&nbsp;&nbsp; c. issue an intr_4 call</span></p>
+
+<p style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'><span style='font-size:10.0pt;font-family:"Verdana","sans-serif";
+color:black'>&nbsp;&nbsp;&nbsp; d. intr_4 does the following:</span></p>
+
+<p style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'><span style='font-size:10.0pt;font-family:"Verdana","sans-serif";
+color:black'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; i. from regs[0]
+takes the name of the function.</span></p>
+
+<p style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'><span style='font-size:10.0pt;font-family:"Verdana","sans-serif";
+color:black'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ii. from the
+bytecode file loads the external functions definition and according to the
+parameter list will pop from the stack the values in order (either peeks an int
+or a string or a float)</span></p>
+
+<p style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'><span style='font-size:10.0pt;font-family:"Verdana","sans-serif";
+color:black'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; iii. with the
+peeked values it will create a nap_ext_par_desc structure</span></p>
+
+<p style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'><span style='font-size:10.0pt;font-family:"Verdana","sans-serif";
+color:black'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; iv. from the
+return type and the parameter list (or already defined by the compiler) it will
+identify the signature of the function (such as: viiis)</span></p>
+
+<p style='margin-top:0in;margin-right:0in;margin-bottom:12.0pt;margin-left:
+0in'><span style='font-size:10.0pt;font-family:"Verdana","sans-serif";
+color:black'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; v. from the
+signature it will identify the correct nap_ext_call_v__i function and call it.</span></p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-size:10.0pt;
+line-height:115%;font-family:"Verdana","sans-serif";color:black'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; vi. if the return type is not void it will handle correctly
+the return value by populating the proper rv register</span></p>
+
+</div>
+
+</body>
+
+</html>
