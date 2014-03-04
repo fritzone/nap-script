@@ -13,7 +13,7 @@
 #include "code_stream.h"
 
 nap_compiler::nap_compiler() : opcode_counter(0),
-    mvm_chain(0), mfirst_entry(true), mvar_counter(0), minterpreter(this), mgbb(garbage_bin_bin::instance()),
+    mfirst_entry(true), mvm_chain(0), mvar_counter(0), minterpreter(this), mgbb(garbage_bin_bin::instance()),
     mfinalError("OK"), mErrorCode(0), mEmbedded(false), print_assembly(false)
 {
     cur_cc = new call_context(this, 0, "global", NULL, NULL) ;
