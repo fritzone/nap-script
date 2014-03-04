@@ -267,7 +267,25 @@ int nap_execute_method(nap_runtime *runtime, void *return_value, const char *met
         va_end(argptr);
         method_cmd += ")";
         const char* t = method_cmd.c_str();
-        return nap_execute_code(runtime, t);
+        int ex_c = nap_execute_code(runtime, t);
+        if(ex_c == NAP_EXECUTE_FAILURE)
+        {
+            return NAP_EXECUTE_FAILURE;
+        }
+
+        if(return_value != 0 && fe->return_type != 0)
+        {
+            if(fe->return_type == OPCODE_INT)
+            {
+                (*(nap_int_t*)return_value) = runtime->vm->rvi;
+            }
+            else
+            if(fe->return_type == OPCODE_BYTE)
+            {
+                (*(nap_byte_t*)return_value) = runtime->vm->rvb;
+            }
+
+        }
     }
     else
     {
@@ -293,7 +311,7 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
         if(!source_set)
         {
             nap_compiler::release_compiler(compiler);
-            return 0;
+            return NAP_EXECUTE_FAILURE;
         }
 
         // compile the call command
@@ -319,7 +337,7 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
         else
         {
             nap_compiler::release_compiler(compiler);
-            return 0;
+            return NAP_EXECUTE_FAILURE;
         }
 
         garbage_bin_bin::instance().empty(compiler.get());
@@ -334,7 +352,8 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
 
         if(child_vm == NULL)
         {
-            return 0;
+            nap_compiler::release_compiler(compiler);
+            return NAP_EXECUTE_FAILURE;
         }
 
         /* no errors, run the new VM  */
@@ -348,8 +367,9 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
 
             /* cleanup */
             nap_vm_cleanup(child_vm);
+            nap_compiler::release_compiler(compiler);
 
-            return 0;
+            return NAP_EXECUTE_FAILURE;
         }
 
         /* just fetch the return values of child_vm into runtime->vm, someone
@@ -365,6 +385,7 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
 
         /* performs the cleanup */
         nap_vm_cleanup(child_vm);
+        nap_compiler::release_compiler(compiler);
 
         return temp;
     }
