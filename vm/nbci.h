@@ -33,7 +33,7 @@ extern "C" {
 #else
  #define __STDC_FORMAT_MACROS
  #include <inttypes.h>
- #if ENVIRONMENT64
+ #ifdef ENVIRONMENT64
   #define PRINT_d PRId64
   #define PRINT_u PRIu64
   #define PRINT_x PRIx64
