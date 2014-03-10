@@ -1,0 +1,21 @@
+int z;
+
+int func(int a)
+{
+    if(a == 4)
+    {
+        return 5;
+    }
+
+    return 7;
+}
+
+z = 3;
+
+if(z == 3)
+{
+  int y = 2;
+  z = 4;
+}
+
+int g = func(z);
