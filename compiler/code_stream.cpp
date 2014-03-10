@@ -260,8 +260,6 @@ void code_finalizer::finalize()
 void code_stream::output_bytecode(const char* s)
 {
 
-    fprintf(stderr, "%s ", s);
-
     std::string expr = s;
     if(expr == " " || expr == "(" || expr == ")" || expr == ",")
     {

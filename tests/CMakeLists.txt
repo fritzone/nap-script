@@ -1,6 +1,7 @@
 include_directories(../inc ../vm ../runtime ../compiler ./gtest/include)
 
 add_executable(vmtest
+    ${CMAKE_CURRENT_SOURCE_DIR}/code_exec.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/var_def.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gtest/src/gtest_main.cc

@@ -3,6 +3,7 @@
 extern "C"
 {
 #include "nbci.h"
+#include "nbci_impl.h"
 #include "nap_structs.h"
 #include "funtable.h"
 }
@@ -254,7 +255,7 @@ int nap_execute_method(nap_runtime *runtime, void *return_value, const char *met
             {
                 nap_string_t v = va_arg(argptr, nap_string_t);
                 std::stringstream ss;
-                ss << v;
+                ss << '"' << v << '"';
                 method_cmd += ss.str();
             }
 
@@ -284,8 +285,21 @@ int nap_execute_method(nap_runtime *runtime, void *return_value, const char *met
             {
                 (*(nap_byte_t*)return_value) = runtime->vm->rvb;
             }
-
+            else
+            if(fe->return_type == OPCODE_FLOAT)
+            {
+                (*(nap_real_t*)return_value) = runtime->vm->rvr;
+            }
+            else
+            if(fe->return_type == OPCODE_STRING)
+            {
+                size_t dest_len = runtime->vm->rvl * CC_MUL, real_len = 0;
+                char* t = convert_string_from_bytecode_file(runtime->vm->rvs,
+                        runtime->vm->rvl * CC_MUL, dest_len, &real_len);
+                *((char**)return_value) = t;
+            }
         }
+        return NAP_EXECUTE_SUCCESS;
     }
     else
     {
@@ -376,11 +390,12 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
          * might use them */
         runtime->vm->rvb = child_vm->rvb;
         runtime->vm->rvi = child_vm->rvi;
+        runtime->vm->rvr = child_vm->rvr;
         runtime->vm->rvl = child_vm->rvl;
         if(runtime->vm->rvl)
         {
-            runtime->vm->rvs = (char*)calloc(runtime->vm->rvl + 1, sizeof(char));
-            memcpy(runtime->vm->rvs, child_vm->rvs, runtime->vm->rvl);
+            runtime->vm->rvs = (char*)calloc(runtime->vm->rvl * CC_MUL, sizeof(char)); /* UTF32 */
+            memcpy(runtime->vm->rvs, child_vm->rvs, runtime->vm->rvl  * CC_MUL);
         }
 
         /* performs the cleanup */

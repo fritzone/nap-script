@@ -474,6 +474,8 @@ std::vector<std::string> string_list_create_bsep(const std::string& instr, char 
             strim(t);
             head.push_back(t);
             frst = p + 1;
+            already_increased = 1;
+            p++; // to skip the separator
 
             free(cur_elem);
         }

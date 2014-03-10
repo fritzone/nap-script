@@ -262,6 +262,11 @@ NAP_LIB_API nap_string_t nap_runtime_get_string(struct nap_runtime* runtime,
  *   - a \c nap_real_t where the method expects a \c real
  *   - a \c nap_byte_t where the method expects a \c byte
  *
+ * This method uses variable arguments, and the values of the variable arguments
+ * are determined based on the signature of the nap-script method. We recommend
+ * to not to use immediate values in the parameter list, unless you cast them
+ * to the speicific C/C++ type, such as: \c (nap_int_t)3
+ *
  * @return NAP_EXECUTE_SUCCESS (1) in case of succes, or NAP_EXECUTE_FAILURE (0)
  * in case of failure. In case of failure you can call the method
  * nap_runtime_last_error() to get the last error

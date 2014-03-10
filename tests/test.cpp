@@ -363,34 +363,6 @@ TEST(Functions, ExternalCalling)
     UNUSED(found_indicator);
 }
 
-
-/* Define a function. Call it via the runtime API
- * Use the function, see that it returns the default return value (0).
- */
-TEST(Functions, ExternalCallingOfInternalMethod)
-{
-    nap_runtime* runtime = nap_runtime_create(0);
-    int found_indicator = 0;
-
-    ASSERT_FALSE(runtime == NULL);
-
-    nap_bytecode_chunk* bytecode = nap_runtime_compile(runtime,
-    "int c = 0;                     \
-     int method(int a , int b)      \
-     {                              \
-         c = a + b;                 \
-     }" ,0);
-
-    ASSERT_FALSE(bytecode == NULL);
-    nap_runtime_execute(runtime, bytecode);
-    nap_int_t p1 = 1;
-    nap_int_t p2 = 2;
-    nap_execute_method(runtime, 0, "method", p1, p2);
-    ASSERT_EQ(3, VAR_INT(c));
-
-    nap_runtime_shutdown(&runtime);
-    ASSERT_TRUE(runtime == NULL);}
-
 NAP_EXPORTS
 void external_callee(nap_int_t a, nap_int_t b)
 {

@@ -7,6 +7,7 @@
 #include "opcodes.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 int nap_call(struct nap_vm *vm)
 {
@@ -70,6 +71,18 @@ int nap_call(struct nap_vm *vm)
 
         /* restore the parent's stack_pointer */
         vm->parent->stack_pointer = parent_sp;
+
+        /* fetch over the return values, they might be used by the caller later*/
+        vm->rvb = vm->parent->rvb;
+        vm->rvi = vm->parent->rvi;
+        vm->rvr = vm->parent->rvr;
+        vm->rvl = vm->parent->rvl;
+        if(vm->parent->rvl)
+        {
+            MEM_FREE(vm->rvs);
+            vm->rvs = (char*)calloc(vm->parent->rvl * CC_MUL, sizeof(char)); /* UTF32 */
+            memcpy(vm->rvs, vm->parent->rvs, vm->rvl  * CC_MUL);
+        }
     }
 
     return NAP_SUCCESS;

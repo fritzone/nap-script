@@ -779,11 +779,11 @@ static int mov_into_variable(struct nap_vm* vm)
                     MEM_FREE(var->instantiation->value);
                 }
                 temp = (char*)calloc(
-                            vm->regslens[register_index] * 4 + 1, /* UTF-32BE */
+                            vm->regslens[register_index] * CC_MUL + 1, /* UTF-32BE */
                             sizeof(char));
 
                 memcpy(temp, vm->regs[register_index],
-                        vm->regslens[register_index] * 4);
+                        vm->regslens[register_index] * CC_MUL);
 
                 var->instantiation->value = temp;
                 var->instantiation->len = vm->regslens[register_index];

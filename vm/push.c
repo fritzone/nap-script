@@ -102,11 +102,13 @@ int nap_push(struct nap_vm *vm)
         else
         if(reg_type == OPCODE_STRING) /* pushing a string register */
         {
-            size_t len = vm->regslens[reg_idx] * CC_MUL;
+            size_t len = vm->regslens[reg_idx] * CC_MUL; /* UTF32*/
             char* temp = (char*)(calloc(len,  sizeof(char)));
             memcpy(temp, vm->regs[reg_idx], len);
-            se->value = temp;
-            se->len = vm->regslens[reg_idx];
+            se->value = temp; /* the stack_entry->value will be the string itself */
+            se->len = vm->regslens[reg_idx]; /* the stack_entry->len will be the
+                                                real length of the string, not
+                                                the length of the UTF32 thing */
         }
         else
         {

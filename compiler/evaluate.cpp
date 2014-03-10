@@ -1399,6 +1399,14 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
     }
 
     cc->compiler()->set_location(node->expwloc);
+
+    // funny check to check for empty string:
+    if(node && node->info.empty() && node->op_type == BASIC_TYPE_STRING)
+    {
+        code_stream(_compiler) << "\"\"";
+        return;
+    }
+
     if( node && (!node->info.empty() || node->op_type == STATEMENT_NEW_CC
                  || node->op_type == STATEMENT_CLOSE_CC
                  || node->op_type == BASIC_TYPE_VARIABLE

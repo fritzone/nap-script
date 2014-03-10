@@ -129,6 +129,7 @@ struct nap_vm
     /* return values */
     nap_int_t rvi;                          /* the integer return value      */
     nap_byte_t rvb;                         /* the byte return value         */
+    nap_real_t rvr;                         /* the real return value      */
     nap_string_t rvs;                       /* the string return value       */
     size_t rvl;                             /* the string return value's length */
 
