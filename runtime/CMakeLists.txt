@@ -6,6 +6,7 @@ include_directories(../vm ../compiler)
 
 set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/nap_runtime.cpp
+    ${NAP_ROOT}/inc/nap_runtime.h
 )
 
 add_library(nap_rt SHARED ${${project}_files} )
