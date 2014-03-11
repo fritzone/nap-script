@@ -11,7 +11,9 @@
 #include <string.h>
 
 
-static int nap_int_set_index_overflow(struct nap_vm* vm, const char* var_name, nap_int_t requested, size_t available)
+static int nap_int_set_index_overflow(struct nap_vm* vm, 
+				      const char* var_name, 
+				      nap_int_t requested, size_t available)
 {
     char* s = (char*)calloc(256, sizeof(char));
     SNPRINTF(s, 256,

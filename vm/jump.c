@@ -1,6 +1,7 @@
 #include "jump.h"
 #include "opcodes.h"
 #include "nbci.h"
+#include "nbci_impl.h"
 #include "jmptable.h"
 #include "nap_consts.h"
 #include "byte_order.h"

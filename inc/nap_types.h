@@ -3,15 +3,32 @@
 
 #include <stdint.h>
 
-/* types for manipulating the addresses, indexes, etc */
-typedef uint32_t nap_addr_t;    /* the type of a NAP address*/
-typedef uint32_t nap_mark_t;    /* the type of a marker pushed on the stack */
-typedef uint32_t nap_index_t;   /* the type of an index */
+/**
+ * @file nap_types.h
+ *
+ * The file contains the definition of the C/C++ types which are to be used for 
+ * interaction with the nap runtime.
+ */
 
-/* nap builtin types */
-typedef int64_t  nap_int_t;     /* the NAP type of an integer number */
+/** @defgroup NapTypes C/C++ types 
+ * 
+ * The mapping of nap script types to C types. In order to properly integrate your
+ * C/C++ code with the nap runtime use these types. They are just typedefs, however 
+ * the nap runtime was compiled with these in mind, so in order to avoid different
+ * sizes for the same nap script type you have to use these data types.
+ * 
+ * @{ 
+ */
+
+/** 
+ * The corresponding C type of a nap-script "int" type. This is a 64 bit signed 
+ * integer.
+ */
+typedef int64_t  nap_int_t;     
 typedef double   nap_real_t;    /* the NAP type of a real number */
 typedef char*    nap_string_t;  /* the NAP type of a string */
 typedef uint8_t  nap_byte_t;    /* the NAP type of a string */
+
+/** @} */
 
 #endif
