@@ -15,7 +15,12 @@ extern "C" {
 #include "nap_structs.h"
 #include "nap_consts.h"
 
-	
+#ifdef _WINDOWS
+#define NAP_EXPORTS extern "C" __declspec(dllexport)
+#else
+#define NAP_EXPORTS extern "C"
+#endif
+
 #ifdef _WINDOWS
 #include "nap_rt_exp.h"
 #else
@@ -39,12 +44,12 @@ struct nap_runtime;
  *                      The compiler is created automatically by the call to the
  *                      \c nap_runtime_create method
  *
- *  2. a nap virtual machine - this is created by the @see nap_runtime_execute
+ *  2. a nap virtual machine - this is created by the \c nap_runtime_execute
  *                      when a bytecode chunk is to be executed. The VM created
  *                      is alive till another call of the \c nap_runtime_execute
  *
  * The nap runtime keeps track of several bytecode chunks and each of them
- * can be executed separately from the other using @see nap_runtime_execute,
+ * can be executed separately from the other using \c nap_runtime_execute,
  * however they are sealed from each other (they cannot call methods or
  * reference variables from another bytecode chunk).
  *
@@ -68,12 +73,12 @@ NAP_LIB_API nap_runtime* nap_runtime_create(const char *name);
  * Compiles the nap-script commands and creates a new code chunk object for 
  * the compiled bytecode. The runtime takes care of the compiled bytecode 
  * and you do NOT need to free it. The function will return NULL in case of
- * failure. In this case use the @see nap_runtime_last_error to get the text
+ * failure. In this case use the \c nap_runtime_last_error to get the text
  * of the error that occured.
  *
  * After compilation you can not access yet the variables and call the methods
  * from bytecode chunk using the respective APIs, first you need to execute the
- * resulted bytecode chunk using @see nap_runtime_execute. By executing the
+ * resulted bytecode chunk using ::nap_runtime_execute. By executing the
  * bytecode the VM sets up its internal structures, creates the variables
  * on the VM's stack, and executes the instructions found in the global call
  * context of the script.

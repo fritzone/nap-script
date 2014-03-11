@@ -49,14 +49,8 @@ extern "C" {
 #include "nap_types.h"
 #include "nap_structs.h"
 
-#ifdef _WINDOWS
-#define NAP_EXPORTS extern "C" __declspec(dllexport)
-#else
-#define NAP_EXPORTS extern "C"
-#endif
-
 #ifdef _MEM_DEBUG_
-#define _FREE(x) if((x)) { fprintf(stderr, "free:%p (%s:%d)\n", (x), __FILE__, __LINE__);  free((x)); }
+#define MEM_FREE(x) if((x)) { fprintf(stderr, "free:%p (%s:%d)\n", (x), __FILE__, __LINE__);  free((x)); }
 #else
 #define MEM_FREE(x) if(x){ free((x)); }
 #endif
