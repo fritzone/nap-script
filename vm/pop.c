@@ -48,7 +48,6 @@ int nap_pop(struct nap_vm* vm)
 
                 vm->stack_pointer --;
             }
-
         }
         else
         {
@@ -95,13 +94,13 @@ int nap_pop(struct nap_vm* vm)
                 {
                     if(vm->stack[vm->stack_pointer]->type == OPCODE_IMMEDIATE)
                     {
-                        *(nap_int_t*)ve->instantiation->value = *(int64_t*)vm->stack[vm->stack_pointer]->value;
+                        *(nap_int_t*)ve->instantiation->value = *(nap_int_t*)vm->stack[vm->stack_pointer]->value;
                     }
                     else
                     if(vm->stack[vm->stack_pointer]->type == OPCODE_INT)
                     {
                         struct variable_entry* ve_src = vm->stack[vm->stack_pointer]->value;
-                        *(nap_int_t*)ve->instantiation->value = *(int64_t*)ve_src->instantiation->value;
+                        *(nap_int_t*)ve->instantiation->value = *(nap_int_t*)ve_src->instantiation->value;
                     }
                     else
                     {
@@ -128,15 +127,21 @@ int nap_pop(struct nap_vm* vm)
                     ve->instantiation->value = temp;
                 }
             }
+            if(ve->instantiation->type == STACK_ENTRY_STRING)
+            {
+                _NOT_IMPLEMENTED
+            }
             else
             {
                 _NOT_IMPLEMENTED
             }
 
-            if(vm->stack[vm->stack_pointer]->type == OPCODE_IMMEDIATE)
-            { /* immediate values are being allocated by the push */
+            if(vm->stack[vm->stack_pointer]->type == OPCODE_IMMEDIATE
+                    || vm->stack[vm->stack_pointer]->len != 0)
+            { /* immediate values are being allocated by the push, also string values */
                 MEM_FREE(vm->stack[vm->stack_pointer]->value);
             }
+
             MEM_FREE(vm->stack[vm->stack_pointer]);
 
             /* and the stack will decrease */

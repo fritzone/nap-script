@@ -48,6 +48,10 @@ NAP_LIB_API nap_runtime* nap_runtime_create(const char* name)
     if(name)
     {
         result->name = name;
+        if(!result->name.empty() && result->name[0] == '$')
+        {
+            result->compiler->print_assemblies();
+        }
     }
     else
     {
