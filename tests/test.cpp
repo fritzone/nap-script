@@ -2,6 +2,27 @@
 #include "nbci.h"
 #include "gtest/gtest.h"
 
+TEST(Assembly, PushPop)
+{
+  nap_runtime* runtime = nap_runtime_create("$");
+  ASSERT_FALSE(runtime == NULL);
+  int found_indicator;
+  nap_bytecode_chunk* bytecode = nap_runtime_compile(runtime,
+  "                        \
+  int a;                   \
+  asm                      \
+  {                        \
+       push 23;            \
+       pop global.a;       \
+  }                        \
+  "
+  SCRIPT_END
+
+  ASSERT_EQ(23, VAR_INT(a));
+
+  SCRIPT_SHUTDOWN
+}
+
 TEST(Operations, BasicIntVariableOperations)
 {
 

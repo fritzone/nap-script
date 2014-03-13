@@ -65,8 +65,8 @@ int nap_push(struct nap_vm *vm)
                 }
                 else
                 {
-                    ve->instantiation->value = (char*)calloc(1, sizeof(char));
-                    *(nap_int_t*)ve->instantiation->value = 0;
+                    ve->instantiation->value = (nap_string_t)calloc(1, sizeof(char));
+                    *(nap_string_t)ve->instantiation->value = 0;
                 }
             }
             else
@@ -79,10 +79,25 @@ int nap_push(struct nap_vm *vm)
         }
         else
         {
-            char* s = (char*)calloc(64, sizeof(char));
-			SNPRINTF(s, 64, "unknown push [0x%x]", push_what);
-            vm->error_description = s;
-            return NAP_FAILURE;
+            if(se->type == OPCODE_STRING) // pushing an immediate string on the stack!
+            {
+                vm->cc --; /* stepping one back, right now we point to first byte in index */
+                nap_index_t str_index = nap_fetch_index(vm);
+                size_t len = vm->stringtable[str_index]->len * CC_MUL; /* UTF32*/
+                char* temp = (char*)(calloc(len,  sizeof(char)));
+                memcpy(temp, vm->stringtable[str_index] , len);
+                se->value = temp; /* the stack_entry->value will be the string itself */
+                se->len = vm->stringtable[str_index]->len; /* the stack_entry->len will be the
+                                                    real length of the string, not
+                                                    the length of the UTF32 thing */
+            }
+            else
+            {
+                char* s = (char*)calloc(64, sizeof(char));
+                SNPRINTF(s, 64, "unknown push [0x%x]", push_what);
+                vm->error_description = s;
+                return NAP_FAILURE;
+            }
         }
     }
     else
@@ -95,6 +110,15 @@ int nap_push(struct nap_vm *vm)
         {
             nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
             *temp = vm->regi[reg_idx];
+
+            /* setting the value of the stack entry */
+            se->value = temp;
+        }
+        else
+        if(reg_type == OPCODE_BYTE) /* pushing an int register */
+        {
+            nap_byte_t* temp = (nap_byte_t*)calloc(1, sizeof(nap_byte_t));
+            *temp = vm->regb[reg_idx];
 
             /* setting the value of the stack entry */
             se->value = temp;
