@@ -13,18 +13,22 @@ int nap_push(struct nap_vm *vm)
 {
     struct stack_entry* se = (struct stack_entry*)(
                                 calloc(sizeof(struct stack_entry), 1));
-    se->type = (StackEntryType)vm->content[vm->cc ++]; /* push int/string/real/byte */
+    se->type = (StackEntryType)vm->content[vm->cc ++]; /* whether we push
+                  int/string/real/byte for creating a variable or just pushing
+                  a variable without the int/string/byte/etc ... or a string
+                  or a number, ...*/
 
     if(se->type == OPCODE_INT || se->type == OPCODE_STRING || se->type == OPCODE_BYTE) /* or real */
     {
         uint8_t push_what = vm->content[vm->cc ++];
 
-        if(push_what == OPCODE_VAR)
+        if(push_what == OPCODE_VAR) /* This is basically defining a variable on the stack */
         {
             nap_index_t var_index = nap_fetch_index(vm);
             struct variable_entry* ve = nap_fetch_variable(vm, var_index);
             ASSERT_NOT_NULL_VAR(ve)
 
+            /* create the instantiation for the variable */
             if(ve->instantiation == NULL)
             {
                 ve->instantiation = (struct stack_entry*)(calloc(sizeof(struct stack_entry), 1));
@@ -79,12 +83,17 @@ int nap_push(struct nap_vm *vm)
         }
         else
         {
-            if(se->type == OPCODE_STRING) // pushing an immediate string on the stack!
+            if(se->type == OPCODE_STRING) /* pushing an immediate string on the stack! */
             {
+                nap_index_t str_index = 0;
+                size_t len = 0;
+                char* temp = 0;
+
                 vm->cc --; /* stepping one back, right now we point to first byte in index */
-                nap_index_t str_index = nap_fetch_index(vm);
-                size_t len = vm->stringtable[str_index]->len * CC_MUL; /* UTF32*/
-                char* temp = (char*)(calloc(len,  sizeof(char)));
+
+                str_index = nap_fetch_index(vm);
+                len = vm->stringtable[str_index]->len * CC_MUL; /* UTF32*/
+                temp = (char*)(calloc(len,  sizeof(char)));
                 memcpy(temp, vm->stringtable[str_index] , len);
                 se->value = temp; /* the stack_entry->value will be the string itself */
                 se->len = vm->stringtable[str_index]->len; /* the stack_entry->len will be the
@@ -115,7 +124,7 @@ int nap_push(struct nap_vm *vm)
             se->value = temp;
         }
         else
-        if(reg_type == OPCODE_BYTE) /* pushing an int register */
+        if(reg_type == OPCODE_BYTE) /* pushing a byte register */
         {
             nap_byte_t* temp = (nap_byte_t*)calloc(1, sizeof(nap_byte_t));
             *temp = vm->regb[reg_idx];
@@ -158,9 +167,16 @@ int nap_push(struct nap_vm *vm)
         CHECK_VARIABLE_INSTANTIATON(ve)
 
         se->type = ve->instantiation->type; /* must match the stack entry */
+        if(se->type == OPCODE_INT)
+        {
+            nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
+            *temp = *(nap_int_t*)ve->instantiation->value;
 
-        /* setting the value of the stack entry, nothing else is required here */
-        se->value = ve;
+            /* setting the value of the stack entry */
+            se->value = temp;
+
+        }
+
     }
     else
     {
