@@ -7,6 +7,7 @@
 #include "nap_consts.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 int nap_pop(struct nap_vm* vm)
 {
@@ -127,9 +128,30 @@ int nap_pop(struct nap_vm* vm)
                     ve->instantiation->value = temp;
                 }
             }
-            if(ve->instantiation->type == STACK_ENTRY_STRING)
+            else
+            if(ve->instantiation->type == STACK_ENTRY_STRING) /* popping a string variable */
             {
-                _NOT_IMPLEMENTED
+                if(vm->stack[vm->stack_pointer]->type == OPCODE_STRING)
+                { /* and there is a string on the stack */
+                    char* temp = NULL;
+                    if(ve->instantiation->value)
+                    {
+                        MEM_FREE(ve->instantiation->value);
+                    }
+                    temp = (char*)calloc(
+                                vm->stack[vm->stack_pointer]->len * CC_MUL + 1, /* UTF-32BE */
+                                sizeof(char));
+
+                    memcpy(temp, vm->stack[vm->stack_pointer]->value,
+                            vm->stack[vm->stack_pointer]->len * CC_MUL);
+
+                    ve->instantiation->value = temp;
+                    ve->instantiation->len = vm->stack[vm->stack_pointer]->len;
+                }
+                else /* popping a string when the push was not a string */
+                {
+                    _NOT_IMPLEMENTED
+                }
             }
             else
             {
