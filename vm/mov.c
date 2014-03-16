@@ -144,6 +144,9 @@ static int64_t deliver_flat_index(struct nap_vm* vm,
     return to_ret;
 }
 
+/**
+ * Moves a string
+ */
 static int move_string_into_substring(struct nap_vm* vm, nap_int_t start_index, nap_int_t end_index,
                                       char** target, size_t* target_len,
                                       char* source, size_t source_len,
@@ -164,7 +167,7 @@ static int move_string_into_substring(struct nap_vm* vm, nap_int_t start_index, 
 
     /* calculate the new length of the target */
     new_len = *target_len -
-            (end_index - start_index - 1) +
+            ((size_t)end_index - (size_t)start_index - 1) +
             source_len; /* the new length of the var*/
 
     if(start_index >= *target_len)
@@ -176,7 +179,7 @@ static int move_string_into_substring(struct nap_vm* vm, nap_int_t start_index, 
 
     /* and fill up the memory */
     memcpy(first_part, *target,
-           start_index * CC_MUL); /* taking the first part from the string */
+           (size_t)start_index * CC_MUL); /* taking the first part from the string */
 
     memcpy(first_part + start_index * CC_MUL,
            source,
@@ -184,7 +187,7 @@ static int move_string_into_substring(struct nap_vm* vm, nap_int_t start_index, 
 
     memcpy(first_part + (start_index + source_len )* CC_MUL,
            *target + (end_index + 1) * CC_MUL, /* +1 because we don't include end_index*/
-           (*target_len - end_index - 1) * CC_MUL); /* and fetching in what remained, -1 see above */
+           (*target_len - (size_t)end_index - 1) * CC_MUL); /* and fetching in what remained, -1 see above */
 
     MEM_FREE(*target);
     *target = first_part;
@@ -290,7 +293,7 @@ static int mov_into_byte_register(struct nap_vm* vm)
         uint8_t return_type = vm->content[vm->cc ++]; /* int/string/float...*/
         if(return_type == OPCODE_INT)                 /* handles: mov reg int 0, rv int*/
         {
-            vm->regb[register_index] = vm->rvi;
+            vm->regb[register_index] = (nap_byte_t)vm->rvi; /* WARNING! Possile loss of data*/
         }
         else
         if(return_type == OPCODE_STRING)              /* handles: mov reg int 0, rv string*/
@@ -412,10 +415,15 @@ static int mov_into_byte_register(struct nap_vm* vm)
                 else
                 if(ctr_used_index_regs == 2) /* string[2,5] = "ABC" - removes from the string the substring [2,5] and puts in the new string */
                 {
-                    size_t start_index = vm->regidx[0]; /* starting from this */
-                    size_t end_index = vm->regidx[1];
+                    size_t start_index = (size_t)vm->regidx[0]; /* starting from this */
+                    size_t end_index = (size_t)vm->regidx[1];
                     size_t temp_len = end_index - start_index + 1;
                     int error_ind = NAP_SUCCESS;
+					if(end_index < start_index)
+					{
+						return NAP_FAILURE;
+					}
+						 
                     vm->regb[register_index] = (nap_byte_t)nap_int_string_to_number(
                                 (char*)var->instantiation->value + start_index * CC_MUL,
                                 temp_len, &error_ind);
