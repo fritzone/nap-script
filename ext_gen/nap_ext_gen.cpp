@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
 
     std::string cpp_file = target_dir + "/nap_ext_def.c";
     std::string header_file = target_dir + "/nap_ext_def.h";
-    int t = atoi(max_par.c_str());
+    unsigned char t = atoi(max_par.c_str());
     if(t > 32)
     {
         t = 8;
@@ -293,6 +293,9 @@ int main(int argc, char* argv[])
     FILE* fp_body = fopen(cpp_file.c_str(), "wt+");
     fputs("#include \"nap_ext_def.h\"\n\n", fp_body);
     fputs("#include <stdlib.h>\n\n", fp_body);
+#ifdef _WINDOWS
+	fputs("#pragma warning(disable: 4055)\n\n", fp_body);
+#endif
 
     // parameters
     fputs("struct nap_ext_par_desc\n{", fp_header);

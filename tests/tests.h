@@ -32,6 +32,11 @@
     nap_runtime_shutdown(&runtime);                                \
     ASSERT_TRUE(runtime == NULL);
 
+
+#ifdef _WINDOWS
+	#pragma warning(disable: 4127)
+#endif
+
 #define SCRIPT_ASSERT_STREQ(with,what)                             \
     do {                                                           \
         char* what = VAR_STRING(what);                             \
