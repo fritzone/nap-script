@@ -102,7 +102,7 @@ static int do_string_operation(struct nap_vm *vm, nap_string_t *target,
         memcpy(temp + final_len, operand, operand_len * CC_MUL);
 
         *len += operand_len;
-        MEM_FREE(*target);
+        NAP_MEM_FREE(*target);
         *target = temp;
 
         return NAP_SUCCESS;

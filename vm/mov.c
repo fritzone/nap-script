@@ -59,7 +59,7 @@ static char* init_string_register(struct nap_vm* vm, uint8_t reg_idx,
     {
         /* set teh memory value to zero to avoid hacking */
         memset(vm->regs[reg_idx], 0, vm->regslens[reg_idx] * CC_MUL);
-        MEM_FREE(vm->regs[reg_idx]);
+        NAP_MEM_FREE(vm->regs[reg_idx]);
     }
 
     vm->regs[reg_idx] = tmp;
@@ -189,7 +189,7 @@ static int move_string_into_substring(struct nap_vm* vm, nap_int_t start_index, 
            *target + (end_index + 1) * CC_MUL, /* +1 because we don't include end_index*/
            (*target_len - (size_t)end_index - 1) * CC_MUL); /* and fetching in what remained, -1 see above */
 
-    MEM_FREE(*target);
+    NAP_MEM_FREE(*target);
     *target = first_part;
     *target_len = new_len;
     return NAP_SUCCESS;
@@ -786,7 +786,7 @@ static int mov_into_variable(struct nap_vm* vm)
                 /* moving a register into the string variable */
                 if(var->instantiation->value)
                 {
-                    MEM_FREE(var->instantiation->value);
+                    NAP_MEM_FREE(var->instantiation->value);
                 }
                 temp = (char*)calloc(
                             vm->regslens[register_index] * CC_MUL + 1, /* UTF-32BE */

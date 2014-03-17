@@ -52,7 +52,7 @@ extern "C" {
 #ifdef _MEM_DEBUG_
 #define MEM_FREE(x) if((x)) { fprintf(stderr, "free:%p (%s:%d)\n", (x), __FILE__, __LINE__);  free((x)); }
 #else
-#define MEM_FREE(x) if(x){ free((x)); }
+#define NAP_MEM_FREE(x) if(x){ free((x)); }
 #endif
 
 #define REGISTER_COUNT      255        /* number of registers in the VM*/
@@ -307,6 +307,8 @@ char* nap_vm_get_string(struct nap_vm* vm, char* name, int* found);
  *
  * @param vm the target virtual machine
  * @param error_desc the error description
+ *
+ * The method takes a copy of the error_desc string.
  *
  * @return this function always return NAP_FAILURE
  */

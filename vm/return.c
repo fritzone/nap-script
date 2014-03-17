@@ -30,7 +30,7 @@ int nap_return(struct nap_vm *vm)
         {
             /* we are supposed to recreate the RVS, clear it before*/
             size_t len = 0;
-            MEM_FREE(vm->rvs);
+            NAP_MEM_FREE(vm->rvs);
             vm->rvl = vm->regslens[register_index];
             len = vm->rvl* CC_MUL;
             vm->rvs = (char*)calloc(len, sizeof(char));

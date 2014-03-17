@@ -90,6 +90,7 @@ void nap_vm_cleanup(struct nap_vm* vm)
     int64_t tempjmi;
     /* dump(vm, stdout); */
 
+    /* free the metatable */
     for(i=0; i<vm->meta_size; i++)
     {
         if(vm->metatable[i]->instantiation)
@@ -97,25 +98,25 @@ void nap_vm_cleanup(struct nap_vm* vm)
             if(vm->metatable[i]->instantiation->value)
             {
                 /* fprintf(stderr, "%s=%d\n", vm->metatable[i]->name, *(int*)vm->metatable[i]->instantiation->value); */
-                MEM_FREE(vm->metatable[i]->instantiation->value);
+                NAP_MEM_FREE(vm->metatable[i]->instantiation->value);
             }
 
-            MEM_FREE(vm->metatable[i]->instantiation);
+            NAP_MEM_FREE(vm->metatable[i]->instantiation);
         }
     }
     for(i=0; i<vm->meta_size; i++)
     {
         if(vm->metatable[i]->name)
         {
-            MEM_FREE(vm->metatable[i]->name);
+            NAP_MEM_FREE(vm->metatable[i]->name);
         }
 
         if(vm->metatable[i])
         {
-            MEM_FREE(vm->metatable[i]);
+            NAP_MEM_FREE(vm->metatable[i]);
         }
     }
-    MEM_FREE(vm->metatable);
+    NAP_MEM_FREE(vm->metatable);
 
     /* free the allocated stack */
     for(tempst = vm->stack_pointer; tempst > -1; tempst --)
@@ -128,27 +129,27 @@ void nap_vm_cleanup(struct nap_vm* vm)
         if(vm->stack[tempst] && (vm->stack[tempst]->type == OPCODE_REG
                                  || vm->stack[tempst]->type == STACK_ENTRY_MARKER_NAME))
         {
-            MEM_FREE(vm->stack[tempst]->value);
+            NAP_MEM_FREE(vm->stack[tempst]->value);
         }
 
-        MEM_FREE(vm->stack[tempst]);
+        NAP_MEM_FREE(vm->stack[tempst]);
     }
-    MEM_FREE(vm->stack);
+    NAP_MEM_FREE(vm->stack);
 
     /* freeing the jumptable */
 	for(tempjmi = vm->jumptable_size; tempjmi > 0; tempjmi --)
 	{
 	    if(vm->jumptable[tempjmi - 1]->label_name)
 		{
-	        MEM_FREE(vm->jumptable[tempjmi - 1]->label_name);
+            NAP_MEM_FREE(vm->jumptable[tempjmi - 1]->label_name);
 		}
-		MEM_FREE(vm->jumptable[tempjmi - 1]);
+        NAP_MEM_FREE(vm->jumptable[tempjmi - 1]);
 	}
 
-    MEM_FREE(vm->jumptable);
+    NAP_MEM_FREE(vm->jumptable);
 
     /* freeing the content */
-    MEM_FREE(vm->content);
+    NAP_MEM_FREE(vm->content);
 
     /* freeing the allocated bytecode chunks */
     for(i = 0; i<vm->allocated_chunks; i++)
@@ -157,21 +158,31 @@ void nap_vm_cleanup(struct nap_vm* vm)
         {
             if(vm->btyecode_chunks[i]->code)
             {
-                MEM_FREE(vm->btyecode_chunks[i]->code);
+                NAP_MEM_FREE(vm->btyecode_chunks[i]->code);
             }
-            MEM_FREE(vm->btyecode_chunks[i]);
+            NAP_MEM_FREE(vm->btyecode_chunks[i]);
         }
     }
 
-    MEM_FREE(vm->btyecode_chunks);
+    NAP_MEM_FREE(vm->btyecode_chunks);
 
     /* the stringtable */
     for(i = 0; i<vm->strt_size; i++)
     {
-        MEM_FREE(vm->stringtable[i]->string);
-        MEM_FREE(vm->stringtable[i]);
+        NAP_MEM_FREE(vm->stringtable[i]->string);
+        NAP_MEM_FREE(vm->stringtable[i]);
     }
-    MEM_FREE(vm->stringtable);
+    NAP_MEM_FREE(vm->stringtable);
+
+    /* free the funtable */
+    for(i = 0; i<vm->funtable_entries; i++)
+    {
+        NAP_MEM_FREE(vm->funtable[i]->function_name);
+        NAP_MEM_FREE(vm->funtable[i]->parameter_types);
+        NAP_MEM_FREE(vm->funtable[i]);
+    }
+    NAP_MEM_FREE(vm->funtable);
+
 
     /* the error message will be freed only if it was not allocated */
     if(vm->error_message)
@@ -187,23 +198,26 @@ void nap_vm_cleanup(struct nap_vm* vm)
 
         if(needs_free)
         {
-            MEM_FREE(vm->error_message);
+            NAP_MEM_FREE(vm->error_message);
         }
     }
 
     if(vm->error_description)
     {
-        MEM_FREE(vm->error_description);
+        NAP_MEM_FREE(vm->error_description);
     }
 
     /* the string registers */
     for(i=0; i<REGISTER_COUNT; i++)
     {
-        MEM_FREE(vm->regs[i]);
+        NAP_MEM_FREE(vm->regs[i]);
     }
 
+    /* the stringreturn value */
+    NAP_MEM_FREE(vm->rvs);
+
     /* and the VM itself */
-    MEM_FREE(vm);
+    NAP_MEM_FREE(vm);
 }
 
 struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environments target)
@@ -385,7 +399,7 @@ struct nap_vm *nap_vm_load(const char *filename)
     fclose(fp);
 
     vm = nap_vm_inject(file_content, fsize, STANDALONE);
-    MEM_FREE(file_content);
+    NAP_MEM_FREE(file_content);
 
     return vm;
 }
@@ -519,12 +533,12 @@ int nap_restore_registers(struct nap_vm* vm)
     /* restore the int registers */
     regi_stack_idx --;
     memcpy(vm->regi, regi_stack[regi_stack_idx], vm->mrc * sizeof(nap_int_t));
-    MEM_FREE(regi_stack[regi_stack_idx]);
+    NAP_MEM_FREE(regi_stack[regi_stack_idx]);
 
     /* restore the byte registers */
     regb_stack_idx --;
     memcpy(vm->regb, regb_stack[regb_stack_idx], vm->mrc * sizeof(nap_byte_t));
-    MEM_FREE(regb_stack[regb_stack_idx]);
+    NAP_MEM_FREE(regb_stack[regb_stack_idx]);
 
     return NAP_SUCCESS;
 }

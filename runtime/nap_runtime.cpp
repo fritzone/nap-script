@@ -398,6 +398,7 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
         runtime->vm->rvl = child_vm->rvl;
         if(runtime->vm->rvl)
         {
+            NAP_MEM_FREE(runtime->vm->rvs);
             runtime->vm->rvs = (char*)calloc(runtime->vm->rvl * CC_MUL, sizeof(char)); /* UTF32 */
             memcpy(runtime->vm->rvs, child_vm->rvs, runtime->vm->rvl  * CC_MUL);
         }
