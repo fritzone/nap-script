@@ -21,12 +21,12 @@ int nap_clrs(struct nap_vm* vm)
         if(vm->stack[vm->stack_pointer]->type == (StackEntryType)OPCODE_REG
                 || vm->stack[vm->stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
         {
-            MEM_FREE(vm->stack[vm->stack_pointer]->value); /* this frees the stuff allocated at push */
+            NAP_MEM_FREE(vm->stack[vm->stack_pointer]->value); /* this frees the stuff allocated at push */
             vm->stack[vm->stack_pointer]->value = NULL;
             /* TODO: in case there are object on the stack call their destructor */
         }
 
-        MEM_FREE(vm->stack[vm->stack_pointer]);
+        NAP_MEM_FREE(vm->stack[vm->stack_pointer]);
         vm->stack[vm->stack_pointer] = NULL;
         vm->stack_pointer --;
     }
@@ -41,9 +41,9 @@ int nap_clrs(struct nap_vm* vm)
       && vm->stack[vm->stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
     {
 
-        MEM_FREE(vm->stack[vm->stack_pointer]->value);
+        NAP_MEM_FREE(vm->stack[vm->stack_pointer]->value);
         vm->stack[vm->stack_pointer]->value = NULL;
-        MEM_FREE(vm->stack[vm->stack_pointer]);
+        NAP_MEM_FREE(vm->stack[vm->stack_pointer]);
         vm->stack[vm->stack_pointer] = NULL;
         vm->stack_pointer --;
     }

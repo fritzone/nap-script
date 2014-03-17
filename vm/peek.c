@@ -39,9 +39,9 @@ int nap_peek(struct nap_vm *vm)
         {
             if(ve->instantiation->value)
             {
-                MEM_FREE(ve->instantiation->value);
+                NAP_MEM_FREE(ve->instantiation->value);
             }
-            MEM_FREE(ve->instantiation);
+            NAP_MEM_FREE(ve->instantiation);
         }
 
         /* create a new instantiation */

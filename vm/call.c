@@ -30,7 +30,7 @@ int nap_call(struct nap_vm *vm)
                      " Max is ["JL_SIZE_T_SPECIFIER"]",
                      jmpt_index, vm->jumptable_size);
             nap_vm_set_error_description(vm, s);
-            MEM_FREE(s);
+            NAP_MEM_FREE(s);
             return NAP_FAILURE;
         }
         /* and simply set cc to be where we need to go */
@@ -79,7 +79,7 @@ int nap_call(struct nap_vm *vm)
         vm->rvl = vm->parent->rvl;
         if(vm->parent->rvl)
         {
-            MEM_FREE(vm->rvs);
+            NAP_MEM_FREE(vm->rvs);
             vm->rvs = (char*)calloc(vm->parent->rvl * CC_MUL, sizeof(char)); /* UTF32 */
             memcpy(vm->rvs, vm->parent->rvs, vm->rvl  * CC_MUL);
         }

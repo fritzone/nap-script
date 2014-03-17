@@ -111,7 +111,9 @@ method* call_context::get_method(const string &pname)
         if(fe)
         {
             call_context* chain_cc = new call_context(mcompiler, 2, "-", 0, 0);
+            garbage_bin<call_context*>::instance(mcompiler).place(chain_cc, mcompiler);
             method* m = new method(mcompiler, pname.c_str(), (char*)get_reg_type(fe->return_type), chain_cc);
+            garbage_bin<method*>::instance(mcompiler).place(m, mcompiler);
             for(int i=0; i<fe->parameter_count; i++)
             {
                 bool success;

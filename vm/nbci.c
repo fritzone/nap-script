@@ -95,7 +95,7 @@ char *nap_vm_get_string(struct nap_vm* vm, char* name, int* found)
 						size_t dest_len = 0, real_len = 0;
                         if(finame != name)
                         {
-                            MEM_FREE(finame);
+                            NAP_MEM_FREE(finame);
                         }
                         *found = 1;
                         dest_len = vm->metatable[i]->instantiation->len;
@@ -136,7 +136,7 @@ nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found)
                     {
                         if(finame != name)
                         {
-                            MEM_FREE(finame);
+                            NAP_MEM_FREE(finame);
                         }
                         *found = 1;
                         return *(nap_int_t*)(vm->metatable[i]->instantiation->value);
@@ -172,7 +172,7 @@ nap_byte_t nap_vm_get_byte(struct nap_vm* vm, char* name, int *found)
                     {
                         if(finame != name)
                         {
-                            MEM_FREE(finame);
+                            NAP_MEM_FREE(finame);
                         }
                         *found = 1;
                         return *(nap_byte_t*)(vm->metatable[i]->instantiation->value);

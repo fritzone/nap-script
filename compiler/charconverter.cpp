@@ -12,7 +12,7 @@ char* to_nap_format(const char* in, size_t in_len, size_t& used_len)
 {
     setlocale(LC_ALL, "");
     char* t1 = setlocale(LC_CTYPE, "");
-    char* locn = (char*)calloc(strlen(t1), sizeof(char));
+    char* locn = (char*)calloc(strlen(t1) + 1   , sizeof(char));
     strcpy(locn, t1);
     const char* enc = strchr(locn, '.') + 1;
 

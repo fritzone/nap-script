@@ -222,7 +222,7 @@ NAP_LIB_API nap_real_t nap_runtime_get_real(struct nap_runtime* runtime,
  * variable_name. Only variables from the global namespace can be retrieved.
  *
  * @param[in]  runtime The runtime which has the variable defined.
- * @param[in]  name    The name of the variable.
+ * @param[in]  name    The name of the string variable.
  * @param[out] found   Populated to NAP_VARIABLE_FOUND (1) if the variable was
  *                     found in the runtime or to NAP_VARIABLE_NOT_FOUND (0) if
  *                     the variable was not found.
@@ -232,6 +232,8 @@ NAP_LIB_API nap_real_t nap_runtime_get_real(struct nap_runtime* runtime,
  *         also the found parameter should be populated to the value of
  *         NAP_VARIABLE_NOT_FOUND in order to confirm that there is indeed no
  *         such variable, otherwise the value indeed is NULL.
+ *         The caller of this method is responsible to free the returned value
+ *         using the \c free() system call (the value is allocated with calloc)
  **/
 NAP_LIB_API nap_string_t nap_runtime_get_string(struct nap_runtime* runtime,
                                                 const char* variable_name,

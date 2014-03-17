@@ -104,11 +104,11 @@ TEST(CodeExecution, ExternalCallingOfInternalMethodWithStringReturnType)
     ASSERT_FALSE(runtime == NULL);
 
     nap_bytecode_chunk* bytecode = nap_runtime_compile(runtime,
-    "string c = \"ABC\";                  \
+    "string c = \"ABC\";                      \
      string some_fun(string a, string b)      \
-     {                                \
-         c = a + b;                   \
-         return c;                    \
+     {                                        \
+         c = a + b;                           \
+         return c;                            \
      }" ,0);
 
     ASSERT_FALSE(bytecode == NULL);
@@ -117,9 +117,11 @@ TEST(CodeExecution, ExternalCallingOfInternalMethodWithStringReturnType)
     nap_string_t p2 = (nap_string_t)"GHI";
     nap_string_t ret = 0;
     nap_execute_method(runtime, &ret, "some_fun", p1, p2);
-    ASSERT_STREQ("DEFGHI", VAR_STRING(c));
+    char *c = VAR_STRING(c);
+    ASSERT_STREQ("DEFGHI", c);
     ASSERT_STREQ("DEFGHI", ret);
     free(ret);
+    free(c);
 
     nap_runtime_shutdown(&runtime);
     ASSERT_TRUE(runtime == NULL);

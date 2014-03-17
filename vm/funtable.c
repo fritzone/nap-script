@@ -43,6 +43,7 @@ int interpret_funtable(struct nap_vm *vm, uint8_t *start_location, uint32_t len)
 
         if( (cloc + 4) > (vm->content + len) || func == count + 1)
         {
+            free(entry); /* no need for this last entry */
             return NAP_SUCCESS;
         }
 

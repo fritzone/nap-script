@@ -18,7 +18,10 @@ int nap_push(struct nap_vm *vm)
                   a variable without the int/string/byte/etc ... or a string
                   or a number, ...*/
 
-    if(se->type == OPCODE_INT || se->type == OPCODE_STRING || se->type == OPCODE_BYTE) /* or real */
+    /* see for push int XX, push string YY ... ie: declaring a variable */
+    if(   se->type == STACK_ENTRY_INT
+       || se->type == STACK_ENTRY_BYTE
+       || se->type == STACK_ENTRY_STRING) /* or real */
     {
         uint8_t push_what = vm->content[vm->cc ++];
 
@@ -83,6 +86,7 @@ int nap_push(struct nap_vm *vm)
         }
         else
         {
+            /* is this push "abcde"? <- the compiler generates: push string index */
             if(se->type == OPCODE_STRING) /* pushing an immediate string on the stack! */
             {
                 nap_index_t str_index = 0;
@@ -110,12 +114,13 @@ int nap_push(struct nap_vm *vm)
         }
     }
     else
-    if(se->type == OPCODE_REG) /* pushing a register */
+    if(se->type == OPCODE_REG) /* pushing a register. */
     {
-        uint8_t reg_type = vm->content[vm->cc ++];
-        uint8_t reg_idx = vm->content[vm->cc ++];
+        uint8_t reg_idx = 0; /* the index of the register */
+        se->type = vm->content[vm->cc ++]; /* update the stack entry type */
+        reg_idx = vm->content[vm->cc ++];
 
-        if(reg_type == OPCODE_INT) /* pushing an int register */
+        if(se->type == OPCODE_INT) /* pushing an int register */
         {
             nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
             *temp = vm->regi[reg_idx];
@@ -124,7 +129,7 @@ int nap_push(struct nap_vm *vm)
             se->value = temp;
         }
         else
-        if(reg_type == OPCODE_BYTE) /* pushing a byte register */
+        if(se->type == OPCODE_BYTE) /* pushing a byte register */
         {
             nap_byte_t* temp = (nap_byte_t*)calloc(1, sizeof(nap_byte_t));
             *temp = vm->regb[reg_idx];
@@ -133,7 +138,7 @@ int nap_push(struct nap_vm *vm)
             se->value = temp;
         }
         else
-        if(reg_type == OPCODE_STRING) /* pushing a string register */
+        if(se->type == OPCODE_STRING) /* pushing a string register */
         {
             size_t len = vm->regslens[reg_idx] * CC_MUL; /* UTF32*/
             char* temp = (char*)(calloc(len,  sizeof(char)));
@@ -166,7 +171,8 @@ int nap_push(struct nap_vm *vm)
         ASSERT_NOT_NULL_VAR(ve)
         CHECK_VARIABLE_INSTANTIATON(ve)
 
-        se->type = ve->instantiation->type; /* must match the stack entry */
+        se->type = ve->instantiation->type; /* force to match the stack entry */
+
         if(se->type == OPCODE_INT)
         {
             nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
@@ -174,9 +180,7 @@ int nap_push(struct nap_vm *vm)
 
             /* setting the value of the stack entry */
             se->value = temp;
-
         }
-
     }
     else
     {
