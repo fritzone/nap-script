@@ -13,6 +13,8 @@ int nap_pop(struct nap_vm* vm)
 {
     uint8_t pop_what = 0;
 
+    NAP_NN_ASSERT(vm, vm->stack);
+
     if(vm->stack_pointer == 0) /* no more entries on the stack. Return error */
     {
         return NAP_FAILURE;
@@ -39,7 +41,7 @@ int nap_pop(struct nap_vm* vm)
             {
                 /* check if they have the same type */
                 if(vm->stack[vm->stack_pointer]->type == STACK_ENTRY_INT)
-                {   /* int on the stach */
+                {   /* int on the stack */
                     vm->regi[register_index] = *(nap_int_t*)vm->stack[vm->stack_pointer]->value;
                 }
                 else
@@ -59,7 +61,7 @@ int nap_pop(struct nap_vm* vm)
         }
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
@@ -89,7 +91,7 @@ int nap_pop(struct nap_vm* vm)
             }
             else
             {
-                _NOT_IMPLEMENTED
+                NAP_NOT_IMPLEMENTED
             }
             /* Do not touch the stack for now.*/
         }
@@ -100,37 +102,26 @@ int nap_pop(struct nap_vm* vm)
             {
                 if(ve->instantiation->value)
                 {
-                    if(vm->stack[vm->stack_pointer]->type == OPCODE_IMMEDIATE)
+                    if(vm->stack[vm->stack_pointer]->type == OPCODE_INT)
                     {
                         *(nap_int_t*)ve->instantiation->value = *(nap_int_t*)vm->stack[vm->stack_pointer]->value;
                     }
                     else
-                    if(vm->stack[vm->stack_pointer]->type == OPCODE_INT)
                     {
-                        struct variable_entry* ve_src = vm->stack[vm->stack_pointer]->value;
-                        *(nap_int_t*)ve->instantiation->value = *(nap_int_t*)ve_src->instantiation->value;
-                    }
-                    else
-                    {
-                        _NOT_IMPLEMENTED
+                        NAP_NOT_IMPLEMENTED
                     }
                 }
                 else /* allocate the memory for the value */
                 {
-                    nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
-                    if(vm->stack[vm->stack_pointer]->type == OPCODE_IMMEDIATE)
+                    nap_int_t* temp = NULL;
+                    if(vm->stack[vm->stack_pointer]->type == OPCODE_INT)
                     {
+                        temp = NAP_MEM_ALLOC(1, nap_int_t);
                         *temp  = *(int64_t*)vm->stack[vm->stack_pointer]->value;
                     }
                     else
-                    if(vm->stack[vm->stack_pointer]->type == OPCODE_INT)
                     {
-                        struct variable_entry* ve_src = vm->stack[vm->stack_pointer]->value;
-                        *temp  = *(int64_t*)ve_src->instantiation->value;
-                    }
-                    else
-                    {
-                        _NOT_IMPLEMENTED
+                        NAP_NOT_IMPLEMENTED
                     }
                     ve->instantiation->value = temp;
                 }
@@ -145,24 +136,20 @@ int nap_pop(struct nap_vm* vm)
                     {
                         NAP_MEM_FREE(ve->instantiation->value);
                     }
-                    temp = (char*)calloc(
-                                vm->stack[vm->stack_pointer]->len * CC_MUL + 1, /* UTF-32BE */
-                                sizeof(char));
-
-                    memcpy(temp, vm->stack[vm->stack_pointer]->value,
-                            vm->stack[vm->stack_pointer]->len * CC_MUL);
+                    NAP_STRING_ALLOC(vm, temp, vm->stack[vm->stack_pointer]->len);
+                    NAP_STRING_COPY(temp, vm->stack[vm->stack_pointer]->value, vm->stack[vm->stack_pointer]->len );
 
                     ve->instantiation->value = temp;
                     ve->instantiation->len = vm->stack[vm->stack_pointer]->len;
                 }
                 else /* popping a string when the push was not a string */
                 {
-                    _NOT_IMPLEMENTED
+                    NAP_NOT_IMPLEMENTED
                 }
             }
             else
             {
-                _NOT_IMPLEMENTED
+                NAP_NOT_IMPLEMENTED
             }
 
             if(vm->stack[vm->stack_pointer]->type == OPCODE_IMMEDIATE
@@ -179,7 +166,7 @@ int nap_pop(struct nap_vm* vm)
     }
     else
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
     return NAP_SUCCESS;
 }

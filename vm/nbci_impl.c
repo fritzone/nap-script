@@ -93,26 +93,24 @@ void nap_vm_cleanup(struct nap_vm* vm)
     /* free the metatable */
     for(i=0; i<vm->meta_size; i++)
     {
-        if(vm->metatable[i]->instantiation)
-        {
-            if(vm->metatable[i]->instantiation->value)
-            {
-                /* fprintf(stderr, "%s=%d\n", vm->metatable[i]->name, *(int*)vm->metatable[i]->instantiation->value); */
-                NAP_MEM_FREE(vm->metatable[i]->instantiation->value);
-            }
-
-            NAP_MEM_FREE(vm->metatable[i]->instantiation);
-        }
-    }
-    for(i=0; i<vm->meta_size; i++)
-    {
-        if(vm->metatable[i]->name)
-        {
-            NAP_MEM_FREE(vm->metatable[i]->name);
-        }
 
         if(vm->metatable[i])
         {
+            if(vm->metatable[i]->name)
+            {
+                NAP_MEM_FREE(vm->metatable[i]->name);
+            }
+
+            if(vm->metatable[i]->instantiation)
+            {
+                if(vm->metatable[i]->instantiation->value)
+                {
+                    /* fprintf(stderr, "%s=%d\n", vm->metatable[i]->name, *(int*)vm->metatable[i]->instantiation->value); */
+                    NAP_MEM_FREE(vm->metatable[i]->instantiation->value);
+                }
+
+                NAP_MEM_FREE(vm->metatable[i]->instantiation);
+            }
             NAP_MEM_FREE(vm->metatable[i]);
         }
     }
@@ -439,7 +437,7 @@ nap_byte_t nap_read_byte(struct nap_vm* vm)
     else
     {
         printf("invalid mov into byte size [mov]: 0x%x", imm_size);
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
 
     return nr;
@@ -484,7 +482,7 @@ nap_int_t nap_read_immediate(struct nap_vm* vm)
     else
     {
         printf("invalid immediate size [push]: 0x%x", imm_size);
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
     return nr;
 }
@@ -570,7 +568,7 @@ int nap_handle_interrupt(struct nap_vm* vm)
     /* CC points to the interrupt number */
     uint8_t intr = *(uint8_t*)(vm->content + vm->cc);
     uint8_t int_res = 0;
-	char* s = NULL;
+    char s[64];
 
     if(vm->interrupts[intr])
     {
@@ -579,27 +577,25 @@ int nap_handle_interrupt(struct nap_vm* vm)
     else
     {
         /* unimplemented interrupt, reporting an error */
-        char* s = (char*)calloc(64, sizeof(char));
-        sprintf(s, "unimplemented interrupt: %d", intr);
-        vm->error_description = s;
-        return NAP_FAILURE;
+        SNPRINTF(s, 64, "unimplemented interrupt: %d", intr);
+        return nap_vm_set_error_description(vm, s);
     }
-    /* advance to the next position */
-    vm->cc ++;
+
     if(int_res == 0)
     {
+        /* advance to the next position */
+        vm->cc ++;
+
         return NAP_SUCCESS;
     }
-    s = (char*)calloc(64, sizeof(char));
-    sprintf(s, "interrupt [%d] failure code [%d]", intr, int_res);
-    vm->error_description = s;
-    return NAP_FAILURE;
+
+    SNPRINTF(s, 64, "interrupt [%d] failure code [%d]", intr, int_res);
+    return nap_vm_set_error_description(vm, s);
 }
 
 
 struct variable_entry *nap_fetch_variable(struct nap_vm* vm, nap_index_t var_index)
 {
-
     struct variable_entry* ve = vm->metatable[var_index];
     if(ve->type == EXTERN_VAR)
     {

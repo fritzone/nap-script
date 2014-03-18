@@ -1,5 +1,6 @@
 #include "metatbl.h"
 #include "nbci.h"
+#include "nbci_impl.h"
 #include "byte_order.h"
 #include "nap_consts.h"
 
@@ -22,13 +23,8 @@ int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
     }
 
     vm->meta_size = count;
-    vm->metatable = (struct variable_entry**) calloc(vm->meta_size + 1,
-                                               sizeof(struct variable_entry*));
-    if(vm->metatable == NULL)
-    {
-        vm->meta_size = 0;
-        return NAP_FAILURE;
-    }
+    vm->metatable = NAP_MEM_ALLOC(vm->meta_size + 1, struct variable_entry*);
+    NAP_NN_ASSERT(vm, vm->metatable);
 
     for(;;)
     {

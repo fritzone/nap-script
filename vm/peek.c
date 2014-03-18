@@ -23,7 +23,7 @@ int nap_peek(struct nap_vm *vm)
     }
     else
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
 
     /* now we know the peek index, see into what are we peeking */
@@ -32,7 +32,7 @@ int nap_peek(struct nap_vm *vm)
     {
         nap_index_t var_index = nap_fetch_index(vm);
         struct variable_entry* ve = nap_fetch_variable(vm, var_index);
-        ASSERT_NOT_NULL_VAR(ve)
+        ASSERT_NOT_NULL_VAR(ve);
 
         /* there supposed to be no instantiation at this point for the var */
         if(ve->instantiation)
@@ -68,12 +68,12 @@ int nap_peek(struct nap_vm *vm)
         }
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
 
     return NAP_SUCCESS;

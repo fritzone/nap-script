@@ -151,3 +151,23 @@ TEST(VariableDefinitions, StringSubstringIndexedOperationInsertion)
     SCRIPT_SHUTDOWN;
 }
 
+
+TEST(VariableDefinitions, UsingVarFromAboveScope)
+{
+    SCRIPT_START
+    "                                 \
+            int b;                    \
+            for(int i=0; i<10; i++)   \
+            {                         \
+                int a;                \
+                a = a + i;            \
+                b += a;               \
+            }                         \
+    "
+    SCRIPT_END
+
+    ASSERT_EQ(1+2+3+4+5+6+7+8+9, VAR_INT(b));
+
+    SCRIPT_SHUTDOWN;
+}
+

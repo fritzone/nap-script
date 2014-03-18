@@ -159,14 +159,14 @@ static void resolve_op_equal(nap_compiler* _compiler,
                     return;
                 }
 
-                operation_target_var_source_reg(_compiler, cc, node->op_type, var, level);
+                operation_target_var_source_reg(_compiler, var->cc, node->op_type, var, level);
             }
             else
             {
                 if(is_post_pre_op(node->right->op_type))    /* we post/pre inc/dec with "something++" */
                 {
                     bool success = true;
-                    deal_with_post_pre_node(_compiler, node->right, level, the_method, cc, forced_mov, success);
+                    deal_with_post_pre_node(_compiler, node->right, level, the_method, cc, forced_mov, success); /* ??? var.cc ??*/
                     if(!success)
                     {
                         psuccess = false;

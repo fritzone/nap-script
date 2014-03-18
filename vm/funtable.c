@@ -1,6 +1,7 @@
 #include "funtable.h"
 #include "nap_consts.h"
 #include "nbci.h"
+#include "nbci_impl.h"
 #include "byte_order.h"
 
 #include <stdlib.h>
@@ -18,34 +19,25 @@ int interpret_funtable(struct nap_vm *vm, uint8_t *start_location, uint32_t len)
         return NAP_SUCCESS;
     }
     vm->funtable_entries = count;
-    vm->funtable = (struct funtable_entry**) calloc(vm->funtable_entries + 1,
-                                              sizeof(struct funtable_entry*));
-    if(vm->funtable == NULL)
-    {
-        vm->funtable_entries = 0;
-        return NAP_FAILURE;
-    }
-
+    vm->funtable = NAP_MEM_ALLOC(vm->funtable_entries + 1, struct funtable_entry*);
+    NAP_NN_ASSERT(vm, vm->funtable);
 
     cloc += 4;
     for(;;)
     {
         uint16_t fun_name_len = 0;
         char* fun_name = NULL;
-        uint8_t* pars;
-        struct funtable_entry* entry = (struct funtable_entry*)calloc(1,
-                                                 sizeof(struct funtable_entry));
-        if(entry == NULL)
-        {
-            return NAP_FAILURE;
-        }
+        uint8_t* pars = NULL;
 
+        struct funtable_entry* entry = NULL;
 
         if( (cloc + 4) > (vm->content + len) || func == count + 1)
         {
-            free(entry); /* no need for this last entry */
             return NAP_SUCCESS;
         }
+
+        entry = NAP_MEM_ALLOC(1, struct funtable_entry);
+        NAP_NN_ASSERT(vm, entry);
 
         /* the index of this fun in the jumptable */
         entry->jmptable_index = htovm_32(*(uint32_t*)(cloc));
@@ -56,11 +48,9 @@ int interpret_funtable(struct nap_vm *vm, uint8_t *start_location, uint32_t len)
         cloc += 2;
 
         /* read the name */
-        fun_name = (char*)(calloc(fun_name_len + 1, sizeof(char)));
-        if(fun_name == NULL)
-        {
-            return NAP_FAILURE;
-        }
+        fun_name = NAP_MEM_ALLOC(fun_name_len + 1, char);
+        NAP_NN_ASSERT(vm, fun_name);
+
         memcpy(fun_name, cloc, fun_name_len);
         cloc += fun_name_len;
         entry->function_name = fun_name;
@@ -76,7 +66,9 @@ int interpret_funtable(struct nap_vm *vm, uint8_t *start_location, uint32_t len)
         /* read the parameters if any*/
         if(entry->parameter_count > 0)
         {
-            pars = (uint8_t*)calloc(entry->parameter_count, sizeof(uint8_t));
+            pars = NAP_MEM_ALLOC(entry->parameter_count, uint8_t);
+            NAP_NN_ASSERT(vm, pars);
+
             memcpy(pars, cloc, entry->parameter_count);
             entry->parameter_types = pars;
         }

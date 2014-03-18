@@ -1,5 +1,6 @@
 #include "jmptable.h"
 #include "nbci.h"
+#include "nbci_impl.h"
 #include "byte_order.h"
 #include "nap_consts.h"
 
@@ -21,13 +22,8 @@ int interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
 
     cloc += 4;
     vm->jumptable_size = count;
-    vm->jumptable = (struct jumptable_entry**) calloc(vm->jumptable_size + 1,
-                                              sizeof(struct jumptable_entry*));
-    if(vm->jumptable == NULL)
-    {
-        vm->jumptable_size = 0;
-        return NAP_FAILURE;
-    }
+    vm->jumptable = NAP_MEM_ALLOC(vm->jumptable_size + 1, struct jumptable_entry*);
+    NAP_NN_ASSERT(vm, vm->jumptable);
 
     for(;;)
     {
@@ -66,21 +62,16 @@ int interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
 
             if(loc_name_length != 0)
             {
-                name = (char*)calloc(loc_name_length + 1, sizeof(char));
-                if(name == NULL)
-                {
-                    return NAP_FAILURE;
-                }
-
+                name = NAP_MEM_ALLOC(loc_name_length + 1, char);
+                NAP_NN_ASSERT(vm, name);
                 memcpy(name, cloc, loc_name_length);
                 cloc += loc_name_length;
             }
         }
-        new_jmpentry = (struct jumptable_entry*)calloc(1, sizeof(struct jumptable_entry));
-        if(new_jmpentry == NULL)
-        {
-            return NAP_FAILURE;
-        }
+
+        new_jmpentry = NAP_MEM_ALLOC(1, struct jumptable_entry);
+        NAP_NN_ASSERT(vm, new_jmpentry);
+
         new_jmpentry->location = index;
         new_jmpentry->type = type;
         new_jmpentry->label_name = name;

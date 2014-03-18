@@ -65,7 +65,7 @@ int do_int_operation(struct nap_vm* vm, nap_int_t* target, nap_int_t operand,
     }
     else
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
     return NAP_SUCCESS;
 }
@@ -159,12 +159,12 @@ int nap_operation(struct nap_vm* vm)
                 }
                 else
                 {
-                    _NOT_IMPLEMENTED
+                    NAP_NOT_IMPLEMENTED
                 }
             }
             else
             {
-                _NOT_IMPLEMENTED
+                NAP_NOT_IMPLEMENTED
             }
         }
         else
@@ -216,17 +216,17 @@ int nap_operation(struct nap_vm* vm)
                 }
                 else
                 {
-                    _NOT_IMPLEMENTED
+                    NAP_NOT_IMPLEMENTED
                 }
             }
             else
             {
-                _NOT_IMPLEMENTED
+                NAP_NOT_IMPLEMENTED
             }
         }
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
@@ -268,17 +268,17 @@ int nap_operation(struct nap_vm* vm)
             }
             else
             {
-                _NOT_IMPLEMENTED
+                NAP_NOT_IMPLEMENTED
             }
         }
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else /* maybe adding (substracting) from an indexed value? */
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
     return NAP_SUCCESS;
 }

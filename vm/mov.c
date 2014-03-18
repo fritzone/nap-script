@@ -15,7 +15,7 @@ static int nap_int_set_index_overflow(struct nap_vm* vm,
 				      const char* var_name, 
 				      nap_int_t requested, size_t available)
 {
-    char* s = (char*)calloc(256, sizeof(char));
+    char s[256];
     SNPRINTF(s, 256,
              "Index out of range for [%s]."
              "Requested index: [%" PRINT_u "] "
@@ -23,8 +23,7 @@ static int nap_int_set_index_overflow(struct nap_vm* vm,
              var_name,
              requested,
              available);
-    vm->error_description = s;
-    return NAP_FAILURE;
+    return nap_vm_set_error_description(vm, s);
 }
 
 /**
@@ -304,7 +303,7 @@ static int mov_into_byte_register(struct nap_vm* vm)
         }
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
@@ -327,7 +326,7 @@ static int mov_into_byte_register(struct nap_vm* vm)
         }
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
@@ -355,7 +354,8 @@ static int mov_into_byte_register(struct nap_vm* vm)
                                                  ctr_used_index_regs,
                                                  &error);
                 if(idx < 0) /* error? */
-                {
+                {   /* do not use the set_error here, the string was allocated
+                     copying it would be a memory leak*/
                     vm->error_description = error;
                     return NAP_FAILURE;
                 }
@@ -378,6 +378,8 @@ static int mov_into_byte_register(struct nap_vm* vm)
                                                  &error);
                 if(idx < 0) /* error? */
                 {
+                    /* do not use the set_error here, the string was allocated
+                       copying it would be a memory leak*/
                     vm->error_description = error;
                     return NAP_FAILURE;
                 }
@@ -421,6 +423,7 @@ static int mov_into_byte_register(struct nap_vm* vm)
                     int error_ind = NAP_SUCCESS;
 					if(end_index < start_index)
 					{
+                        /* TODO: error message? */
 						return NAP_FAILURE;
 					}
 						 
@@ -436,17 +439,17 @@ static int mov_into_byte_register(struct nap_vm* vm)
             }
             else
             {
-                _NOT_IMPLEMENTED
+                NAP_NOT_IMPLEMENTED
             }
         }
         else /* what else can be indexed? */
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
     return NAP_SUCCESS;
 }
@@ -490,7 +493,7 @@ static int mov_into_int_register(struct nap_vm* vm)
         }
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
@@ -513,7 +516,7 @@ static int mov_into_int_register(struct nap_vm* vm)
         }
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
@@ -595,18 +598,18 @@ static int mov_into_int_register(struct nap_vm* vm)
             }
             else
             {
-                _NOT_IMPLEMENTED
+                NAP_NOT_IMPLEMENTED
             }
 
         }
         else /* what else can be indexed? */
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
     return NAP_SUCCESS;
 }
@@ -651,12 +654,12 @@ static int mov_into_string_register(struct nap_vm* vm)
         }
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
     return NAP_SUCCESS;
 }
@@ -671,7 +674,7 @@ static int mov_into_index_register(struct nap_vm* vm)
     }
     else
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
 
     return NAP_SUCCESS;
@@ -703,7 +706,7 @@ static int mov_into_register(struct nap_vm* vm)
     }
     else
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
 
     return NAP_SUCCESS;
@@ -748,7 +751,7 @@ static int mov_into_variable(struct nap_vm* vm)
             }
             else
             { /* here: convert the value to hold the requested type */
-                _NOT_IMPLEMENTED
+                NAP_NOT_IMPLEMENTED
             }
         }
         else
@@ -774,7 +777,7 @@ static int mov_into_variable(struct nap_vm* vm)
             }
             else
             { /* here: convert the value to hold the requested type */
-                _NOT_IMPLEMENTED
+                NAP_NOT_IMPLEMENTED
             }
         }
         else
@@ -800,17 +803,17 @@ static int mov_into_variable(struct nap_vm* vm)
             }
             else
             {
-                _NOT_IMPLEMENTED
+                NAP_NOT_IMPLEMENTED
             }
         }
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else /* moving another variable or an immediate into the variable */
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
 
     return NAP_SUCCESS;
@@ -874,7 +877,7 @@ static int mov_into_indexed(struct nap_vm* vm)
                         /* do we fit in? */
                         if(real_index + vm->regslens[register_index] > var->instantiation->len)
                         {
-                            char* s = (char*)calloc(256, sizeof(char));
+                            char s[256];
                             SNPRINTF(s, 256,
                                      "Index overflow error for [%s]."
                                      "Requested index: [%" PRINT_u "] "
@@ -884,8 +887,7 @@ static int mov_into_indexed(struct nap_vm* vm)
                                      real_index,
                                      var->instantiation->len,
                                      real_index + vm->regslens[register_index]);
-                            vm->error_description = s;
-                            return NAP_FAILURE;
+                            return nap_vm_set_error_description(vm, s);
                         }
 
                         /* and finally do a memcpy */
@@ -913,7 +915,7 @@ static int mov_into_indexed(struct nap_vm* vm)
                 }
                 else
                 {
-                    _NOT_IMPLEMENTED
+                    NAP_NOT_IMPLEMENTED
                 }
             }
             else
@@ -928,6 +930,8 @@ static int mov_into_indexed(struct nap_vm* vm)
                                                      &error);
                     if(idx < 0) /* error? */
                     {
+                        /* do not use the set_error here, the string was allocated
+                        copying it would be a memory leak*/
                         vm->error_description = error;
                         return NAP_FAILURE;
                     }
@@ -942,7 +946,7 @@ static int mov_into_indexed(struct nap_vm* vm)
                 }
                 else
                 {
-                    _NOT_IMPLEMENTED
+                    NAP_NOT_IMPLEMENTED
                 }
             }
             else
@@ -957,6 +961,8 @@ static int mov_into_indexed(struct nap_vm* vm)
                                                      &error);
                     if(idx < 0) /* error? */
                     {
+                        /* do not use the set_error here, the string was allocated
+                           copying it would be a memory leak*/
                         vm->error_description = error;
                         return NAP_FAILURE;
                     }
@@ -972,19 +978,19 @@ static int mov_into_indexed(struct nap_vm* vm)
             }
             else
             {
-                _NOT_IMPLEMENTED
+                NAP_NOT_IMPLEMENTED
             }
         }
         else
         {
             /* moving an immediate value/variable into an index destination */
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
     {
         /* moving into something other indexed, than a variable */
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
 
     return NAP_SUCCESS;
@@ -1010,7 +1016,7 @@ int nap_mov(struct nap_vm* vm)
     }
     else /* what comes is moving in a structure member, etc ...*/
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
 
     return NAP_SUCCESS;

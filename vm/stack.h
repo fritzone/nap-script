@@ -23,6 +23,8 @@ typedef enum TStackEntryType
     STACK_ENTRY_LAST
 } StackEntryType;
 
+struct variable_entry;
+
 /**
  * Structure representing a stack entry. The same structure is used in the
  * instantiation of a variable_entry. An object of this type holds the copy
@@ -38,12 +40,13 @@ struct stack_entry
 
     /* the value of it. At this address usually there is:
      *
-     * 1. for immediate values (such as pushing a number, a string)
+     * 1. for something with a value (such as pushing a number, a string or
+     *    a variabe)
      *     - an nap_int_t            (type = STACK_ENTRY_INT)
      *     - a nap_real_t            (type = STACK_ENTRY_REAL)
      *     - a UTF32-BE string       (type = STACK_ENTRY_STRING)
      *     - a nap_byte_t            (type = STACK_ENTRY_BYTE)
-     *    resulted from: push 23, push "abc", push reg int(2), etc...
+     *    resulted from: push 23, push "abc", push reg int(2), push global.a ...
      *
      * 2. for pushing an object on the stack:
      *     - an object descriptor (TODO)
@@ -54,9 +57,10 @@ struct stack_entry
      *       index itself. In this case the type member of this tells us the
      *       type of the data being pushed. (TODO)
      *
-     * 2. for variables (pushed on the stack):
-     *     - a variable entry object
-     *    resulted from: push global.var
+     * 2. for variable declarations (they are pushed on the stack):
+     *     - there is always 0 pushed onto the stack as the initial value of the
+     *       variable.
+     *    resulted from: push int global.int_var
      */
     void* value;
 
@@ -65,6 +69,12 @@ struct stack_entry
      *  2. an element with indexes
      * this is the length of the allocated memory */
     size_t len;
+
+    /* This member has the variable entry in this case this object was created
+     * dute to a variable creation. It is useful only for class like objects to
+     * know the destructor that must be called in order to delete the object.
+     */
+    struct variable_entry* var_def;
 };
 
 #endif

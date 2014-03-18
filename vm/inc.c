@@ -23,12 +23,12 @@ int nap_inc(struct nap_vm* vm)
         }
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
     return NAP_SUCCESS;
 }

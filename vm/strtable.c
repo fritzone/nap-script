@@ -17,13 +17,8 @@ int interpret_stringtable(struct nap_vm *vm, uint8_t *start_location, uint32_t l
     }
     cloc += 4;
 
-    vm->stringtable = (struct strtable_entry**) calloc(vm->strt_size + 1,
-                                                       sizeof(struct strtable_entry*));
-    if(vm->stringtable == NULL)
-    {
-        vm->strt_size = 0;
-        return NAP_FAILURE;
-    }
+    vm->stringtable = NAP_MEM_ALLOC(vm->strt_size + 1, struct strtable_entry*);
+    NAP_NN_ASSERT(vm, vm->stringtable);
 
     for(;;)
     {
@@ -40,12 +35,10 @@ int interpret_stringtable(struct nap_vm *vm, uint8_t *start_location, uint32_t l
             struct strtable_entry* new_strentry = NULL;
 
             cloc += 4;
-            str = (char*)calloc(sizeof(char), len * CC_MUL); /* NOT zero terminated */
-            if(str == NULL)
-            {
-                return NAP_FAILURE;
-            }
-            memcpy(str, cloc, len * CC_MUL); /* UTF-32BE encoding */
+
+            NAP_STRING_ALLOC(vm, str, len);
+            NAP_STRING_COPY(str, cloc, len);
+
             cloc += len * CC_MUL;
 
             if(vm->strt_size < index + 1)
@@ -53,19 +46,13 @@ int interpret_stringtable(struct nap_vm *vm, uint8_t *start_location, uint32_t l
                 struct strtable_entry** tmp = (struct strtable_entry**)
                         realloc(vm->stringtable,
                                 sizeof(struct strtable_entry**) * (index + 1));
-                if(tmp == NULL)
-                {
-                    return NAP_FAILURE;
-                }
+                NAP_NN_ASSERT(vm, tmp);
+
                 vm->stringtable = tmp;
                 vm->strt_size = index + 1;
             }
-            new_strentry = (struct strtable_entry*)calloc(1,
-                                                 sizeof(struct strtable_entry));
-            if(new_strentry == NULL)
-            {
-                return NAP_FAILURE;
-            }
+            new_strentry = NAP_MEM_ALLOC(1, struct strtable_entry);
+            NAP_NN_ASSERT(vm, new_strentry);
 
             new_strentry->index = index;
             new_strentry->string = str;
