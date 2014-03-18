@@ -621,7 +621,6 @@ struct variable_entry *nap_fetch_variable(struct nap_vm* vm, nap_index_t var_ind
     {
         return ve;
     }
-    return NULL;
 }
 
 

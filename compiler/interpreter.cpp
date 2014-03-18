@@ -559,8 +559,7 @@ int interpreter::looks_like_function_def(const char* expr, int expr_len, const e
     {
         return 0;
     }
-    /* finally, it can return 1 */
-    return 0;
+
 }
 
 bool interpreter::is_list_value(const char* what)
