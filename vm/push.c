@@ -19,9 +19,9 @@ int nap_push(struct nap_vm *vm)
                   a variable without the int/string/byte/etc ... or a string
                   or a number, ... This just saves a variable*/
 
-    /* see for push int XX, push string YY ... ie: declaring a variable */
+    /* see for push int global.XX, push string global.YY ... ie: declaring a variable */
     if(   se->type == STACK_ENTRY_INT
-       || se->type == STACK_ENTRY_INT
+       || se->type == STACK_ENTRY_BYTE
        || se->type == STACK_ENTRY_STRING) /* or real */
     {
         uint8_t push_what = vm->content[vm->cc ++];

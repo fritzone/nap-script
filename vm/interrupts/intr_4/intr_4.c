@@ -135,7 +135,8 @@ uint8_t intr_4(struct nap_vm* vm)
     /* going to the generated file */
     nec(function_to_call, pd, 0);
 
-    dlclose(lib_handle);
+    int t = dlclose(lib_handle);
+    fprintf(stderr, "DC:%d\n", t);
 #else
 	{
 		void* function_to_call = NULL;
