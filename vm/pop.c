@@ -152,12 +152,7 @@ int nap_pop(struct nap_vm* vm)
                 NAP_NOT_IMPLEMENTED
             }
 
-            if(vm->stack[vm->stack_pointer]->type == OPCODE_IMMEDIATE
-                    || vm->stack[vm->stack_pointer]->len != 0)
-            { /* immediate values are being allocated by the push, also string values */
-                NAP_MEM_FREE(vm->stack[vm->stack_pointer]->value);
-            }
-
+            NAP_MEM_FREE(vm->stack[vm->stack_pointer]->value);
             NAP_MEM_FREE(vm->stack[vm->stack_pointer]);
 
             /* and the stack will decrease */

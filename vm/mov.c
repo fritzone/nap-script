@@ -116,7 +116,7 @@ static int64_t deliver_flat_index(struct nap_vm* vm,
         int64_t dim_multiplier = 1;
 
         /* is this a valid index? */
-        if( (vm->regidx[i] < 0) || (vm->regidx[i] >= (size_t)(ve->dimensions[i])) )
+        if( (vm->regidx[i] < 0) || ((size_t)vm->regidx[i] >= (size_t)(ve->dimensions[i])) )
         {
             char* s = (char*)calloc(256, sizeof(char));
             SNPRINTF(s, 256,
@@ -159,7 +159,7 @@ static int move_string_into_substring(struct nap_vm* vm, nap_int_t start_index, 
         return NAP_SUCCESS;
     }
 
-    if(end_index >= *target_len)
+    if((size_t)end_index >= *target_len)
     {
         end_index = *target_len - 1;
     }
@@ -169,7 +169,7 @@ static int move_string_into_substring(struct nap_vm* vm, nap_int_t start_index, 
             ((size_t)end_index - (size_t)start_index - 1) +
             source_len; /* the new length of the var*/
 
-    if(start_index >= *target_len)
+    if((size_t)start_index >= *target_len)
     {
         return nap_int_set_index_overflow(vm, helper, start_index, *target_len);
     }
@@ -402,7 +402,7 @@ static int mov_into_byte_register(struct nap_vm* vm)
                      so calculate the "real" index ofthe variable based
                      on the regidx vector and ctr_used_index_regs
                     */
-                    nap_int_t real_index = vm->regidx[0];
+                    size_t real_index = (size_t)vm->regidx[0];
                     if(real_index >= var->instantiation->len)
                     {
                         return nap_int_set_index_overflow(vm, var->name,
@@ -567,7 +567,7 @@ static int mov_into_int_register(struct nap_vm* vm)
                      so calculate the "real" index ofthe variable based
                      on the regidx vector and ctr_used_index_regs
                     */
-                    nap_int_t real_index = vm->regidx[0];
+                    size_t real_index = (size_t)vm->regidx[0];
                     if(real_index >= var->instantiation->len)
                     {
                         return nap_int_set_index_overflow(vm, var->name,
@@ -867,7 +867,7 @@ static int mov_into_indexed(struct nap_vm* vm)
                          so calculate the "real" index ofthe variable based
                          on the regidx vector and ctr_used_index_regs
                         */
-                        nap_int_t real_index = vm->regidx[0];
+                        size_t real_index = (size_t)vm->regidx[0];
                         if(real_index >= var->instantiation->len)
                         {
                             return nap_int_set_index_overflow(vm, var->name,
