@@ -128,7 +128,7 @@ void code_finalizer::finalize()
         }
         f.write_stuff_to_file_8(mcompiler->variables()[i]->type);
 
-        uint16_t var_name_length = mcompiler->variables()[i]->name.length();
+        uint16_t var_name_length = (uint16_t)mcompiler->variables()[i]->name.length();
         // find out if this is a global/extern variable or not: if there is only one dot
         // in the name, it is a global/extern variable
         // TODO: include a debugging flag option to write out all the variable names

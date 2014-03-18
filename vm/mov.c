@@ -1018,6 +1018,4 @@ int nap_mov(struct nap_vm* vm)
     {
         NAP_NOT_IMPLEMENTED
     }
-
-    return NAP_SUCCESS;
 }

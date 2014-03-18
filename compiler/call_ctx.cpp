@@ -314,7 +314,7 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
             while(vlist != m->get_variables().end())
             {
                 variable* v = *vlist;
-                type_encoding += get_type_code(v->i_type);
+                type_encoding += get_type_code((uint8_t)v->i_type);
                 vlist ++;
             }
 
