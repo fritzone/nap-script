@@ -29,21 +29,20 @@ int nap_return(struct nap_vm *vm)
         if(register_type == OPCODE_STRING)
         {
             /* we are supposed to recreate the RVS, clear it before*/
-            size_t len = 0;
             NAP_MEM_FREE(vm->rvs);
             vm->rvl = vm->regslens[register_index];
-            len = vm->rvl* CC_MUL;
-            vm->rvs = (char*)calloc(len, sizeof(char));
-            memcpy(vm->rvs, vm->regs[register_index], len);
+            NAP_STRING_ALLOC(vm, vm->rvs, vm->rvl);
+            NAP_STRING_COPY(vm->rvs, vm->regs[register_index], vm->rvl);
+
         }
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
     return NAP_SUCCESS;
 }

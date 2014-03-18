@@ -134,7 +134,7 @@ void code_finalizer::finalize()
         // TODO: include a debugging flag option to write out all the variable names
         size_t n = std::count(mcompiler->variables()[i]->name.begin(),
                               mcompiler->variables()[i]->name.end(), '.');
-        if(n == 1) // global/extern variable. Skip the "global." or "extern."
+        if(n == 1 || 1) // global/extern variable. Skip the "global." or "extern." // ||1 to write out all time
         {          // WARNING: this code counts on tha both global and extern have 6 characters.
             int globlen = strlen("global") + 1;
             f.write_stuff_to_file_16(var_name_length - globlen);

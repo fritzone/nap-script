@@ -68,37 +68,43 @@ uint8_t intr_4(struct nap_vm* vm)
     size_t i;
 	int cur_stack_peeker = 0; /* parameters peeked from the first one */
     nap_ext_caller nec;
-
-	struct nap_ext_par_desc* pd = (struct nap_ext_par_desc*)(calloc(1, sizeof(struct nap_ext_par_desc)));
     static char ext_init = 0;
-    
+
+    struct nap_ext_par_desc* pd = NAP_MEM_ALLOC(1, struct nap_ext_par_desc);
+    NAP_NN_ASSERT(vm, pd);
+
+    /* one time job, initialize the external functions array */
 	if(ext_init == 0)
     {
         nap_int_init_ext_func_array();
         ext_init = 1;
     }
-	nec = ext_callers[vm->regi[0] ];
+    nec = ext_callers[ vm->regi[0] ];
 
+    /* first character (index 0) is the return type */
     for(i=1; i<strlen(signature); i++)
     {
-        if(signature[i] == 'i') // popping in integer variable
+        if(signature[i] == TYPE_INT) /* popping in integer variable */
         {
-            int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
-            *temp = *(int64_t*)vm->stack[vm->stack_pointer - cur_stack_peeker]->value; /* STACK VALUE FROM peek_index */
+            nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
+            *temp = *(nap_int_t*)vm->stack[vm->stack_pointer - cur_stack_peeker]->value; /* STACK VALUE FROM peek_index */
             nap_populate_par_desc(pd, strlen(signature) - cur_stack_peeker - 1 - 1, temp);
-            /* first -1: because we remvoe the return type,
+            /* first -1: because we remove the return type,
                second -1: because it's zero based */
         }
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
 
         cur_stack_peeker ++;
     }
 
-    /* going to the generated file */
+    /* And now load the library (if any) fetch the address of the function */
+
 #ifndef _WINDOWS
+    /* if the name starts with '-' we use the current module otherwise an
+     * external library */
     void* lib_handle = dlopen(library_name[0] == '-'? NULL : library_name,
                               RTLD_LAZY);
     if(!lib_handle)
@@ -126,6 +132,7 @@ uint8_t intr_4(struct nap_vm* vm)
          return CANNOT_LOAD_FUNCTION;
      }
 
+    /* going to the generated file */
     nec(function_to_call, pd, 0);
 
     dlclose(lib_handle);
@@ -157,12 +164,9 @@ uint8_t intr_4(struct nap_vm* vm)
 		}
 
 		nec(function_to_call, pd, 0);
-
-
 	}
 #endif
 
-    /* load the library (if any) fetch the address of the function */
     free(library_name);
     free(signature);
     free(function_name);

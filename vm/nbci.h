@@ -49,12 +49,6 @@ extern "C" {
 #include "nap_types.h"
 #include "nap_structs.h"
 
-#ifdef _MEM_DEBUG_
-#define MEM_FREE(x) if((x)) { fprintf(stderr, "free:%p (%s:%d)\n", (x), __FILE__, __LINE__);  free((x)); }
-#else
-#define NAP_MEM_FREE(x) if(x){ free((x)); }
-#endif
-
 #define REGISTER_COUNT      255        /* number of registers in the VM*/
 #define STACK_INIT          4096       /* initially 4096 entries  */
 #define DEEPEST_RECURSION   4096       /* how deep we can dwelve into recursion */

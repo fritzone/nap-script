@@ -9,17 +9,16 @@
 int nap_marks(struct nap_vm *vm)
 {
     nap_mark_t marker_code = nap_fetch_mark(vm);
-    nap_mark_t* temp = temp = (nap_mark_t*)calloc(1, sizeof(int32_t));
-	struct stack_entry* marker = NULL;
-	if(!temp)
-	{
-        return NAP_FAILURE;
-	}
-    marker = (struct stack_entry*)(calloc(sizeof(struct stack_entry), 1));
+    struct stack_entry* marker = NULL;
+
+    nap_mark_t* temp = NAP_MEM_ALLOC(1, nap_mark_t);
+    NAP_NN_ASSERT(vm, temp);
+
+    marker = NAP_MEM_ALLOC(1, struct stack_entry);
     if(!marker)
     {
         free(temp);
-        return NAP_FAILURE;
+        NAP_NN_ASSERT(vm, marker); /* sort of ugly ... */
     }
 
     *temp = marker_code;

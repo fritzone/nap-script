@@ -52,7 +52,7 @@ static int nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_int_t reg,
     }
     else
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
 
     if(vm->lbf == UNDECIDED)
@@ -100,7 +100,7 @@ int nap_comparison(struct nap_vm* vm)
                 }
                 else /* comparing int register with another kind of variable */
                 {
-                    _NOT_IMPLEMENTED
+                    NAP_NOT_IMPLEMENTED
                 }
             }
             else
@@ -116,17 +116,17 @@ int nap_comparison(struct nap_vm* vm)
                 }
                 else /* comparing int reg with another type register */
                 {
-                    _NOT_IMPLEMENTED
+                    NAP_NOT_IMPLEMENTED
                 }
             }
             else /* comparing an int register to something else. What might that be? */
             {
-                _NOT_IMPLEMENTED
+                NAP_NOT_IMPLEMENTED
             }
         } /* some other type of register is compared against something */
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
@@ -153,7 +153,7 @@ int nap_comparison(struct nap_vm* vm)
                 }
                 else /* comparing int variable with another kind of variable */
                 {
-                    _NOT_IMPLEMENTED
+                    NAP_NOT_IMPLEMENTED
                 }
             }
             else
@@ -169,13 +169,13 @@ int nap_comparison(struct nap_vm* vm)
                 }
                 else /* comparing int reg with another type register */
                 {
-                    _NOT_IMPLEMENTED
+                    NAP_NOT_IMPLEMENTED
                 }
             }
         }
         else /* comparing an another type of variable */
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else

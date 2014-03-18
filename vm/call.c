@@ -25,12 +25,11 @@ int nap_call(struct nap_vm *vm)
         /* is this a valid jump index? */
         if(jmpt_index >= vm->jumptable_size)
         {
-            char* s = (char*)calloc(256, sizeof(char));
+            char s[256];
             SNPRINTF(s, 256, "Invalid jump index [%d]."
                      " Max is ["JL_SIZE_T_SPECIFIER"]",
                      jmpt_index, vm->jumptable_size);
             nap_vm_set_error_description(vm, s);
-            NAP_MEM_FREE(s);
             return NAP_FAILURE;
         }
         /* and simply set cc to be where we need to go */
@@ -80,8 +79,8 @@ int nap_call(struct nap_vm *vm)
         if(vm->parent->rvl)
         {
             NAP_MEM_FREE(vm->rvs);
-            vm->rvs = (char*)calloc(vm->parent->rvl * CC_MUL, sizeof(char)); /* UTF32 */
-            memcpy(vm->rvs, vm->parent->rvs, vm->rvl  * CC_MUL);
+            NAP_STRING_ALLOC(vm, vm->rvs, vm->parent->rvl);
+            NAP_STRING_COPY(vm->rvs, vm->parent->rvs, vm->rvl);
         }
     }
 

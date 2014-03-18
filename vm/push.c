@@ -11,16 +11,17 @@
 
 int nap_push(struct nap_vm *vm)
 {
-    struct stack_entry* se = (struct stack_entry*)(
-                                calloc(sizeof(struct stack_entry), 1));
+    struct stack_entry* se = NAP_MEM_ALLOC(1, struct stack_entry);
+    NAP_NN_ASSERT(vm, se);
+
     se->type = (StackEntryType)vm->content[vm->cc ++]; /* whether we push
                   int/string/real/byte for creating a variable or just pushing
                   a variable without the int/string/byte/etc ... or a string
-                  or a number, ...*/
+                  or a number, ... This just saves a variable*/
 
     /* see for push int XX, push string YY ... ie: declaring a variable */
     if(   se->type == STACK_ENTRY_INT
-       || se->type == STACK_ENTRY_BYTE
+       || se->type == STACK_ENTRY_INT
        || se->type == STACK_ENTRY_STRING) /* or real */
     {
         uint8_t push_what = vm->content[vm->cc ++];
@@ -29,60 +30,40 @@ int nap_push(struct nap_vm *vm)
         {
             nap_index_t var_index = nap_fetch_index(vm);
             struct variable_entry* ve = nap_fetch_variable(vm, var_index);
-            ASSERT_NOT_NULL_VAR(ve)
+            ASSERT_NOT_NULL_VAR(ve);
 
-            /* create the instantiation for the variable */
-            if(ve->instantiation == NULL)
-            {
-                ve->instantiation = (struct stack_entry*)(calloc(sizeof(struct stack_entry), 1));
-            }
+            ve->instantiation = (struct stack_entry*)(calloc(sizeof(struct stack_entry), 1));
             ve->instantiation->type = se->type; /* must match the stack entry */
 
-            if(se->type == OPCODE_INT) /* pushing an integer */
+            if(se->type == STACK_ENTRY_INT) /* pushing an integer */
             {
-                if(ve->instantiation->value) /* to not to create another value if we have it*/
-                {                            /* such as variable declaration in a loop */
-                    *(nap_int_t*)ve->instantiation->value = 0;
-                }
-                else
-                {
-                    ve->instantiation->value = calloc(1, sizeof(nap_int_t));
-                    *(nap_int_t*)ve->instantiation->value = 0;
-                }
+                ve->instantiation->value = NAP_MEM_ALLOC(1, nap_int_t);
+                *(nap_int_t*)ve->instantiation->value = 0;
             }
             else
-            if(se->type == OPCODE_BYTE) /* pushing a byte */
+            if(se->type == STACK_ENTRY_BYTE) /* pushing a byte */
             {
-                if(ve->instantiation->value) /* to not to create another value if we have it*/
-                {                            /* such as variable declaration in a loop */
-                    *(nap_byte_t*)ve->instantiation->value = 0;
-                }
-                else
-                {
-                    ve->instantiation->value = calloc(1, sizeof(nap_byte_t));
-                    *(nap_byte_t*)ve->instantiation->value = 0;
-                }
+                ve->instantiation->value = NAP_MEM_ALLOC(1, nap_byte_t);
+                *(nap_byte_t*)ve->instantiation->value = 0;
             }
             else
-            if(se->type == OPCODE_STRING) /* pushing a string */
+            if(se->type == STACK_ENTRY_STRING) /* pushing a string */
             {
-                if(ve->instantiation->value)
-                {
-                    *(nap_string_t)ve->instantiation->value = 0;
-                }
-                else
-                {
-                    ve->instantiation->value = (nap_string_t)calloc(1, sizeof(char));
-                    *(nap_string_t)ve->instantiation->value = 0;
-                }
+                ve->instantiation->value = NAP_MEM_ALLOC(1, char);
+                *(char*)ve->instantiation->value = 0;
             }
             else
             {
-                _NOT_IMPLEMENTED
+                NAP_NOT_IMPLEMENTED
             }
 
-            /* setting the value of the stack entry */
-            se->value = ve;
+            /* setting the value of the stack entry to be the 0 coming from the
+               creation of the variable, so there is a 0 on the stack */
+            se->value = ve->instantiation->value;
+
+            /* this will be a variable definition, set the correct field */
+            se->var_def = ve;
+
         }
         else
         {
@@ -106,10 +87,9 @@ int nap_push(struct nap_vm *vm)
             }
             else
             {
-                char* s = (char*)calloc(64, sizeof(char));
+                char s[64];
                 SNPRINTF(s, 64, "unknown push [0x%x]", push_what);
-                vm->error_description = s;
-                return NAP_FAILURE;
+                return nap_vm_set_error_description(vm, s);
             }
         }
     }
@@ -150,22 +130,26 @@ int nap_push(struct nap_vm *vm)
         }
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
     if(se->type == OPCODE_IMMEDIATE)
     {
+        /* immediate values (23, 42) are pushed as ints */
         nap_int_t nr = nap_read_immediate(vm);
         nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
         *temp = nr;
 
-        /* setting the value of the stack entry */
+        /* setting the value of the stack entry and indicating it is immediate */
         se->value = temp;
+        se->type = STACK_ENTRY_INT;
     }
     else
-    if(se->type == OPCODE_VAR)
+    if(se->type == OPCODE_VAR) /* such as: push global.varname*/
     {
+        /* this push does not declare the variable merely creates a stack entry
+           with its value*/
         nap_index_t var_index = nap_fetch_index(vm);
         struct variable_entry* ve = nap_fetch_variable(vm, var_index);
         ASSERT_NOT_NULL_VAR(ve)
@@ -173,7 +157,7 @@ int nap_push(struct nap_vm *vm)
 
         se->type = ve->instantiation->type; /* force to match the stack entry */
 
-        if(se->type == OPCODE_INT)
+        if(se->type == STACK_ENTRY_INT)
         {
             nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
             *temp = *(nap_int_t*)ve->instantiation->value;
@@ -181,10 +165,14 @@ int nap_push(struct nap_vm *vm)
             /* setting the value of the stack entry */
             se->value = temp;
         }
+        else
+        {
+            NAP_NOT_IMPLEMENTED
+        }
     }
     else
     {
-        _NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED
     }
 
     vm->stack[++ vm->stack_pointer] = se;

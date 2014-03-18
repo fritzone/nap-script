@@ -40,12 +40,11 @@ int nap_call_intern(struct nap_vm* vm)
 
                     if(grow_value == 0)
                     {
-                        char* s = (char*)calloc(256, sizeof(char));
+                        char s[256];
                         SNPRINTF(s, 256,
                                 "[ERR-INT] Cannot grow with 0 index [%s].",
                                  ve->name);
-                        vm->error_description = s;
-                        return NAP_FAILURE;
+                        return nap_vm_set_error_description(vm, s);
                     }
                     /* recalculate how much memory we need*/
                     while(dim_counter < 254 && ve->dimensions[dim_counter])
@@ -81,7 +80,7 @@ int nap_call_intern(struct nap_vm* vm)
                         /* an array of strings */
                         else
                         {
-                            _NOT_IMPLEMENTED
+                            NAP_NOT_IMPLEMENTED
                         }
 
                         ve->data_size = data_size;
@@ -89,12 +88,11 @@ int nap_call_intern(struct nap_vm* vm)
                                           new_size * data_size);
                         if(!t)
                         {
-                            char* s = (char*)calloc(256, sizeof(char));
+                            char s[256];
                             SNPRINTF(s, 256,
                                     "[ERR-INT] Cannot grow [%s]. Not enough memory.",
                                      ve->name);
-                            vm->error_description = s;
-                            return NAP_FAILURE;
+                            return nap_vm_set_error_description(vm, s);
                         }
 
                         /* copying it over */
@@ -103,12 +101,11 @@ int nap_call_intern(struct nap_vm* vm)
                     }
                     else
                     {
-                        char* s = (char*)calloc(256, sizeof(char));
+                        char s[256];
                         SNPRINTF(s, 256,
                                 "[ERR-INT-2] Cannot grow [%s]. Not pushed yet.",
                                  ve->name);
-                        vm->error_description = s;
-                        return NAP_FAILURE;
+                        return nap_vm_set_error_description(vm, s);
                     }
 
                     /* and update the variable itself */
@@ -117,17 +114,17 @@ int nap_call_intern(struct nap_vm* vm)
                 }
                 else
                 {
-                    _NOT_IMPLEMENTED
+                    NAP_NOT_IMPLEMENTED
                 }
             }
             else
             {
-                _NOT_IMPLEMENTED
+                NAP_NOT_IMPLEMENTED
             }
         }
         else
         {
-            _NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED
         }
     }
     else

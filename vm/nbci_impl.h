@@ -10,7 +10,6 @@ extern "C" {
 
 #include <stddef.h>
 
-
 /* types for manipulating the addresses, indexes, etc */
 typedef uint32_t nap_addr_t;    /* the type of a NAP address*/
 typedef uint32_t nap_mark_t;    /* the type of a marker pushed on the stack */
@@ -25,24 +24,64 @@ struct nap_vm;
 #define SNPRINTF snprintf
 #endif
 
-/* Macro for leaving the application in case of an unimplemented opcode */
-#define _NOT_IMPLEMENTED                                                       \
-    do {                                                                       \
-    char t[256];                                                               \
-    sprintf(t, "NI: file [%s] line [%d] instr [%x] "                           \
-                    "opcode [%x] at %" PRINT_u " (%" PRINT_x ")\n\n",          \
-            __FILE__, __LINE__, vm->content[vm->cc - 1],                       \
-            vm->current_opcode, vm->cc - 1, vm->cc - 1);                       \
+/* Macro for freeing a piece of memory */
+#ifdef NAP_MEM_DEBUG
+#define NAP_MEM_FREE(x) if((x)) { fprintf(stderr, "free:%p (%s:%d)\n", (x), __FILE__, __LINE__);  free((x)); }
+#else
+#define NAP_MEM_FREE(x) if(x){ free((x)); }
+#endif
+
+#define NAP_REPORT_ERROR(vm, error)                                            \
+    do                                                                         \
+    {                                                                          \
     if(vm->environment == STANDALONE)                                          \
     {                                                                          \
-        fprintf(stderr, "%s", t);                                              \
+        fprintf(stderr, "%s", error);                                          \
+        nap_vm_cleanup(vm);                                                    \
         exit(EXIT_FAILURE);                                                    \
     }                                                                          \
     else                                                                       \
     {                                                                          \
-        nap_vm_set_error_description(vm, t);                                   \
+        nap_vm_set_error_description(vm, error);                               \
         return NAP_FAILURE;                                                    \
     }                                                                          \
+    } while(0);
+
+/* Macro for creating an object */
+#define NAP_MEM_ALLOC(count, type) (type*)calloc( (count), sizeof(type));
+
+/* Macro for asserting a non-NULL variable and setting the VM's error in case*/
+#define NAP_NN_ASSERT(vm,var)                                                 \
+    do                                                                         \
+    {                                                                          \
+        if(var == NULL)                                                        \
+        {                                                                      \
+            char t[256];                                                       \
+            SNPRINTF(t, 256, "MEM: out of memory file:[%s] line [%d] var:[%s]",\
+                     __FILE__, __LINE__, #var);                                \
+            NAP_REPORT_ERROR(vm, t);                                           \
+        }                                                                      \
+    } while(0);
+
+
+/* Macro for creating a nap string. We need this in order to be able to support
+   the UTF-32 BE without too much hassle */
+#define NAP_STRING_ALLOC(vm, var, count) do {                                  \
+   var = (char*)calloc(count * CC_MUL, sizeof(char));                          \
+   NAP_NN_ASSERT(vm,var);                                                      \
+   } while(0);
+
+#define NAP_STRING_COPY(dest, src, count) memcpy(dest, src, count * CC_MUL);
+
+/* Macro for leaving the application in case of an unimplemented opcode */
+#define NAP_NOT_IMPLEMENTED                                                    \
+    do {                                                                       \
+    char t[256];                                                               \
+    SNPRINTF(t, 256, "NI: file [%s] line [%d] instr [%x] "                     \
+                    "opcode [%x] at %" PRINT_u " (%" PRINT_x ")\n\n",          \
+            __FILE__, __LINE__, vm->content[vm->cc - 1],                       \
+            vm->current_opcode, vm->cc - 1, vm->cc - 1);                       \
+    NAP_REPORT_ERROR(vm, t);                                                   \
     } while(0);
 
 /* macro to try to call a function and leave the app in case of error with the
