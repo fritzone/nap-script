@@ -50,11 +50,8 @@ int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
 
             if(len != 0)
             {
-                name = (char*)calloc(sizeof(char), len + 1);
-                if(name == NULL)
-                {
-                    return NAP_FAILURE;
-                }
+                name = NAP_MEM_ALLOC(len + 1, char);
+                NAP_NN_ASSERT(vm, name);
 
                 memcpy(name, cloc, len);
                 cloc += len;
@@ -71,8 +68,9 @@ int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
 
                 vm->metatable = tmp;
             }
-            new_var = (struct variable_entry*)
-                                    calloc(1, sizeof(struct variable_entry));
+            new_var = NAP_MEM_ALLOC(1, struct variable_entry);
+            NAP_NN_ASSERT(vm, new_var);
+
             new_var->index = index;
             new_var->name = name;
             new_var->type = type;

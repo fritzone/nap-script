@@ -75,7 +75,7 @@ char *nap_vm_get_string(struct nap_vm* vm, char* name, int* found)
 {
     uint64_t i;
     char* finame = name;
-
+    char error[256];
     if(name == NULL)
     {
         *found = 0;
@@ -93,22 +93,35 @@ char *nap_vm_get_string(struct nap_vm* vm, char* name, int* found)
                     if(vm->metatable[i]->name && !strcmp(vm->metatable[i]->name, finame))
                     {
 						size_t dest_len = 0, real_len = 0;
+                        char* result = NULL;
                         if(finame != name)
                         {
                             NAP_MEM_FREE(finame);
                         }
                         *found = 1;
                         dest_len = vm->metatable[i]->instantiation->len;
-                        return convert_string_from_bytecode_file((char*)(vm->metatable[i]->instantiation->value),
-                                                                 vm->metatable[i]->instantiation->len * 4,
-                                                                 dest_len,
-                                                                 &real_len);
-
+                        result = convert_string_from_bytecode_file(
+                                    vm, (char*)(vm->metatable[i]->instantiation->value),
+                                    vm->metatable[i]->instantiation->len * CC_MUL,
+                                    dest_len,
+                                    &real_len);
+                        if(result == NULL)
+                        {
+                            *found = 0; /* The vm already has the error */
+                            return NULL;
+                        }
+                        else
+                        {
+                            return result;
+                        }
                     }
                 }
             }
         }
     }
+
+    SNPRINTF(error, 256, "Not found the variable: [%s]", name);
+    nap_vm_set_error_description(vm, error);
     *found = 0;
     return NULL;
 }
@@ -230,16 +243,12 @@ void nap_vm_run(struct nap_vm* vm)
     }
 }
 
+/* global since we want to have it on the stack in case of memory allocation issues */
+static char error[256] = {0};
 int nap_vm_set_error_description(struct nap_vm* vm, const char *error_desc)
 {
-    char* error = (char*)(calloc(strlen(error_desc) + 1, sizeof(char)));
-    if(error == NULL)
-    {
-        /* we are doomed anyway ... */
-        return NAP_FAILURE;
-    }
 
-    strcpy(error, error_desc);
+    strncpy(error, error_desc, 256);
     vm->error_description = error;
 
     return NAP_FAILURE;

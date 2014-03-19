@@ -1,6 +1,8 @@
 #ifndef NAP_CONSTS_H
 #define NAP_CONSTS_H
 
+#include <stdint.h>
+
 /** Means the execution was succesful */
 static const int NAP_EXECUTE_SUCCESS = 1;
 
@@ -17,9 +19,28 @@ static const int NAP_VARIABLE_NOT_FOUND = 0;
 static const int NAP_NO_VALUE = 0xFF;
 
 /* Success and failure indicators */
-static const int NAP_SUCCESS = 1;
-static const int NAP_FAILURE = 0;
+static const int NAP_FAILURE                      = 0;
+static const int NAP_SUCCESS                      = 1;
 
+/* Error codes for intr 2 */
+static const uint16_t INTR_2_CANNOT_SET_SOURCE         = 0x0201;
+static const uint16_t INTR_2_CANNOT_COMPILE_SOURCE     = 0x0202;
+
+/* Error codes for intr 3 */
+static const uint16_t INTR_3_CANNOT_CREATE_VM          = 0x0301;
+static const uint16_t INTR_3_COULD_NOT_RUN_CODE        = 0x0302;
+
+/* Error codes for intr 4 */
+static const uint16_t INTR_4_CANNOT_LOAD_LIBRARY       = 0x0401;
+static const uint16_t INTR_4_CANNOT_LOAD_FUNCTION      = 0x0402;
+
+/* Constants for the data type codes */
+static const char TYPE_INT    = 'i';
+static const char TYPE_BYTE   = 'b';
+static const char TYPE_REAL   = 'r';
+static const char TYPE_STRING = 's';
+
+/* Errors for index handling in mov.c*/
 static const int INVALID_INDEX_COUNT = -1;
 static const int INDEX_OUT_OF_RANGE  = -2;
 

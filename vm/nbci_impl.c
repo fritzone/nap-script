@@ -200,11 +200,6 @@ void nap_vm_cleanup(struct nap_vm* vm)
         }
     }
 
-    if(vm->error_description)
-    {
-        NAP_MEM_FREE(vm->error_description);
-    }
-
     /* the string registers */
     for(i=0; i<REGISTER_COUNT; i++)
     {
@@ -223,14 +218,14 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     struct nap_vm* vm = NULL;
     uint8_t* cloc = bytecode;
 
-    vm = (struct nap_vm*)(calloc(1, sizeof(struct nap_vm)));
+    vm = NAP_MEM_ALLOC(1, struct nap_vm);
     if(vm == NULL)
     {
         /* TODO: provide a mechanism for error reporting */
         return NULL;
     }
 
-    vm->content = (uint8_t *) calloc(sizeof(uint8_t), bytecode_len);
+    vm->content = NAP_MEM_ALLOC(bytecode_len, uint8_t);
     if(vm->content == NULL)
     {
         /* TODO: provide a mechanism for error reporting */
@@ -241,7 +236,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     /* create the stack */
     vm->stack_size = STACK_INIT;
     vm->stack_pointer = -1; /* this is first ++'d then used */
-    vm->stack = (struct stack_entry**)calloc(sizeof(struct stack_entry*), STACK_INIT);
+    vm->stack = NAP_MEM_ALLOC(STACK_INIT, struct stack_entry*);
     if(vm->stack == NULL)
     {
         /* TODO: provide a mechanism for error reporting */
@@ -326,8 +321,14 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
 
     /* initially the last boolean flag is in an unknow state */
     vm->lbf = UNDECIDED;
-    vm->btyecode_chunks = (struct nap_bytecode_chunk**)calloc(MAX_BYTECODE_CHUNKS,
-                                            sizeof(struct nap_bytecode_chunk*));
+
+    /* allocating bytecode chunks */
+    vm->btyecode_chunks = NAP_MEM_ALLOC(MAX_BYTECODE_CHUNKS, struct nap_bytecode_chunk*);
+    if(vm->btyecode_chunks == NULL)
+    {
+        nap_vm_cleanup(vm);
+        return NULL;
+    }
     vm->chunk_counter = 0;
     vm->allocated_chunks = 255;
 
@@ -381,15 +382,19 @@ struct nap_vm *nap_vm_load(const char *filename)
     FILE* fp = fopen(filename, "rb");
     if(!fp)
     {
-        fprintf(stderr, "cannot load file [%s]", filename);
+        fprintf(stderr, "cannot open file [%s]", filename);
         return NULL;
     }
 
     /* read in all the data in memory. Should be faster */
     fseek(fp, 0, SEEK_END);
     fsize = ftell(fp);
-    file_content = (uint8_t *) calloc(sizeof(uint8_t), fsize);
-    /* TODO: check memory */
+    file_content = NAP_MEM_ALLOC(fsize, uint8_t);
+    if(file_content == NULL)
+    {
+        fprintf(stderr, "cannot load file [%s]. Not enough memory", filename);
+        return NULL;
+    }
 
     fseek(fp, 0, SEEK_SET);
     fread(file_content, sizeof(uint8_t ), fsize, fp);
@@ -398,6 +403,12 @@ struct nap_vm *nap_vm_load(const char *filename)
 
     vm = nap_vm_inject(file_content, fsize, STANDALONE);
     NAP_MEM_FREE(file_content);
+
+    if(vm == NULL)
+    {
+        fprintf(stderr, "cannot load file [%s]. Cannot create VM", filename);
+        return NULL;
+    }
 
     return vm;
 }
@@ -498,25 +509,32 @@ int nap_save_registers(struct nap_vm* vm)
     nap_int_t* tmp_ints = NULL;
     nap_byte_t* tmp_bytes = NULL;
 
-    /* save the int registers */
-    tmp_ints = calloc(REGISTER_COUNT, sizeof(nap_int_t));
-    memcpy(tmp_ints, vm->regi, vm->mrc * sizeof(nap_int_t));
-    regi_stack[regi_stack_idx] = tmp_ints;
-    regi_stack_idx ++;
-    if(regi_stack_idx == DEEPEST_RECURSION)
+    if(   regi_stack_idx + 1 == DEEPEST_RECURSION
+       || regb_stack_idx + 1 == DEEPEST_RECURSION)
     {
+        nap_vm_set_error_description(vm, "Too deep recursion. Execution halted");
         return NAP_FAILURE;
     }
 
+    /* save the int registers */
+    tmp_ints = NAP_MEM_ALLOC(REGISTER_COUNT, nap_int_t);
+    NAP_NN_ASSERT(vm, tmp_ints);
+
+    memcpy(tmp_ints, vm->regi, vm->mrc * sizeof(nap_int_t));
+    regi_stack[regi_stack_idx] = tmp_ints;
+    regi_stack_idx ++;
+
     /* save the byte registers */
-    tmp_bytes = calloc(REGISTER_COUNT, sizeof(nap_byte_t));
+    tmp_bytes = NAP_MEM_ALLOC(REGISTER_COUNT, nap_byte_t);
+    if(tmp_bytes == NULL)
+    {
+        free(tmp_ints);
+        NAP_NN_ASSERT(vm, tmp_bytes);
+    }
+
     memcpy(tmp_bytes, vm->regb, vm->mrc * sizeof(nap_byte_t));
     regb_stack[regb_stack_idx] = tmp_bytes;
     regb_stack_idx ++;
-    if(regb_stack_idx == DEEPEST_RECURSION)
-    {
-        return NAP_FAILURE;
-    }
 
     return NAP_SUCCESS;
 }
@@ -525,6 +543,7 @@ int nap_restore_registers(struct nap_vm* vm)
 {
     if(regi_stack_idx == 0 || regb_stack_idx == 0)
     {
+        nap_vm_set_error_description(vm, "Cannot restore registers: None saved");
         return NAP_FAILURE;
     }
 
@@ -581,7 +600,7 @@ int nap_handle_interrupt(struct nap_vm* vm)
         return nap_vm_set_error_description(vm, s);
     }
 
-    if(int_res == 0)
+    if(int_res == NAP_SUCCESS)
     {
         /* advance to the next position */
         vm->cc ++;
@@ -694,7 +713,7 @@ const char *nap_get_type_description(StackEntryType t)
     }
 }
 
-char *convert_string_from_bytecode_file(const char *src, size_t len, size_t dest_len, size_t* real_len)
+char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size_t len, size_t dest_len, size_t* real_len)
 {
     char* loc_orig = 0; /* the original locale string for LC_ALL */
     int len_loc = 0;    /* the length of the loc_orig */
@@ -707,8 +726,14 @@ char *convert_string_from_bytecode_file(const char *src, size_t len, size_t dest
     size_t save_dest_len = dest_len; /* used in real lenth calcualtions */
     char* to_return = NULL; /* what to return */
 	char* final_encoding = NULL;
-    char* src_copy = (char*)calloc(len + 1, sizeof(char));
+    char* src_copy = NAP_MEM_ALLOC(len + 1, char);
     char* src_copy_save = src_copy;
+
+    if(src_copy == NULL)
+    {
+        nap_vm_set_error_description(vm, "[iconv] Not enough memory [1]");
+        return NULL;
+    }
 
     /*copy the src*/
     memcpy(src_copy, src, len);
@@ -717,7 +742,13 @@ char *convert_string_from_bytecode_file(const char *src, size_t len, size_t dest
     setlocale(LC_ALL, "");
     loc_orig = setlocale(LC_CTYPE, NULL);
     len_loc = strlen(loc_orig);
-    loc_cp = (char*)calloc(len_loc + 1, sizeof(char));
+    loc_cp = NAP_MEM_ALLOC(len_loc + 1, char);
+    if(loc_cp == NULL)
+    {
+        free(src_copy);
+        nap_vm_set_error_description(vm, "[iconv] Not enough memory [2]");
+        return NULL;
+    }
     strcpy(loc_cp, loc_orig);
 
     /* the encoding of the locale */
@@ -725,6 +756,12 @@ char *convert_string_from_bytecode_file(const char *src, size_t len, size_t dest
 
 #ifdef _WINDOWS
 	final_encoding = (char*)calloc(8 + 1 + strlen(enc), sizeof(char)); /* WINDOWS- */
+    if(final_encoding == NULL)
+    {
+        free(loc_cp);
+        free(src_copy);
+        return NULL;
+    }
 	strcpy(final_encoding, "WINDOWS-");
 	strcat(final_encoding, enc);
 #else
@@ -736,49 +773,67 @@ char *convert_string_from_bytecode_file(const char *src, size_t len, size_t dest
     if((size_t)converter == (size_t)-1)
     {
         free(loc_cp);
+        free(src_copy);
+#ifdef _WINDOWS
+        free(final_encoding);
+#endif
         if (errno == EINVAL)
         {
-            fprintf(stderr, "[iconv] Conversion to %s is not supported\n", enc);
+            char s[256];
+            SNPRINTF(s, 256, "[iconv] Conversion to %s is not supported\n", enc);
+            nap_vm_set_error_description(vm, s);
         }
         else
         {
-            fprintf(stderr, "[iconv] Initialization failure");
+            nap_vm_set_error_description(vm, "[iconv] Initialization failure");
         }
-        exit(1);
+        return NULL;
     }
 
     /* creating the work buffer for iconv */
-    converted = (char*)calloc(dest_len, sizeof(char));
+    converted = NAP_MEM_ALLOC(dest_len, char);
+    if(converted == NULL)
+    {
+        free(loc_cp);
+        free(src_copy);
+#ifdef _WINDOWS
+        free(final_encoding);
+#endif
+        return NULL;
+    }
+
     orig_converted = converted;
 
     /* converting */
     ret = iconv(converter, &src_copy, &len, &converted, &dest_len);
     iconv_close(converter);
 
-#ifdef _WINDOWS
-	free(final_encoding);
-#endif
-
-    free(loc_cp);
-
     if(ret == -1)
     {
-        perror("iconv");
+        char s[256];
+
         switch(errno)
         {
         case EILSEQ:
-            fprintf(stderr,  "EILSEQ\n");
+            SNPRINTF(s, 256, "[iconv] %s EILSEQ", strerror(errno));
             break;
         case EINVAL:
-            fprintf(stderr,  "EINVAL\n");
+            SNPRINTF(s, 256, "[iconv] %s EINVAL\n", strerror(errno));
             break;
         case E2BIG:
-            fprintf(stderr,  "E2BIG\n");
+            SNPRINTF(s, 256, "[iconv] %s E2BIG\n", strerror(errno));
             break;
         }
 
+        nap_vm_set_error_description(vm, s);
+
         free(orig_converted);
         free(src_copy_save);
+        free(loc_cp);
+#ifdef _WINDOWS
+        free(final_encoding);
+#endif
+
         return NULL;
     }
 
@@ -786,10 +841,23 @@ char *convert_string_from_bytecode_file(const char *src, size_t len, size_t dest
     *real_len = save_dest_len - dest_len;
 
     /* and what to return */
-    to_return = (char*)calloc(*real_len + 1, sizeof(char));
+    to_return = NAP_MEM_ALLOC(*real_len + 1, char);
+    if(to_return == NULL)
+    {
+        free(orig_converted);
+        free(src_copy_save);
+        free(loc_cp);
+#ifdef _WINDOWS
+        free(final_encoding);
+#endif
+    }
     strncpy(to_return, orig_converted, *real_len);
 
     free(orig_converted);
     free(src_copy_save);
+    free(loc_cp);
+#ifdef _WINDOWS
+    free(final_encoding);
+#endif
     return to_return;
 }

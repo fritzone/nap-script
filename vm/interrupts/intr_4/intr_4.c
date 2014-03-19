@@ -54,23 +54,31 @@ void ErrorExit(LPTSTR lpszFunction)
  * regs 2 -> the name of the library (- if none)
  * regi 0 -> the index in the pregenerated table
  */
-uint8_t intr_4(struct nap_vm* vm)
+uint16_t intr_4(struct nap_vm* vm)
 {
-    size_t sig_dest_len = vm->regslens[0] * CC_MUL, sig_real_len = 0;
-    char* signature = convert_string_from_bytecode_file(vm->regs[0],
-            vm->regslens[0] * CC_MUL, sig_dest_len, &sig_real_len);
-    size_t fun_dest_len = vm->regslens[1] * CC_MUL, fun_real_len = 0;
-    char* function_name = convert_string_from_bytecode_file(vm->regs[1],
-            vm->regslens[1] * CC_MUL, fun_dest_len, &fun_real_len);
-    size_t lib_dest_len = vm->regslens[2] * CC_MUL, lib_real_len = 0;
-    char* library_name = convert_string_from_bytecode_file(vm->regs[2],
-            vm->regslens[2] * CC_MUL, lib_dest_len, &lib_real_len);
-    size_t i;
-	int cur_stack_peeker = 0; /* parameters peeked from the first one */
-    nap_ext_caller nec;
-    static char ext_init = 0;
 
-    struct nap_ext_par_desc* pd = NAP_MEM_ALLOC(1, struct nap_ext_par_desc);
+    size_t sig_dest_len = vm->regslens[0] * CC_MUL, sig_real_len = 0;
+    size_t fun_dest_len = vm->regslens[1] * CC_MUL, fun_real_len = 0;
+    size_t lib_dest_len = vm->regslens[2] * CC_MUL, lib_real_len = 0;
+    size_t i = 0;
+    nap_ext_caller nec = NULL;
+    int cur_stack_peeker = 0; /* parameters peeked from the first one */
+    static char ext_init = 0; /* flag for checking the init state of the external functions table*/
+    struct nap_ext_par_desc* pd = NULL; /* Parameter descriptor */
+
+    char* signature = NULL;
+    char* function_name = NULL;
+    char* library_name = NULL;
+
+    signature = convert_string_from_bytecode_file(vm, vm->regs[0],
+            vm->regslens[0] * CC_MUL, sig_dest_len, &sig_real_len);
+
+    function_name = convert_string_from_bytecode_file(vm, vm->regs[1],
+            vm->regslens[1] * CC_MUL, fun_dest_len, &fun_real_len);
+    library_name = convert_string_from_bytecode_file(vm, vm->regs[2],
+            vm->regslens[2] * CC_MUL, lib_dest_len, &lib_real_len);
+
+    pd = NAP_MEM_ALLOC(1, struct nap_ext_par_desc);
     NAP_NN_ASSERT(vm, pd);
 
     /* one time job, initialize the external functions array */
@@ -114,7 +122,7 @@ uint8_t intr_4(struct nap_vm* vm)
          free(function_name);
          nap_free_parameter_descriptor(&pd);
 		 
-		 return CANNOT_LOAD_LIBRARY;
+         return INTR_4_CANNOT_LOAD_LIBRARY;
     }
 
     void* function_to_call = dlsym(lib_handle, function_name);
@@ -129,7 +137,7 @@ uint8_t intr_4(struct nap_vm* vm)
          free(function_name);
          nap_free_parameter_descriptor(&pd);
 
-         return CANNOT_LOAD_FUNCTION;
+         return INTR_4_CANNOT_LOAD_FUNCTION;
      }
 
     /* going to the generated file */
@@ -148,7 +156,7 @@ uint8_t intr_4(struct nap_vm* vm)
 			free(function_name);
 			nap_free_parameter_descriptor(&pd);
 			fprintf(stderr, "\nCannot load library\n");
-			return CANNOT_LOAD_LIBRARY;
+            return INTR_4_CANNOT_LOAD_LIBRARY;
 		}
 
 		function_to_call = (void*)GetProcAddress(hLib, function_name);
@@ -161,7 +169,7 @@ uint8_t intr_4(struct nap_vm* vm)
 			nap_free_parameter_descriptor(&pd);
 			fprintf(stderr, "\nCannot load function\n");
 			ErrorExit("intr_4");
-			return CANNOT_LOAD_FUNCTION;
+            return INTR_4_CANNOT_LOAD_FUNCTION;
 		}
 
 		nec(function_to_call, pd, 0);
@@ -173,5 +181,5 @@ uint8_t intr_4(struct nap_vm* vm)
     free(function_name);
 
     nap_free_parameter_descriptor(&pd);
-    return 0;
+    return NAP_SUCCESS;
 }

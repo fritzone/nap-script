@@ -43,27 +43,23 @@ static int nap_int_set_index_overflow(struct nap_vm* vm,
  *
  * @return NULL in case of error, or the new value of vm->regs[reg_idx]
  */
-static char* init_string_register(struct nap_vm* vm, uint8_t reg_idx,
+static int init_string_register(struct nap_vm* vm, uint8_t reg_idx,
                                   const char* target, size_t target_len)
 {
-    char* tmp = (char*)(calloc(target_len * CC_MUL, sizeof(char)));
-    if(!tmp)
-    {
-        return NULL;
-    }
-
-    memcpy(tmp, target, target_len * CC_MUL);
+    char* tmp = NULL;
+    NAP_STRING_ALLOC(vm, tmp, target_len);
+    NAP_STRING_COPY(tmp, target, target_len);
 
     if(vm->regs[reg_idx])
     {
-        /* set teh memory value to zero to avoid hacking */
+        /* set the memory value to zero */
         memset(vm->regs[reg_idx], 0, vm->regslens[reg_idx] * CC_MUL);
         NAP_MEM_FREE(vm->regs[reg_idx]);
     }
 
     vm->regs[reg_idx] = tmp;
     vm->regslens[reg_idx] = target_len;
-    return tmp;
+    return NAP_SUCCESS;
 }
 
 /**
@@ -100,7 +96,9 @@ static int64_t deliver_flat_index(struct nap_vm* vm,
     /* checking the validity of the requested index count */
     if(used_indexes != ve->dimension_count)
     {
-        char* s = (char*)calloc(256, sizeof(char));
+        char* s = NAP_MEM_ALLOC(256, char);
+        NAP_NN_ASSERT(vm, s);
+
         SNPRINTF(s, 256,
                 "Invalid index count used for [%s]. "
                  "Requested: %d available: %d",
@@ -118,7 +116,9 @@ static int64_t deliver_flat_index(struct nap_vm* vm,
         /* is this a valid index? */
         if( (vm->regidx[i] < 0) || ((size_t)vm->regidx[i] >= (size_t)(ve->dimensions[i])) )
         {
-            char* s = (char*)calloc(256, sizeof(char));
+            char* s = NAP_MEM_ALLOC(256, char);
+            NAP_NN_ASSERT(vm, s);
+
             SNPRINTF(s, 256,
                     "Multi dim index out of range for [%s]. "
                      "Dim Index: %d, requested: %" PRINT_d " available: %d",
@@ -174,19 +174,18 @@ static int move_string_into_substring(struct nap_vm* vm, nap_int_t start_index, 
         return nap_int_set_index_overflow(vm, helper, start_index, *target_len);
     }
 
-    first_part = (char*)calloc(new_len * CC_MUL, sizeof(char));
+    NAP_STRING_ALLOC(vm, first_part, new_len);
 
-    /* and fill up the memory */
-    memcpy(first_part, *target,
-           (size_t)start_index * CC_MUL); /* taking the first part from the string */
+    /* taking the first part from the string */
+    NAP_STRING_COPY(first_part, *target, (size_t)start_index);
 
-    memcpy(first_part + start_index * CC_MUL,
-           source,
-           source_len * CC_MUL); /* the second part */
+    /* the second part */
+    NAP_STRING_COPY(first_part + NAP_STRING_LEN(start_index), source, source_len);
 
-    memcpy(first_part + (start_index + source_len )* CC_MUL,
-           *target + (end_index + 1) * CC_MUL, /* +1 because we don't include end_index*/
-           (*target_len - (size_t)end_index - 1) * CC_MUL); /* and fetching in what remained, -1 see above */
+    NAP_STRING_COPY(first_part + NAP_STRING_LEN(start_index + source_len),
+           *target + NAP_STRING_LEN(end_index + 1), /* +1 because we don't include end_index*/
+           (*target_len - (size_t)end_index - 1)
+                    ); /* and fetching in what remained, -1 see above */
 
     NAP_MEM_FREE(*target);
     *target = first_part;
@@ -209,18 +208,21 @@ static int move_string_into_substring(struct nap_vm* vm, nap_int_t start_index, 
  *        number as converted by strtoll and the *error set to NAP_SUCCESS in
  *        case of a succesfull conversion
  */
-static nap_int_t nap_int_string_to_number(const char* to_conv, size_t len, int* error)
+static nap_int_t nap_int_string_to_number(struct nap_vm* vm,
+                                          const char* to_conv,
+                                          size_t len,
+                                          int* error)
 {
     int base = 10;
     char* endptr = NULL;
     size_t dest_len = len * CC_MUL, real_len = 0;
-    char* t = convert_string_from_bytecode_file((char*)to_conv, len * CC_MUL,
+    char* t = convert_string_from_bytecode_file(vm, (char*)to_conv, len * CC_MUL,
                                                 dest_len, &real_len);
     char *save_t = t;
 	nap_int_t v = 0;
     if(!t)
     {
-        *error = NAP_FAILURE;
+        *error = NAP_FAILURE; /* the VM has already its error set */
         return NAP_NO_VALUE;
     }
 
@@ -298,8 +300,12 @@ static int mov_into_byte_register(struct nap_vm* vm)
         if(return_type == OPCODE_STRING)              /* handles: mov reg int 0, rv string*/
         {
             int error = NAP_SUCCESS; /* might lose some numbers */
-            vm->regb[register_index] = (nap_byte_t)nap_int_string_to_number(vm->rvs,
-                                                                vm->rvl, &error);
+            vm->regb[register_index] =
+                    (nap_byte_t)nap_int_string_to_number(vm, vm->rvs, vm->rvl, &error);
+            if(error != NAP_SUCCESS)
+            {
+                return NAP_FAILURE;
+            }
         }
         else
         {
@@ -320,9 +326,13 @@ static int mov_into_byte_register(struct nap_vm* vm)
         {
             uint8_t second_register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
             int error = NAP_SUCCESS;
-            vm->regb[register_index] = (nap_byte_t)nap_int_string_to_number(
+            vm->regb[register_index] = (nap_byte_t)nap_int_string_to_number(vm,
                         vm->regs[second_register_index],
                         vm->regslens[second_register_index], &error);
+            if(error != NAP_SUCCESS)
+            {
+                return NAP_FAILURE;
+            }
         }
         else
         {
@@ -410,9 +420,13 @@ static int mov_into_byte_register(struct nap_vm* vm)
                     }
 
                     /* and finally put the "character" in the register */
-                    vm->regb[register_index] = (nap_byte_t)nap_int_string_to_number(
+                    vm->regb[register_index] = (nap_byte_t)nap_int_string_to_number(vm,
                                 (char*)var->instantiation->value + real_index * CC_MUL,
                                 1, &error); /* taking only one character */
+                    if(error != NAP_SUCCESS)
+                    {
+                        return NAP_FAILURE;
+                    }
                 }
                 else
                 if(ctr_used_index_regs == 2) /* string[2,5] = "ABC" - removes from the string the substring [2,5] and puts in the new string */
@@ -420,16 +434,20 @@ static int mov_into_byte_register(struct nap_vm* vm)
                     size_t start_index = (size_t)vm->regidx[0]; /* starting from this */
                     size_t end_index = (size_t)vm->regidx[1];
                     size_t temp_len = end_index - start_index + 1;
-                    int error_ind = NAP_SUCCESS;
+                    int error = NAP_SUCCESS;
 					if(end_index < start_index)
 					{
                         /* TODO: error message? */
 						return NAP_FAILURE;
 					}
 						 
-                    vm->regb[register_index] = (nap_byte_t)nap_int_string_to_number(
+                    vm->regb[register_index] = (nap_byte_t)nap_int_string_to_number(vm,
                                 (char*)var->instantiation->value + start_index * CC_MUL,
-                                temp_len, &error_ind);
+                                temp_len, &error);
+                    if(error != NAP_SUCCESS)
+                    {
+                        return NAP_FAILURE;
+                    }
                 }
                 else /* string [x,y,z] make no sense */
                 {
@@ -488,8 +506,12 @@ static int mov_into_int_register(struct nap_vm* vm)
         if(return_type == OPCODE_STRING)              /* handles: mov reg int 0, rv string*/
         {
             int error = NAP_SUCCESS;
-            vm->regi[register_index] = nap_int_string_to_number(vm->rvs,
+            vm->regi[register_index] = nap_int_string_to_number(vm, vm->rvs,
                                                                 vm->rvl, &error);
+            if(error != NAP_SUCCESS)
+            {
+                return NAP_FAILURE;
+            }
         }
         else
         {
@@ -510,9 +532,13 @@ static int mov_into_int_register(struct nap_vm* vm)
         {
             uint8_t second_register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
             int error = NAP_SUCCESS;
-            vm->regi[register_index] = nap_int_string_to_number(
+            vm->regi[register_index] = nap_int_string_to_number(vm,
                         vm->regs[second_register_index],
                         vm->regslens[second_register_index], &error);
+            if(error != NAP_SUCCESS)
+            {
+                return NAP_FAILURE;
+            }
         }
         else
         {
@@ -575,9 +601,13 @@ static int mov_into_int_register(struct nap_vm* vm)
                     }
 
                     /* and finally put the "character" in the register */
-                    vm->regi[register_index] = nap_int_string_to_number(
+                    vm->regi[register_index] = nap_int_string_to_number(vm,
                                 (char*)var->instantiation->value + real_index * CC_MUL,
                                 1, &error); /* taking only one character */
+                    if(error != NAP_SUCCESS)
+                    {
+                        return NAP_FAILURE;
+                    }
                 }
                 else
                 if(ctr_used_index_regs == 2) /* string[2,5] = "ABC" - removes from the string the substring [2,5] and puts in the new string */
@@ -585,10 +615,14 @@ static int mov_into_int_register(struct nap_vm* vm)
                     size_t start_index = vm->regidx[0]; /* starting from this */
                     size_t end_index = vm->regidx[1];
                     size_t temp_len = end_index - start_index + 1;
-                    int error_ind = NAP_SUCCESS;
-                    vm->regi[register_index] = nap_int_string_to_number(
+                    int error = NAP_SUCCESS;
+                    vm->regi[register_index] = nap_int_string_to_number(vm,
                                 (char*)var->instantiation->value + start_index * CC_MUL,
-                                temp_len, &error_ind);
+                                temp_len, &error);
+                    if(error != NAP_SUCCESS)
+                    {
+                        return NAP_FAILURE;
+                    }
                 }
                 else /* string [x,y,z] make no sense */
                 {
@@ -621,8 +655,7 @@ static int mov_into_string_register(struct nap_vm* vm)
     if(move_source == OPCODE_STRING) /* usually we move an immediate string intro string register*/
     {
         nap_index_t str_index = nap_fetch_index(vm);
-
-        init_string_register(vm, register_index,
+        return init_string_register(vm, register_index,
                              vm->stringtable[str_index]->string,
                              vm->stringtable[str_index]->len);
     }
@@ -637,7 +670,7 @@ static int mov_into_string_register(struct nap_vm* vm)
         CHECK_VARIABLE_TYPE(var, STACK_ENTRY_STRING)
 
         /* and moving the value in the regsiter itself */
-        init_string_register(vm, register_index,
+        return init_string_register(vm, register_index,
                              (char*)var->instantiation->value,
                              var->instantiation->len);
     }
@@ -648,7 +681,7 @@ static int mov_into_string_register(struct nap_vm* vm)
         if(second_register_type == OPCODE_STRING)
         {
             uint8_t second_register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
-            init_string_register(vm, register_index,
+            return  init_string_register(vm, register_index,
                                  vm->regs[second_register_index],
                                  vm->regslens[second_register_index]);
         }
@@ -744,7 +777,7 @@ static int mov_into_variable(struct nap_vm* vm)
                 }
                 else /* allocate the memory for the value */
                 {
-                    nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
+                    nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
                     *temp = vm->regi[register_index];
                     var->instantiation->value = temp;
                 }
@@ -770,7 +803,7 @@ static int mov_into_variable(struct nap_vm* vm)
                 }
                 else /* allocate the memory for the value */
                 {
-                    nap_byte_t* temp = (nap_byte_t*)calloc(1, sizeof(nap_byte_t));
+                    nap_byte_t* temp = NAP_MEM_ALLOC(1, nap_byte_t);
                     *temp = vm->regb[register_index];
                     var->instantiation->value = temp;
                 }
@@ -791,12 +824,8 @@ static int mov_into_variable(struct nap_vm* vm)
                 {
                     NAP_MEM_FREE(var->instantiation->value);
                 }
-                temp = (char*)calloc(
-                            vm->regslens[register_index] * CC_MUL + 1, /* UTF-32BE */
-                            sizeof(char));
-
-                memcpy(temp, vm->regs[register_index],
-                        vm->regslens[register_index] * CC_MUL);
+                NAP_STRING_ALLOC(vm, temp, vm->regslens[register_index]);
+                NAP_STRING_COPY(temp, vm->regs[register_index], vm->regslens[register_index]);
 
                 var->instantiation->value = temp;
                 var->instantiation->len = vm->regslens[register_index];
@@ -880,9 +909,9 @@ static int mov_into_indexed(struct nap_vm* vm)
                             char s[256];
                             SNPRINTF(s, 256,
                                      "Index overflow error for [%s]."
-                                     "Requested index: [%" PRINT_u "] "
+                                     "Requested index: [%" PRINT_st "] "
                                      "Available length: [%" PRINT_st "] "
-                                     "Assumed length: [%" PRINT_u "]\n",
+                                     "Assumed length: [%" PRINT_st "]\n",
                                      var->name,
                                      real_index,
                                      var->instantiation->len,

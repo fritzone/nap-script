@@ -89,7 +89,8 @@ enum label_type
 
 struct nap_vm;
 /* the function pointer for an interrupt function */
-typedef uint8_t (*interrupt)(struct nap_vm*);
+typedef uint16_t (*interrupt)(struct nap_vm*);
+
 /* the function pointer for the handling of a byteocde operation */
 typedef int (*nap_op_handler)(struct nap_vm* vm);
 
