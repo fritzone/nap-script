@@ -298,8 +298,13 @@ int nap_execute_method(nap_runtime *runtime, void *return_value, const char *met
             if(fe->return_type == OPCODE_STRING)
             {
                 size_t dest_len = runtime->vm->rvl * CC_MUL, real_len = 0;
-                char* t = convert_string_from_bytecode_file(runtime->vm->rvs,
+                char* t = convert_string_from_bytecode_file(runtime->vm, runtime->vm->rvs,
                         runtime->vm->rvl * CC_MUL, dest_len, &real_len);
+                if(t == NULL)
+                {
+                    return NAP_EXECUTE_FAILURE;
+                }
+
                 *((char**)return_value) = t;
             }
         }

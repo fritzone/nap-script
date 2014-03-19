@@ -3,7 +3,7 @@
 #include "nap_consts.h"
 #include "nbci_impl.h"
 
-uint8_t intr_3(struct nap_vm* vm)
+uint16_t intr_3(struct nap_vm* vm)
 {
     struct nap_vm* child_vm = NULL;
     child_vm = nap_vm_inject(vm->btyecode_chunks[vm->regi[0]]->code,
@@ -32,5 +32,5 @@ uint8_t intr_3(struct nap_vm* vm)
 
     /* performs the cleanup */
     nap_vm_cleanup(child_vm);
-    return 0;
+    return NAP_SUCCESS;
 }

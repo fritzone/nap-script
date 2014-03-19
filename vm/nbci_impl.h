@@ -67,11 +67,16 @@ struct nap_vm;
 /* Macro for creating a nap string. We need this in order to be able to support
    the UTF-32 BE without too much hassle */
 #define NAP_STRING_ALLOC(vm, var, count) do {                                  \
-   var = (char*)calloc(count * CC_MUL, sizeof(char));                          \
-   NAP_NN_ASSERT(vm,var);                                                      \
+   var = (char*)calloc( (count) * CC_MUL, sizeof(char));                       \
+   NAP_NN_ASSERT(vm, var);                                                     \
    } while(0);
 
-#define NAP_STRING_COPY(dest, src, count) memcpy(dest, src, count * CC_MUL);
+/* to calculate the length of a string without using too much CC_MUL*/
+#define NAP_STRING_LEN(len) ((len) * CC_MUL)
+
+/* to make less use of the CC_MUL in the code */
+#define NAP_STRING_COPY(dest,src,count) memcpy(dest,src,NAP_STRING_LEN(count));
+
 
 /* Macro for leaving the application in case of an unimplemented opcode */
 #define NAP_NOT_IMPLEMENTED                                                    \
@@ -244,11 +249,12 @@ const char* nap_get_type_description(StackEntryType t);
 /**
  * @brief convert_string_from_bytecode_file converts a string from the bytecode
  * file's UTF-32BE format to the system's internal format.
- * @param src
- * @param len
- * @return
  */
-char* convert_string_from_bytecode_file(const char *src, size_t len, size_t dest_len, size_t *real_len);
+char* convert_string_from_bytecode_file(struct nap_vm* vm,
+                                        const char *src,
+                                        size_t len,
+                                        size_t dest_len,
+                                        size_t *real_len);
 
 #ifdef __cplusplus
 }

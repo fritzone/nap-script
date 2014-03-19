@@ -16,14 +16,14 @@ public:
 
 static gb_releaser gbr;
 
-uint8_t intr_2(struct nap_vm* vm)
+uint16_t intr_2(struct nap_vm* vm)
 {
     std::auto_ptr<nap_compiler> compiler = nap_compiler::create_compiler();
     compiler->set_vmchain(vm);
     bool success = true;
     /* the vm->regs[0] is a Unicode string, convert it to system representation*/
     size_t dest_len = vm->regslens[0] * CC_MUL, real_len = 0;
-    char* t = convert_string_from_bytecode_file(vm->regs[0],
+    char* t = convert_string_from_bytecode_file(vm, vm->regs[0],
             vm->regslens[0] * CC_MUL, dest_len, &real_len);
 
     bool source_set = compiler->set_source(t, success);
@@ -34,7 +34,7 @@ uint8_t intr_2(struct nap_vm* vm)
         nap_compiler::release_compiler(compiler);
         garbage_bin_bin::release();
 
-        return CANNOT_SET_SOURCE;
+        return INTR_2_CANNOT_SET_SOURCE;
     }
 
     if(compiler->compile())
@@ -61,12 +61,12 @@ uint8_t intr_2(struct nap_vm* vm)
         nap_compiler::release_compiler(compiler);
         garbage_bin_bin::release();
 
-        return CANNOT_COMPILE_SOURCE;
+        return INTR_2_CANNOT_COMPILE_SOURCE;
     }
 
     garbage_bin_bin::instance().empty(compiler.get());
     nap_compiler::release_compiler(compiler);
     vm->regi[0] = vm->chunk_counter - 1 ;
 
-    return 0;
+    return NAP_SUCCESS;
 }
