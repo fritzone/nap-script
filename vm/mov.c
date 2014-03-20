@@ -612,8 +612,8 @@ static int mov_into_int_register(struct nap_vm* vm)
                 else
                 if(ctr_used_index_regs == 2) /* string[2,5] = "ABC" - removes from the string the substring [2,5] and puts in the new string */
                 {
-                    size_t start_index = vm->regidx[0]; /* starting from this */
-                    size_t end_index = vm->regidx[1];
+                    size_t start_index = (size_t)vm->regidx[0]; /* starting from this */
+                    size_t end_index = (size_t)vm->regidx[1];
                     size_t temp_len = end_index - start_index + 1;
                     int error = NAP_SUCCESS;
                     vm->regi[register_index] = nap_int_string_to_number(vm,
@@ -694,7 +694,6 @@ static int mov_into_string_register(struct nap_vm* vm)
     {
         NAP_NOT_IMPLEMENTED
     }
-    return NAP_SUCCESS;
 }
 
 static int mov_into_index_register(struct nap_vm* vm)
@@ -927,8 +926,8 @@ static int mov_into_indexed(struct nap_vm* vm)
                     else
                     if(ctr_used_index_regs == 2) /* string[2,5] = "ABC" - removes from the string the substring [2,5] and puts in the new string */
                     {
-                        size_t start_index = vm->regidx[0]; /* starting from this */
-                        size_t end_index = vm->regidx[1];
+                        size_t start_index = (size_t)vm->regidx[0]; /* starting from this */
+                        size_t end_index = (size_t)vm->regidx[1];
                         return move_string_into_substring(vm, start_index, end_index,
                                     (char**)&var->instantiation->value,
                                     &var->instantiation->len,

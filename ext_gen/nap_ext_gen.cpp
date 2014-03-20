@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
 
     std::string cpp_file = target_dir + "/nap_ext_def.c";
     std::string header_file = target_dir + "/nap_ext_def.h";
-    unsigned char t = atoi(max_par.c_str());
+    unsigned char t = (unsigned char)atoi(max_par.c_str());
     if(t > 32)
     {
         t = 8;

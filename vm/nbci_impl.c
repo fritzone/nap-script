@@ -586,7 +586,7 @@ int nap_handle_interrupt(struct nap_vm* vm)
 {
     /* CC points to the interrupt number */
     uint8_t intr = *(uint8_t*)(vm->content + vm->cc);
-    uint8_t int_res = 0;
+    uint16_t int_res = 0;
     char s[64];
 
     if(vm->interrupts[intr])
@@ -712,11 +712,10 @@ const char *nap_get_type_description(StackEntryType t)
         default: return "unk";
     }
 }
-
 char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size_t len, size_t dest_len, size_t* real_len)
 {
     char* loc_orig = 0; /* the original locale string for LC_ALL */
-    int len_loc = 0;    /* the length of the loc_orig */
+    int len_loc = 0;
     char* enc = 0;      /* the actual encoding */
     char* loc_cp = 0;   /* copying over the loc_orig to not to mess with orig */
     char* converted = 0; /* will be used by iconv */
@@ -724,7 +723,7 @@ char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size
     iconv_t converter;  /* the converter itself */
     int ret = -1;       /* errorchecking */
     size_t save_dest_len = dest_len; /* used in real lenth calcualtions */
-    char* to_return = NULL; /* what to return */
+    char* to_return = NULL;
 	char* final_encoding = NULL;
     char* src_copy = NAP_MEM_ALLOC(len + 1, char);
     char* src_copy_save = src_copy;

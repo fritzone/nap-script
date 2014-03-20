@@ -10,6 +10,10 @@
 #include <stdio.h>
 #include <string>
 
+#ifdef _WINDOWS
+#pragma warning(disable:4244)
+#endif
+
 const char* get_reg_type(uint8_t req_type)
 {
     switch(req_type)
@@ -327,7 +331,15 @@ void move_start_register_atomic(nap_compiler* _compiler, variable* dest, int lev
 
 void move_start_register_atomic_with_type(nap_compiler* _compiler, int reqd_type, int level )
 {
-    code_stream(_compiler) <<mov() << SPACE << reg() << get_reg_type(reqd_type) << C_PAR_OP << level << C_PAR_CL << C_COMMA;
+    code_stream(_compiler) <<
+		mov() << 
+		SPACE << 
+		reg() << 
+		get_reg_type(reqd_type) 
+		<< C_PAR_OP 
+		<< level 
+		<< C_PAR_CL 
+		<< C_COMMA;
 }
 
 void move_reg_into_var(nap_compiler* _compiler,call_context* cc,  variable* dest, int level )
