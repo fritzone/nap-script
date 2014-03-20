@@ -48,7 +48,7 @@ struct nap_vm;
     } while(0);
 
 /* Macro for creating an object */
-#define NAP_MEM_ALLOC(count, type) (type*)calloc( (count), sizeof(type));
+#define NAP_MEM_ALLOC(count, type) (type*)calloc( (count), sizeof(type))
 
 /* Macro for asserting a non-NULL variable and setting the VM's error in case*/
 #define NAP_NN_ASSERT(vm,var)                                                 \

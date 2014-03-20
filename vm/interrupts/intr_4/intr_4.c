@@ -13,41 +13,8 @@
 #else
 #include <windows.h>
 #include <strsafe.h>
-void ErrorExit(LPTSTR lpszFunction) 
-{ 
-    // Retrieve the system error message for the last-error code
-
-    LPVOID lpMsgBuf;
-    LPVOID lpDisplayBuf;
-    DWORD dw = GetLastError(); 
-
-    FormatMessage(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-        FORMAT_MESSAGE_FROM_SYSTEM |
-        FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL,
-        dw,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR) &lpMsgBuf,
-        0, NULL );
-
-    // Display the error message and exit the process
-
-    lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT, 
-        (lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)lpszFunction) + 40) * sizeof(TCHAR)); 
-    StringCchPrintf((LPTSTR)lpDisplayBuf, 
-        LocalSize(lpDisplayBuf) / sizeof(TCHAR),
-        TEXT("%s failed with error %d: %s"), 
-        lpszFunction, dw, lpMsgBuf); 
-    MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK); 
-
-    LocalFree(lpMsgBuf);
-    LocalFree(lpDisplayBuf);
-    ExitProcess(dw); 
-}
-
+#pragma warning(disable: 4054)
 #endif
-
 /*
  * regs 0 -> the signature, first character is the return type
  * regs 1 -> the name of the function
@@ -147,19 +114,18 @@ uint16_t intr_4(struct nap_vm* vm)
     fprintf(stderr, "DC:%d\n", t);
 #else
 	{
-		void* function_to_call = NULL;
-		HANDLE hLib = library_name[0] == '-'?GetModuleHandle(NULL) : LoadLibrary(library_name);
+		FARPROC function_to_call = NULL;
+		HMODULE hLib = library_name[0] == '-'?GetModuleHandle(NULL) : LoadLibrary(library_name);
 		if(hLib == NULL)
 		{
 			free(library_name);
 			free(signature);
 			free(function_name);
 			nap_free_parameter_descriptor(&pd);
-			fprintf(stderr, "\nCannot load library\n");
             return INTR_4_CANNOT_LOAD_LIBRARY;
 		}
 
-		function_to_call = (void*)GetProcAddress(hLib, function_name);
+		function_to_call = GetProcAddress(hLib, function_name);
 
 		if(function_to_call == NULL)
 		{
@@ -167,12 +133,10 @@ uint16_t intr_4(struct nap_vm* vm)
 			free(signature);
 			free(function_name);
 			nap_free_parameter_descriptor(&pd);
-			fprintf(stderr, "\nCannot load function\n");
-			ErrorExit("intr_4");
             return INTR_4_CANNOT_LOAD_FUNCTION;
 		}
 
-		nec(function_to_call, pd, 0);
+		nec((LPVOID)function_to_call, pd, 0);
 	}
 #endif
 

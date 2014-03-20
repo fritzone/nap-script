@@ -75,5 +75,4 @@ int interpret_funtable(struct nap_vm *vm, uint8_t *start_location, uint32_t len)
         vm->funtable[func ++] = entry;
 
     }
-    return NAP_SUCCESS;
 }

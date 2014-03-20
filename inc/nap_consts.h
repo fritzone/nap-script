@@ -16,11 +16,11 @@ static const int NAP_VARIABLE_FOUND     = 1;
 static const int NAP_VARIABLE_NOT_FOUND = 0;
 
 /** Represents that there is no such value*/
-static const int NAP_NO_VALUE = 0xFF;
+#define NAP_NO_VALUE 0xFF
 
 /* Success and failure indicators */
-static const int NAP_FAILURE                      = 0;
-static const int NAP_SUCCESS                      = 1;
+#define NAP_FAILURE 0
+#define NAP_SUCCESS 1
 
 /* Error codes for intr 2 */
 static const uint16_t INTR_2_CANNOT_SET_SOURCE         = 0x0201;

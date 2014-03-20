@@ -136,7 +136,7 @@ void code_finalizer::finalize()
                               mcompiler->variables()[i]->name.end(), '.');
         if(n == 1 || 1) // global/extern variable. Skip the "global." or "extern." // ||1 to write out all time
         {          // WARNING: this code counts on tha both global and extern have 6 characters.
-            int globlen = strlen("global") + 1;
+            uint16_t globlen = (uint16_t)strlen("global") + 1;
             f.write_stuff_to_file_16(var_name_length - globlen);
             const char* vname = mcompiler->variables()[i]->name.c_str();
             vname += globlen;
@@ -173,7 +173,7 @@ void code_finalizer::finalize()
     for(unsigned int i=0; i<jumptable_count; i++)
     {
         label_entry* je = mcompiler->jumptable()[i];
-        uint16_t l = je->name.length();
+        uint16_t l = (uint16_t)je->name.length();
 
         f.write_stuff_to_file_32(je->bytecode_location); // the actual location in code
 
@@ -182,7 +182,7 @@ void code_finalizer::finalize()
         {
             je->type = 3;
             je->name = je->name.substr(je->name.find('.') + 1);
-            l = je->name.length();
+            l = (uint16_t)je->name.length();
         }
         f.write_stuff_to_file_8(je->type);      // 0, 1, 2 .. .see there
         if(je->type == 1 || je->type == 2 || je->type == 3)
