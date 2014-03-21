@@ -84,7 +84,9 @@ int nap_pop(struct nap_vm* vm)
                 }
                 else /* allocate the memory for the value */
                 {
-                    nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
+                    nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
+                    NAP_NN_ASSERT(vm, temp);
+
                     *temp = 0;
                     ve->instantiation->value = temp;
                 }
