@@ -32,7 +32,9 @@ int nap_push(struct nap_vm *vm)
             struct variable_entry* ve = nap_fetch_variable(vm, var_index);
             ASSERT_NOT_NULL_VAR(ve);
 
-            ve->instantiation = (struct stack_entry*)(calloc(sizeof(struct stack_entry), 1));
+            ve->instantiation = NAP_MEM_ALLOC(1, struct stack_entry);
+            NAP_NN_ASSERT(vm, ve->instantiation);
+
             ve->instantiation->type = se->type; /* must match the stack entry */
 
             if(se->type == STACK_ENTRY_INT) /* pushing an integer */
@@ -78,7 +80,9 @@ int nap_push(struct nap_vm *vm)
 
                 str_index = nap_fetch_index(vm);
                 len = vm->stringtable[str_index]->len * CC_MUL; /* UTF32*/
-                temp = (char*)(calloc(len,  sizeof(char)));
+                temp = NAP_MEM_ALLOC(len,  char);
+                NAP_NN_ASSERT(vm, temp) ;
+
                 memcpy(temp, vm->stringtable[str_index] , len);
                 se->value = temp; /* the stack_entry->value will be the string itself */
                 se->len = vm->stringtable[str_index]->len; /* the stack_entry->len will be the
@@ -102,7 +106,9 @@ int nap_push(struct nap_vm *vm)
 
         if(se->type == OPCODE_INT) /* pushing an int register */
         {
-            nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
+            nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
+            NAP_NN_ASSERT(vm, temp);
+
             *temp = vm->regi[reg_idx];
 
             /* setting the value of the stack entry */
@@ -111,7 +117,9 @@ int nap_push(struct nap_vm *vm)
         else
         if(se->type == OPCODE_BYTE) /* pushing a byte register */
         {
-            nap_byte_t* temp = (nap_byte_t*)calloc(1, sizeof(nap_byte_t));
+            nap_byte_t* temp = NAP_MEM_ALLOC(1, nap_byte_t);
+            NAP_NN_ASSERT(vm, temp);
+
             *temp = vm->regb[reg_idx];
 
             /* setting the value of the stack entry */
@@ -121,7 +129,9 @@ int nap_push(struct nap_vm *vm)
         if(se->type == OPCODE_STRING) /* pushing a string register */
         {
             size_t len = vm->regslens[reg_idx] * CC_MUL; /* UTF32*/
-            char* temp = (char*)(calloc(len,  sizeof(char)));
+            char* temp = NAP_MEM_ALLOC(len, char);
+            NAP_NN_ASSERT(vm, temp);
+
             memcpy(temp, vm->regs[reg_idx], len);
             se->value = temp; /* the stack_entry->value will be the string itself */
             se->len = vm->regslens[reg_idx]; /* the stack_entry->len will be the
@@ -138,7 +148,8 @@ int nap_push(struct nap_vm *vm)
     {
         /* immediate values (23, 42) are pushed as ints */
         nap_int_t nr = nap_read_immediate(vm);
-        nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
+        nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
+        NAP_NN_ASSERT(vm, temp);
         *temp = nr;
 
         /* setting the value of the stack entry and indicating it is immediate */
@@ -159,7 +170,9 @@ int nap_push(struct nap_vm *vm)
 
         if(se->type == STACK_ENTRY_INT)
         {
-            nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
+            nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
+            NAP_NN_ASSERT(vm, temp);
+
             *temp = *(nap_int_t*)ve->instantiation->value;
 
             /* setting the value of the stack entry */

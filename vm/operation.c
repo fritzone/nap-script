@@ -75,7 +75,7 @@ int do_int_operation(struct nap_vm* vm, nap_int_t* target, nap_int_t operand,
  *
  * @param vm the VM in which we perform the operation
  * @param target the target which will be populated with the result of the
- *               operation.
+ *               operation. Will be freed
  * @param len The length of the target will be updated. Initially it contains
  *            the original length
  * @param operand The second operand
@@ -90,16 +90,12 @@ static int do_string_operation(struct nap_vm *vm, nap_string_t *target,
 {
     if(opcode == OPCODE_ADD) /* add two strings, result will be in target */
     {
-        nap_string_t temp = (nap_string_t)calloc((*len + operand_len) * CC_MUL,
-                                                 sizeof(char));
         size_t final_len = *len * CC_MUL;
-        if(temp == NULL)
-        {
-            return nap_vm_set_error_description(vm,
-                               "Cannot allocate memory for a string operation");
-        }
-        memcpy(temp, *target, final_len);
-        memcpy(temp + final_len, operand, operand_len * CC_MUL);
+        nap_string_t temp = NULL;
+
+        NAP_STRING_ALLOC(vm, temp, (*len + operand_len));
+        NAP_STRING_COPY(temp, *target, *len);
+        NAP_STRING_COPY(temp + final_len, operand, operand_len);
 
         *len += operand_len;
         NAP_MEM_FREE(*target);
@@ -255,13 +251,13 @@ int nap_operation(struct nap_vm* vm)
                 /* perform the operation only if the values are not the same already*/
                 if(var->instantiation->value)
                 {
-                    int64_t* temp = (int64_t*)var->instantiation->value;
+                    nap_int_t* temp = (nap_int_t*)var->instantiation->value;
                     return do_int_operation(vm, temp, vm->regi[register_index],
                                             vm->current_opcode);
                 }
                 else /* allocate the memory for the value */
                 { /* this should generate some error, there should be a value before add */
-                    int64_t* temp = (int64_t*)calloc(1, sizeof(int64_t));
+                    nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
                     *temp = vm->regi[register_index];
                     var->instantiation->value = temp;
                 }

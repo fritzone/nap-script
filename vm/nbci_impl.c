@@ -754,7 +754,7 @@ char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size
     enc = strchr(loc_cp, '.') + 1;
 
 #ifdef _WINDOWS
-	final_encoding = (char*)calloc(8 + 1 + strlen(enc), sizeof(char)); /* WINDOWS- */
+    final_encoding = NAP_MEM_ALLOC(8 + 1 + strlen(enc), char); /* WINDOWS- */
     if(final_encoding == NULL)
     {
         free(loc_cp);

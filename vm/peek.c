@@ -45,13 +45,15 @@ int nap_peek(struct nap_vm *vm)
         }
 
         /* create a new instantiation */
-        ve->instantiation = (struct stack_entry*)(
-                    calloc(sizeof(struct stack_entry), 1));
+        ve->instantiation = NAP_MEM_ALLOC(1, struct stack_entry);
+        NAP_NN_ASSERT(vm, ve->instantiation);
+
         ve->instantiation->type = (StackEntryType)peek_type;
 
         if(peek_type == OPCODE_INT) /* we are dealing with an INT type peek */
         {   /* peek int: assumes that on the stack there is a nap_int_t in the value of the stack_entry at the given index*/
-            nap_int_t* temp = (nap_int_t*)calloc(1, sizeof(nap_int_t));
+            nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
+            NAP_NN_ASSERT(vm, temp);
             *temp = *(nap_int_t*)vm->stack[vm->stack_pointer - peek_index]->value; /* STACK VALUE FROM peek_index */
             ve->instantiation->value = temp;
         }
@@ -61,7 +63,8 @@ int nap_peek(struct nap_vm *vm)
             char* temp = NULL;
             struct stack_entry* se = vm->stack[vm->stack_pointer - peek_index];
             size_t len = se->len * CC_MUL;
-            temp = (char*)(calloc(len,  sizeof(char)));
+            temp = NAP_MEM_ALLOC(len, char);
+            NAP_NN_ASSERT(vm, temp);
             memcpy(temp, se->value, len);
             ve->instantiation->value = temp;
             ve->instantiation->len = se->len; /* real length, not UTF32 length*/
