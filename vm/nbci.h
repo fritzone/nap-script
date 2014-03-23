@@ -27,7 +27,7 @@ extern "C" {
 #ifdef _WINDOWS
  #define PRINT_d "lld"
  #define PRINT_u "lld"
- #define PRINT_x "x"
+ #define PRINT_x "llX"
  #define PRINT_st "u"
  #pragma warning (disable : 4127)
 #else

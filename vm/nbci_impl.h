@@ -124,8 +124,8 @@ struct nap_vm;
 #define CHECK_VARIABLE_INSTANTIATON(var)                                       \
     if(var->instantiation == 0)                                                \
     {                                                                          \
-        char* s = (char*)calloc(128, sizeof(char));                            \
-        SNPRINTF(s, 128, "Variable [%s] not initialised correctly. "           \
+        char s[512];                                                           \
+        SNPRINTF(s, 512, "Variable [%s] not initialised correctly. "           \
                    "It has no instantiation.", var->name);                     \
         vm->error_description = s;                                             \
         return NAP_FAILURE;                                                    \
@@ -134,8 +134,8 @@ struct nap_vm;
 #define CHECK_VARIABLE_TYPE(var, REQ_TYPE_CODE)                                \
     if(var->instantiation->type != REQ_TYPE_CODE)                              \
     {                                                                          \
-        char* s = (char*)calloc(128, sizeof(char));                            \
-        SNPRINTF(s, 128, "Variable [%s] has wrong type."                       \
+        char s[512];                                                           \
+        SNPRINTF(s, 512, "Variable [%s] has wrong type."                       \
                    "Expected [%s] got[%s].", var->name,                        \
                     nap_get_type_description(REQ_TYPE_CODE),                   \
                     nap_get_type_description(var->instantiation->type));       \

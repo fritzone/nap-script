@@ -119,6 +119,7 @@ int nap_pop(struct nap_vm* vm)
                     if(vm->stack[vm->stack_pointer]->type == OPCODE_INT)
                     {
                         temp = NAP_MEM_ALLOC(1, nap_int_t);
+						NAP_NN_ASSERT(vm, temp);
                         *temp  = *(int64_t*)vm->stack[vm->stack_pointer]->value;
                     }
                     else

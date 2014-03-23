@@ -165,6 +165,11 @@ static void print_function(unsigned char* vec, int also_body, FILE* fp)
     }
 
     char *nr = (char*)calloc(NUM_PARMS, sizeof(char));
+	if(nr == NULL)
+	{
+		fprintf(stderr, "Out of memory\n");
+		exit(1);
+	}
     for(int i=0; i<NUM_PARMS; i++)
     {
         nr[i] = '0' + vec[i];
@@ -327,7 +332,7 @@ int main(int argc, char* argv[])
     // define the typedef for the function pointers and their array
     fputs("\ntypedef void (*nap_ext_caller)(void*, struct nap_ext_par_desc*, void*);\n", fp_header);
     fputs("\nextern nap_ext_caller ext_callers[", fp_header);
-    fprintf(fp_header, "%lu];\n", max_array);
+    fprintf(fp_header, "%lu];\n", max_array + 1);
 
     fputs("void nap_int_init_ext_func_array();\n", fp_header);
     fputs("void nap_populate_par_desc(struct nap_ext_par_desc* pd, int index, void* new_data);\n", fp_header);
@@ -340,7 +345,7 @@ int main(int argc, char* argv[])
     // now in the body create the number to function pointer array
     // and write the array of function pointers
     fputs("\nnap_ext_caller ext_callers[", fp_body);
-    fprintf(fp_body, "%lu] = {0};\n", max_array);
+    fprintf(fp_body, "%lu] = {0};\n", max_array + 1);
 
     // and the initialization function
     fputs("\nvoid nap_int_init_ext_func_array()\n{\n", fp_body);

@@ -62,6 +62,8 @@ uint16_t intr_4(struct nap_vm* vm)
         if(signature[i] == TYPE_INT) /* popping in integer variable */
         {
             nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
+			NAP_NN_ASSERT(vm, temp);
+
             *temp = *(nap_int_t*)vm->stack[vm->stack_pointer - cur_stack_peeker]->value; /* STACK VALUE FROM peek_index */
             nap_populate_par_desc(pd, strlen(signature) - cur_stack_peeker - 1 - 1, temp);
             /* first -1: because we remove the return type,

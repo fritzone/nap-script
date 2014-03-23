@@ -4,25 +4,22 @@
 #include <stdint.h>
 
 typedef union{
-    unsigned char c[4];
-    unsigned short s[2];
+    uint8_t c[4];
+    uint16_t s[2];
     uint32_t l;
 }U4;
 
-
-
 typedef union{
-    unsigned char c[8];
-    unsigned char c2[2][4];
-    unsigned short s[4];
-    unsigned long l[2];
-    unsigned long long ll;
+    uint8_t c[8];
+    uint8_t c2[2][4];
+    uint16_t s[4];
+    uint32_t l[2];
+    uint64_t ll;
 }U8;
 
-
 typedef union{
-    unsigned char c[2];
-    unsigned short s;
+    uint8_t c[2];
+    uint16_t s;
 }U2;
 
 uint16_t htovm_16(uint16_t s);

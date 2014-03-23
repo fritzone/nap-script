@@ -145,6 +145,11 @@ void nap_compiler::deliver_bytecode(uint8_t *&location, size_t &len)
     code_finalizer(this).finalize();
     len = bytecode.size();
     location = (uint8_t*)calloc(len, sizeof(char));
+	if(location == NULL)
+	{
+		len = 0;
+		return;
+	}
     memcpy(const_cast<uint8_t*>(location), bytecode.data(), len);
 }
 

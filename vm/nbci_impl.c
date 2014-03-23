@@ -203,6 +203,9 @@ void nap_vm_cleanup(struct nap_vm* vm)
     /* the string registers */
     for(i=0; i<REGISTER_COUNT; i++)
     {
+#ifdef _WINDOWS
+#pragma warning(suppress: 6001)
+#endif
         NAP_MEM_FREE(vm->regs[i]);
     }
 
@@ -849,6 +852,7 @@ char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size
 #ifdef _WINDOWS
         free(final_encoding);
 #endif
+		return NULL;
     }
     strncpy(to_return, orig_converted, *real_len);
 
