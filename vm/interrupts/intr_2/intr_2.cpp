@@ -41,16 +41,32 @@ uint16_t intr_2(struct nap_vm* vm)
     {
         nap_bytecode_chunk* chunk = (struct nap_bytecode_chunk*)
                                calloc(sizeof(struct nap_bytecode_chunk), 1);
+		if(chunk == NULL)
+		{
+			nap_compiler::release_compiler(compiler);
+			garbage_bin_bin::release();
+			
+			return INTR_2_CANNOT_COMPILE_SOURCE;
+		}
+		
         compiler->deliver_bytecode(chunk->code, chunk->length);
 
         if(vm->chunk_counter + 1 > vm->allocated_chunks)
         {
-            vm->allocated_chunks *= 2;
-            vm->btyecode_chunks = (struct nap_bytecode_chunk**)realloc(
+			struct nap_bytecode_chunk** tmp = (struct nap_bytecode_chunk**)realloc(
                         vm->btyecode_chunks,
-                        vm->allocated_chunks * sizeof(struct nap_bytecode_chunk*));
+                        vm->allocated_chunks * 2 * sizeof(struct nap_bytecode_chunk*));
 
-            /* TODO: is this NULL? */
+			if(tmp == NULL)
+			{
+				free(chunk);
+				nap_compiler::release_compiler(compiler);
+				garbage_bin_bin::release();
+			
+				return INTR_2_CANNOT_COMPILE_SOURCE;
+			}
+            vm->allocated_chunks *= 2;
+            vm->btyecode_chunks = tmp;
         }
 
         vm->btyecode_chunks[vm->chunk_counter] = chunk;

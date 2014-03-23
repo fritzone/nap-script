@@ -78,13 +78,32 @@ NAP_LIB_API nap_bytecode_chunk* nap_runtime_compile(struct nap_runtime* runtime,
             {
                 nap_bytecode_chunk* chunk = (struct nap_bytecode_chunk*)
                                        calloc(sizeof(struct nap_bytecode_chunk), 1);
+				if(chunk == NULL)
+				{
+					runtime->last_error = "Not enought memory";
+					return NULL;
+				}
+
+				chunk->code = NULL; // just to see it, not necessarry
+				chunk->length = 0;
+
+				// this will initialize the chunk->code with data or leave it NULL
                 runtime->compiler->deliver_bytecode(chunk->code, chunk->length);
+				if(chunk->length == 0)
+				{
+					free(chunk);
+					runtime->last_error = "Cannot deliver bytecode";
+					return NULL;
+				}
                 runtime->chunks.push_back(chunk);
                 if(name != NULL)
                 {
                     size_t len = strlen(name);
                     chunk->name = (char*)(calloc(len, sizeof(char)));
-                    strncpy(chunk->name, name, len);
+					if(chunk->name != NULL)
+					{
+						strncpy(chunk->name, name, len);
+					}
                 }
                 return chunk;
             }
@@ -201,13 +220,20 @@ NAP_LIB_API void nap_runtime_shutdown(nap_runtime **runtime)
     }
     for(size_t i=0; i<(*runtime)->chunks.size(); i++)
     {
-        free( (*runtime)->chunks.at(i)->code);
-        if((*runtime)->chunks.at(i)->name)
-        {
-            free((*runtime)->chunks.at(i)->name);
-        }
+		if( (*runtime)->chunks.at(i) )
+		{
+			if((*runtime)->chunks.at(i)->code != NULL)
+			{
+				free( (*runtime)->chunks.at(i)->code );
+			}
+
+			if((*runtime)->chunks.at(i)->name)
+			{
+				free((*runtime)->chunks.at(i)->name);
+			}
 
         free( (*runtime)->chunks.at(i));
+		}
     }
     delete (*runtime);
     *runtime = 0;
@@ -333,7 +359,9 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
 
         if(!source_set)
         {
-            nap_compiler::release_compiler(compiler);
+            runtime->last_error = compiler->get_error();
+			
+			nap_compiler::release_compiler(compiler);
             return NAP_EXECUTE_FAILURE;
         }
 
@@ -342,16 +370,41 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
         {
             nap_bytecode_chunk* chunk = (struct nap_bytecode_chunk*)
                                    calloc(sizeof(struct nap_bytecode_chunk), 1);
+			if(chunk == NULL)
+			{
+				runtime->last_error = "Not enough memory";
+				nap_compiler::release_compiler(compiler);
+				return NAP_EXECUTE_FAILURE;
+			}
+
+			chunk->code = NULL; // it is already NULL
+			chunk->length = 0;
+
             compiler->deliver_bytecode(chunk->code, chunk->length);
+
+			if(chunk->length == 0)
+			{
+				runtime->last_error = "Cannot deliver bytecode";
+				nap_compiler::release_compiler(compiler);
+				return NAP_EXECUTE_FAILURE;
+			}
 
             if(runtime->vm->chunk_counter + 1 > runtime->vm->allocated_chunks)
             {
-                runtime->vm->allocated_chunks *= 2;
-                runtime->vm->btyecode_chunks = (struct nap_bytecode_chunk**)realloc(
+				struct nap_bytecode_chunk** tmp = (struct nap_bytecode_chunk**)realloc(
                             runtime->vm->btyecode_chunks,
-                            runtime->vm->allocated_chunks * sizeof(struct nap_bytecode_chunk*));
+                            runtime->vm->allocated_chunks * 2 * sizeof(struct nap_bytecode_chunk*));
+				if(tmp == NULL)
+				{
+					runtime->last_error = "Not enough memory to reallocate the bytecode chunks";  
+					free(chunk->code);
+					free(chunk);
+					nap_compiler::release_compiler(compiler);
+					return NAP_EXECUTE_FAILURE;
+				}
 
-                /* TODO: is this NULL? */
+				runtime->vm->allocated_chunks <<= 1;
+                runtime->vm->btyecode_chunks = tmp;
             }
 
             runtime->vm->btyecode_chunks[runtime->vm->chunk_counter] = chunk;
@@ -403,9 +456,13 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
         runtime->vm->rvl = child_vm->rvl;
         if(runtime->vm->rvl)
         {
-            NAP_MEM_FREE(runtime->vm->rvs);
-            runtime->vm->rvs = (char*)calloc(runtime->vm->rvl * CC_MUL, sizeof(char)); /* UTF32 */
-            memcpy(runtime->vm->rvs, child_vm->rvs, runtime->vm->rvl  * CC_MUL);
+			char *tmp = (char*)calloc(runtime->vm->rvl * CC_MUL, sizeof(char)); /* UTF32 */
+			if(tmp != NULL)
+			{
+				memcpy(tmp, child_vm->rvs, runtime->vm->rvl  * CC_MUL);
+				NAP_MEM_FREE(runtime->vm->rvs);
+				runtime->vm->rvs = tmp; 
+			}
         }
 
         /* performs the cleanup */

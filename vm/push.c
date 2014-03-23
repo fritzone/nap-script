@@ -40,18 +40,21 @@ int nap_push(struct nap_vm *vm)
             if(se->type == STACK_ENTRY_INT) /* pushing an integer */
             {
                 ve->instantiation->value = NAP_MEM_ALLOC(1, nap_int_t);
+				NAP_NN_ASSERT(vm, ve->instantiation->value);
                 *(nap_int_t*)ve->instantiation->value = 0;
             }
             else
             if(se->type == STACK_ENTRY_BYTE) /* pushing a byte */
             {
                 ve->instantiation->value = NAP_MEM_ALLOC(1, nap_byte_t);
+				NAP_NN_ASSERT(vm, ve->instantiation->value);
                 *(nap_byte_t*)ve->instantiation->value = 0;
             }
             else
             if(se->type == STACK_ENTRY_STRING) /* pushing a string */
             {
                 ve->instantiation->value = NAP_MEM_ALLOC(1, char);
+				NAP_NN_ASSERT(vm, ve->instantiation->value);
                 *(char*)ve->instantiation->value = 0;
             }
             else

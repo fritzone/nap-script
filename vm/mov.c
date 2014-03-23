@@ -777,6 +777,7 @@ static int mov_into_variable(struct nap_vm* vm)
                 else /* allocate the memory for the value */
                 {
                     nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
+					NAP_NN_ASSERT(vm, temp);
                     *temp = vm->regi[register_index];
                     var->instantiation->value = temp;
                 }
@@ -803,6 +804,7 @@ static int mov_into_variable(struct nap_vm* vm)
                 else /* allocate the memory for the value */
                 {
                     nap_byte_t* temp = NAP_MEM_ALLOC(1, nap_byte_t);
+					NAP_NN_ASSERT(vm, temp);
                     *temp = vm->regb[register_index];
                     var->instantiation->value = temp;
                 }
