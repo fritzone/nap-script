@@ -479,7 +479,12 @@ static int mov_into_int_register(struct nap_vm* vm)
 
     if(move_source == OPCODE_IMMEDIATE) /* immediate value (1,..) */
     {
-        vm->regi[register_index] = nap_read_immediate(vm);
+        int success = 0;
+        vm->regi[register_index] = nap_read_immediate(vm, &success);
+        if(success == NAP_FAILURE)
+        {
+            return NAP_FAILURE;
+        }
     }
     else
     if(move_source == OPCODE_VAR) /* movin a variable into reg*/
@@ -702,7 +707,12 @@ static int mov_into_index_register(struct nap_vm* vm)
     uint8_t move_source = vm->content[vm->cc ++]; /* the index definition */
     if(move_source == OPCODE_IMMEDIATE) /* immediate value (1,..) */
     {
-        vm->regidx[register_index] = (size_t)nap_read_immediate(vm);
+        int success = 0;
+        vm->regidx[register_index] = (size_t)nap_read_immediate(vm, &success);
+        if(success == NAP_FAILURE)
+        {
+            return NAP_FAILURE;
+        }
     }
     else
     {

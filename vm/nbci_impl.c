@@ -457,10 +457,11 @@ nap_byte_t nap_read_byte(struct nap_vm* vm)
     return nr;
 }
 
-nap_int_t nap_read_immediate(struct nap_vm* vm)
+nap_int_t nap_read_immediate(struct nap_vm* vm, int* success)
 {
     uint8_t imm_size = vm->content[vm->cc ++];
     nap_int_t nr = 0;
+    *success = NAP_SUCCESS;
     /* and now read the number according to the size */
     if(imm_size == OPCODE_BYTE)
     {
@@ -473,7 +474,6 @@ nap_int_t nap_read_immediate(struct nap_vm* vm)
     {
         int16_t* immediate = (int16_t*)(vm->content + vm->cc);
         int16_t temp_16 = htovm_16(*immediate);
-        temp_16 = temp_16;
         nr = temp_16;
         vm->cc += 2;
     }
@@ -495,8 +495,11 @@ nap_int_t nap_read_immediate(struct nap_vm* vm)
     }
     else
     {
-        printf("invalid immediate size [push]: 0x%x", imm_size);
-        NAP_NOT_IMPLEMENTED
+        char s[256];
+        SNPRINTF(s, 256, "invalid immediate size  0x%x at %"PRINT_u" (%"PRINT_x")", 
+                 (unsigned)imm_size, vm->cc, vm->cc);
+        nap_vm_set_error_description(vm, s);
+        *success = NAP_FAILURE;
     }
     return nr;
 }

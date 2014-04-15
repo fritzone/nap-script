@@ -387,6 +387,5 @@ TEST(Functions, ExternalCalling)
 NAP_EXPORTS
 void external_callee(nap_int_t a, nap_int_t b)
 {
-    fprintf(stderr, "\na=%"PRINT_d", b=%"PRINT_d"\n", a, b);
     if(a != 1 || b != 2) FAIL();
 }

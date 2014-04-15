@@ -83,7 +83,13 @@ int nap_comparison(struct nap_vm* vm)
 
             if(cmp_second == OPCODE_IMMEDIATE) /* comparing int register with immediate value (1,..) */
             {
-                nap_int_t immediate = nap_read_immediate(vm);
+                int success = 0;
+                nap_int_t immediate = nap_read_immediate(vm, &success);
+                if(success == NAP_FAILURE)
+                {
+                    return NAP_FAILURE;
+                }
+                
                 return nap_vm_set_lbf_to_op_result(vm, vm->regi[register_index], immediate, vm->current_opcode);
             }
             else

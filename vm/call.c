@@ -13,6 +13,17 @@ int nap_call(struct nap_vm *vm)
 {
     nap_addr_t jmpt_index = nap_fetch_address(vm);
 
+    /* is this a valid jump index? */
+    if(jmpt_index >= vm->jumptable_size)
+    {
+        char s[256];
+        SNPRINTF(s, 256, "Invalid jump index [%d]."
+                 " Max is ["JL_SIZE_T_SPECIFIER"]",
+                 jmpt_index, vm->jumptable_size);
+        nap_vm_set_error_description(vm, s);
+        return NAP_FAILURE;
+    }
+
     if(vm->jumptable[jmpt_index]->type != JMPTABLE_ENTRY_TYPE_FROM_PARENT)
     {
         /* can we create a new location? */
@@ -22,17 +33,7 @@ int nap_call(struct nap_vm *vm)
         }
         vm->call_frames[vm->cfsize ++] = vm->cc;
 
-        /* is this a valid jump index? */
-        if(jmpt_index >= vm->jumptable_size)
-        {
-            char s[256];
-            SNPRINTF(s, 256, "Invalid jump index [%d]."
-                     " Max is ["JL_SIZE_T_SPECIFIER"]",
-                     jmpt_index, vm->jumptable_size);
-            nap_vm_set_error_description(vm, s);
-            return NAP_FAILURE;
-        }
-        /* and simply set cc to be where we need to go */
+      /* and simply set cc to be where we need to go */
         vm->cc = vm->jumptable[jmpt_index]->location;
     }
     else /* calling a method from the parent_vm */
@@ -45,7 +46,8 @@ int nap_call(struct nap_vm *vm)
         uint64_t fake_call_frame_exit = (uint64_t)-1;
 
         /* get the function from the parent*/
-        struct funtable_entry* fe = nap_vm_get_method(vm->parent, vm->jumptable[jmpt_index]->label_name);
+        struct funtable_entry* fe = nap_vm_get_method(vm->parent, 
+                                        vm->jumptable[jmpt_index]->label_name);
         if(fe == NULL)
         {
             return NAP_FAILURE;

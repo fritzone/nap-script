@@ -210,7 +210,7 @@ struct variable_entry* nap_fetch_variable(struct nap_vm* vm, nap_index_t var_ind
  * @param vm
  * @return
  */
-nap_int_t nap_read_immediate(struct nap_vm* vm);
+nap_int_t nap_read_immediate(struct nap_vm* vm, int* success);
 
 /**
  * Read an immediate byte from the bytecode stream and return it

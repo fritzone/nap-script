@@ -40,3 +40,9 @@ LINK_DIRECTORIES(${NAP_ROOT}/vm/$(ConfigurationName)/)
 target_link_libraries(nap_cpl_s nap_bci_s)
 
 target_link_libraries(nap nap_bci_s nap_cpl_s)
+
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    target_link_libraries(nap_cpl_s stdc++)
+endif()
+

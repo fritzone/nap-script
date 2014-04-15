@@ -9,3 +9,7 @@ set(${project}_files
 add_executable(${project}
     ${${project}_files}
 )
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    target_link_libraries(${project} stdc++)
+endif()

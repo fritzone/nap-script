@@ -13,16 +13,27 @@
  */
 int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len)
 {
-    uint8_t* cloc = start_location + 5; /* skip the .meta TODO :check if it is .meta */
-    uint32_t count = htovm_32(*(uint32_t*)(cloc));
+    uint8_t* cloc = 0; 
+    
+    /* see if this is actually .meta or something else */
+    if(*(start_location) != '.' 
+        || *(start_location + 1) != 'm'
+        || *(start_location + 2) != 'e'
+        || *(start_location + 3) != 't'
+        || *(start_location + 4) != 'a')
+    {
+        return NAP_FAILURE;
+    }
+    
+    cloc = start_location + 5; /* skip the .meta */
+    vm->meta_size = htovm_32(*(uint32_t*)(cloc)); /* the number of meta entries */
     cloc += 4;
 
-    if(count == 0)
+    if(vm->meta_size == 0)
     {
         return NAP_SUCCESS;
     }
 
-    vm->meta_size = count;
     vm->metatable = NAP_MEM_ALLOC(vm->meta_size + 1, struct variable_entry*);
     NAP_NN_ASSERT(vm, vm->metatable);
 
@@ -33,13 +44,13 @@ int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
 
         if(index == htovm_32(1920234286) || cloc > start_location + len) /* ".str" */
         {
-            break;
+            return NAP_SUCCESS;
         }
         else
         {
             char* name = NULL;
             struct variable_entry* new_var = NULL;
-			uint16_t len = 0;                 /* the length of the name */
+            uint16_t len = 0;                 /* the length of the name */
             uint8_t type = *cloc;             /* the type of the variable */
 
             cloc ++;
@@ -61,10 +72,7 @@ int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
             { /* seems there is something wrong with the metatable size*/
                 struct variable_entry** tmp = (struct variable_entry**) realloc(vm->metatable,
                                                sizeof(struct variable_entry**) * (index + 1));
-                if(tmp == NULL)
-                {
-                    return NAP_FAILURE;
-                }
+                NAP_NN_ASSERT(vm, tmp);
 
                 vm->metatable = tmp;
             }
@@ -74,7 +82,6 @@ int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
             new_var->index = index;
             new_var->name = name;
             new_var->type = type;
-            /* fprintf(stderr, "TY: %s:%d \n", new_var->name, new_var->type ); */
 
             new_var->instantiation = 0;
             vm->metatable[index] = new_var;

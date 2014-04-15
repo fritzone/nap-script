@@ -22,12 +22,13 @@ int nap_push(struct nap_vm *vm)
     /* see for push int global.XX, push string global.YY ... ie: declaring a variable */
     if(   se->type == STACK_ENTRY_INT
        || se->type == STACK_ENTRY_BYTE
-       || se->type == STACK_ENTRY_STRING) /* or real */
+       || se->type == STACK_ENTRY_STRING) /* STACK_ENTRY_STRING is the same as OPCODE_STRING */
+        /* or real */
     {
         uint8_t push_what = vm->content[vm->cc ++];
 
         if(push_what == OPCODE_VAR) /* This is basically defining a variable on the stack */
-        {
+        {                           /* such as push int globa.variable_name */
             nap_index_t var_index = nap_fetch_index(vm);
             struct variable_entry* ve = nap_fetch_variable(vm, var_index);
             ASSERT_NOT_NULL_VAR(ve);
@@ -40,21 +41,21 @@ int nap_push(struct nap_vm *vm)
             if(se->type == STACK_ENTRY_INT) /* pushing an integer */
             {
                 ve->instantiation->value = NAP_MEM_ALLOC(1, nap_int_t);
-				NAP_NN_ASSERT(vm, ve->instantiation->value);
+                NAP_NN_ASSERT(vm, ve->instantiation->value);
                 *(nap_int_t*)ve->instantiation->value = 0;
             }
             else
             if(se->type == STACK_ENTRY_BYTE) /* pushing a byte */
             {
                 ve->instantiation->value = NAP_MEM_ALLOC(1, nap_byte_t);
-				NAP_NN_ASSERT(vm, ve->instantiation->value);
+                NAP_NN_ASSERT(vm, ve->instantiation->value);
                 *(nap_byte_t*)ve->instantiation->value = 0;
             }
             else
             if(se->type == STACK_ENTRY_STRING) /* pushing a string */
             {
                 ve->instantiation->value = NAP_MEM_ALLOC(1, char);
-				NAP_NN_ASSERT(vm, ve->instantiation->value);
+                NAP_NN_ASSERT(vm, ve->instantiation->value);
                 *(char*)ve->instantiation->value = 0;
             }
             else
@@ -75,14 +76,19 @@ int nap_push(struct nap_vm *vm)
             /* is this push "abcde"? <- the compiler generates: push string index */
             if(se->type == OPCODE_STRING) /* pushing an immediate string on the stack! */
             {
-                nap_index_t str_index = 0;
-                size_t len = 0;
-                char* temp = 0;
+                nap_index_t str_index = 0; /* the index of the string */
+                size_t len = 0;            /* the length of the string */
+                char* temp = 0;            /* a temporary variable */
 
                 vm->cc --; /* stepping one back, right now we point to first byte in index */
 
                 str_index = nap_fetch_index(vm);
-                len = vm->stringtable[str_index]->len * CC_MUL; /* UTF32*/
+                if(str_index >= vm->strt_size) /* this index does not exist */
+                {
+                    return NAP_FAILURE;
+                }
+                
+                len = vm->stringtable[str_index]->len * CC_MUL; /* UTF32 */
                 temp = NAP_MEM_ALLOC(len,  char);
                 NAP_NN_ASSERT(vm, temp) ;
 
@@ -95,7 +101,8 @@ int nap_push(struct nap_vm *vm)
             else
             {
                 char s[64];
-                SNPRINTF(s, 64, "unknown push [0x%x]", push_what);
+                SNPRINTF(s, 64, "unknown push [0x%x] at %"PRINT_u" (%"PRINT_x")", 
+                         push_what, vm->cc, vm->cc);
                 return nap_vm_set_error_description(vm, s);
             }
         }
@@ -150,8 +157,16 @@ int nap_push(struct nap_vm *vm)
     if(se->type == OPCODE_IMMEDIATE)
     {
         /* immediate values (23, 42) are pushed as ints */
-        nap_int_t nr = nap_read_immediate(vm);
-        nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
+        int success = 0;
+        nap_int_t* temp = NULL;
+        nap_int_t nr = nap_read_immediate(vm, &success);
+        
+        if(!success)
+        {
+            return NAP_FAILURE;
+        }
+        
+        temp = NAP_MEM_ALLOC(1, nap_int_t);
         NAP_NN_ASSERT(vm, temp);
         *temp = nr;
 
@@ -171,8 +186,8 @@ int nap_push(struct nap_vm *vm)
 
         se->type = ve->instantiation->type; /* force to match the stack entry */
 
-        if(se->type == STACK_ENTRY_INT)
-        {
+        if(se->type == STACK_ENTRY_INT) /* pushing an int variable */
+        {                               /* STACK_ENTRY_INT = OPCODE_INT */
             nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
             NAP_NN_ASSERT(vm, temp);
 
@@ -180,6 +195,30 @@ int nap_push(struct nap_vm *vm)
 
             /* setting the value of the stack entry */
             se->value = temp;
+        }
+        else
+        if(se->type == STACK_ENTRY_BYTE) /* pushing a byte variable */
+        {
+            nap_byte_t* temp = NAP_MEM_ALLOC(1, nap_byte_t);
+            NAP_NN_ASSERT(vm, temp);
+            
+            *temp = *(nap_byte_t*)ve->instantiation->value;
+            
+            /* setting the value of the stack entry */
+            se->value = temp;
+        }
+        else
+        if(se->type == STACK_ENTRY_STRING)
+        {
+            size_t len = ve->instantiation->len * CC_MUL; /* UTF32*/
+            char* temp = NAP_MEM_ALLOC(len, char);
+            NAP_NN_ASSERT(vm, temp);
+            
+            memcpy(temp, ve->instantiation->value, len);
+            se->value = temp; /* the stack_entry->value will be the string itself */
+            se->len = ve->instantiation->len; /* the stack_entry->len will be the
+                                                  real length of the string, not
+                                                  the length of the UTF32 thing */        
         }
         else
         {
