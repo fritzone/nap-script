@@ -100,9 +100,6 @@ private:
 
     /* this is the actual string */
     char *m_the_string;
-
-    /* the length of the string */
-    int len;
 };
 
 #endif

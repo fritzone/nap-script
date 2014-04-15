@@ -73,7 +73,7 @@ int interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
         NAP_NN_ASSERT(vm, new_jmpentry);
 
         new_jmpentry->location = index;
-        new_jmpentry->type = type;
+        new_jmpentry->type = (enum JmptableEntryType)type;
         new_jmpentry->label_name = name;
 
         vm->jumptable[ jmpc++ ] = new_jmpentry;

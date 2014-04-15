@@ -123,7 +123,13 @@ int nap_operation(struct nap_vm* vm)
 
             if(add_source == OPCODE_IMMEDIATE) /* immediate value (1,..) added to register */
             {
-                nap_int_t imm_operand = nap_read_immediate(vm);
+                int success = 0;
+                nap_int_t imm_operand = nap_read_immediate(vm, &success);
+                if(success == NAP_FAILURE)
+                {
+                    return NAP_FAILURE;
+                }
+                
                 return do_int_operation(vm, &vm->regi[register_index],
                                         imm_operand, vm->current_opcode);
             }

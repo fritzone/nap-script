@@ -9,8 +9,20 @@
 
 int interpret_stringtable(struct nap_vm *vm, uint8_t *start_location, uint32_t len)
 {
-    uint8_t* cloc = start_location + 4; /* skip the .str TODO: chec is this .str?*/
+    uint8_t* cloc = 0; 
+    
+    /* check is this .str?*/
+    if(*(start_location) != '.' 
+        || *(start_location + 1) != 's'
+        || *(start_location + 2) != 't'
+        || *(start_location + 3) != 'r')
+    {
+        return NAP_FAILURE;
+    }
+    
+    cloc = start_location + 4; /* skip the ".str" */ 
     vm->strt_size = htovm_32(*(uint32_t*)(cloc)); /* the next: count*/
+    
     if(vm->strt_size == 0)
     {
         return NAP_SUCCESS;
@@ -26,7 +38,7 @@ int interpret_stringtable(struct nap_vm *vm, uint8_t *start_location, uint32_t l
         cloc += 4;
         if(index == htovm_32(1886218798) || cloc > start_location + len) /* .jmp */
         {
-            break;
+            return NAP_SUCCESS;
         }
         else
         {

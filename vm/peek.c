@@ -19,7 +19,12 @@ int nap_peek(struct nap_vm *vm)
 
     if(peek_index_type == OPCODE_IMMEDIATE) /* immediate value (1,..) */
     {
-        peek_index = (nap_index_t)nap_read_immediate(vm);
+        int success = 0;
+        peek_index = (nap_index_t)nap_read_immediate(vm, &success);
+        if(success == NAP_FAILURE)
+        {
+            return NAP_FAILURE;
+        }
     }
     else
     {

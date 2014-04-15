@@ -18,7 +18,7 @@ int nap_marks(struct nap_vm *vm)
     if(!marker)
     {
         free(temp);
-        NAP_NN_ASSERT(vm, marker); /* sort of ugly ... */
+        NAP_NN_ASSERT(vm, marker); /* sort of ugly but will do what we want */
     }
 
     *temp = marker_code;
