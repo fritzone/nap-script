@@ -9,19 +9,27 @@
 
 int interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t len)
 {
-    uint8_t* cloc = start_location + 4; /* skip the .jmp TODO :check if it is .jmp */
-    size_t count = 0;
+    uint8_t* cloc = 0;
     size_t jmpc = 0;
     size_t indx_ctr = 0;
 
-    count = htovm_32(*(uint32_t*)(cloc));
-    if(count == 0)
+    /* check is this .jmp?*/
+    if(*(start_location) != '.' 
+        || *(start_location + 1) != 'j'
+        || *(start_location + 2) != 'm'
+        || *(start_location + 3) != 'p')
+    {
+        return NAP_FAILURE;
+    }
+    
+    cloc = start_location + 4; /* skip the .jmp */
+    vm->jumptable_size = htovm_32(*(uint32_t*)(cloc));
+    if(vm->jumptable_size == 0)
     {
         return NAP_SUCCESS;
     }
 
     cloc += 4;
-    vm->jumptable_size = count;
     vm->jumptable = NAP_MEM_ALLOC(vm->jumptable_size + 1, struct jumptable_entry*);
     NAP_NN_ASSERT(vm, vm->jumptable);
 
@@ -34,7 +42,8 @@ int interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
 
         struct jumptable_entry* new_jmpentry = NULL;
 
-        if( (cloc + 4) > (vm->content + len) || ++indx_ctr == count+1)
+        if( ((cloc + 4) > (vm->content + len)) 
+            || (++indx_ctr == vm->jumptable_size + 1) )
         {
             return NAP_SUCCESS;
         }
@@ -43,7 +52,7 @@ int interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
         index = htovm_32(*(uint32_t*)(cloc));
 
         /* is this the start of the function table? */
-        if(index == htovm_32(778466670))
+        if(index == htovm_32(778466670)) /* ".fun" as a 4 byt value */
         {
             return NAP_SUCCESS;
         }
