@@ -367,6 +367,8 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     vm->opcode_handlers[OPCODE_SUB] = nap_operation; vm->opcode_error_codes[OPCODE_SUB] = ERR_VM_0012;
     vm->opcode_handlers[OPCODE_DIV] = nap_operation; vm->opcode_error_codes[OPCODE_DIV] = ERR_VM_0012;
     vm->opcode_handlers[OPCODE_MOD] = nap_operation; vm->opcode_error_codes[OPCODE_MOD] = ERR_VM_0012;
+    vm->opcode_handlers[OPCODE_SHL] = nap_operation; vm->opcode_error_codes[OPCODE_SHL] = ERR_VM_0012;
+    vm->opcode_handlers[OPCODE_SHR] = nap_operation; vm->opcode_error_codes[OPCODE_SHR] = ERR_VM_0012;
     vm->opcode_handlers[OPCODE_INTR] = nap_handle_interrupt; vm->opcode_error_codes[OPCODE_INTR] = ERR_VM_0017;
     vm->opcode_handlers[OPCODE_CLIDX] = nap_clidx; vm->opcode_error_codes[OPCODE_CLIDX] = 0;
     vm->opcode_handlers[OPCODE_LEAVE] = nap_leave; vm->opcode_error_codes[OPCODE_LEAVE] = ERR_VM_0021;
