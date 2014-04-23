@@ -281,9 +281,9 @@ static int mov_into_byte_register(struct nap_vm* vm)
         nap_index_t var_index = nap_fetch_index(vm);
         /* and fetch the variable from the given index */
         struct variable_entry* var = nap_fetch_variable(vm, var_index);
-        ASSERT_NOT_NULL_VAR(var)
-        CHECK_VARIABLE_INSTANTIATON(var)
-        CHECK_VARIABLE_TYPE(var, STACK_ENTRY_INT)
+        ASSERT_NOT_NULL_VAR(var);
+        CHECK_VARIABLE_INSTANTIATON(var);
+        CHECK_VARIABLE_TYPE(var, STACK_ENTRY_INT);
 
         /* and moving the value in the regsiter itself */
         vm->regb[register_index] = *(nap_byte_t*)var->instantiation->value;

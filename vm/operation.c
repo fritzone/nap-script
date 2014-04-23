@@ -74,6 +74,21 @@ int do_int_operation(struct nap_vm* vm, nap_int_t* target, nap_int_t operand,
         *target >>= operand;
     }
     else
+    if(opcode == OPCODE_AND)
+    {
+        *target &= operand;
+    }
+    else
+    if(opcode == OPCODE_OR)
+    {
+        *target |= operand;
+    }
+    else
+    if(opcode == OPCODE_XOR)
+    {
+        *target ^= operand;
+    }
+    else
     {
         NAP_NOT_IMPLEMENTED
     }

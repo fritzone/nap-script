@@ -41,6 +41,7 @@
 #include "operation.h"
 #include "leave.h"
 #include "call_intern.h"
+#include "unary.h"
 
 /* system headers */
 #include <stdio.h>
@@ -68,7 +69,7 @@ static char* error_table[ERROR_COUNT + 1] =
     "[VM-0009] cannot decrement something",
     "[VM-0010] cannot increment something",
     "[VM-0011] cannot execute a move operation",
-    "[VM-0012] cannot execute an arithmetic operation",
+    "[VM-0012] cannot execute an operation",
     "[VM-0013] cannot peek from the stack",
     "[VM-0014] cannot pop from the stack",
     "[VM-0015] cannot push onto the stack",
@@ -81,7 +82,7 @@ static char* error_table[ERROR_COUNT + 1] =
     "[VM-0022] Invalid internal call",
     "[VM-0023] Division by zero",
 
-    "LAST_ENTRY_FOR_FUNNY_COMPILERS_WHO_DONT_LIKE_COMMAS"
+    "LAST_ENTRY_FOR_FUNNY_COMPILERS_WHO_DONT_LIKE_COMMAS_AT_LAST_POSITON_IN_AN_INITIALIZATION"
 };
 
 /**
@@ -376,6 +377,11 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     vm->opcode_handlers[OPCODE_MOD] = nap_operation; vm->opcode_error_codes[OPCODE_MOD] = ERR_VM_0012;
     vm->opcode_handlers[OPCODE_SHL] = nap_operation; vm->opcode_error_codes[OPCODE_SHL] = ERR_VM_0012;
     vm->opcode_handlers[OPCODE_SHR] = nap_operation; vm->opcode_error_codes[OPCODE_SHR] = ERR_VM_0012;
+    vm->opcode_handlers[OPCODE_AND] = nap_operation; vm->opcode_error_codes[OPCODE_AND] = ERR_VM_0012;
+    vm->opcode_handlers[OPCODE_OR] = nap_operation; vm->opcode_error_codes[OPCODE_OR] = ERR_VM_0012;
+    vm->opcode_handlers[OPCODE_XOR] = nap_operation; vm->opcode_error_codes[OPCODE_XOR] = ERR_VM_0012;
+    vm->opcode_handlers[OPCODE_NOT] = nap_unary; vm->opcode_error_codes[OPCODE_NOT] = ERR_VM_0012;
+    vm->opcode_handlers[OPCODE_BCOM] = nap_unary; vm->opcode_error_codes[OPCODE_BCOM] = ERR_VM_0012;
     vm->opcode_handlers[OPCODE_INTR] = nap_handle_interrupt; vm->opcode_error_codes[OPCODE_INTR] = ERR_VM_0017;
     vm->opcode_handlers[OPCODE_CLIDX] = nap_clidx; vm->opcode_error_codes[OPCODE_CLIDX] = 0;
     vm->opcode_handlers[OPCODE_LEAVE] = nap_leave; vm->opcode_error_codes[OPCODE_LEAVE] = ERR_VM_0021;

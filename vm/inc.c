@@ -14,12 +14,13 @@ int nap_inc(struct nap_vm* vm)
     if(inc_what == OPCODE_VAR)
     {
         nap_index_t var_index = nap_fetch_index(vm);
-        struct variable_entry* ve = nap_fetch_variable(vm, var_index);
-        ASSERT_NOT_NULL_VAR(ve)
+        struct variable_entry* var = nap_fetch_variable(vm, var_index);
+        ASSERT_NOT_NULL_VAR(var);
+        CHECK_VARIABLE_INSTANTIATON(var);
 
-        if(ve->instantiation->type == OPCODE_INT)
+        if(var->instantiation->type == OPCODE_INT)
         {
-            (*(nap_int_t*)ve->instantiation->value) ++;
+            (*(nap_int_t*)var->instantiation->value) ++;
         }
         else
         {

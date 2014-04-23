@@ -246,7 +246,7 @@ int get_comp_typeid(const char* input)
 }
 
 
-std::string fully_qualified_varname(call_context* cc, variable* v)
+std::string fully_qualified_varname(call_context* cc, const variable* v)
 {
     std::string result;
     if(v->cc)

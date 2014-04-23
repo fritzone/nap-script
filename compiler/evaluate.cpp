@@ -90,13 +90,13 @@ static void deal_with_post_pre_node(nap_compiler* _compiler,
         variable* var = (variable*)pp_node->left->reference->to_interpret;    /* this is the variable */
         if(pp_node->op_type == OPERATOR_POSTDEC || pp_node->op_type == OPERATOR_POSTINC) /*post increment/decrement?*/
         {
-            mov_var_into_reg(_compiler, cc, var, level);                   /* post operation: firstly "use" the original value*/
-            operation_on_variable(_compiler, cc, pp_node->op_type, var);    /* then update it*/
+            mov_target_register_source_var(_compiler, cc, var, level);                   /* post operation: firstly "use" the original value*/
+            unary_operation_variable(_compiler, cc, pp_node->op_type, var);    /* then update it*/
         }
         else    /* must be pre increment/decrement */
         {
-            operation_on_variable(_compiler, cc, pp_node->op_type, var);    /* firstly update the variable*/
-            mov_var_into_reg(_compiler, cc, var, level);                   /* then "use" it*/
+            unary_operation_variable(_compiler, cc, pp_node->op_type, var);    /* firstly update the variable*/
+            mov_target_register_source_var(_compiler, cc, var, level);                   /* then "use" it*/
         }
     }
     else
@@ -114,13 +114,13 @@ static void deal_with_post_pre_node(nap_compiler* _compiler,
 
         if(pp_node->op_type == OPERATOR_POSTDEC || pp_node->op_type == OPERATOR_POSTINC)
         {
-            mov_indexed_into_reg(_compiler, cc, var, level, idxc);            /* reg(level) goes out to the caller*/
+            mov_target_register_source_indexed(_compiler, cc, var, level, idxc);            /* reg(level) goes out to the caller*/
             operation_on_indexed(_compiler, cc, pp_node->op_type, var, idxc);        /* then increment it */
         }
         else
         {
             operation_on_indexed(_compiler, cc, pp_node->op_type, var, idxc);        /* update it */
-            mov_indexed_into_reg(_compiler, cc, var, level, idxc);            /* then initialize the return value (use it) in the caller*/
+            mov_target_register_source_indexed(_compiler, cc, var, level, idxc);            /* then initialize the return value (use it) in the caller*/
         }
 
         clidx(_compiler);                                            /* and finally liberate the indexes for the next operation*/
@@ -151,7 +151,7 @@ static void resolve_op_equal(nap_compiler* _compiler,
         variable* var = (variable*)node->left->reference->to_interpret;
             if(is_atomic_type(node->right->op_type))
             {
-                mov_reg(_compiler, var->i_type, level);
+                mov_start_register(_compiler, var->i_type, level);
                 compile(_compiler,node->right, the_method, cc, level, var->i_type, forced_mov, success);    /* filled up the 'incby' */
                 if(!success)
                 {
@@ -204,7 +204,7 @@ static void resolve_op_equal(nap_compiler* _compiler,
                     return;
                 }
 
-                mov_reg(_compiler, var->i_type, level);
+                mov_start_register(_compiler, var->i_type, level);
                 compile(_compiler,node->right, the_method, cc, level, var->i_type, forced_mov, success);            /* printing right's content*/
                 if(!success)
                 {
@@ -246,7 +246,7 @@ static void resolve_op_equal(nap_compiler* _compiler,
                         return;
                     }
 
-                    operation_target_reg_source_reg(_compiler, var->i_type, level, var->i_type, level + 1);
+                    operation_target_register_source_register(_compiler, var->i_type, level, var->i_type, level + 1);
 
                     bool success = true;
                     deliver_ccidx_dest(_compiler,node->left, level, the_method, cc, reqd_type, index, var, forced_mov, success);    /* fisrtly calculating the index since this might mess up the registers*/
@@ -291,7 +291,7 @@ void deliver_ccidx_dest(nap_compiler* _compiler, const expression_tree* node, in
     {
         if(is_atomic_type((*indxs)->op_type))    /* put the indexes into reg(current level)*/
         {
-            move_atomic_into_index_register(_compiler, idxc, *indxs, the_method, cc, level, forced_mov, success);
+            mov_target_index_register_source_atomic(_compiler, idxc, *indxs, the_method, cc, level, forced_mov, success);
             if(!success)
             {
                 psuccess = false;
@@ -312,7 +312,7 @@ void deliver_ccidx_dest(nap_compiler* _compiler, const expression_tree* node, in
                 }
 
                 /* and here updating the current index register to hold the value from the reg(level) */
-                move_int_register_into_index_register(_compiler, idxc, level);
+                mov_target_index_register_source_int_register(_compiler, idxc, level);
 
             }
             else    /* compile everything in the next level and finally assign the next reg to current reg*/
@@ -325,7 +325,7 @@ void deliver_ccidx_dest(nap_compiler* _compiler, const expression_tree* node, in
                     return;
                 }
 
-                move_int_register_into_index_register(_compiler, idxc, level+1);
+                mov_target_index_register_source_int_register(_compiler, idxc, level+1);
             }
         }
         idxc ++;
@@ -354,7 +354,7 @@ void resolve_operation(nap_compiler* _compiler,
         {                                        /* and to this we'll add the evaluation of the right */
             if(node->right)                        /* binary operation with two sides */
             {
-                mov_reg(_compiler, reqd_type, level);
+                mov_start_register(_compiler, reqd_type, level);
                 compile(_compiler,node->left, the_method, cc, level, reqd_type, forced_mov, success);    /* the stuff contained in the 'atomic' left branch */
                 if(!success)
                 {
@@ -365,7 +365,7 @@ void resolve_operation(nap_compiler* _compiler,
                 if(is_atomic_type(node->right->op_type))    /* number / variable */
                 {
                     code_stream(_compiler) << NEWLINE;
-                    operation_start_register_atomic(_compiler, node, reqd_type, level);
+                    operation_start_register(_compiler, node, reqd_type, level);
                     compile(_compiler,node->right, the_method, cc, level, reqd_type, forced_mov, success);    /* make the operations with the right side*/
                     if(!success)
                     {
@@ -439,7 +439,7 @@ void resolve_operation(nap_compiler* _compiler,
             {
                 if(is_atomic_type(node->right->op_type))
                 {
-                    operation_start_register_atomic(_compiler, node, reqd_type, level);
+                    operation_start_register(_compiler, node, reqd_type, level);
                     compile(_compiler,node->right, the_method, cc, level, reqd_type, forced_mov, success);
                     if(!success)
                     {
@@ -491,7 +491,7 @@ static void resolve_class_member(nap_compiler* _compiler, const expression_tree*
         {
             if(is_atomic_type(node->father->right->op_type))
             {
-                move_start_register_atomic(_compiler,dest, level);
+                mov_start_register(_compiler, dest->i_type, level);
             }
             compile(_compiler,node->father->right, the_method, cc, level, dest->i_type, forced_mov, success);
             if(!success)
@@ -610,7 +610,7 @@ void resolve_assignment(nap_compiler* _compiler, const expression_tree* node,
                             /* start a move into the current register */
                             if(is_atomic_type(node->right->op_type))
                             {
-                                move_start_register_atomic(_compiler,dest, level);
+                                mov_start_register(_compiler, dest->i_type, level);
                             }
                             compile(_compiler,node->right, the_method, cc, level, dest->i_type, forced_mov, success);
                             if(!success)
@@ -623,11 +623,11 @@ void resolve_assignment(nap_compiler* _compiler, const expression_tree* node,
 
                             if(dest->func_par)
                             {
-                                move_reg_into_var(_compiler, dest->func_par->the_method->main_cc, dest, level);
+                                mov_target_variable_source_register(_compiler, dest->func_par->the_method->main_cc, dest, level);
                             }
                             else
                             {
-                                move_reg_into_var(_compiler, cc, dest, level);
+                                mov_target_variable_source_register(_compiler, cc, dest, level);
                             }
                         }
                     }
@@ -641,7 +641,7 @@ void resolve_assignment(nap_compiler* _compiler, const expression_tree* node,
                             return;
                         }
 
-                        output_mov_instruction(_compiler);
+                        mov_start(_compiler);
                         int forced_type = -2;
                         compile(_compiler,node->left, the_method, cc, level, forced_type, forced_mov, success); /* this will print the "mov to dest" */
                         if(!success)
@@ -650,7 +650,7 @@ void resolve_assignment(nap_compiler* _compiler, const expression_tree* node,
                             return;
                         }
 
-                        second_operand_register_level(_compiler, dest, level);
+                        second_part_target_unknown_source_register(_compiler, dest, level);
                     }
                 }
             }
@@ -675,7 +675,7 @@ void resolve_assignment(nap_compiler* _compiler, const expression_tree* node,
                     {
                         if(is_atomic_type(node->right->op_type))
                         {
-                            move_start_register_atomic(_compiler,dest, level);
+                            mov_start_register(_compiler, dest->i_type, level);
                         }
                         compile(_compiler,node->right, the_method, cc, level, dest->i_type, forced_mov, success);
                         if(!success)
@@ -706,7 +706,7 @@ void resolve_assignment(nap_compiler* _compiler, const expression_tree* node,
                 }
 
                 /* the above one prepares the ccidx*/
-                move_register_level_into_indexe_variable(_compiler, dest, idxc, level);
+                mov_target_indexed_variable_source_register(_compiler, dest, idxc, level);
 
                 clidx(_compiler);
             }
@@ -884,7 +884,7 @@ static void resolve_if_keyword(nap_compiler* _compiler,
         }
         if(is_atomic_type(my_if->logical_expr->op_type))
         {
-            move_start_register_atomic_with_type(_compiler, reqd_type, level);
+            mov_start_register(_compiler, reqd_type, level);
             compile(_compiler,my_if->logical_expr, the_method, cc, level, reqd_type, forced_mov, success);
             if(!success)
             {
@@ -1048,7 +1048,7 @@ static void resolve_while_keyword(nap_compiler* _compiler,
         }
         if(is_atomic_type(my_while->logical_expr->op_type))
         {
-            move_start_register_atomic_with_type(_compiler, reqd_type, level);
+            mov_start_register(_compiler, reqd_type, level);
             compile(_compiler,my_while->logical_expr, the_method, cc, level, reqd_type, forced_mov, success);
             if(!success)
             {
@@ -1174,7 +1174,7 @@ static void resolve_for_keyword(nap_compiler* _compiler,
         }
         if(is_atomic_type(my_for->tree_condition->op_type))
         {
-            move_start_register_atomic_with_type(_compiler,reqd_type, level);
+            mov_start_register(_compiler,reqd_type, level);
             compile(_compiler,my_for->tree_condition, the_method, cc, level, reqd_type, forced_mov, success);
             if(!success)
             {
@@ -1317,7 +1317,7 @@ void resolve_variable_definition(nap_compiler* _compiler,
             {
                 if(q->dimension > 0)    /* this dimension definition is a simple number */
                 {
-                    resolve_variable_add_dimension_number(_compiler,cc, vd->the_variable, q->dimension);
+                    call_internal_grow_with_immediate(_compiler,cc, vd->the_variable, q->dimension);
                 }
                 else
                 {
@@ -1341,7 +1341,7 @@ void resolve_variable_definition(nap_compiler* _compiler,
                             return;
                         }
 
-                        resolve_variable_add_dimension_regis(_compiler,cc, vd->the_variable, level + 1);
+                        call_internal_grow_with_register(_compiler,cc, vd->the_variable, level + 1);
 
                     }
                 }
