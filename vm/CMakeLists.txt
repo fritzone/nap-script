@@ -4,11 +4,26 @@ set_source_files_properties(
     ${CMAKE_CURRENT_SOURCE_DIR}/*.c
     PROPERTIES COMPILE_FLAGS "-std=c90")
 
-include_directories(
-    interrupts/intr_2
-    interrupts/intr_3
-    interrupts/intr_4
-)
+set(include_interrupt_dirs "interrupts/intr_4")
+
+
+if(build-compiler)
+    option(enable-runtime-compilation "Build in the runtime code compilation feature (link in intr_2 & intr_3)" ON)
+    if(enable-runtime-compilation)
+        list(APPEND include_interrupt_dirs  "interrupts/intr_2" "interrupts/intr_3" )
+
+        # this will go to the compiler
+        add_definitions( -DRUNTIME_COMPILATION )
+    endif()
+else()
+    unset(enable-runtime-compilation)
+endif()
+
+include_directories( ${include_interrupt_dirs} )
+
+if(enable-runtime-compilation AND NOT build-compiler)
+    MESSAGE(FATAL_ERROR "You cannot have runtime compilation without building the compiler")
+endif()
 
 set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/strtable.c
@@ -44,7 +59,6 @@ include_directories(${CMAKE_SOURCE_DIR}/vm
                     ${NAP_ROOT}/build/ext_gen/
 )
 
-
 set(interrupt_files CACHE INTERNAL "interrupt_files" FORCE)
 add_subdirectory(interrupts)
 list(APPEND ${project}_files ${interrupt_files})
@@ -68,10 +82,14 @@ add_executable(napi
 
 add_dependencies(nap_bci_s nap-ext-gen)
 
-if(NOT WIN32)
-    target_link_libraries(nap_bci_s nap_cpl_s dl)
-    target_link_libraries(napi nap_bci_s nap_cpl_s dl)
-else()
-    target_link_libraries(nap_bci_s nap_cpl_s nap_iconv_s kernel32)
-    target_link_libraries(napi nap_bci_s nap_cpl_s nap_iconv_s kernel32)
+set(vm_link_libs "dl")
+if(WIN32)
+    list(APPEND vm_link_libs "nap_iconv_s" "kernel32")
 endif()
+
+if(build-compiler)
+    list(APPEND vm_link_libs "nap_cpl_s")
+endif()
+
+target_link_libraries(nap_bci_s ${vm_link_libs})
+target_link_libraries(napi nap_bci_s ${vm_link_libs})
