@@ -56,6 +56,37 @@ TEST(Operations, BasicIntVariableOperations)
     SCRIPT_SHUTDOWN
 }
 
+TEST(Operations, BasicBitwiseOperations)
+{
+
+    SCRIPT_START
+    "                                    \
+            int a1 = 1;                  \
+            int a2 = 2;                  \
+            int a3 = 3;                  \
+            int a4 = 1;                  \
+            int a5 = 2;                  \
+            int a6 = 2;                  \
+            int b1 = a1 << 1;            \
+            int b2 = a2 >> 1;            \
+            int b3 = a3 &  1;            \
+            int b4 = a4 |  2;            \
+            int b5 = a5 ^  1;            \
+            int b6 = ~a6;                \
+    "
+    SCRIPT_END
+
+    ASSERT_TRUE( 2 == VAR_INT(b1));
+    ASSERT_TRUE( 1 == VAR_INT(b2));
+    ASSERT_TRUE( 1 == VAR_INT(b3));
+    ASSERT_TRUE( 3 == VAR_INT(b4));
+    ASSERT_TRUE( 3 == VAR_INT(b5));
+    ASSERT_TRUE(-3 == VAR_INT(b6));
+
+    SCRIPT_SHUTDOWN
+}
+
+
 TEST(Operations, BasicStringVariableOperations1)
 {
 

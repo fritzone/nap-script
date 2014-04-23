@@ -357,6 +357,11 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "mod") opcode = OPCODE_MOD;
     if(expr == "shl") opcode = OPCODE_SHL;
     if(expr == "shr") opcode = OPCODE_SHR;
+    if(expr == "and") opcode = OPCODE_AND;
+    if(expr == "or") opcode = OPCODE_OR;
+    if(expr == "xor") opcode = OPCODE_XOR;
+    if(expr == "not") opcode = OPCODE_NOT;
+    if(expr == "bcom") opcode = OPCODE_BCOM;
     if(expr == "eq") opcode = OPCODE_EQ;
     if(expr == "lt") opcode = OPCODE_LT;
     if(expr == "gt") opcode = OPCODE_GT;

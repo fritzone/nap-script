@@ -49,6 +49,7 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/dec.c
     ${CMAKE_CURRENT_SOURCE_DIR}/clidx.c
     ${CMAKE_CURRENT_SOURCE_DIR}/operation.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/unary.c
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/vm 

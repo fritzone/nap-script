@@ -2066,7 +2066,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 }
             }
             else
-                if(var)    /* if this is a variable */
+            if(var)    /* if this is a variable */
             {
                 // TODO: Check if this is a class variable
                 envl = new_envelope(var, BASIC_TYPE_VARIABLE, cc->compiler());
