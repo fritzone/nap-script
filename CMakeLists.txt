@@ -4,6 +4,10 @@ project (nap-script)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) 
 
 option(coverage-build "gcov/lcov test coverage analysis (make coverage_test)" OFF)
+option(build-vm "Build the Nap Virtual Machine" ON)
+option(build-compiler "Build the Nap Compiler" ON)
+option(make-tests "Enable Unit tests" ON)
+option(build-runtime "Build the runtime" ON)
 
 if(NOT WIN32)
   add_definitions(-Wall -Wextra -Wcomment -Wformat -Winit-self -Wno-long-long -Wmissing-include-dirs)
@@ -38,18 +42,30 @@ set(NAP_ROOT ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "NAP_ROOT")
 
 add_subdirectory(ext_gen)
 
-set(compiler_files CACHE INTERNAL "compiler_files" FORCE)
-add_subdirectory(compiler)
+if(build-compiler)
+	set(compiler_files CACHE INTERNAL "compiler_files" FORCE)
+	add_subdirectory(compiler)
+endif()
 
 if(WIN32)
     add_subdirectory(iconv)
 endif()
 
-add_subdirectory(vm)
-add_subdirectory(runtime)
-add_subdirectory(tests)
+if(build-vm)
+	add_subdirectory(vm)
+endif()
 
-enable_testing()
+if(build-runtime)
+	add_subdirectory(runtime)
+endif()
 
-add_test(NAME nap_vm_test COMMAND vmtest)
+if(make-tests)
 
+	if(NOT build-compiler OR NOT build-runtime OR NOT build-vm)
+		MESSAGE(FATAL_ERROR "In order to make the tests you need the compiler, the VM and the runtime")
+	endif()
+
+	add_subdirectory(tests)
+	enable_testing()
+	add_test(NAME nap_vm_test COMMAND vmtest)
+endif()
