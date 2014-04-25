@@ -482,7 +482,6 @@ variable* call_context::variable_list_add_variable(const char *var_name,
         return 0;
     }
 
-
     variable* var = new variable(var_size, itype, var_name, var_type, cc);
     garbage_bin<variable*>::instance(cc->compiler()).place(var, cc->compiler());
 

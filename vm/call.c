@@ -64,7 +64,10 @@ int nap_call(struct nap_vm *vm)
         vm->parent->cc = vm->parent->jumptable[fe->jmptable_index]->location;
 
         /* patch the call frames of the parent so that it will give invalid value
-         * but will not affect the correct functionality */
+         * but will not affect the correct functionality. In leave.c the call
+         * frame that will be placed in vm->cc will be (uint)-1 thus the main
+         * loop if nap_vm_run of the parent will exit andwill return here.
+         * Kind of hacky, but works.*/
         vm->parent->call_frames[vm->parent->cfsize ++] = fake_call_frame_exit;
 
         /* and run the method with the patched stack */
