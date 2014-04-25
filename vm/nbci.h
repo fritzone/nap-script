@@ -95,6 +95,24 @@ typedef uint16_t (*interrupt)(struct nap_vm*);
 typedef int (*nap_op_handler)(struct nap_vm* vm);
 
 /**
+ * The execution context of a virtual machine is the data structure holding the
+ * information about the currently executed thread (of an application). In a nap
+ * virtual machine each thread has its own instruction pointer, set of registers
+ * return values, call frames and stack. Upon a thread creation the parents' stack
+ * (which can be either a thread or the main app) is duplicated into the stack
+ * of the newly created thread and the stack pointer updated as required to
+ * point to the top of the threads' stack.
+ *
+ * Upon execution of an instruction the thread scheduler might switch to another
+ * thread. This is a fake multithreading mechanism since there is always one
+ * active thread which is being executed.
+ */
+struct nap_execution_context
+{
+
+};
+
+/**
  * The nap_vm struct represents an instance of a virtual machine.
  * This structure contains all the necessary components that are used to
  * create a fully functional virtual machine. This actually is a linked list
@@ -107,19 +125,19 @@ struct nap_vm
 
     /* Registers section */
 
-    nap_byte_t       regb    [REGISTER_COUNT]; /* the byte registers             */
+    nap_byte_t       regb    [REGISTER_COUNT]; /* the byte registers                */
     nap_int_t        regi    [REGISTER_COUNT]; /* the integer registers             */
     char*            regs    [REGISTER_COUNT]; /* the string registers, UTF-32BE    */
     nap_int_t        regidx  [REGISTER_COUNT]; /* the register indexes              */
-    enum flag_status lbf;                     /* the last boolean flag             */
+    enum flag_status lbf;                      /* the last boolean flag             */
     uint8_t          mrc;                      /* number of registers of the VM. Used by pushall/popall  */
     size_t           regslens[REGISTER_COUNT]; /* the length of the string registers*/
 
     /* return values */
-    nap_int_t rvi;                          /* the integer return value      */
-    nap_byte_t rvb;                         /* the byte return value         */
-    nap_real_t rvr;                         /* the real return value      */
-    nap_string_t rvs;                       /* the string return value       */
+    nap_int_t rvi;                          /* the integer return value         */
+    nap_byte_t rvb;                         /* the byte return value            */
+    nap_real_t rvr;                         /* the real return value            */
+    nap_string_t rvs;                       /* the string return value          */
     size_t rvl;                             /* the string return value's length */
 
     /* variables regarding the execution flow */
@@ -136,7 +154,6 @@ struct nap_vm
     uint32_t  jumptable_location;           /* the location of the jumptable in the file */
     uint32_t  funtable_location;            /* the location of the fun table in the file */
     uint8_t   file_bitsize;                 /* the bit size: 0x32, 0x64*/
-
 
     /* variables for the meta table */
     struct variable_entry** metatable;      /* the variables */
