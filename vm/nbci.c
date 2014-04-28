@@ -204,10 +204,10 @@ nap_byte_t nap_vm_get_byte(struct nap_vm* vm, char* name, int *found)
 
 void nap_vm_run(struct nap_vm* vm)
 {
-    while(vm->cc < vm->meta_location)
+    while(nap_ip(vm) < vm->meta_location)
     {
-        vm->current_opcode = vm->content[vm->cc];
-        vm->cc ++;
+        vm->current_opcode = vm->content[nap_ip(vm)];
+        nap_step_ip(vm);
 
         if(vm->opcode_handlers[vm->current_opcode] != 0)
         {
@@ -236,7 +236,7 @@ void nap_vm_run(struct nap_vm* vm)
         else
         {
             fprintf(stderr, "invalid opcode [%x] at %"PRINT_u" (%"PRINT_x")\n",
-                    vm->current_opcode, vm->cc - 1, vm->cc - 1);
+                    vm->current_opcode, nap_ip(vm) - 1, nap_ip(vm) - 1);
             nap_vm_cleanup(vm);
             exit(5);
         }

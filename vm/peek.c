@@ -11,9 +11,9 @@
 
 int nap_peek(struct nap_vm *vm)
 {
-    uint8_t peek_type = vm->content[vm->cc ++]; /* int/string/float...*/
+    uint8_t peek_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
 
-    uint8_t peek_index_type = vm->content[vm->cc ++]; /* what are we moving in*/
+    uint8_t peek_index_type = vm->content[nap_step_ip(vm)]; /* what are we moving in*/
     nap_index_t peek_index = 0; /* the index that's peeked */
     uint8_t peek_target = 0;    /* this normally is OPCODE_VAR for compiled code*/
 
@@ -32,7 +32,7 @@ int nap_peek(struct nap_vm *vm)
     }
 
     /* now we know the peek index, see into what are we peeking */
-    peek_target = vm->content[vm->cc ++];
+    peek_target = vm->content[nap_step_ip(vm)];
     if(peek_target == OPCODE_VAR)
     {
         nap_index_t var_index = nap_fetch_index(vm);

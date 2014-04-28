@@ -82,7 +82,7 @@ uint16_t intr_2(struct nap_vm* vm)
 
     garbage_bin_bin::instance().empty(compiler.get());
     nap_compiler::release_compiler(compiler);
-    vm->regi[0] = vm->chunk_counter - 1 ;
+    nap_set_regi(vm, 0, vm->chunk_counter - 1);
 
     return NAP_SUCCESS;
 }

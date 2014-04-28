@@ -13,11 +13,11 @@
  */
 int nap_call_intern(struct nap_vm* vm)
 {
-    uint8_t call_what = vm->content[vm->cc ++];
+    uint8_t call_what = vm->content[nap_step_ip(vm)];
 
     if(call_what == OPCODE_GROW)
     {
-        uint8_t grow_what = vm->content[vm->cc ++];
+        uint8_t grow_what = vm->content[nap_step_ip(vm)];
         if(grow_what == OPCODE_VAR) /* we are adding a dimension to a variable */
         {
             nap_index_t var_index = nap_fetch_index(vm);
@@ -25,16 +25,16 @@ int nap_call_intern(struct nap_vm* vm)
 			uint8_t grow_target_type = 0;
             ASSERT_NOT_NULL_VAR(ve)
 
-            grow_target_type = vm->content[vm->cc ++];
+            grow_target_type = vm->content[nap_step_ip(vm)];
             if(grow_target_type == OPCODE_REG) /* grow with the value of a register */
             {
-                uint8_t register_type = vm->content[vm->cc ++]; /* int/string/float...*/
-                uint8_t register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
+                uint8_t register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+                uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
 
                 /* we are dealing with an INT type register */
                 if(register_type == OPCODE_INT)
                 {
-                    size_t grow_value = (size_t)(vm->regi[register_index]);
+                    size_t grow_value = (size_t)(nap_regi(vm, register_index));
                     size_t new_size = 1;
                     uint8_t dim_counter = 0;
 

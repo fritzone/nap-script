@@ -54,7 +54,7 @@ uint16_t intr_4(struct nap_vm* vm)
         nap_int_init_ext_func_array();
         ext_init = 1;
     }
-    nec = ext_callers[ vm->regi[0] ];
+    nec = ext_callers[ nap_regi(vm, 0) ];
 
     /* first character (index 0) is the return type */
     for(i=1; i<strlen(signature); i++)

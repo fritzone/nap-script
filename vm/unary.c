@@ -11,7 +11,7 @@
 int nap_unary(struct nap_vm* vm)
 {
     /* vm-> current_opcode has the opcode */
-    uint8_t op_what = vm->content[vm->cc ++]; /* variable, register*/
+    uint8_t op_what = vm->content[nap_step_ip(vm)]; /* variable, register*/
     if(op_what == OPCODE_VAR)
     {
         nap_index_t var_index = nap_fetch_index(vm);
@@ -43,10 +43,10 @@ int nap_unary(struct nap_vm* vm)
     else
     if(op_what == OPCODE_REG)
     {
-        uint8_t regt = vm->content[vm->cc ++]; /* int/string/float...*/
+        uint8_t regt = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
         if(regt == OPCODE_INT) /* unary operation on an int register */
         {
-            uint8_t register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
+            uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
             if(vm->current_opcode == OPCODE_BCOM)
             {
                 vm->regi[register_index] = ~vm->regi[register_index];

@@ -17,6 +17,10 @@ typedef uint32_t nap_index_t;   /* the type of an index */
 
 struct nap_vm;
 
+/* The directions in which the IP can move */
+#define BACKWARD -1
+#define FORWARD   1
+
 #if defined(_MSC_VER)
 #define SNPRINTF _snprintf
 #define strtoll _strtoi64
@@ -84,8 +88,8 @@ struct nap_vm;
     char t[256];                                                               \
     SNPRINTF(t, 256, "NI: file [%s] line [%d] instr [%x] "                     \
                     "opcode [%x] at %" PRINT_u " (%" PRINT_x ")\n\n",          \
-            __FILE__, __LINE__, vm->content[vm->cc - 1],                       \
-            vm->current_opcode, vm->cc - 1, vm->cc - 1);                       \
+            __FILE__, __LINE__, vm->content[nap_ip(vm) - 1],                       \
+            vm->current_opcode, nap_ip(vm) - 1, nap_ip(vm) - 1);                       \
     NAP_REPORT_ERROR(vm, t);                                                   \
     } while(0);
 
@@ -255,6 +259,42 @@ char* convert_string_from_bytecode_file(struct nap_vm* vm,
                                         size_t len,
                                         size_t dest_len,
                                         size_t *real_len);
+
+/*
+ * Returns the current IP and will step the IP of the given virtual machine.
+ */
+uint64_t nap_step_ip(struct nap_vm* vm);
+
+/*
+ * Returns the current IP of the VM. Does not step the IP.
+ */
+uint64_t nap_ip(const struct nap_vm* vm);
+
+/*
+ * Sets the IP of  the VM to be the new value. The old IP is discarded,
+ * thrown away.
+ */
+void nap_set_ip(struct nap_vm* vm, uint64_t new_ip);
+
+/**
+ * @brief nap_move_ip Moves the IP of th virtual machine
+ * @param vm The virtual machine
+ * @param delta The difference between the current and the new IP
+ * @param direction 1 forward, -1 backward
+ */
+void nap_move_ip(struct nap_vm* vm, uint64_t delta, signed char direction);
+
+/* Sets the given byte register in the VM to the specified value */
+void nap_set_regb(struct nap_vm* vm, uint8_t register_index, nap_byte_t v);
+
+/* Returns the given byte register from the given VM */
+nap_byte_t nap_regb(struct nap_vm* vm, uint8_t register_index);
+
+/* Sets the given int register in the VM to the specified value */
+void nap_set_regi(struct nap_vm* vm, uint8_t register_index, nap_int_t v);
+
+/* Returns the given int register from the given VM */
+nap_int_t nap_regi(struct nap_vm* vm, uint8_t register_index);
 
 #ifdef __cplusplus
 }

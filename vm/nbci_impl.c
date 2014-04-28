@@ -217,6 +217,13 @@ void nap_vm_cleanup(struct nap_vm* vm)
     /* the stringreturn value */
     NAP_MEM_FREE(vm->rvs);
 
+    /* the current execution context */
+    for(i=0; i<vm->ecs_cnt; i++)
+    {
+        NAP_MEM_FREE(vm->ecs[i]);
+    }
+    NAP_MEM_FREE(vm->ecs);
+
     /* and the VM itself */
     NAP_MEM_FREE(vm);
 }
@@ -233,10 +240,33 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
         return NULL;
     }
 
+    /* initializing the execution contexts vector */
+    vm->ecs = NAP_MEM_ALLOC(1, struct nap_execution_context*);
+    if(vm->ecs == NULL)
+    {
+        free(vm);
+        return NULL;
+    }
+
+    /* creating the initial execution context */
+    vm->cec = NAP_MEM_ALLOC(1, struct nap_execution_context);
+    if(vm->cec == NULL)
+    {
+        free(vm->ecs);
+        free(vm);
+        return NULL;
+    }
+
+    /* initial setup for the ecs vector */
+    vm->ecs_cnt = 1;
+    vm->ecs[vm->ecs_cnt - 1] = vm->cec;
+
+    /* the bytecode content of the vm */
     vm->content = NAP_MEM_ALLOC(bytecode_len, uint8_t);
     if(vm->content == NULL)
     {
         /* TODO: provide a mechanism for error reporting */
+        free(vm->cec);
         free(vm);
         return NULL;
     }
@@ -249,6 +279,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     {
         /* TODO: provide a mechanism for error reporting */
         free(vm->content);
+        free(vm->cec);
         free(vm);
         return NULL;
     }
@@ -324,8 +355,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
      * - 3 addresses          - 4 * 32 (64) bits
      * - the register count   - 8 bits
      * - the flags            - 8 bits */
-    vm->cc = 1 + 4 * vm->file_bitsize + 1
-            + 1; /* to point to the first instruction */
+    nap_set_ip(vm, 1 + 4 * vm->file_bitsize + 1 + 1); /* to point to the first instruction */
 
     /* initially the last boolean flag is in an unknow state */
     vm->lbf = UNDECIDED;
@@ -433,35 +463,35 @@ struct nap_vm *nap_vm_load(const char *filename)
 
 nap_addr_t nap_fetch_address(struct nap_vm *vm)
 {
-    nap_addr_t* p_addr = (nap_addr_t*)(vm->content + vm->cc);
-    vm->cc += sizeof(nap_addr_t);
+    nap_addr_t* p_addr = (nap_addr_t*)(vm->content + nap_ip(vm));
+    nap_move_ip(vm, sizeof(nap_addr_t), FORWARD);
     return htovm_32(*p_addr);
 }
 
 nap_mark_t nap_fetch_mark(struct nap_vm* vm)
 {
-    nap_mark_t* p_marker_code = (nap_mark_t*)(vm->content + vm->cc);
-    vm->cc += sizeof(nap_mark_t);
+    nap_mark_t* p_marker_code = (nap_mark_t*)(vm->content + nap_ip(vm));
+    nap_move_ip(vm, sizeof(nap_mark_t), FORWARD);
     return htovm_32(*p_marker_code);
 }
 
 nap_index_t nap_fetch_index(struct nap_vm* vm)
 {
-    nap_index_t* p_var_index = (nap_index_t*)(vm->content + vm->cc);
-    vm->cc += sizeof(nap_index_t);
+    nap_index_t* p_var_index = (nap_index_t*)(vm->content + nap_ip(vm));
+    nap_move_ip(vm, sizeof(nap_index_t), FORWARD);
     return htovm_32(*p_var_index);
 }
 
 nap_byte_t nap_read_byte(struct nap_vm* vm)
 {
-    uint8_t imm_size = vm->content[vm->cc ++];
+    uint8_t imm_size = vm->content[nap_step_ip(vm)];
     nap_byte_t nr = 0;
     /* and now read the number according to the size */
     if(imm_size == OPCODE_BYTE)
     {
-        nap_byte_t* immediate = (nap_byte_t*)(vm->content + vm->cc);
+        nap_byte_t* immediate = (nap_byte_t*)(vm->content + nap_ip(vm));
         nr = *immediate;
-        vm->cc ++;
+        nap_step_ip(vm);
     }
     else
     {
@@ -474,45 +504,45 @@ nap_byte_t nap_read_byte(struct nap_vm* vm)
 
 nap_int_t nap_read_immediate(struct nap_vm* vm, int* success)
 {
-    uint8_t imm_size = vm->content[vm->cc ++];
+    uint8_t imm_size = vm->content[nap_step_ip(vm)];
     nap_int_t nr = 0;
     *success = NAP_SUCCESS;
     /* and now read the number according to the size */
     if(imm_size == OPCODE_BYTE)
     {
-        int8_t* immediate = (int8_t*)(vm->content + vm->cc);
+        int8_t* immediate = (int8_t*)(vm->content + nap_ip(vm));
         nr = *immediate;
-        vm->cc ++;
+        nap_step_ip(vm);
     }
     else
     if(imm_size == OPCODE_SHORT)
     {
-        int16_t* immediate = (int16_t*)(vm->content + vm->cc);
+        int16_t* immediate = (int16_t*)(vm->content + nap_ip(vm));
         int16_t temp_16 = htovm_16(*immediate);
         nr = temp_16;
-        vm->cc += 2;
+        nap_move_ip(vm, 2, FORWARD);
     }
     else
     if(imm_size == OPCODE_LONG)
     {
-        int32_t* immediate = (int32_t*)(vm->content + vm->cc);
+        int32_t* immediate = (int32_t*)(vm->content + nap_ip(vm));
         int32_t temp_32 = htovm_32(*immediate);
         nr = temp_32;
-        vm->cc += 4;
+        nap_move_ip(vm, 4, FORWARD);
     }
     else
     if(imm_size == OPCODE_HUGE)
     {
-        int64_t* immediate = (int64_t*)(vm->content + vm->cc);
+        int64_t* immediate = (int64_t*)(vm->content + nap_ip(vm));
         int64_t temp_64 = htovm_64(*immediate);
         nr = temp_64;
-        vm->cc += 8;
+        nap_move_ip(vm, 8, FORWARD);
     }
     else
     {
         char s[256];
         SNPRINTF(s, 256, "invalid immediate size  0x%x at %"PRINT_u" (%"PRINT_x")", 
-                 (unsigned)imm_size, vm->cc, vm->cc);
+                 (unsigned)imm_size, nap_ip(vm), nap_ip(vm));
         nap_vm_set_error_description(vm, s);
         *success = NAP_FAILURE;
     }
@@ -553,7 +583,7 @@ int nap_save_registers(struct nap_vm* vm)
         NAP_NN_ASSERT(vm, tmp_bytes);
     }
 
-    memcpy(tmp_bytes, vm->regb, vm->mrc * sizeof(nap_byte_t));
+    memcpy(tmp_bytes, vm->cec->regb, vm->mrc * sizeof(nap_byte_t));
     regb_stack[regb_stack_idx] = tmp_bytes;
     regb_stack_idx ++;
 
@@ -575,7 +605,7 @@ int nap_restore_registers(struct nap_vm* vm)
 
     /* restore the byte registers */
     regb_stack_idx --;
-    memcpy(vm->regb, regb_stack[regb_stack_idx], vm->mrc * sizeof(nap_byte_t));
+    memcpy(vm->cec->regb, regb_stack[regb_stack_idx], vm->mrc * sizeof(nap_byte_t));
     NAP_MEM_FREE(regb_stack[regb_stack_idx]);
 
     return NAP_SUCCESS;
@@ -606,7 +636,7 @@ int nap_vmi_has_variable(const struct nap_vm* vm, const char* name, int* type)
 int nap_handle_interrupt(struct nap_vm* vm)
 {
     /* CC points to the interrupt number */
-    uint8_t intr = *(uint8_t*)(vm->content + vm->cc);
+    uint8_t intr = *(uint8_t*)(vm->content + nap_ip(vm));
     uint16_t int_res = 0;
     char s[64];
 
@@ -624,7 +654,7 @@ int nap_handle_interrupt(struct nap_vm* vm)
     if(int_res == NAP_SUCCESS)
     {
         /* advance to the next position */
-        vm->cc ++;
+        nap_step_ip(vm);
 
         return NAP_SUCCESS;
     }
@@ -881,4 +911,47 @@ char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size
     free(final_encoding);
 #endif
     return to_return;
+}
+
+
+uint64_t nap_step_ip(struct nap_vm *vm)
+{
+    return vm->cec->cc ++;
+}
+
+
+uint64_t nap_ip(const struct nap_vm *vm)
+{
+    return vm->cec->cc;
+}
+
+
+void nap_set_ip(struct nap_vm *vm, uint64_t new_ip)
+{
+    vm->cec->cc = new_ip;
+}
+
+void nap_move_ip(struct nap_vm *vm, uint64_t delta, signed char direction)
+{
+    vm->cec->cc = vm->cec->cc + direction * delta;
+}
+
+void nap_set_regb(struct nap_vm *vm, uint8_t register_index, nap_byte_t v)
+{
+    vm->cec->regb[register_index] = v;
+}
+
+nap_byte_t nap_regb(struct nap_vm *vm, uint8_t register_index)
+{
+    return vm->cec->regb[register_index];
+}
+
+nap_int_t nap_regi(struct nap_vm *vm, uint8_t register_index)
+{
+    return vm->regi[register_index];
+}
+
+void nap_set_regi(struct nap_vm *vm, uint8_t register_index, nap_int_t v)
+{
+    vm->regi[register_index] = v;
 }

@@ -10,7 +10,7 @@
 
 int nap_inc(struct nap_vm* vm)
 {
-    uint8_t inc_what = vm->content[vm->cc ++]; /* variable, register*/
+    uint8_t inc_what = vm->content[nap_step_ip(vm)]; /* variable, register*/
     if(inc_what == OPCODE_VAR)
     {
         nap_index_t var_index = nap_fetch_index(vm);
