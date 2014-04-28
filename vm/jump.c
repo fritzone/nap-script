@@ -8,7 +8,7 @@
 
 int nap_jump(struct nap_vm *vm)
 {
-    nap_index_t* p_jmpt_index = (nap_index_t*)(vm->content + vm->cc);
+    nap_index_t* p_jmpt_index = (nap_index_t*)(vm->content + nap_ip(vm));
     nap_index_t jmp_idx = htovm_32(*p_jmpt_index);
 
     /* is this a valid jump index? */
@@ -20,17 +20,17 @@ int nap_jump(struct nap_vm *vm)
     /* and simply set cc to be where we need to go */
     if(vm->current_opcode == OPCODE_JMP)
     {
-        vm->cc = vm->jumptable[jmp_idx]->location;
+        nap_set_ip(vm, vm->jumptable[jmp_idx]->location);
     }
     else
     {
         if(vm->lbf)
         {
-            vm->cc = vm->jumptable[jmp_idx]->location;
+            nap_set_ip(vm, vm->jumptable[jmp_idx]->location);
         }
         else
         {
-            vm->cc += sizeof(nap_index_t);
+            nap_set_ip(vm, nap_ip(vm) + sizeof(nap_index_t) );
         }
         vm->lbf = UNDECIDED;
     }

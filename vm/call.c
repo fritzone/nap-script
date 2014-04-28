@@ -31,10 +31,10 @@ int nap_call(struct nap_vm *vm)
         {
             return NAP_FAILURE;
         }
-        vm->call_frames[vm->cfsize ++] = vm->cc;
+        vm->call_frames[vm->cfsize ++] = nap_ip(vm);
 
-      /* and simply set cc to be where we need to go */
-        vm->cc = vm->jumptable[jmpt_index]->location;
+        /* and simply set cc to be where we need to go */
+        nap_set_ip(vm, vm->jumptable[jmpt_index]->location);
     }
     else /* calling a method from the parent_vm */
     {
@@ -61,11 +61,11 @@ int nap_call(struct nap_vm *vm)
         }
 
         /* then set the parent's cc to the method*/
-        vm->parent->cc = vm->parent->jumptable[fe->jmptable_index]->location;
+        vm->parent->cec->cc = vm->parent->jumptable[fe->jmptable_index]->location;
 
         /* patch the call frames of the parent so that it will give invalid value
          * but will not affect the correct functionality. In leave.c the call
-         * frame that will be placed in vm->cc will be (uint)-1 thus the main
+         * frame that will be placed in nap_ip(vm) will be (uint)-1 thus the main
          * loop if nap_vm_run of the parent will exit andwill return here.
          * Kind of hacky, but works.*/
         vm->parent->call_frames[vm->parent->cfsize ++] = fake_call_frame_exit;

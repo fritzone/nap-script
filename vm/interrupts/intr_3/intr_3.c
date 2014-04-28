@@ -6,8 +6,11 @@
 uint16_t intr_3(struct nap_vm* vm)
 {
     struct nap_vm* child_vm = NULL;
-    child_vm = nap_vm_inject(vm->btyecode_chunks[vm->regi[0]]->code,
-            vm->btyecode_chunks[vm->regi[0]]->length, INTERRUPT);
+    nap_int_t regi0 = nap_regi(vm, 0);
+    child_vm = nap_vm_inject(
+                vm->btyecode_chunks[regi0]->code,
+                vm->btyecode_chunks[regi0]->length,
+                INTERRUPT);
 
     if(child_vm == NULL)
     {

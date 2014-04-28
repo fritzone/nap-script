@@ -134,17 +134,17 @@ static int do_string_operation(struct nap_vm *vm, nap_string_t *target,
 
 int nap_operation(struct nap_vm* vm)
 {
-    uint8_t add_target = vm->content[vm->cc ++];   /* where we add (reg, var)*/
+    uint8_t add_target = vm->content[nap_step_ip(vm)];   /* where we add (reg, var)*/
 
     if(add_target == OPCODE_REG) /* we add into a register? */
     {
-        uint8_t register_type = vm->content[vm->cc ++]; /* int/string/float...*/
+        uint8_t register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
 
         /* we are dealing with an INT type register */
         if(register_type == OPCODE_INT)
         {
-            uint8_t register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
-            uint8_t add_source = vm->content[vm->cc ++]; /* what are we adding to it*/
+            uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+            uint8_t add_source = vm->content[nap_step_ip(vm)]; /* what are we adding to it*/
 
             if(add_source == OPCODE_IMMEDIATE) /* immediate value (1,..) added to register */
             {
@@ -175,11 +175,11 @@ int nap_operation(struct nap_vm* vm)
             else
             if(add_source == OPCODE_REG) /* adding a register to a register */
             {
-                uint8_t second_register_type = vm->content[vm->cc ++]; /* int/string/float...*/
+                uint8_t second_register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
                 /* we are dealing with an INT type second register */
                 if(second_register_type == OPCODE_INT)
                 {
-                    uint8_t second_register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
+                    uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
                     return do_int_operation(vm, &vm->regi[register_index],
                                             vm->regi[second_register_index],
                                             vm->current_opcode);
@@ -197,8 +197,8 @@ int nap_operation(struct nap_vm* vm)
         else
         if(register_type == OPCODE_STRING)
         {
-            uint8_t register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
-            uint8_t add_source = vm->content[vm->cc ++]; /* what are we adding to it*/
+            uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+            uint8_t add_source = vm->content[nap_step_ip(vm)]; /* what are we adding to it*/
             if(add_source == OPCODE_VAR) /* add reg string (0), xyz */
             {
                 nap_index_t var_index = nap_fetch_index(vm);
@@ -231,10 +231,10 @@ int nap_operation(struct nap_vm* vm)
             if(add_source == OPCODE_REG) /* add reg string (0), reg string (1) */
             {
                 /* fetch the index of the string */
-                uint8_t second_register_type = vm->content[vm->cc ++]; /* string, int, etc... */
+                uint8_t second_register_type = vm->content[nap_step_ip(vm)]; /* string, int, etc... */
                 if(second_register_type == OPCODE_STRING)
                 {
-                    uint8_t second_register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
+                    uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
                     do_string_operation(vm, &vm->regs[register_index],
                                         &vm->regslens[register_index],
                                         vm->regs[second_register_index],
@@ -267,17 +267,17 @@ int nap_operation(struct nap_vm* vm)
         CHECK_VARIABLE_INSTANTIATON(var)
 
         /* and now let's see what we move in the variable */
-        add_source = vm->content[vm->cc ++];
+        add_source = vm->content[nap_step_ip(vm)];
 
         /* moving a register in a variable? */
         if(add_source == OPCODE_REG)
         {
-            uint8_t register_type = vm->content[vm->cc ++]; /* int/string/float...*/
+            uint8_t register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
 
             /* we are dealing with an INT type register */
             if(register_type == OPCODE_INT)
             {
-                uint8_t register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
+                uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
 
                 /* perform the operation only if the values are not the same already*/
                 if(var->instantiation->value)

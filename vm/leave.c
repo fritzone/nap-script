@@ -1,5 +1,6 @@
 #include "leave.h"
 #include "nbci.h"
+#include "nbci_impl.h"
 #include "nap_consts.h"
 
 int nap_leave(struct nap_vm *vm)
@@ -8,6 +9,6 @@ int nap_leave(struct nap_vm *vm)
     {
         return NAP_FAILURE;
     }
-    vm->cc = vm->call_frames[-- vm->cfsize];
+    nap_set_ip(vm, vm->call_frames[-- vm->cfsize]);
     return NAP_SUCCESS;
 }

@@ -9,11 +9,11 @@
 
 int nap_return(struct nap_vm *vm)
 {
-    uint8_t return_what = vm->content[vm->cc ++];   /* return what? */
+    uint8_t return_what = vm->content[nap_step_ip(vm)];   /* return what? */
     if(return_what == OPCODE_REG) /* do we check a register? */
     {
-        uint8_t register_type = vm->content[vm->cc ++]; /* int/string/float...*/
-        uint8_t register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
+        uint8_t register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+        uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
 
         /* we are dealing with an INT type register */
         if(register_type == OPCODE_INT)
@@ -23,7 +23,7 @@ int nap_return(struct nap_vm *vm)
         else
         if(register_type == OPCODE_BYTE)
         {
-            vm->rvb = vm->regb[register_index];
+            vm->rvb = nap_regb(vm, register_index);
         }
         else
         if(register_type == OPCODE_STRING)

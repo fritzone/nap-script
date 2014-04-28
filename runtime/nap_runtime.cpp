@@ -418,12 +418,12 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
 
         garbage_bin_bin::instance().empty(compiler.get());
         nap_compiler::release_compiler(compiler);
-        runtime->vm->regi[0] = runtime->vm->chunk_counter - 1 ;
+        nap_set_regi(runtime->vm, 0, runtime->vm->chunk_counter - 1);
 
         // create a new VM to call the method
         struct nap_vm* child_vm = NULL;
-        child_vm = nap_vm_inject(runtime->vm->btyecode_chunks[runtime->vm->regi[0]]->code,
-                runtime->vm->btyecode_chunks[runtime->vm->regi[0]]->length, INTERRUPT);
+        child_vm = nap_vm_inject(runtime->vm->btyecode_chunks[nap_regi(runtime->vm, 0)]->code,
+                runtime->vm->btyecode_chunks[nap_regi(runtime->vm, 0)]->length, INTERRUPT);
 
 
         if(child_vm == NULL)

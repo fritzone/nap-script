@@ -20,15 +20,15 @@ int nap_pop(struct nap_vm* vm)
         return NAP_FAILURE;
     }
 
-    pop_what = vm->content[vm->cc ++];
+    pop_what = vm->content[nap_step_ip(vm)];
     if(pop_what == OPCODE_REG)
     {
-        uint8_t register_type = vm->content[vm->cc ++]; /* int/string/float...*/
+        uint8_t register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
 
         /* we are dealing with an INT type register */
         if(register_type == OPCODE_INT)
         {
-            uint8_t register_index = vm->content[vm->cc ++]; /* 0, 1, 2 ...*/
+            uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
 
             if(vm->stack[vm->stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
             {

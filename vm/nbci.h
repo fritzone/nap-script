@@ -110,6 +110,9 @@ typedef int (*nap_op_handler)(struct nap_vm* vm);
 struct nap_execution_context
 {
 
+    uint64_t         cc;                       /* the instruction pointer    */
+    nap_byte_t       regb    [REGISTER_COUNT]; /* the byte registers         */
+
 };
 
 /**
@@ -121,11 +124,15 @@ struct nap_execution_context
  */
 struct nap_vm
 {
-    uint64_t cc;                            /* the instruction pointer */
+    /* The current execution context. This is automatically modified by the
+     * thread scheduler upon more than one threads */
+    struct nap_execution_context* cec;
+
+    struct nap_execution_context** ecs;     /* The list of execution contexts */
+    size_t ecs_cnt;                  /* How many execution contexts are there */
 
     /* Registers section */
 
-    nap_byte_t       regb    [REGISTER_COUNT]; /* the byte registers                */
     nap_int_t        regi    [REGISTER_COUNT]; /* the integer registers             */
     char*            regs    [REGISTER_COUNT]; /* the string registers, UTF-32BE    */
     nap_int_t        regidx  [REGISTER_COUNT]; /* the register indexes              */
