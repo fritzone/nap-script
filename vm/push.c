@@ -119,7 +119,7 @@ int nap_push(struct nap_vm *vm)
             nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
             NAP_NN_ASSERT(vm, temp);
 
-            *temp = vm->regi[register_index];
+            *temp = nap_regi(vm, register_index);
 
             /* setting the value of the stack entry */
             se->value = temp;
@@ -142,7 +142,7 @@ int nap_push(struct nap_vm *vm)
             char* temp = NAP_MEM_ALLOC(len, char);
             NAP_NN_ASSERT(vm, temp);
 
-            memcpy(temp, vm->regs[register_index], len);
+            memcpy(temp, nap_regs(vm, register_index), len);
             se->value = temp; /* the stack_entry->value will be the string itself */
             se->len = vm->regslens[register_index]; /* the stack_entry->len will be the
                                                 real length of the string, not

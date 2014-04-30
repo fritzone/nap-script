@@ -37,12 +37,12 @@ uint16_t intr_4(struct nap_vm* vm)
     char* function_name = NULL;
     char* library_name = NULL;
 
-    signature = convert_string_from_bytecode_file(vm, vm->regs[0],
+    signature = convert_string_from_bytecode_file(vm, nap_regs(vm, 0),
             vm->regslens[0] * CC_MUL, sig_dest_len, &sig_real_len);
 
-    function_name = convert_string_from_bytecode_file(vm, vm->regs[1],
+    function_name = convert_string_from_bytecode_file(vm, nap_regs(vm, 1),
             vm->regslens[1] * CC_MUL, fun_dest_len, &fun_real_len);
-    library_name = convert_string_from_bytecode_file(vm, vm->regs[2],
+    library_name = convert_string_from_bytecode_file(vm, nap_regs(vm, 2),
             vm->regslens[2] * CC_MUL, lib_dest_len, &lib_real_len);
 
     pd = NAP_MEM_ALLOC(1, struct nap_ext_par_desc);

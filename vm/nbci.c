@@ -206,16 +206,16 @@ void nap_vm_run(struct nap_vm* vm)
 {
     while(nap_ip(vm) < vm->meta_location)
     {
-        vm->current_opcode = vm->content[nap_ip(vm)];
+        vm->cec->current_opcode = vm->content[nap_ip(vm)];
         nap_step_ip(vm);
 
-        if(vm->opcode_handlers[vm->current_opcode] != 0)
+        if(vm->opcode_handlers[vm->cec->current_opcode] != 0)
         {
-            TRY_CALL(vm->opcode_handlers[vm->current_opcode],
-                    vm->opcode_error_codes[vm->current_opcode]);
+            TRY_CALL(vm->opcode_handlers[vm->cec->current_opcode],
+                    vm->opcode_error_codes[vm->cec->current_opcode]);
         }
         else
-        if(vm->current_opcode == OPCODE_EXIT) /* quit the application ... */
+        if(vm->cec->current_opcode == OPCODE_EXIT) /* quit the application ... */
         {
             if(vm->environment == STANDALONE) /* only if not run in a library */
             {
@@ -229,14 +229,14 @@ void nap_vm_run(struct nap_vm* vm)
             }
         }
         else
-        if(vm->current_opcode == OPCODE_CLBF) /* clear last boolean flag */
+        if(vm->cec->current_opcode == OPCODE_CLBF) /* clear last boolean flag */
         {
-            vm->lbf = UNDECIDED;
+            vm->cec->lbf = UNDECIDED;
         }
         else
         {
             fprintf(stderr, "invalid opcode [%x] at %"PRINT_u" (%"PRINT_x")\n",
-                    vm->current_opcode, nap_ip(vm) - 1, nap_ip(vm) - 1);
+                    vm->cec->current_opcode, nap_ip(vm) - 1, nap_ip(vm) - 1);
             nap_vm_cleanup(vm);
             exit(5);
         }

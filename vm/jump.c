@@ -18,13 +18,13 @@ int nap_jump(struct nap_vm *vm)
     }
 
     /* and simply set cc to be where we need to go */
-    if(vm->current_opcode == OPCODE_JMP)
+    if(vm->cec->current_opcode == OPCODE_JMP)
     {
         nap_set_ip(vm, vm->jumptable[jmp_idx]->location);
     }
     else
     {
-        if(vm->lbf)
+        if(vm->cec->lbf)
         {
             nap_set_ip(vm, vm->jumptable[jmp_idx]->location);
         }
@@ -32,7 +32,7 @@ int nap_jump(struct nap_vm *vm)
         {
             nap_set_ip(vm, nap_ip(vm) + sizeof(nap_index_t) );
         }
-        vm->lbf = UNDECIDED;
+        vm->cec->lbf = UNDECIDED;
     }
 
     return NAP_SUCCESS;

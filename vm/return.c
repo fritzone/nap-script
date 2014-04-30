@@ -18,21 +18,22 @@ int nap_return(struct nap_vm *vm)
         /* we are dealing with an INT type register */
         if(register_type == OPCODE_INT)
         {
-            vm->rvi = vm->regi[register_index];
+            vm->cec->rvi = nap_regi(vm, register_index);
         }
         else
         if(register_type == OPCODE_BYTE)
         {
-            vm->rvb = nap_regb(vm, register_index);
+            vm->cec->rvb = nap_regb(vm, register_index);
         }
         else
         if(register_type == OPCODE_STRING)
         {
             /* we are supposed to recreate the RVS, clear it before*/
-            NAP_MEM_FREE(vm->rvs);
-            vm->rvl = vm->regslens[register_index];
-            NAP_STRING_ALLOC(vm, vm->rvs, vm->rvl);
-            NAP_STRING_COPY(vm->rvs, vm->regs[register_index], vm->rvl);
+            /* TODO this is dangerous, might lose the old rvs. rewrite */
+            NAP_MEM_FREE(vm->cec->rvs);
+            vm->cec->rvl = vm->regslens[register_index];
+            NAP_STRING_ALLOC(vm, vm->cec->rvs, vm->cec->rvl);
+            NAP_STRING_COPY(vm->cec->rvs, nap_regs(vm, register_index), vm->cec->rvl);
 
         }
         else

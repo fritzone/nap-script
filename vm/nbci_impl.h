@@ -88,8 +88,8 @@ struct nap_vm;
     char t[256];                                                               \
     SNPRINTF(t, 256, "NI: file [%s] line [%d] instr [%x] "                     \
                     "opcode [%x] at %" PRINT_u " (%" PRINT_x ")\n\n",          \
-            __FILE__, __LINE__, vm->content[nap_ip(vm) - 1],                       \
-            vm->current_opcode, nap_ip(vm) - 1, nap_ip(vm) - 1);                       \
+            __FILE__, __LINE__, vm->content[nap_ip(vm) - 1],                   \
+            vm->cec->current_opcode, nap_ip(vm) - 1, nap_ip(vm) - 1);          \
     NAP_REPORT_ERROR(vm, t);                                                   \
     } while(0);
 
@@ -260,6 +260,9 @@ char* convert_string_from_bytecode_file(struct nap_vm* vm,
                                         size_t dest_len,
                                         size_t *real_len);
 
+/** Copies the return values from source to dest */
+int nap_copy_return_values(const struct nap_vm* src, struct nap_vm* dst);
+
 /*
  * Returns the current IP and will step the IP of the given virtual machine.
  */
@@ -295,6 +298,38 @@ void nap_set_regi(struct nap_vm* vm, uint8_t register_index, nap_int_t v);
 
 /* Returns the given int register from the given VM */
 nap_int_t nap_regi(struct nap_vm* vm, uint8_t register_index);
+
+/* Sets the givenregsiter to the given value */
+void nap_set_regidx(struct nap_vm* vm, uint8_t register_index, nap_int_t v);
+
+/* Return the nap register index from the given position */
+nap_int_t nap_regidx(struct nap_vm* vm, uint8_t register_index);
+
+/**
+ * @brief init_string_register initializes the string register to a given value.
+ *
+ * Firstly it deallocates the memory (if any) which was previously allocated to
+ * this string register. Then copies the string into the register. Also sets
+ * the length registers.
+ *
+ * In case of error it preserves the value of the register.
+ *
+ * @param vm - the VM in which all this is happening
+ * @param reg_idx - the target register index
+ * @param target - the target string (UTF-32BE)
+ * @param target_len - the length of the target string (string len, not memory
+ * area length)
+ *
+ * @return NULL in case of error, or the new value of vm->regs[reg_idx]
+ */
+int nap_set_regs(struct nap_vm* vm, uint8_t reg_idx,
+                                  const char* target, size_t target_len);
+
+/* Returns the string register's value */
+nap_string_t nap_regs(struct nap_vm* vm, uint8_t register_index);
+
+/* Initializes the given register to 0 */
+void nap_init_regs(struct nap_vm* vm, uint8_t register_index);
 
 #ifdef __cplusplus
 }

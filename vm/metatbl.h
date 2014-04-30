@@ -41,12 +41,12 @@ struct variable_entry
     struct stack_entry* instantiation;
 
     /* the dimensions of this variable. The scanning for dimensions begins at
-     * the first element ([0]) and as long as there is a p0sitive value (>0) we
+     * the first element ([0]) and as long as there is a positive value (>0) we
      * increment a dimension counter. If any of the elements is -1 the variable
      * is considered to be with dynamic dimensions, and on runtime it is
-     * resized as per needs ofthe index. The scanning stops on the first 0 index
+     * resized as per needs of the index. The scanning stops on the first 0 index
      */
-    int32_t dimensions[256];
+    nap_int_t dimensions[256];
 
     /* just stores the number of dimensions for easier access */
     uint8_t dimension_count;

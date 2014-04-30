@@ -37,7 +37,7 @@ extern "C" {
   #define PRINT_d PRId64
   #define PRINT_u PRIu64
   #define PRINT_x PRIx64
- #define PRINT_st PRId64
+  #define PRINT_st PRId64
  #else
   #define PRINT_d PRId64
   #define PRINT_u PRIu64
@@ -94,6 +94,16 @@ typedef uint16_t (*interrupt)(struct nap_vm*);
 /* the function pointer for the handling of a byteocde operation */
 typedef int (*nap_op_handler)(struct nap_vm* vm);
 
+/* a structure representing a string register */
+struct nap_string_register
+{
+    /* the length of the string register. Real length, not the UTF-32BE length */
+    size_t l;
+
+    /* the actual string in UTF-32 BE representation, not NULL terminated */
+    char *s;
+};
+
 /**
  * The execution context of a virtual machine is the data structure holding the
  * information about the currently executed thread (of an application). In a nap
@@ -111,7 +121,25 @@ struct nap_execution_context
 {
 
     uint64_t         cc;                       /* the instruction pointer    */
+
+    /* registers ofthe VM */
     nap_byte_t       regb    [REGISTER_COUNT]; /* the byte registers         */
+    nap_int_t        regi    [REGISTER_COUNT]; /* the integer registers      */
+    nap_int_t        regidx  [REGISTER_COUNT]; /* the register indexes       */
+    enum flag_status lbf;                      /* the last boolean flag      */
+
+    /* return values */
+    nap_string_t rvs;                     /* the string return value          */
+    size_t       rvl;                     /* the string return value's length */
+    nap_int_t    rvi;                     /* the integer return value         */
+    nap_byte_t   rvb;                     /* the byte return value            */
+    nap_real_t   rvr;                     /* the real return value            */
+
+    /* variables regarding the execution flow */
+    uint8_t  current_opcode;                /* the current opcode */
+    uint64_t call_frames[DEEPEST_RECURSION];/* the jump back points, the first address after the calls' index */
+    uint32_t cfsize;                        /* the size of the call frames vector */
+
 
 };
 
@@ -131,28 +159,13 @@ struct nap_vm
     struct nap_execution_context** ecs;     /* The list of execution contexts */
     size_t ecs_cnt;                  /* How many execution contexts are there */
 
-    /* Registers section */
-
-    nap_int_t        regi    [REGISTER_COUNT]; /* the integer registers             */
     char*            regs    [REGISTER_COUNT]; /* the string registers, UTF-32BE    */
-    nap_int_t        regidx  [REGISTER_COUNT]; /* the register indexes              */
-    enum flag_status lbf;                      /* the last boolean flag             */
-    uint8_t          mrc;                      /* number of registers of the VM. Used by pushall/popall  */
     size_t           regslens[REGISTER_COUNT]; /* the length of the string registers*/
 
-    /* return values */
-    nap_int_t rvi;                          /* the integer return value         */
-    nap_byte_t rvb;                         /* the byte return value            */
-    nap_real_t rvr;                         /* the real return value            */
-    nap_string_t rvs;                       /* the string return value          */
-    size_t rvl;                             /* the string return value's length */
+    uint8_t          mrc;                      /* number of registers of the VM. Used by pushall/popall  */
 
-    /* variables regarding the execution flow */
 
     uint8_t* content;                       /* the content of the file (ie the bytecodes)*/
-    uint64_t call_frames[DEEPEST_RECURSION];/* the jump back points, the first address after the calls' index */
-    uint32_t cfsize;                        /* the size of the call frames vector */
-    uint8_t  current_opcode;                /* the current opcode */
 
     /* variables about the structure of the file */
 

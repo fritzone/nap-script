@@ -55,13 +55,13 @@ static int nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_int_t reg,
         NAP_NOT_IMPLEMENTED
     }
 
-    if(vm->lbf == UNDECIDED)
+    if(vm->cec->lbf == UNDECIDED)
     {
-        vm->lbf = temp_lbf;
+        vm->cec->lbf = temp_lbf;
     }
     else
     {
-        vm->lbf &= temp_lbf;
+        vm->cec->lbf &= temp_lbf;
     }
 
     return NAP_SUCCESS;
@@ -92,7 +92,7 @@ int nap_comparison(struct nap_vm* vm)
                 
                 return nap_vm_set_lbf_to_op_result(vm,
                                                    nap_regi(vm, register_index),
-                                                   immediate, vm->current_opcode);
+                                                   immediate, vm->cec->current_opcode);
             }
             else
             if(cmp_second == OPCODE_VAR) /* int register compared to a variable */
@@ -106,7 +106,7 @@ int nap_comparison(struct nap_vm* vm)
                     return nap_vm_set_lbf_to_op_result(vm,
                                                        nap_regi(vm, register_index),
                                                        *(nap_int_t*)ve->instantiation->value,
-                                                       vm->current_opcode);
+                                                       vm->cec->current_opcode);
                 }
                 else /* comparing int register with another kind of variable */
                 {
@@ -124,7 +124,7 @@ int nap_comparison(struct nap_vm* vm)
                     return nap_vm_set_lbf_to_op_result(vm,
                                                        nap_regi(vm, register_index),
                                                        nap_regi(vm, second_register_index),
-                                                       vm->current_opcode);
+                                                       vm->cec->current_opcode);
                 }
                 else /* comparing int reg with another type register */
                 {
@@ -161,7 +161,7 @@ int nap_comparison(struct nap_vm* vm)
                 {
                     return nap_vm_set_lbf_to_op_result(vm, *(nap_int_t*)ve->instantiation->value,
                                                 *(nap_int_t*)second_ve->instantiation->value,
-                                                vm->current_opcode);
+                                                vm->cec->current_opcode);
                 }
                 else /* comparing int variable with another kind of variable */
                 {
@@ -179,7 +179,7 @@ int nap_comparison(struct nap_vm* vm)
                     return nap_vm_set_lbf_to_op_result(vm,
                                                        *(nap_int_t*)ve->instantiation->value,
                                                        nap_regi(vm, second_register_index),
-                                                       vm->current_opcode);
+                                                       vm->cec->current_opcode);
                 }
                 else /* comparing int reg with another type register */
                 {

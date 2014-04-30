@@ -5,10 +5,10 @@
 
 int nap_leave(struct nap_vm *vm)
 {
-    if(vm->cfsize == (uint32_t)(-1))
+    if(vm->cec->cfsize == (uint32_t)(-1))
     {
         return NAP_FAILURE;
     }
-    nap_set_ip(vm, vm->call_frames[-- vm->cfsize]);
+    nap_set_ip(vm, vm->cec->call_frames[-- vm->cec->cfsize]);
     return NAP_SUCCESS;
 }

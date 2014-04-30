@@ -21,12 +21,12 @@ int nap_unary(struct nap_vm* vm)
 
         if(var->instantiation->type == OPCODE_INT)
         {
-            if(vm->current_opcode == OPCODE_BCOM)
+            if(vm->cec->current_opcode == OPCODE_BCOM)
             {
                 (*(nap_int_t*)var->instantiation->value) = ~(*(nap_int_t*)var->instantiation->value);
             }
             else
-            if(vm->current_opcode == OPCODE_NOT)
+            if(vm->cec->current_opcode == OPCODE_NOT)
             {
                 (*(nap_int_t*)var->instantiation->value) = !(*(nap_int_t*)var->instantiation->value);
             }
@@ -47,14 +47,14 @@ int nap_unary(struct nap_vm* vm)
         if(regt == OPCODE_INT) /* unary operation on an int register */
         {
             uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
-            if(vm->current_opcode == OPCODE_BCOM)
+            if(vm->cec->current_opcode == OPCODE_BCOM)
             {
-                vm->regi[register_index] = ~vm->regi[register_index];
+                nap_set_regi(vm, register_index, ~ nap_regi(vm, register_index));
             }
             else
-            if(vm->current_opcode == OPCODE_NOT)
+            if(vm->cec->current_opcode == OPCODE_NOT)
             {
-                vm->regi[register_index] = !vm->regi[register_index];
+                nap_set_regi(vm, register_index, ! nap_regi(vm, register_index));
             }
             else
             {
