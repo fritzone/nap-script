@@ -6,6 +6,6 @@
 
 int nap_clidx(struct nap_vm *vm)
 {
-    memset(vm->regidx, 0, sizeof(vm->regidx));
+    memset(vm->cec->regidx, 0, sizeof(vm->cec->regidx));
     return NAP_SUCCESS;
 }

@@ -155,8 +155,8 @@ int nap_operation(struct nap_vm* vm)
                     return NAP_FAILURE;
                 }
                 
-                return do_int_operation(vm, &vm->regi[register_index],
-                                        imm_operand, vm->current_opcode);
+                return do_int_operation(vm, &vm->cec->regi[register_index],
+                                        imm_operand, vm->cec->current_opcode);
             }
             else
             if(add_source == OPCODE_VAR) /* adding a variable to the reg*/
@@ -168,9 +168,9 @@ int nap_operation(struct nap_vm* vm)
                 CHECK_VARIABLE_TYPE(var,STACK_ENTRY_INT)
 
                 /* and moving the value in the regsiter itself */
-                return do_int_operation(vm, &vm->regi[register_index],
+                return do_int_operation(vm, &vm->cec->regi[register_index],
                                         *(int64_t*)var->instantiation->value,
-                                        vm->current_opcode);
+                                        vm->cec->current_opcode);
             }
             else
             if(add_source == OPCODE_REG) /* adding a register to a register */
@@ -180,9 +180,9 @@ int nap_operation(struct nap_vm* vm)
                 if(second_register_type == OPCODE_INT)
                 {
                     uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
-                    return do_int_operation(vm, &vm->regi[register_index],
-                                            vm->regi[second_register_index],
-                                            vm->current_opcode);
+                    return do_int_operation(vm, &vm->cec->regi[register_index],
+                                            nap_regi(vm, second_register_index),
+                                            vm->cec->current_opcode);
                 }
                 else
                 {
@@ -212,7 +212,7 @@ int nap_operation(struct nap_vm* vm)
                                     &vm->regslens[register_index],
                                     var->instantiation->value,
                                     var->instantiation->len,
-                                    vm->current_opcode);
+                                    vm->cec->current_opcode);
             }
             else
             if(add_source == OPCODE_STRING) /* add reg string (0), "B" */
@@ -224,7 +224,7 @@ int nap_operation(struct nap_vm* vm)
                                     &vm->regslens[register_index],
                                     vm->stringtable[string_index]->string,
                                     vm->stringtable[string_index]->len,
-                                    vm->current_opcode);
+                                    vm->cec->current_opcode);
 
             }
             else
@@ -237,9 +237,9 @@ int nap_operation(struct nap_vm* vm)
                     uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
                     do_string_operation(vm, &vm->regs[register_index],
                                         &vm->regslens[register_index],
-                                        vm->regs[second_register_index],
+                                        nap_regs(vm, second_register_index),
                                         vm->regslens[second_register_index],
-                                        vm->current_opcode);
+                                        vm->cec->current_opcode);
                 }
                 else
                 {
@@ -283,13 +283,14 @@ int nap_operation(struct nap_vm* vm)
                 if(var->instantiation->value)
                 {
                     nap_int_t* temp = (nap_int_t*)var->instantiation->value;
-                    return do_int_operation(vm, temp, vm->regi[register_index],
-                                            vm->current_opcode);
+                    return do_int_operation(vm, temp,
+                                            nap_regi(vm, register_index),
+                                            vm->cec->current_opcode);
                 }
                 else /* allocate the memory for the value */
                 { /* this should generate some error, there should be a value before add */
                     nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
-                    *temp = vm->regi[register_index];
+                    *temp = nap_regi(vm, register_index);
                     var->instantiation->value = temp;
                 }
             }

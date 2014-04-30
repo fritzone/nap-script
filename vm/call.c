@@ -27,11 +27,11 @@ int nap_call(struct nap_vm *vm)
     if(vm->jumptable[jmpt_index]->type != JMPTABLE_ENTRY_TYPE_FROM_PARENT)
     {
         /* can we create a new location? */
-        if(vm->cfsize == DEEPEST_RECURSION)
+        if(vm->cec->cfsize == DEEPEST_RECURSION)
         {
             return NAP_FAILURE;
         }
-        vm->call_frames[vm->cfsize ++] = nap_ip(vm);
+        vm->cec->call_frames[vm->cec->cfsize ++] = nap_ip(vm);
 
         /* and simply set cc to be where we need to go */
         nap_set_ip(vm, vm->jumptable[jmpt_index]->location);
@@ -68,7 +68,7 @@ int nap_call(struct nap_vm *vm)
          * frame that will be placed in nap_ip(vm) will be (uint)-1 thus the main
          * loop if nap_vm_run of the parent will exit andwill return here.
          * Kind of hacky, but works.*/
-        vm->parent->call_frames[vm->parent->cfsize ++] = fake_call_frame_exit;
+        vm->parent->cec->call_frames[vm->parent->cec->cfsize ++] = fake_call_frame_exit;
 
         /* and run the method with the patched stack */
         nap_vm_run(vm->parent);
@@ -77,16 +77,7 @@ int nap_call(struct nap_vm *vm)
         vm->parent->stack_pointer = parent_sp;
 
         /* fetch over the return values, they might be used by the caller later*/
-        vm->rvb = vm->parent->rvb;
-        vm->rvi = vm->parent->rvi;
-        vm->rvr = vm->parent->rvr;
-        vm->rvl = vm->parent->rvl;
-        if(vm->parent->rvl)
-        {
-            NAP_MEM_FREE(vm->rvs);
-            NAP_STRING_ALLOC(vm, vm->rvs, vm->parent->rvl);
-            NAP_STRING_COPY(vm->rvs, vm->parent->rvs, vm->rvl);
-        }
+        nap_copy_return_values(vm->parent, vm);
     }
 
     return NAP_SUCCESS;

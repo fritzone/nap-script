@@ -34,7 +34,7 @@ int nap_pop(struct nap_vm* vm)
             {
                 /*obviously popping something when nothing was returned
                  from a misbehvaing function. Set the register to 0 */
-                vm->regi[register_index] = 0;
+                nap_set_regi(vm, register_index, 0);
                 /* Do not touch the vm->stack for now, a clrsn might come later*/
             }
             else
@@ -42,16 +42,16 @@ int nap_pop(struct nap_vm* vm)
                 /* check if they have the same type */
                 if(vm->stack[vm->stack_pointer]->type == STACK_ENTRY_INT)
                 {   /* int on the stack */
-                    vm->regi[register_index] = *(nap_int_t*)vm->stack[vm->stack_pointer]->value;
+                    nap_set_regi(vm, register_index, *(nap_int_t*)vm->stack[vm->stack_pointer]->value);
                 }
                 else
                 if(vm->stack[vm->stack_pointer]->type == STACK_ENTRY_BYTE)
                 {   /* byte on the stack, convert it to nap_int */
-                    vm->regi[register_index] = (nap_int_t)(*(nap_byte_t*)vm->stack[vm->stack_pointer]->value);
+                    nap_set_regi(vm, register_index, (nap_int_t)(*(nap_byte_t*)vm->stack[vm->stack_pointer]->value));
                 }
                 else /* default value */
                 {
-                    vm->regi[register_index] = 0;
+                    nap_set_regi(vm, register_index, 0);
                 }
                 NAP_MEM_FREE(vm->stack[vm->stack_pointer]->value);
                 NAP_MEM_FREE(vm->stack[vm->stack_pointer]);

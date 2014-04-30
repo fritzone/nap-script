@@ -214,8 +214,8 @@ void nap_vm_cleanup(struct nap_vm* vm)
         NAP_MEM_FREE(vm->regs[i]);
     }
 
-    /* the stringreturn value */
-    NAP_MEM_FREE(vm->rvs);
+    /* the string return value */
+    NAP_MEM_FREE(vm->cec->rvs);
 
     /* the current execution context */
     for(i=0; i<vm->ecs_cnt; i++)
@@ -358,7 +358,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     nap_set_ip(vm, 1 + 4 * vm->file_bitsize + 1 + 1); /* to point to the first instruction */
 
     /* initially the last boolean flag is in an unknow state */
-    vm->lbf = UNDECIDED;
+    vm->cec->lbf = UNDECIDED;
 
     /* allocating bytecode chunks */
     vm->btyecode_chunks = NAP_MEM_ALLOC(MAX_BYTECODE_CHUNKS, struct nap_bytecode_chunk*);
@@ -571,7 +571,7 @@ int nap_save_registers(struct nap_vm* vm)
     tmp_ints = NAP_MEM_ALLOC(REGISTER_COUNT, nap_int_t);
     NAP_NN_ASSERT(vm, tmp_ints);
 
-    memcpy(tmp_ints, vm->regi, vm->mrc * sizeof(nap_int_t));
+    memcpy(tmp_ints, vm->cec->regi, vm->mrc * sizeof(nap_int_t));
     regi_stack[regi_stack_idx] = tmp_ints;
     regi_stack_idx ++;
 
@@ -600,7 +600,7 @@ int nap_restore_registers(struct nap_vm* vm)
 
     /* restore the int registers */
     regi_stack_idx --;
-    memcpy(vm->regi, regi_stack[regi_stack_idx], vm->mrc * sizeof(nap_int_t));
+    memcpy(vm->cec->regi, regi_stack[regi_stack_idx], vm->mrc * sizeof(nap_int_t));
     NAP_MEM_FREE(regi_stack[regi_stack_idx]);
 
     /* restore the byte registers */
@@ -948,10 +948,78 @@ nap_byte_t nap_regb(struct nap_vm *vm, uint8_t register_index)
 
 nap_int_t nap_regi(struct nap_vm *vm, uint8_t register_index)
 {
-    return vm->regi[register_index];
+    return vm->cec->regi[register_index];
 }
 
 void nap_set_regi(struct nap_vm *vm, uint8_t register_index, nap_int_t v)
 {
-    vm->regi[register_index] = v;
+    vm->cec->regi[register_index] = v;
+}
+
+void nap_set_regidx(struct nap_vm *vm, uint8_t register_index, nap_int_t v)
+{
+    vm->cec->regidx[register_index] = v;
+}
+
+nap_int_t nap_regidx(struct nap_vm *vm, uint8_t register_index)
+{
+    return vm->cec->regidx[register_index];
+}
+
+
+int nap_copy_return_values(const struct nap_vm *src, struct nap_vm *dst)
+{
+    if(src->cec->rvl)
+    {
+        dst->cec->rvl = src->cec->rvl;
+
+        char *tmp = (char*)calloc(src->cec->rvl * CC_MUL, sizeof(char)); /* UTF32 */
+        if(tmp != NULL)
+        {
+            memcpy(tmp, src->cec->rvs, src->cec->rvl  * CC_MUL);
+            NAP_MEM_FREE(dst->cec->rvs);
+            dst->cec->rvs = tmp;
+        }
+        else
+        {
+            return NAP_FAILURE;
+        }
+    }
+    dst->cec->rvb = src->cec->rvb;
+    dst->cec->rvi = src->cec->rvi;
+    dst->cec->rvr = src->cec->rvr;
+
+    return NAP_SUCCESS;
+}
+
+int nap_set_regs(struct nap_vm* vm, uint8_t reg_idx,
+                                  const char* target, size_t target_len)
+{
+    char* tmp = NULL;
+    NAP_STRING_ALLOC(vm, tmp, target_len);
+    NAP_STRING_COPY(tmp, target, target_len);
+
+    if(nap_regs(vm, reg_idx))
+    {
+        /* set the memory value to zero */
+        nap_init_regs(vm, reg_idx);
+
+        /* and actually free the memory */
+        NAP_MEM_FREE(vm->regs[reg_idx]);
+    }
+
+    vm->regs[reg_idx] = tmp;
+    vm->regslens[reg_idx] = target_len;
+    return NAP_SUCCESS;
+}
+
+nap_string_t nap_regs(struct nap_vm *vm, uint8_t register_index)
+{
+    return vm->regs[register_index];
+}
+
+
+void nap_init_regs(struct nap_vm *vm, uint8_t register_index)
+{
+    memset(vm->regs[register_index], 0, vm->regslens[register_index] * CC_MUL);
 }

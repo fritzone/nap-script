@@ -308,24 +308,24 @@ int nap_execute_method(nap_runtime *runtime, void *return_value, const char *met
         {
             if(fe->return_type == OPCODE_INT)
             {
-                (*(nap_int_t*)return_value) = runtime->vm->rvi;
+                (*(nap_int_t*)return_value) = runtime->vm->cec->rvi;
             }
             else
             if(fe->return_type == OPCODE_BYTE)
             {
-                (*(nap_byte_t*)return_value) = runtime->vm->rvb;
+                (*(nap_byte_t*)return_value) = runtime->vm->cec->rvb;
             }
             else
             if(fe->return_type == OPCODE_FLOAT)
             {
-                (*(nap_real_t*)return_value) = runtime->vm->rvr;
+                (*(nap_real_t*)return_value) = runtime->vm->cec->rvr;
             }
             else
             if(fe->return_type == OPCODE_STRING)
             {
-                size_t dest_len = runtime->vm->rvl * CC_MUL, real_len = 0;
-                char* t = convert_string_from_bytecode_file(runtime->vm, runtime->vm->rvs,
-                        runtime->vm->rvl * CC_MUL, dest_len, &real_len);
+                size_t dest_len = runtime->vm->cec->rvl * CC_MUL, real_len = 0;
+                char* t = convert_string_from_bytecode_file(runtime->vm, runtime->vm->cec->rvs,
+                        runtime->vm->cec->rvl * CC_MUL, dest_len, &real_len);
                 if(t == NULL)
                 {
                     return NAP_EXECUTE_FAILURE;
@@ -448,22 +448,7 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
             return NAP_EXECUTE_FAILURE;
         }
 
-        /* just fetch the return values of child_vm into runtime->vm, someone
-         * might use them */
-        runtime->vm->rvb = child_vm->rvb;
-        runtime->vm->rvi = child_vm->rvi;
-        runtime->vm->rvr = child_vm->rvr;
-        runtime->vm->rvl = child_vm->rvl;
-        if(runtime->vm->rvl)
-        {
-			char *tmp = (char*)calloc(runtime->vm->rvl * CC_MUL, sizeof(char)); /* UTF32 */
-			if(tmp != NULL)
-			{
-				memcpy(tmp, child_vm->rvs, runtime->vm->rvl  * CC_MUL);
-				NAP_MEM_FREE(runtime->vm->rvs);
-				runtime->vm->rvs = tmp; 
-			}
-        }
+        nap_copy_return_values(child_vm, runtime->vm);
 
         /* performs the cleanup */
         nap_vm_cleanup(child_vm);
