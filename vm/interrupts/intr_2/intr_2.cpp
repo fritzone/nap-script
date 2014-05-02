@@ -22,9 +22,9 @@ uint16_t intr_2(struct nap_vm* vm)
     compiler->set_vmchain(vm);
     bool success = true;
     /* the vm->regs[0] is a Unicode string, convert it to system representation*/
-    size_t dest_len = vm->regslens[0] * CC_MUL, real_len = 0;
-    char* t = convert_string_from_bytecode_file(vm, nap_regs(vm, 0),
-            vm->regslens[0] * CC_MUL, dest_len, &real_len);
+    size_t dest_len = nap_regs(vm, 0)->l * CC_MUL, real_len = 0;
+    char* t = convert_string_from_bytecode_file(vm, nap_regs(vm, 0)->s,
+            nap_regs(vm, 0)->l * CC_MUL, dest_len, &real_len);
 
     bool source_set = compiler->set_source(t, success);
 

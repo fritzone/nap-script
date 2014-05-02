@@ -31,9 +31,9 @@ int nap_return(struct nap_vm *vm)
             /* we are supposed to recreate the RVS, clear it before*/
             /* TODO this is dangerous, might lose the old rvs. rewrite */
             NAP_MEM_FREE(vm->cec->rvs);
-            vm->cec->rvl = vm->regslens[register_index];
+            vm->cec->rvl = nap_regs(vm, register_index)->l;
             NAP_STRING_ALLOC(vm, vm->cec->rvs, vm->cec->rvl);
-            NAP_STRING_COPY(vm->cec->rvs, nap_regs(vm, register_index), vm->cec->rvl);
+            NAP_STRING_COPY(vm->cec->rvs, nap_regs(vm, register_index)->s, vm->cec->rvl);
 
         }
         else

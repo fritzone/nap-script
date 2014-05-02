@@ -116,6 +116,17 @@ struct nap_string_register
  * Upon execution of an instruction the thread scheduler might switch to another
  * thread. This is a fake multithreading mechanism since there is always one
  * active thread which is being executed.
+ *
+ * The "thread" executor is watching the "vm->crs" flag and upon a change in its
+ * status from 0 to 1:
+ *  - it takes the next execution context from the vm->ecs
+ *  - sets the flag back to 0
+ *
+ * The thread executor decides upon switching to a new context based on the
+ * following:
+ *  - after each completed instruction?
+ *  - upon a specific timer after each completed instruction?
+ *  - always upon the creation of a new execution context
  */
 struct nap_execution_context
 {
@@ -123,10 +134,11 @@ struct nap_execution_context
     uint64_t         cc;                       /* the instruction pointer    */
 
     /* registers ofthe VM */
-    nap_byte_t       regb    [REGISTER_COUNT]; /* the byte registers         */
-    nap_int_t        regi    [REGISTER_COUNT]; /* the integer registers      */
-    nap_int_t        regidx  [REGISTER_COUNT]; /* the register indexes       */
-    enum flag_status lbf;                      /* the last boolean flag      */
+    nap_byte_t                 regb  [REGISTER_COUNT]; /* the byte registers  */
+    nap_int_t                  regi  [REGISTER_COUNT]; /* the int registers   */
+    nap_int_t                  regidx[REGISTER_COUNT]; /* the index register  */
+    struct nap_string_register regs  [REGISTER_COUNT]; /* the string registers*/
+    enum flag_status lbf;                              /* the last bool flag  */
 
     /* return values */
     nap_string_t rvs;                     /* the string return value          */
@@ -140,6 +152,9 @@ struct nap_execution_context
     uint64_t call_frames[DEEPEST_RECURSION];/* the jump back points, the first address after the calls' index */
     uint32_t cfsize;                        /* the size of the call frames vector */
 
+    /* variables for the stack */
+    struct stack_entry** stack;             /* in this stack */
+    int64_t stack_pointer;                  /* the stack pointer, starts from 0, grows */
 
 };
 
@@ -155,15 +170,13 @@ struct nap_vm
     /* The current execution context. This is automatically modified by the
      * thread scheduler upon more than one threads */
     struct nap_execution_context* cec;
-
     struct nap_execution_context** ecs;     /* The list of execution contexts */
     size_t ecs_cnt;                  /* How many execution contexts are there */
+    size_t cec_idx;                  /* The index of the curent execution context */
 
-    char*            regs    [REGISTER_COUNT]; /* the string registers, UTF-32BE    */
-    size_t           regslens[REGISTER_COUNT]; /* the length of the string registers*/
+    uint8_t csr; /* Context Switch Requested? 1 if it was requested, 0 otherwise */
 
-    uint8_t          mrc;                      /* number of registers of the VM. Used by pushall/popall  */
-
+    uint8_t mrc;    /* number of registers of the VM. Used by pushall/popall  */
 
     uint8_t* content;                       /* the content of the file (ie the bytecodes)*/
 
@@ -178,11 +191,6 @@ struct nap_vm
     /* variables for the meta table */
     struct variable_entry** metatable;      /* the variables */
     size_t meta_size;                       /* the size of  the variables vector */
-
-    /* variables for the stack */
-    struct stack_entry** stack;             /* in this stack */
-    uint64_t stack_size;                    /* initial stack size */
-    int64_t stack_pointer;                  /* the stack pointer, starts from 0, grows */
 
     /* variables for the jumptable */
     struct jumptable_entry** jumptable;     /* the jumptable itself */
@@ -246,7 +254,7 @@ void nap_vm_cleanup(struct nap_vm* vm);
  * Dumps the stage of the VM into the given descriptor
  * @param vm
  */
-void dump(struct nap_vm* vm, FILE *fp);
+void nap_vm_dump(struct nap_vm* vm, FILE *fp);
 
 /**
  * Loads the given bytecode file and creates a new virtual machine

@@ -17,7 +17,7 @@
 /*                             Debugging section                              */
 /******************************************************************************/
 
-void dump(struct nap_vm* vm, FILE *fp)
+void nap_vm_dump(struct nap_vm* vm, FILE *fp)
 {
     uint64_t i;
     puts("");

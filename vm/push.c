@@ -138,13 +138,13 @@ int nap_push(struct nap_vm *vm)
         else
         if(se->type == OPCODE_STRING) /* pushing a string register */
         {
-            size_t len = vm->regslens[register_index] * CC_MUL; /* UTF32*/
+            size_t len = nap_regs(vm, register_index)->l * CC_MUL; /* UTF32*/
             char* temp = NAP_MEM_ALLOC(len, char);
             NAP_NN_ASSERT(vm, temp);
 
-            memcpy(temp, nap_regs(vm, register_index), len);
+            memcpy(temp, nap_regs(vm, register_index)->s, len);
             se->value = temp; /* the stack_entry->value will be the string itself */
-            se->len = vm->regslens[register_index]; /* the stack_entry->len will be the
+            se->len = nap_regs(vm, register_index)->l; /* the stack_entry->len will be the
                                                 real length of the string, not
                                                 the length of the UTF32 thing */
         }
@@ -230,6 +230,6 @@ int nap_push(struct nap_vm *vm)
         NAP_NOT_IMPLEMENTED
     }
 
-    vm->stack[++ vm->stack_pointer] = se;
+    vm->cec->stack[++ vm->cec->stack_pointer ] = se;
     return NAP_SUCCESS;
 }

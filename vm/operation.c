@@ -208,8 +208,9 @@ int nap_operation(struct nap_vm* vm)
                 CHECK_VARIABLE_TYPE(var,STACK_ENTRY_STRING)
 
                 /* and moving the value in the regsiter itself */
-                do_string_operation(vm, &vm->regs[register_index],
-                                    &vm->regslens[register_index],
+                do_string_operation(vm,
+                                    &(nap_regs(vm, register_index)->s),
+                                    &(nap_regs(vm, register_index)->l),
                                     var->instantiation->value,
                                     var->instantiation->len,
                                     vm->cec->current_opcode);
@@ -220,8 +221,9 @@ int nap_operation(struct nap_vm* vm)
                 /* fetch the index of the string */
                 nap_index_t string_index = nap_fetch_index(vm);
 
-                do_string_operation(vm, &vm->regs[register_index],
-                                    &vm->regslens[register_index],
+                do_string_operation(vm,
+                                    &(nap_regs(vm, register_index)->s),
+                                    &(nap_regs(vm, register_index)->l),
                                     vm->stringtable[string_index]->string,
                                     vm->stringtable[string_index]->len,
                                     vm->cec->current_opcode);
@@ -235,10 +237,11 @@ int nap_operation(struct nap_vm* vm)
                 if(second_register_type == OPCODE_STRING)
                 {
                     uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
-                    do_string_operation(vm, &vm->regs[register_index],
-                                        &vm->regslens[register_index],
-                                        nap_regs(vm, second_register_index),
-                                        vm->regslens[second_register_index],
+                    do_string_operation(vm,
+                                        &(nap_regs(vm, register_index)->s),
+                                        &(nap_regs(vm, register_index)->l),
+                                        nap_regs(vm, second_register_index)->s,
+                                        nap_regs(vm, second_register_index)->l,
                                         vm->cec->current_opcode);
                 }
                 else

@@ -210,9 +210,8 @@ struct call_context
                                          const expression_with_location* expwloc, bool &psuccess);
 
 
-public:
-    std::vector<method *> getMethods() const;
-    void setMethods(const std::vector<method *> &value);
+    /* the methods of this call context */
+    std::vector<method*> methods;
 
 private:
 
@@ -222,8 +221,6 @@ private:
     /* the name of the call context */
     std::string name;
 
-    /* the methods of this call context */
-    std::vector<method*> methods;
 
     /* the list of variable that have been defined in this call context */
     std::vector<variable*> variables;
