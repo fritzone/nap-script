@@ -59,14 +59,14 @@ int nap_peek(struct nap_vm *vm)
         {   /* peek int: assumes that on the stack there is a nap_int_t in the value of the stack_entry at the given index*/
             nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
             NAP_NN_ASSERT(vm, temp);
-            *temp = *(nap_int_t*)vm->stack[vm->stack_pointer - peek_index]->value; /* STACK VALUE FROM peek_index */
+            *temp = *(nap_int_t*)vm->cec->stack[nap_sp(vm) - peek_index]->value; /* STACK VALUE FROM peek_index */
             ve->instantiation->value = temp;
         }
         else
         if(peek_type == OPCODE_STRING)
         {   /* assumes there is a string on the stack, at the given index'd stack_entry */
             char* temp = NULL;
-            struct stack_entry* se = vm->stack[vm->stack_pointer - peek_index];
+            struct stack_entry* se = vm->cec->stack[nap_sp(vm) - peek_index];
             size_t len = se->len * CC_MUL;
             temp = NAP_MEM_ALLOC(len, char);
             NAP_NN_ASSERT(vm, temp);

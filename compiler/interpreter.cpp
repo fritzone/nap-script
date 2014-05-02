@@ -370,6 +370,7 @@ int interpreter::get_operator(const char* expr, const char** foundOperator, int*
 method* interpreter::is_function_call(char *s,  call_context* cc, int* special)
 {
     unsigned int i=0;
+    *special = 0;
     std::string method_name;
     while( i<strlen(s) && s[i] != C_PAR_OP && !is_whitespace(s[i]))
     {
@@ -389,7 +390,11 @@ method* interpreter::is_function_call(char *s,  call_context* cc, int* special)
 
     if(method_name == "nap_execute")
     {
+#if RUNTIME_COMPILATION
         *special = METHOD_CALL_SPECIAL_EXECUTE;
+#else
+        cc->compiler()->throw_error("Cannot compile this code since runtime compilation was disabled");
+#endif
         return 0;
     }
     return cc->get_method(method_name);
@@ -1737,6 +1742,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         {
             if(special == METHOD_CALL_SPECIAL_EXECUTE)
             {
+#if RUNTIME_COMPILATION
                 *result = FUNCTION_CALL_NAP_EXEC;
 
 
@@ -1768,6 +1774,9 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 }
 
                 node->reference = new_envelope(0, FUNCTION_CALL_NAP_EXEC, cc->compiler());
+#else
+                cc->compiler()->throw_error("Cannot compile this code since runtime compilation was disabled");
+#endif
                 return 0;
             }
         }

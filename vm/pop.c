@@ -13,9 +13,7 @@ int nap_pop(struct nap_vm* vm)
 {
     uint8_t pop_what = 0;
 
-    NAP_NN_ASSERT(vm, vm->stack);
-
-    if(vm->stack_pointer == 0) /* no more entries on the stack. Return error */
+    if(nap_sp(vm) == 0) /* no more entries on the stack. Return error */
     {
         return NAP_FAILURE;
     }
@@ -30,33 +28,33 @@ int nap_pop(struct nap_vm* vm)
         {
             uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
 
-            if(vm->stack[vm->stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
+            if(vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_MARKER_NAME)
             {
                 /*obviously popping something when nothing was returned
                  from a misbehvaing function. Set the register to 0 */
                 nap_set_regi(vm, register_index, 0);
-                /* Do not touch the vm->stack for now, a clrsn might come later*/
+                /* Do not touch the vm->cec->stack for now, a clrsn might come later*/
             }
             else
             {
                 /* check if they have the same type */
-                if(vm->stack[vm->stack_pointer]->type == STACK_ENTRY_INT)
+                if(vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_INT)
                 {   /* int on the stack */
-                    nap_set_regi(vm, register_index, *(nap_int_t*)vm->stack[vm->stack_pointer]->value);
+                    nap_set_regi(vm, register_index, *(nap_int_t*)vm->cec->stack[nap_sp(vm)]->value);
                 }
                 else
-                if(vm->stack[vm->stack_pointer]->type == STACK_ENTRY_BYTE)
+                if(vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_BYTE)
                 {   /* byte on the stack, convert it to nap_int */
-                    nap_set_regi(vm, register_index, (nap_int_t)(*(nap_byte_t*)vm->stack[vm->stack_pointer]->value));
+                    nap_set_regi(vm, register_index, (nap_int_t)(*(nap_byte_t*)vm->cec->stack[nap_sp(vm)]->value));
                 }
                 else /* default value */
                 {
                     nap_set_regi(vm, register_index, 0);
                 }
-                NAP_MEM_FREE(vm->stack[vm->stack_pointer]->value);
-                NAP_MEM_FREE(vm->stack[vm->stack_pointer]);
+                NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->value);
+                NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]);
 
-                vm->stack_pointer --;
+                vm->cec->stack_pointer --;
             }
         }
         else
@@ -72,7 +70,7 @@ int nap_pop(struct nap_vm* vm)
         ASSERT_NOT_NULL_VAR(ve)
         CHECK_VARIABLE_INSTANTIATON(ve)
 
-        if(vm->stack[vm->stack_pointer]->type == STACK_ENTRY_MARKER_NAME)
+        if(vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_MARKER_NAME)
         {
             /*obviously popping something when nothing was pushed properly.
              * Set the variable to 0 */
@@ -104,9 +102,9 @@ int nap_pop(struct nap_vm* vm)
             {
                 if(ve->instantiation->value)
                 {
-                    if(vm->stack[vm->stack_pointer]->type == OPCODE_INT)
+                    if(vm->cec->stack[nap_sp(vm)]->type == OPCODE_INT)
                     {
-                        *(nap_int_t*)ve->instantiation->value = *(nap_int_t*)vm->stack[vm->stack_pointer]->value;
+                        *(nap_int_t*)ve->instantiation->value = *(nap_int_t*)vm->cec->stack[nap_sp(vm)]->value;
                     }
                     else
                     {
@@ -116,11 +114,11 @@ int nap_pop(struct nap_vm* vm)
                 else /* allocate the memory for the value */
                 {
                     nap_int_t* temp = NULL;
-                    if(vm->stack[vm->stack_pointer]->type == OPCODE_INT)
+                    if(vm->cec->stack[nap_sp(vm)]->type == OPCODE_INT)
                     {
                         temp = NAP_MEM_ALLOC(1, nap_int_t);
 						NAP_NN_ASSERT(vm, temp);
-                        *temp  = *(int64_t*)vm->stack[vm->stack_pointer]->value;
+                        *temp  = *(int64_t*)vm->cec->stack[nap_sp(vm)]->value;
                     }
                     else
                     {
@@ -132,18 +130,18 @@ int nap_pop(struct nap_vm* vm)
             else
             if(ve->instantiation->type == STACK_ENTRY_STRING) /* popping a string variable */
             {
-                if(vm->stack[vm->stack_pointer]->type == OPCODE_STRING)
+                if(vm->cec->stack[nap_sp(vm)]->type == OPCODE_STRING)
                 { /* and there is a string on the stack */
                     char* temp = NULL;
                     if(ve->instantiation->value)
                     {
                         NAP_MEM_FREE(ve->instantiation->value);
                     }
-                    NAP_STRING_ALLOC(vm, temp, vm->stack[vm->stack_pointer]->len);
-                    NAP_STRING_COPY(temp, vm->stack[vm->stack_pointer]->value, vm->stack[vm->stack_pointer]->len );
+                    NAP_STRING_ALLOC(vm, temp, vm->cec->stack[nap_sp(vm)]->len);
+                    NAP_STRING_COPY(temp, vm->cec->stack[nap_sp(vm)]->value, vm->cec->stack[nap_sp(vm)]->len );
 
                     ve->instantiation->value = temp;
-                    ve->instantiation->len = vm->stack[vm->stack_pointer]->len;
+                    ve->instantiation->len = vm->cec->stack[nap_sp(vm)]->len;
                 }
                 else /* popping a string when the push was not a string */
                 {
@@ -155,11 +153,11 @@ int nap_pop(struct nap_vm* vm)
                 NAP_NOT_IMPLEMENTED
             }
 
-            NAP_MEM_FREE(vm->stack[vm->stack_pointer]->value);
-            NAP_MEM_FREE(vm->stack[vm->stack_pointer]);
+            NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->value);
+            NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]);
 
             /* and the stack will decrease */
-            vm->stack_pointer --;
+            vm->cec->stack_pointer --;
         }
     }
     else

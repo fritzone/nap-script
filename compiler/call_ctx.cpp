@@ -491,13 +491,3 @@ variable* call_context::variable_list_add_variable(const char *var_name,
     first.push_back(var);
     return var;
 }
-std::vector<method *> call_context::getMethods() const
-{
-    return methods;
-}
-
-void call_context::setMethods(const std::vector<method *> &value)
-{
-    methods = value;
-}
-

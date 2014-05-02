@@ -298,8 +298,8 @@ static int mov_into_byte_register(struct nap_vm* vm)
             nap_set_regb(vm,
                          register_index,
                          (nap_byte_t)nap_int_string_to_number(vm,
-                                    nap_regs(vm, second_register_index),
-                                    vm->regslens[second_register_index], &error)
+                                    nap_regs(vm, second_register_index)->s,
+                                    nap_regs(vm, second_register_index)->l, &error)
                          );
             if(error != NAP_SUCCESS)
             {
@@ -514,8 +514,8 @@ static int mov_into_int_register(struct nap_vm* vm)
             int error = NAP_SUCCESS;
             nap_set_regi(vm, register_index,
                          nap_int_string_to_number(vm,
-                                nap_regs(vm, second_register_index),
-                                vm->regslens[second_register_index],
+                                nap_regs(vm, second_register_index)->s,
+                                nap_regs(vm, second_register_index)->l,
                                 &error)
                          );
             if(error != NAP_SUCCESS)
@@ -667,8 +667,8 @@ static int mov_into_string_register(struct nap_vm* vm)
         {
             uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
             return  nap_set_regs(vm, register_index,
-                                 nap_regs(vm, second_register_index),
-                                 vm->regslens[second_register_index]);
+                                 nap_regs(vm, second_register_index)->s,
+                                 nap_regs(vm, second_register_index)->l);
         }
         else
         {
@@ -815,11 +815,12 @@ static int mov_into_variable(struct nap_vm* vm)
                 {
                     NAP_MEM_FREE(var->instantiation->value);
                 }
-                NAP_STRING_ALLOC(vm, temp, vm->regslens[register_index]);
-                NAP_STRING_COPY(temp, nap_regs(vm, register_index), vm->regslens[register_index]);
+                NAP_STRING_ALLOC(vm, temp, nap_regs(vm, register_index)->l);
+                NAP_STRING_COPY(temp, nap_regs(vm, register_index)->s,
+                                nap_regs(vm, register_index)->l);
 
                 var->instantiation->value = temp;
-                var->instantiation->len = vm->regslens[register_index];
+                var->instantiation->len = nap_regs(vm, register_index)->l;
             }
             else
             {
@@ -895,7 +896,7 @@ static int mov_into_indexed(struct nap_vm* vm)
                         }
 
                         /* do we fit in? */
-                        if(real_index + vm->regslens[register_index] > var->instantiation->len)
+                        if(real_index + nap_regs(vm, register_index)->l > var->instantiation->len)
                         {
                             char s[256];
                             SNPRINTF(s, 256,
@@ -906,14 +907,14 @@ static int mov_into_indexed(struct nap_vm* vm)
                                      var->name,
                                      real_index,
                                      var->instantiation->len,
-                                     real_index + vm->regslens[register_index]);
+                                     real_index + nap_regs(vm, register_index)->l);
                             return nap_vm_set_error_description(vm, s);
                         }
 
                         /* and finally do a memcpy */
                         memcpy((char*)var->instantiation->value + real_index * CC_MUL,
-                               nap_regs(vm, register_index),
-                               vm->regslens[register_index] * CC_MUL); /* UTF-32 BE */
+                               nap_regs(vm, register_index)->s,
+                               nap_regs(vm, register_index)->l * CC_MUL); /* UTF-32 BE */
                     }
                     else
                     if(ctr_used_index_regs == 2) /* string[2,5] = "ABC" - removes from the string the substring [2,5] and puts in the new string */
@@ -923,8 +924,8 @@ static int mov_into_indexed(struct nap_vm* vm)
                         return move_string_into_substring(vm, start_index, end_index,
                                     (char**)&var->instantiation->value,
                                     &var->instantiation->len,
-                                    nap_regs(vm, register_index),
-                                    vm->regslens[register_index],
+                                    nap_regs(vm, register_index)->s,
+                                    nap_regs(vm, register_index)->l,
                                     var->name);
                     }
                     else /* string [x,y,z] make no sense */

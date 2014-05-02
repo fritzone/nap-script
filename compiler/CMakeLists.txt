@@ -14,17 +14,23 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/variable.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/evaluate.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/file_abstraction.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/garbage_bin.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/code_output.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/code_finalizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/code_stream.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/charconverter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/parameter.cpp
     ${CMAKE_SOURCE_DIR}/vm/byte_order.c
 )
 
+if(enable-runtime-compilation)
+    add_definitions( -DRUNTIME_COMPILATION )
+endif()
+
 include_directories(${CMAKE_SOURCE_DIR}/vm 
-                    ${CMAKE_CURRENT_BINARY_DIR} 
-					${CMAKE_BINARY_DIR}/compiler
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_BINARY_DIR}/compiler
 )
 
 list(APPEND compiler_files ${${project}_files})

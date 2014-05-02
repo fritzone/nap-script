@@ -122,22 +122,22 @@ void nap_vm_cleanup(struct nap_vm* vm)
     NAP_MEM_FREE(vm->metatable);
 
     /* free the allocated stack */
-    for(tempst = vm->stack_pointer; tempst > -1; tempst --)
+    for(tempst = vm->cec->stack_pointer; tempst > -1; tempst --)
     {
-        if(vm->stack[tempst] && vm->stack[tempst]->type == OPCODE_INT) /* or float/string */
+        if(vm->cec->stack[tempst] && vm->cec->stack[tempst]->type == OPCODE_INT) /* or float/string */
         {
             /* this wa already freed in the metatable */
         }
         else /* register type */
-        if(vm->stack[tempst] && (vm->stack[tempst]->type == OPCODE_REG
-                                 || vm->stack[tempst]->type == STACK_ENTRY_MARKER_NAME))
+        if(vm->cec->stack[tempst] && (vm->cec->stack[tempst]->type == OPCODE_REG
+                                 || vm->cec->stack[tempst]->type == STACK_ENTRY_MARKER_NAME))
         {
-            NAP_MEM_FREE(vm->stack[tempst]->value);
+            NAP_MEM_FREE(vm->cec->stack[tempst]->value);
         }
 
-        NAP_MEM_FREE(vm->stack[tempst]);
+        NAP_MEM_FREE(vm->cec->stack[tempst]);
     }
-    NAP_MEM_FREE(vm->stack);
+    NAP_MEM_FREE(vm->cec->stack);
 
     /* freeing the jumptable */
 	for(tempjmi = vm->jumptable_size; tempjmi > 0; tempjmi --)
@@ -211,7 +211,7 @@ void nap_vm_cleanup(struct nap_vm* vm)
 #ifdef _WINDOWS
 #pragma warning(suppress: 6001)
 #endif
-        NAP_MEM_FREE(vm->regs[i]);
+        NAP_MEM_FREE(vm->cec->regs[i].s);
     }
 
     /* the string return value */
@@ -272,10 +272,9 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     }
 
     /* create the stack */
-    vm->stack_size = STACK_INIT;
-    vm->stack_pointer = -1; /* this is first ++'d then used */
-    vm->stack = NAP_MEM_ALLOC(STACK_INIT, struct stack_entry*);
-    if(vm->stack == NULL)
+    vm->cec->stack_pointer = -1; /* this is first ++'d then used */
+    vm->cec->stack = NAP_MEM_ALLOC(STACK_INIT, struct stack_entry*);
+    if(vm->cec->stack == NULL)
     {
         /* TODO: provide a mechanism for error reporting */
         free(vm->content);
@@ -992,34 +991,35 @@ int nap_copy_return_values(const struct nap_vm *src, struct nap_vm *dst)
     return NAP_SUCCESS;
 }
 
-int nap_set_regs(struct nap_vm* vm, uint8_t reg_idx,
+int nap_set_regs(struct nap_vm* vm, uint8_t register_index,
                                   const char* target, size_t target_len)
 {
     char* tmp = NULL;
     NAP_STRING_ALLOC(vm, tmp, target_len);
     NAP_STRING_COPY(tmp, target, target_len);
 
-    if(nap_regs(vm, reg_idx))
+    if(nap_regs(vm, register_index)->s)
     {
         /* set the memory value to zero */
-        nap_init_regs(vm, reg_idx);
+        memset(vm->cec->regs[register_index].s, 0, vm->cec->regs[register_index].l * CC_MUL);
 
         /* and actually free the memory */
-        NAP_MEM_FREE(vm->regs[reg_idx]);
+        NAP_MEM_FREE(vm->cec->regs[register_index].s);
     }
 
-    vm->regs[reg_idx] = tmp;
-    vm->regslens[reg_idx] = target_len;
+    vm->cec->regs[register_index].s = tmp;
+    vm->cec->regs[register_index].l = target_len;
+
     return NAP_SUCCESS;
 }
 
-nap_string_t nap_regs(struct nap_vm *vm, uint8_t register_index)
+struct nap_string_register* nap_regs(struct nap_vm *vm, uint8_t register_index)
 {
-    return vm->regs[register_index];
+    return &(vm->cec->regs[register_index]);
 }
 
 
-void nap_init_regs(struct nap_vm *vm, uint8_t register_index)
+int64_t nap_sp(struct nap_vm *vm)
 {
-    memset(vm->regs[register_index], 0, vm->regslens[register_index] * CC_MUL);
+    return vm->cec->stack_pointer;
 }

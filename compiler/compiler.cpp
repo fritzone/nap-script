@@ -11,6 +11,8 @@
 #include "call_ctx.h"
 #include "parser.h"
 #include "code_stream.h"
+#include "code_finalizer.h"
+
 
 nap_compiler::nap_compiler() : opcode_counter(0),
     mfirst_entry(true), mvm_chain(0), mvar_counter(0), minterpreter(this), mgbb(garbage_bin_bin::instance()),

@@ -75,13 +75,4 @@ private:
     nap_compiler* mcompiler;
 };
 
-class code_finalizer
-{
-public:
-    code_finalizer(nap_compiler* _compiler) : mcompiler(_compiler) {}
-    void finalize();
-private:
-   nap_compiler* mcompiler;
-};
-
 #endif // CODE_STREAM_H

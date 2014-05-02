@@ -16,6 +16,7 @@ typedef uint32_t nap_mark_t;    /* the type of a marker pushed on the stack */
 typedef uint32_t nap_index_t;   /* the type of an index */
 
 struct nap_vm;
+struct nap_string_register;
 
 /* The directions in which the IP can move */
 #define BACKWARD -1
@@ -55,7 +56,7 @@ struct nap_vm;
 #define NAP_MEM_ALLOC(count, type) (type*)calloc( (count), sizeof(type))
 
 /* Macro for asserting a non-NULL variable and setting the VM's error in case*/
-#define NAP_NN_ASSERT(vm,var)                                                 \
+#define NAP_NN_ASSERT(vm,var)                                                  \
     do                                                                         \
     {                                                                          \
         if(var == NULL)                                                        \
@@ -305,6 +306,9 @@ void nap_set_regidx(struct nap_vm* vm, uint8_t register_index, nap_int_t v);
 /* Return the nap register index from the given position */
 nap_int_t nap_regidx(struct nap_vm* vm, uint8_t register_index);
 
+/* Returns the stack pointer */
+int64_t nap_sp(struct nap_vm* vm);
+
 /**
  * @brief init_string_register initializes the string register to a given value.
  *
@@ -322,14 +326,11 @@ nap_int_t nap_regidx(struct nap_vm* vm, uint8_t register_index);
  *
  * @return NULL in case of error, or the new value of vm->regs[reg_idx]
  */
-int nap_set_regs(struct nap_vm* vm, uint8_t reg_idx,
+int nap_set_regs(struct nap_vm* vm, uint8_t register_index,
                                   const char* target, size_t target_len);
 
 /* Returns the string register's value */
-nap_string_t nap_regs(struct nap_vm* vm, uint8_t register_index);
-
-/* Initializes the given register to 0 */
-void nap_init_regs(struct nap_vm* vm, uint8_t register_index);
+struct nap_string_register* nap_regs(struct nap_vm* vm, uint8_t register_index);
 
 #ifdef __cplusplus
 }

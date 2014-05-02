@@ -24,9 +24,9 @@
 uint16_t intr_4(struct nap_vm* vm)
 {
 
-    size_t sig_dest_len = vm->regslens[0] * CC_MUL, sig_real_len = 0;
-    size_t fun_dest_len = vm->regslens[1] * CC_MUL, fun_real_len = 0;
-    size_t lib_dest_len = vm->regslens[2] * CC_MUL, lib_real_len = 0;
+    size_t sig_dest_len = nap_regs(vm, 0)->l * CC_MUL, sig_real_len = 0;
+    size_t fun_dest_len = nap_regs(vm, 1)->l * CC_MUL, fun_real_len = 0;
+    size_t lib_dest_len = nap_regs(vm, 2)->l * CC_MUL, lib_real_len = 0;
     size_t i = 0;
     nap_ext_caller nec = NULL;
     int cur_stack_peeker = 0; /* parameters peeked from the first one */
@@ -37,13 +37,12 @@ uint16_t intr_4(struct nap_vm* vm)
     char* function_name = NULL;
     char* library_name = NULL;
 
-    signature = convert_string_from_bytecode_file(vm, nap_regs(vm, 0),
-            vm->regslens[0] * CC_MUL, sig_dest_len, &sig_real_len);
-
-    function_name = convert_string_from_bytecode_file(vm, nap_regs(vm, 1),
-            vm->regslens[1] * CC_MUL, fun_dest_len, &fun_real_len);
-    library_name = convert_string_from_bytecode_file(vm, nap_regs(vm, 2),
-            vm->regslens[2] * CC_MUL, lib_dest_len, &lib_real_len);
+    signature = convert_string_from_bytecode_file(vm, nap_regs(vm, 0)->s,
+            sig_dest_len, sig_dest_len, &sig_real_len);
+    function_name = convert_string_from_bytecode_file(vm, nap_regs(vm, 1)->s,
+            fun_dest_len, fun_dest_len, &fun_real_len);
+    library_name = convert_string_from_bytecode_file(vm, nap_regs(vm, 2)->s,
+            lib_dest_len, lib_dest_len, &lib_real_len);
 
     pd = NAP_MEM_ALLOC(1, struct nap_ext_par_desc);
     NAP_NN_ASSERT(vm, pd);
@@ -64,7 +63,7 @@ uint16_t intr_4(struct nap_vm* vm)
             nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
 			NAP_NN_ASSERT(vm, temp);
 
-            *temp = *(nap_int_t*)vm->stack[vm->stack_pointer - cur_stack_peeker]->value; /* STACK VALUE FROM peek_index */
+            *temp = *(nap_int_t*)vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->value; /* STACK VALUE FROM peek_index */
             nap_populate_par_desc(pd, strlen(signature) - cur_stack_peeker - 1 - 1, temp);
             /* first -1: because we remove the return type,
                second -1: because it's zero based */

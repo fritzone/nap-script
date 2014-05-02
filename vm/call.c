@@ -38,7 +38,7 @@ int nap_call(struct nap_vm *vm)
     }
     else /* calling a method from the parent_vm */
     {
-        int64_t parent_sp = vm->parent->stack_pointer;
+        int64_t parent_sp = vm->parent->cec->stack_pointer;
         int i = 0;
 
         /* this will be definitely over the max amount allowed,
@@ -54,10 +54,10 @@ int nap_call(struct nap_vm *vm)
         }
 
         /* patch the stack of the parent */
-        for(i=0; i<=vm->stack_pointer; i++)
+        for(i=0; i<=nap_sp(vm); i++)
         {
-            vm->parent->stack[parent_sp + i + 1] = vm->stack[i];
-            vm->parent->stack_pointer ++;
+            vm->parent->cec->stack[parent_sp + i + 1] = vm->cec->stack[i];
+            vm->parent->cec->stack_pointer ++;
         }
 
         /* then set the parent's cc to the method*/
@@ -74,7 +74,7 @@ int nap_call(struct nap_vm *vm)
         nap_vm_run(vm->parent);
 
         /* restore the parent's stack_pointer */
-        vm->parent->stack_pointer = parent_sp;
+        vm->parent->cec->stack_pointer = parent_sp;
 
         /* fetch over the return values, they might be used by the caller later*/
         nap_copy_return_values(vm->parent, vm);
