@@ -294,7 +294,7 @@ static std::string generate_hash_tag()
 {
     char str[5];
     for (int i = 0; i < 4; ++i)
-    str[i] = irand('a', 'z');
+    str[i] = (char)irand('a', 'z');
     str[4] = '\0';
     return std::string(str);
 }

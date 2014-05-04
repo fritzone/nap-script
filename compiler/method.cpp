@@ -304,7 +304,8 @@ void method::feed_parameter_list(char* par_list, const expression_with_location*
                 return;
             }
 
-            if((modifiable = (C_AND == (*q)[i])))
+			modifiable = (C_AND == (*q)[i]);
+            if(modifiable)
             {
                 i++;
                 // TODO: There is no support for this in the bytecode yet.

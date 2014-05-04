@@ -83,9 +83,10 @@ add_executable(napi
 
 add_dependencies(nap_bci_s nap-ext-gen)
 
-set(vm_link_libs "dl")
 if(WIN32)
-    list(APPEND vm_link_libs "nap_iconv_s" "kernel32")
+    set(vm_link_libs "nap_iconv_s" "kernel32")
+else()
+    set(vm_link_libs "dl")
 endif()
 
 if(build-compiler)

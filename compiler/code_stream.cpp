@@ -154,7 +154,8 @@ void code_stream::output_bytecode(const char* s)
         // the method calls just output a byte counter, no number identifier
         if(mcompiler->getLastOpcode() == OPCODE_CCIDX || mcompiler->getLastOpcode() == OPCODE_GROW)
         {
-            int8_t nrf = atoi(expr.c_str());
+			// TODO: What is this?
+            int8_t nrf = (int8_t)atoi(expr.c_str());
             f.write_stuff_to_file_8(nrf);
             return;
         }
@@ -185,7 +186,7 @@ void code_stream::output_bytecode(const char* s)
         {
             if(mcompiler->opcode_counter > 3 && mcompiler->opcodes()[mcompiler->opcode_counter - 3] == OPCODE_REG)
             { // if this counts a register
-                uint8_t nrf = atoi(expr.c_str());
+                uint8_t nrf = (uint8_t)atoi(expr.c_str());
                 f.write_stuff_to_file_8(nrf);
                 if(max_reg_count < nrf)
                 {
@@ -201,7 +202,7 @@ void code_stream::output_bytecode(const char* s)
             // interrupt, does not neeed spcifier, there are max 255 of them
             if(mcompiler->opcode_counter > 3 && mcompiler->opcodes()[mcompiler->opcode_counter - 2] == OPCODE_INTR)
             {
-                uint8_t nrf = atoi(expr.c_str());
+                uint8_t nrf = (uint8_t)atoi(expr.c_str());
                 f.write_stuff_to_file_8(nrf);
             }
             else
@@ -221,12 +222,12 @@ void code_stream::output_bytecode(const char* s)
                 // and now write the number according to the size
                 if(type == OPCODE_BYTE)
                 {
-                    int8_t nrf = atoi(expr.c_str());
-                    f.write_stuff_to_file_8((uint8_t)nrf);
+                    uint8_t nrf = (uint8_t)atoi(expr.c_str());
+                    f.write_stuff_to_file_8(nrf);
                 }
                 if(type == OPCODE_SHORT)
                 {
-                    int16_t nrf = atoi(expr.c_str());
+                    int16_t nrf = (int16_t)atoi(expr.c_str());
                     f.write_stuff_to_file_16((uint16_t)nrf);
                 }
                 if(type == OPCODE_LONG)

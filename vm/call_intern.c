@@ -49,7 +49,7 @@ int nap_call_intern(struct nap_vm* vm)
                     /* recalculate how much memory we need*/
                     while(dim_counter < 254 && ve->dimensions[dim_counter])
                     {
-                        new_size *= ve->dimensions[dim_counter ++];
+                        new_size *= (size_t)ve->dimensions[dim_counter ++];
                     }
                     new_size *= grow_value;
 

@@ -13,6 +13,7 @@ class nap_compiler;
 // TODO: These easiyl can go into a compiler helper class or similar ...
 
 
+const char *get_reg_type(int req_type);
 const char* get_opcode(int opt);
 void op_reg_reg(nap_compiler *_compiler, int op_type, char reg1_ty, int reg1_level, char reg2_ty, int reg2_level);
 void operation_start_register(nap_compiler *_compiler, const expression_tree* node, int reqd_type, int level );
