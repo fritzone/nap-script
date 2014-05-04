@@ -11,6 +11,4 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
              int &reqd_type,
              int forced_mov, bool &psuccess);
 
-const char *get_reg_type(uint8_t req_type);
-
 #endif

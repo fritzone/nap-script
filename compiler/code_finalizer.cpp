@@ -146,13 +146,13 @@ void code_finalizer::finalize_funtable()
                 f.write_stuff_to_file_32(jc);
 
                 // write the function name
-                uint16_t name_len = strlen(n);
+                uint16_t name_len = (uint16_t)strlen(n);
                 f.write_stuff_to_file_16(name_len);
                 f.write_string_to_file(n, name_len, 0);
                 // the return type
                 f.write_stuff_to_file_8((uint8_t)m->ret_type);
-                // write the parameter count to file
-                uint8_t pars = m->parameters.size();
+                // write the parameter count to file- There can be max 255 parameters
+                uint8_t pars = (uint8_t)m->parameters.size();
                 f.write_stuff_to_file_8(pars);
                 for(uint8_t pi = 0; pi < pars; pi++)
                 {

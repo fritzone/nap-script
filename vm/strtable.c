@@ -72,6 +72,4 @@ int interpret_stringtable(struct nap_vm *vm, uint8_t *start_location, uint32_t l
             vm->stringtable[index] = new_strentry;
         }
     }
-
-    return NAP_SUCCESS;
 }

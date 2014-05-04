@@ -87,6 +87,4 @@ int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
             vm->metatable[index] = new_var;
         }
     }
-
-    return NAP_SUCCESS;
 }

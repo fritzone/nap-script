@@ -53,7 +53,7 @@ static int64_t deliver_flat_index(struct nap_vm* vm,
                                    uint8_t used_indexes, char** error)
 {
     int64_t to_ret = 0;
-    int i = 0;
+    uint8_t i = 0;
 
     /* moving block of arrays is not permitted yet :( */
 
