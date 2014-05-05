@@ -935,7 +935,7 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
             garbage_bin<expression_tree*>::instance(cc->compiler).place(cur_par_expr, cc->compiler);
             build_expr_tree((*q).c_str(), cur_par_expr, the_method, orig_expr, cc, result, expwloc, psuccess);
             SUCCES_OR_RETURN 0;
-            parameter* cur_par_obj = new parameter(the_method, cc);
+            parameter* cur_par_obj = new parameter(the_method);
             garbage_bin<parameter*>::instance(cc->compiler).place(cur_par_obj, cc->compiler);
             cur_par_obj->expr = cur_par_expr;
 

@@ -26,13 +26,10 @@ struct variable
      * @param pctype - the string type of the variable
      * @param pcc - the call context of the variable
      */
-    variable(int pdimension, int type, const std::string& pname, const std::string& pctype, call_context* pcc)
-        : name(pname), dimension(pdimension), c_type(pctype), cc(pcc)
-    {
-        i_type = type;
-        mult_dim_def = NULL;
-        func_par = NULL;
-    }
+    variable(int pdimension, int type, const std::string& pname,
+             const std::string& pctype, call_context* pcc) : name(pname),
+        dimension(pdimension), c_type(pctype), i_type(type),
+        mult_dim_def(NULL), func_par(NULL), cc(pcc) {}
 
     /* the name of the variable */
     std::string name;
