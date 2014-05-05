@@ -15,7 +15,8 @@ struct method;
  */
 struct parameter
 {
-    parameter(method* pthe_method, call_context* pcc);
+    parameter(method* pthe_method) : simple_value(1), the_method(pthe_method)
+    {}
 
     /* the name of the parameter (as used on te function's side). This is not used on the client side*/
     std::string name;

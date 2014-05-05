@@ -59,7 +59,7 @@ struct expression_with_location
 };
 
 /**
- * The struct envelope structure is holding a data tha can be worked
+ * The envelope structure is holding a data tha can be worked
  *  with using the same interface by the functions.
  * It has two members:
  * 1. the type. This can denote a struct variable, a struct number, a

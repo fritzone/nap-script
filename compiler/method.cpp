@@ -149,7 +149,7 @@ parameter* method::add_parameter(std::string pname,
                                  const expression_with_location* pexpwloc,
                                  call_context*cc, bool& psuccess)
 {
-    parameter* func_par = new parameter(this, cc);
+    parameter* func_par = new parameter(this);
     garbage_bin<parameter*>::instance(cc->compiler).place(func_par, cc->compiler);
 
     size_t indexOfEq = pname.find(C_EQ);

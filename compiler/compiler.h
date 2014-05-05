@@ -5,6 +5,7 @@ struct call_context;
 struct method;
 struct parsed_file;
 class garbage_bin_bin;
+struct nap_vm;
 
 #include "interpreter.h"
 
@@ -53,11 +54,7 @@ struct label_entry
 
     // and the name of it
     std::string name;
-
-    method* m;
 };
-
-struct nap_vm ;
 
 /**
  * @brief The nap_compiler class represents a compiler.
