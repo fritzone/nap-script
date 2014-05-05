@@ -302,30 +302,17 @@ int level_0_add_operator(const nap_compiler* _compiler, const char* expr, bool& 
  */
 int level_0_logical_operator(const nap_compiler* _compiler, const char* expr, bool& psuccess)
 {
-    bool success = true;
-    int opr = level_0_longer_operator(_compiler, expr, STR_LOGIC_OR, 0, success);
+    int opr = level_0_longer_operator(_compiler, expr, STR_LOGIC_OR, 0, psuccess);
     if(opr > -1) return opr;
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    SUCCES_OR_RETURN -1;
 
-    opr = level_0_longer_operator(_compiler, expr, STR_LOGIC_AND, 0, success);
+    opr = level_0_longer_operator(_compiler, expr, STR_LOGIC_AND, 0, psuccess);
     if(opr > -1) return opr;
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    SUCCES_OR_RETURN -1;
 
-    opr = level_0_longer_operator(_compiler, expr, STR_LOGIC_NOT, 0, success);
+    opr = level_0_longer_operator(_compiler, expr, STR_LOGIC_NOT, 0, psuccess);
     if(opr > -1) return opr;
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    SUCCES_OR_RETURN -1;
 
     return -1;
 }
@@ -336,39 +323,20 @@ int level_0_logical_operator(const nap_compiler* _compiler, const char* expr, bo
  */
 int level_0_bitwise_operator(const nap_compiler* _compiler,const char* expr, bool &psuccess)
 {
-    bool success = true;
-    int opr = level_0_longer_operator(_compiler, expr, STR_BIT_OR, 0, success);
-    if(opr > -1) return opr;
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
-
-    opr = level_0_longer_operator(_compiler, expr, STR_BIT_XOR, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int opr = level_0_longer_operator(_compiler, expr, STR_BIT_OR, 0, psuccess);
+    SUCCES_OR_RETURN -1;
     if(opr > -1) return opr;
 
-    opr = level_0_longer_operator(_compiler, expr, STR_BIT_AND, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
-
+    opr = level_0_longer_operator(_compiler, expr, STR_BIT_XOR, 0, psuccess);
+    SUCCES_OR_RETURN -1;
     if(opr > -1) return opr;
 
-    opr = level_0_longer_operator(_compiler, expr, STR_BIT_COMP, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    opr = level_0_longer_operator(_compiler, expr, STR_BIT_AND, 0, psuccess);
+    SUCCES_OR_RETURN -1;
+    if(opr > -1) return opr;
 
+    opr = level_0_longer_operator(_compiler, expr, STR_BIT_COMP, 0, psuccess);
+    SUCCES_OR_RETURN -1;
     if(opr > -1) return opr;
 
     return -1;
@@ -379,25 +347,12 @@ int level_0_bitwise_operator(const nap_compiler* _compiler,const char* expr, boo
  */
 int level_0_multiply_operator(const nap_compiler* _compiler,const char *expr, bool& psuccess)
 {
-    bool success = true;
-    int posMply = level_0_longer_operator(_compiler, expr, STR_MUL, 1, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
-    int posDiv = level_0_longer_operator(_compiler, expr, STR_DIV, 1, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
-    int modDiv = level_0_longer_operator(_compiler, expr, STR_MOD, 1, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int posMply = level_0_longer_operator(_compiler, expr, STR_MUL, 1, psuccess);
+    SUCCES_OR_RETURN -1;
+    int posDiv = level_0_longer_operator(_compiler, expr, STR_DIV, 1, psuccess);
+    SUCCES_OR_RETURN -1;
+    int modDiv = level_0_longer_operator(_compiler, expr, STR_MOD, 1, psuccess);
+    SUCCES_OR_RETURN -1;
     return (max_int (posMply, max_int(posDiv, modDiv)));
 }
 
@@ -406,13 +361,8 @@ int level_0_multiply_operator(const nap_compiler* _compiler,const char *expr, bo
  */
 int level_0_assignment_operator(const nap_compiler* _compiler,const char *expr, bool& psuccess)
 {
-    bool success = true;
-    int t = level_0_longer_operator(_compiler, expr, STR_EQUAL, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int t = level_0_longer_operator(_compiler, expr, STR_EQUAL, 0, psuccess);
+    SUCCES_OR_RETURN -1;
     return t;
 }
 
@@ -421,13 +371,8 @@ int level_0_assignment_operator(const nap_compiler* _compiler,const char *expr, 
  */
 int level_0_dot_operator(const nap_compiler* _compiler, const char *expr, bool& psuccess)
 {
-    bool success = true;
-    int t = level_0_longer_operator(_compiler, expr, STR_DOT, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int t = level_0_longer_operator(_compiler, expr, STR_DOT, 0, psuccess);
+    SUCCES_OR_RETURN -1;
     return t;
 }
 
@@ -436,20 +381,11 @@ int level_0_dot_operator(const nap_compiler* _compiler, const char *expr, bool& 
  */
 int level_0_shift(const nap_compiler* _compiler, const char* expr, bool& psuccess)
 {
-    bool success = true;
-    int posleft = level_0_longer_operator(_compiler, expr, STR_SHLEFT, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int posleft = level_0_longer_operator(_compiler, expr, STR_SHLEFT, 0, psuccess);
+    SUCCES_OR_RETURN -1;
 
-    int posrigh = level_0_longer_operator(_compiler, expr, STR_SHRIGHT, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int posrigh = level_0_longer_operator(_compiler, expr, STR_SHRIGHT, 0, psuccess);
+    SUCCES_OR_RETURN -1;
 
     return posleft==-1? posrigh : posleft;
 }
@@ -460,25 +396,16 @@ int level_0_shift(const nap_compiler* _compiler, const char* expr, bool& psucces
 */
 int level_0_comparison_operator(const nap_compiler* _compiler, const char *expr, const char** found_operator, bool& psuccess)
 {
-    bool success = true;
-    int l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_EQUALEQUAL, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_EQUALEQUAL, 0, psuccess);
+    SUCCES_OR_RETURN -1;
 
     if(l0_cmp_op > -1)
     {
         *found_operator = STR_EQUALEQUAL;
         return l0_cmp_op;
     }
-    l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_NEQ, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_NEQ, 0, psuccess);
+    SUCCES_OR_RETURN -1;
 
     if(l0_cmp_op > -1)
     {
@@ -487,48 +414,32 @@ int level_0_comparison_operator(const nap_compiler* _compiler, const char *expr,
     }
     /* the order is important, LTE should be checked before LT since other way it might find the < op
        and ignore the = after it, leading to errors */
-    l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_LTE, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_LTE, 0, psuccess);
+    SUCCES_OR_RETURN -1;
 
     if(l0_cmp_op > -1)
     {
         *found_operator = STR_LTE;
         return l0_cmp_op;
     }
-    l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_GTE, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_GTE, 0, psuccess);
+    SUCCES_OR_RETURN -1;
 
     if(l0_cmp_op > -1)
     {
         *found_operator = STR_GTE;
         return l0_cmp_op;
     }
-    l0_cmp_op = level_0_char_operator(_compiler, expr, '<', '<', 1, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    l0_cmp_op = level_0_char_operator(_compiler, expr, '<', '<', 1, psuccess);
+    SUCCES_OR_RETURN -1;
 
     if(l0_cmp_op > -1)
     {
         *found_operator = STR_LT;
         return l0_cmp_op;
     }
-    l0_cmp_op = level_0_char_operator(_compiler, expr, '>', '>', 1, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    l0_cmp_op = level_0_char_operator(_compiler, expr, '>', '>', 1, psuccess);
+    SUCCES_OR_RETURN -1;
 
     if(l0_cmp_op > -1)
     {
@@ -543,13 +454,8 @@ int level_0_comparison_operator(const nap_compiler* _compiler, const char *expr,
  */
 int level_0_sg_eq_operator(const nap_compiler* _compiler, const char *expr, const char** found_operator, int* found_type, bool&psuccess)
 {
-    bool success = true;
-    int l0_seq_op = level_0_longer_operator(_compiler, expr, STR_PLUS_EQUAL, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int l0_seq_op = level_0_longer_operator(_compiler, expr, STR_PLUS_EQUAL, 0, psuccess);
+    SUCCES_OR_RETURN -1;
 
     if(l0_seq_op > -1)
     {
@@ -558,12 +464,8 @@ int level_0_sg_eq_operator(const nap_compiler* _compiler, const char *expr, cons
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_MINUS_EQUAL, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_MINUS_EQUAL, 0, psuccess);
+    SUCCES_OR_RETURN -1;
 
     if(l0_seq_op > -1)
     {
@@ -572,12 +474,8 @@ int level_0_sg_eq_operator(const nap_compiler* _compiler, const char *expr, cons
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_MUL_EQUAL, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_MUL_EQUAL, 0, psuccess);
+    SUCCES_OR_RETURN -1;
 
     if(l0_seq_op > -1)
     {
@@ -586,12 +484,8 @@ int level_0_sg_eq_operator(const nap_compiler* _compiler, const char *expr, cons
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_DIV_EQUAL, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_DIV_EQUAL, 0, psuccess);
+    SUCCES_OR_RETURN -1;
 
     if(l0_seq_op > -1)
     {
@@ -600,12 +494,8 @@ int level_0_sg_eq_operator(const nap_compiler* _compiler, const char *expr, cons
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_AND_EQUAL, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_AND_EQUAL, 0, psuccess);
+    SUCCES_OR_RETURN -1;
 
     if(l0_seq_op > -1)
     {
@@ -614,12 +504,8 @@ int level_0_sg_eq_operator(const nap_compiler* _compiler, const char *expr, cons
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_OR_EQUAL, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_OR_EQUAL, 0, psuccess);
+    SUCCES_OR_RETURN -1;
 
     if(l0_seq_op > -1)
     {
@@ -628,12 +514,8 @@ int level_0_sg_eq_operator(const nap_compiler* _compiler, const char *expr, cons
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_XOR_EQUAL, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_XOR_EQUAL, 0, psuccess);
+    SUCCES_OR_RETURN -1;
 
     if(l0_seq_op > -1)
     {
@@ -642,12 +524,8 @@ int level_0_sg_eq_operator(const nap_compiler* _compiler, const char *expr, cons
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_SHL_EQUAL, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_SHL_EQUAL, 0, psuccess);
+    SUCCES_OR_RETURN -1;
 
     if(l0_seq_op > -1)
     {
@@ -656,12 +534,8 @@ int level_0_sg_eq_operator(const nap_compiler* _compiler, const char *expr, cons
         return l0_seq_op;
     }
 
-    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_SHR_EQUAL, 0, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    l0_seq_op = level_0_longer_operator(_compiler, expr, STR_SHR_EQUAL, 0, psuccess);
+    SUCCES_OR_RETURN -1;
 
     if(l0_seq_op > -1)
     {

@@ -63,20 +63,20 @@ void call_context::add_method(method* the_method)
  */
 variable* call_context::add_variable(const char* name, const char* type,
                                      int dimension,
-                                     const expression_with_location* expwloc, bool& psuccess)
+                                     bool& psuccess)
 {
     psuccess = true;
-    if(variable_list_has_variable(name) != variables.end())
+    if(has_variable(name) != variables.end())
     {
         psuccess = false;
         compiler->throw_error(E0034_SYMBOLDEFD, NULL);
         return 0;
     }
-    bool success = true;
-    variable* v = variable_list_add_variable(name, type, dimension, ccs_method, this, expwloc, success);
-    if(!success)
+
+    variable* v = variable_holder::add_variable(name, type, dimension,
+                                                ccs_method, this, psuccess);
+    if(!psuccess)
     {
-        psuccess = false;
         return 0;
     }
 
@@ -117,8 +117,9 @@ method* call_context::get_method(const string &pname)
             garbage_bin<method*>::instance(compiler).place(m, compiler);
             for(int i=0; i<fe->parameter_count; i++)
             {
-                bool success;
+                bool success = true;
                 m->add_parameter(std::string("par_") +  get_reg_type(fe->parameter_types[i]), get_reg_type(fe->parameter_types[i]), 1, 0, chain_cc, success);
+                if(!success) return 0;
             }
             // and populate the method's parameters from the funtable :)
             return m;
@@ -128,26 +129,15 @@ method* call_context::get_method(const string &pname)
     return NULL;
 }
 
-long call_context::add_label(long position, const std::string& name)
+bytecode_label call_context::add_break_label(long position, const std::string& name)
 {
-    bytecode_label* bl = new bytecode_label;
-    garbage_bin<bytecode_label*>::instance(compiler).place(bl, compiler);
-    bl->bytecode_location = position;
-    bl->name = name;
-    bl->type = bytecode_label::LABEL_PLAIN;
-    labels.push_back(bl);
-    return labels.size();
-}
+    bytecode_label bl;
 
-struct bytecode_label* call_context::add_break_label(long position, const std::string& name)
-{
-    bytecode_label* bl = new bytecode_label;
-    garbage_bin<bytecode_label*>::instance(compiler).place(bl, compiler);
-
-    bl->bytecode_location = position;
-    bl->name = name;
-    bl->type = bytecode_label::LABEL_BREAK;
+    bl.bytecode_location = position;
+    bl.name = name;
+    bl.type = bytecode_label::LABEL_BREAK;
     break_label = bl;
+
     labels.push_back(bl);
     return bl;
 }
@@ -162,33 +152,27 @@ expression_tree* call_context::add_new_expression(const char* expr, const expres
     garbage_bin<expression_tree*>::instance(compiler).place(new_expression, compiler);
 
     int res;
-    bool success = true;
-    compiler->get_interpreter().build_expr_tree(expr, new_expression, ccs_method, expr, this, &res, expwloc, success);
-    if(!success)
+    compiler->get_interpreter().build_expr_tree(expr, new_expression, ccs_method, expr, this, &res, expwloc, psuccess);
+    if(!psuccess)
     {
-        psuccess = false;
         return 0;
     }
     expressions.push_back(new_expression);
     return new_expression;
 }
 
-
-
 /**
-* Runs the given call context.
-*/
-void call_context::compile_standalone(nap_compiler* _compiler, int level, int reqd_type, int forced_mov, bool&psuccess)
+ * Compiles the given call context.
+ */
+void call_context::compile_standalone(nap_compiler* _compiler, int level, int reqd_type, int forced_mov, bool& psuccess)
 {
     std::vector<expression_tree*>::iterator q = expressions.begin();
     while(q != expressions.end())
     {
-        bool success = true;
-        ::compile(_compiler, *q, ccs_method, this, level, reqd_type, forced_mov, success);
-        if(!success)
+        ::compile(_compiler, *q, ccs_method, this, level, reqd_type, forced_mov, psuccess);
+        if(!psuccess)
         {
-            psuccess = false;
-            return;
+           return;
         }
 
         q ++;
@@ -237,11 +221,9 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
         while(q != expressions.end())
         {
             int unknown_type = -1;
-            bool success = true;
-            ::compile(_compiler, *q, NULL, this, 0, unknown_type, 0, success);
-            if(!success)
+            ::compile(_compiler, *q, NULL, this, 0, unknown_type, 0, psuccess);
+            if(!psuccess)
             {
-                psuccess = false;
                 return;
             }
 
@@ -261,7 +243,7 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
         code_stream(_compiler) << NEWLINE << fully_qualified_label(std::string(std::string((*ccs_methods)->main_cc->father->name) +
                                                                       '.' +
                                                                       (*ccs_methods)->method_name).c_str()) << NEWLINE;
-        code_stream(_compiler) << "pushall" << NEWLINE;
+        code_stream(_compiler) << pushall() << NEWLINE;
 
         if(m->def_loc == DEF_INTERN)
         {
@@ -283,11 +265,9 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
             while(q1 != (*ccs_methods)->main_cc->expressions.end())
             {
                 int unknown_type = -1;
-                bool success = true;
-                ::compile(_compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0, success);
-                if(!success)
+                ::compile(_compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0, psuccess);
+                if(!psuccess)
                 {
-                    psuccess = false;
                     return;
                 }
 
@@ -329,8 +309,8 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
 
             code_stream(_compiler) << "intr" << 4 << NEWLINE;
         }
-        code_stream(_compiler) << "popall" << NEWLINE;
-        code_stream(_compiler) << "leave" << NEWLINE;
+        code_stream(_compiler) << popall() << NEWLINE;
+        code_stream(_compiler) << leave() << NEWLINE;
 
         // nest method
         ccs_methods ++;
@@ -364,11 +344,9 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
             while(q1 != (*ccs_methods)->main_cc->expressions.end())
             {
                 int unknown_type = -1;
-                bool success = true;
-                ::compile(_compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0, success);
-                if(!success)
+                ::compile(_compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0, psuccess);
+                if(!psuccess)
                 {
-                    psuccess = false;
                     return;
                 }
 
@@ -377,20 +355,32 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
 
             ccs_methods ++;
             push_cc_end_marker(_compiler, class_fun_hash.c_str());
-            code_stream(_compiler) << "popall" << NEWLINE;
-            code_stream(_compiler) << "leave" << NEWLINE;
+            code_stream(_compiler) << popall() << NEWLINE;
+            code_stream(_compiler) << leave() << NEWLINE;
         }
     }
     }
 
 }
 
-bytecode_label* call_context::provide_label()
+bytecode_label call_context::provide_label()
 {
     std::stringstream ss;
     ss << name << C_UNDERLINE << (int)labels.size();
     long idx = add_label(-1, ss.str());
     return labels.at(idx - 1);
+}
+
+long call_context::add_label(long position, const std::string& name)
+{
+    bytecode_label bl;
+
+    bl.bytecode_location = position;
+    bl.name = name;
+    bl.type = bytecode_label::LABEL_PLAIN;
+
+    labels.push_back(bl);
+    return labels.size();
 }
 
 class_declaration* call_context::get_class_declaration(const std::string& required_name) const

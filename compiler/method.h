@@ -51,7 +51,7 @@ struct method : public variable_holder
      * @param expwloc
      * @return
      */
-    variable* add_new_variable(const std::string &pname,  const std::string &ptype, int dimension, const expression_with_location* expwloc, bool &psuccess);
+    variable* add_new_variable(const std::string &pname,  const std::string &ptype, int dimension, bool &psuccess);
     /**
      * @brief has_variable
      * @param cc
@@ -60,7 +60,7 @@ struct method : public variable_holder
      * @param env_var
      * @return
      */
-    variable* has_variable(call_context* cc, char* varname, int* templed, int* env_var, bool &psuccess);
+    variable* has_variable(call_context* cc, char* varname, int* env_var);
 
     /**
      * @brief feed_parameter_list Feeds in the given parameter list to the method for it to create its parameter structures
@@ -68,12 +68,6 @@ struct method : public variable_holder
      * @param expwloc
      */
     void feed_parameter_list(char* par_list, const expression_with_location* expwloc, bool &psuccess);
-
-    const nap_compiler* get_compiler() const
-    {
-        return mcompiler;
-    }
-
 
     /* the name of the method */
     std::string method_name;
@@ -127,7 +121,7 @@ struct call_frame_entry
     /* this is the method that was called */
     method *the_method;
 
-    /* this are the parameters passed to the method */
+    /* these are the parameters passed to the method */
     std::vector<parameter*> parameters;
 
 };

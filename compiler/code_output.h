@@ -61,5 +61,7 @@ const char* reg();
 const char* idx();
 const char* ccidx();
 const char* int_();
-
+const char* popall();
+const char* pushall();
+const char* leave();
 #endif

@@ -38,16 +38,6 @@ const char* get_reg_type(int req_type)
     return "generic";
 }
 
-const char* mov()
-{
-    return "mov";
-}
-
-const char *int_()
-{
-    return "int";
-}
-
 const char* get_opcode(int opt)
 {
     switch(opt)
@@ -115,6 +105,32 @@ const char* get_opcode(int opt)
 
     return "not implemented";
 }
+
+const char* leave()
+{
+    return "leave";
+}
+
+const char* pushall()
+{
+    return "pushall";
+}
+
+const char* popall()
+{
+    return "popall";
+}
+
+const char* mov()
+{
+    return "mov";
+}
+
+const char *int_()
+{
+    return "int";
+}
+
 
 const char* reg()
 {

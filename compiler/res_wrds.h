@@ -36,7 +36,7 @@ struct resw_while
     /* these are the operations that will be executed */
     call_context* operations;
 
-    bytecode_label* break_label;
+    bytecode_label break_label;
 };
 
 /**

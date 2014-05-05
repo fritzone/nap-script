@@ -88,13 +88,9 @@ std::vector<envelope*>* interpreter::listv_prepare_list(const char* src,
             {
                 tmp[j] = 0;    // cause we added the ',' too :(
                 expression_tree* new_expression = new expression_tree(expwloc);
-                bool success = true;
-                build_expr_tree(tmp, new_expression, the_method, orig_expr, cc, result, expwloc, success);
-                if(!success)
-                {
-                    psuccess = false;
-                    return 0;
-                }
+                build_expr_tree(tmp, new_expression, the_method, orig_expr, cc, result, expwloc, psuccess);
+                SUCCES_OR_RETURN 0;
+
                 envelope* expr_holder = new_envelope(new_expression, LIST_ELEMENT, cc->compiler);
                 lst->push_back(expr_holder);
 
@@ -135,72 +131,35 @@ std::vector<envelope*>* interpreter::listv_prepare_list(const char* src,
  */
 int interpreter::get_operator(const char* expr, const char** foundOperator, int* ntype, bool& psuccess)
 {
-    bool success = true;
-    int zladd = level_0_add_operator(mcompiler, expr, success);                    /* the position of a +- sign on the first level */
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int zladd = level_0_add_operator(mcompiler, expr, psuccess);                    /* the position of a +- sign on the first level */
+    SUCCES_OR_RETURN -1;
 
-    int zlbit = level_0_bitwise_operator(mcompiler, expr, success);                /* if any bitwise (&|~_ operators can be found on level 0 */
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int zlbit = level_0_bitwise_operator(mcompiler, expr, psuccess);                /* if any bitwise (&|~_ operators can be found on level 0 */
+    SUCCES_OR_RETURN -1;
 
-    int zllogic = level_0_logical_operator(mcompiler, expr, success);            /* && or || or ! on the zeroth level */
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int zllogic = level_0_logical_operator(mcompiler, expr, psuccess);            /* && or || or ! on the zeroth level */
+    SUCCES_OR_RETURN -1;
 
-    int zlmlt=level_0_multiply_operator(mcompiler, expr, success);                /* the position of a * / sign on the first level */
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int zlmlt=level_0_multiply_operator(mcompiler, expr, psuccess);                /* the position of a * / sign on the first level */
+    SUCCES_OR_RETURN -1;
 
-    int zlev_assignment = level_0_assignment_operator(mcompiler, expr, success);/* the position of an equal operator on the first level */
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int zlev_assignment = level_0_assignment_operator(mcompiler, expr, psuccess);/* the position of an equal operator on the first level */
+    SUCCES_OR_RETURN -1;
 
-    int zlev_dot = level_0_dot_operator(mcompiler, expr, success);              /* the position of a dot operator on the first level */
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int zlev_dot = level_0_dot_operator(mcompiler, expr, psuccess);              /* the position of a dot operator on the first level */
+    SUCCES_OR_RETURN -1;
 
-    int zlev_shift = level_0_shift(mcompiler, expr, success);                    /* Shift operator << >> */
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int zlev_shift = level_0_shift(mcompiler, expr, psuccess);                    /* Shift operator << >> */
+    SUCCES_OR_RETURN -1;
 
     const char* found_comp_operator = NULL;                        /* the comparison operator that was found */
-    int zlev_comparison = level_0_comparison_operator(mcompiler, expr, &found_comp_operator, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int zlev_comparison = level_0_comparison_operator(mcompiler, expr, &found_comp_operator, psuccess);
+    SUCCES_OR_RETURN -1;
 
     int sgeq_type = -1;                                        /* the type of the sg_eq operator*/
     const char* found_sq_eq_operator = NULL;                        /* the found sg_eq operator*/
-    int zlev_sg_eq_operator = level_0_sg_eq_operator(mcompiler, expr, &found_sq_eq_operator, &sgeq_type, success);
-    if(!success)
-    {
-        psuccess = false;
-        return -1;
-    }
+    int zlev_sg_eq_operator = level_0_sg_eq_operator(mcompiler, expr, &found_sq_eq_operator, &sgeq_type, psuccess);
+    SUCCES_OR_RETURN -1;
 
     int zlop = -1;
 
@@ -408,7 +367,6 @@ method* interpreter::is_function_call(char *s,  call_context* cc, int* special)
  */
 int interpreter::looks_like_function_def(const char* expr, int expr_len, const expression_tree* node, call_context* cc, bool& psuccess)
 {
-    bool success = true;
     if(node && node->father && node->father->op_type == OPERATOR_ASSIGN)
     {
         return 0;    /* this is part of a templated variable definition */
@@ -449,12 +407,8 @@ int interpreter::looks_like_function_def(const char* expr, int expr_len, const e
 
     if(i == -1) /* meaning, either we have defined a function with no return type or this is a function call */
     {   /* we need to analyze the parameters, if they look like definition, then it's fine, give back 1 */
-        std::vector<std::string> pars = string_list_create_bsep(tmp, ',', mcompiler, success);
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
+        std::vector<std::string> pars = string_list_create_bsep(tmp, ',', mcompiler, psuccess);
+        SUCCES_OR_RETURN -1;
 
         std::vector<std::string>::iterator q = pars.begin();
         while(q != pars.end())
@@ -683,14 +637,8 @@ method* interpreter::define_method(const char* expr, int expr_len, expression_tr
         return 0;
     }
     created_method = new method(mcompiler, func_name, ret_type, cc);
-
-    bool success = true;
-    created_method->feed_parameter_list(trim(parameters, cc->compiler), expwloc, success);
-    if(!success)
-    {
-        psuccess = false;
-        return 0;
-    }
+    created_method->feed_parameter_list(trim(parameters, cc->compiler), expwloc, psuccess);
+    SUCCES_OR_RETURN 0;
 
     if(!strcmp(created_method->return_type.c_str(), "int")) created_method->ret_type = BASIC_TYPE_INT;
     if(!strcmp(created_method->return_type.c_str(), "byte")) created_method->ret_type = BASIC_TYPE_BYTE;
@@ -769,14 +717,9 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
                                                                  const expression_with_location* expwloc, bool& psuccess)
 {
     psuccess = true;
-    bool success = true;
     std::string copied = expr_trim + strlen(var_def_type);
-    std::vector<std::string> var_names = string_list_create_bsep(copied, ',', mcompiler, success);
-    if(!success)
-    {
-        psuccess = false;
-        return 0;
-    }
+    std::vector<std::string> var_names = string_list_create_bsep(copied, ',', mcompiler, psuccess);
+    SUCCES_OR_RETURN 0;
 
     std::vector<std::string>::iterator q = var_names.begin();
     std::vector<variable_definition*>* var_def_list = new std::vector<variable_definition*>(); /* will contain the variable definitions if any*/
@@ -818,12 +761,8 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
                 if(*idx_def_start == C_SQPAR_CL && --level == -1) can_stop = 1;
                 if(!can_stop) index += *idx_def_start ++;
             }
-            std::vector<std::string> dimensions = string_list_create_bsep(index, C_COMMA, mcompiler, success);
-            if(!success)
-            {
-                psuccess = false;
-                return 0;
-            }
+            std::vector<std::string> dimensions = string_list_create_bsep(index, C_COMMA, mcompiler, psuccess);
+            SUCCES_OR_RETURN 0;
 
             std::vector<std::string>::iterator qDimensionStrings = dimensions.begin();    /* to walk through the dimensions */
             int countedDimensions = 0;
@@ -836,13 +775,8 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
 
                 if(qDimensionStrings->length() > 0)
                 {
-                    bool success = true;
-                    build_expr_tree((*qDimensionStrings).c_str(), dim_def_node, the_method, orig_expr, cc, result, expwloc, success);
-                    if(!success)
-                    {
-                        psuccess = false;
-                        return 0;
-                    }
+                    build_expr_tree((*qDimensionStrings).c_str(), dim_def_node, the_method, orig_expr, cc, result, expwloc, psuccess);
+                    SUCCES_OR_RETURN 0;
                 }
                 else
                 {
@@ -853,7 +787,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
                         psuccess = false;
                         return 0;
                     }
-                    qm->dynamic = 1;
+                    qm->dynamic = true;
                 }
                 qm->dimension = -1;
                 qm->expr_def = dim_def_node;
@@ -909,13 +843,8 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
 
         if(cc)
         {
-            bool success = true;
-            added_var = cc->add_variable(name.c_str(), var_def_type, 1, expwloc, success);
-            if(!success)
-            {
-                psuccess = false;
-                return 0;
-            }
+            added_var = cc->add_variable(name.c_str(), var_def_type, 1, psuccess);
+            SUCCES_OR_RETURN 0;
         }
 
         if(!added_var)
@@ -934,13 +863,9 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
         {
             expression_tree* var_def_node = new expression_tree(expwloc);
             garbage_bin<expression_tree*>::instance(cc->compiler).place(var_def_node, cc->compiler);
-            bool success = true;
-            build_expr_tree(deflist, var_def_node, the_method, orig_expr, cc, result, expwloc, success);
-            if(!success)
-            {
-                psuccess = false;
-                return 0;
-            }
+            build_expr_tree(deflist, var_def_node, the_method, orig_expr, cc, result, expwloc, psuccess);
+            SUCCES_OR_RETURN 0;
+
             var_def->the_value = var_def_node;
         }
 
@@ -974,7 +899,6 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
         const expression_with_location* expwloc, int type_of_call, bool& psuccess)
 {
     char *params_body = mcompiler->new_string(expr_len);
-    bool success = true;
     std::vector<std::string> parameters;
     std::vector<parameter*> pars_list;
     call_frame_entry* cfe = NULL;
@@ -998,12 +922,8 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
     params_body = trim(params_body, cc->compiler);
     //printf("Checking function call:[%s]\n", params_body);
     /* Now: To build the parameter list, and create a call_frame_entry element to insert into the tree */
-    parameters = string_list_create_bsep(params_body, ',', mcompiler, success);
-    if(!success)
-    {
-        psuccess = false;
-        return 0;
-    }
+    parameters = string_list_create_bsep(params_body, ',', mcompiler, psuccess);
+    SUCCES_OR_RETURN 0;
 
     std::vector<std::string>::iterator q = parameters.begin();
     while(q != parameters.end())
@@ -1013,13 +933,8 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
         {
             cur_par_expr = new expression_tree(expwloc);
             garbage_bin<expression_tree*>::instance(cc->compiler).place(cur_par_expr, cc->compiler);
-            bool success = true;
-            build_expr_tree((*q).c_str(), cur_par_expr, the_method, orig_expr, cc, result, expwloc, success);
-            if(!success)
-            {
-                psuccess = false;
-                return 0;
-            }
+            build_expr_tree((*q).c_str(), cur_par_expr, the_method, orig_expr, cc, result, expwloc, psuccess);
+            SUCCES_OR_RETURN 0;
             parameter* cur_par_obj = new parameter(the_method, cc);
             garbage_bin<parameter*>::instance(cc->compiler).place(cur_par_obj, cc->compiler);
             cur_par_obj->expr = cur_par_expr;
@@ -1237,13 +1152,9 @@ void* interpreter::deal_with_conditional_keywords(char* keyword_if,
         char* p = ++condition;                                /* skip the parenthesis */
         char* m_cond = mcompiler->new_string(expr_len);
         p = trim(extract_next_enclosed_phrase(p, C_PAR_OP, C_PAR_CL, m_cond), mcompiler);
-        bool success = true;
-        build_expr_tree(m_cond, expt, the_method, orig_expr, cc, result, expwloc, success);
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
+        build_expr_tree(m_cond, expt, the_method, orig_expr, cc, result, expwloc, psuccess);
+        SUCCES_OR_RETURN 0;
+
         if(strlen(p) > 1)    /* means: there is a one lined statement after the condition*/
         {
             node->info = p;    /* somehow we must tell the external world what's the next expression */
@@ -1285,7 +1196,6 @@ void* interpreter::deal_with_conditional_keywords(char* keyword_if,
 void* interpreter::build_expr_tree(const char *expr, expression_tree* node, method* the_method, const char* orig_expr, call_context* cc, int* result, const expression_with_location* expwloc, bool& psuccess)
 {
     psuccess = true;
-    bool success = true;
     mcompiler->set_location(expwloc);
 
     /* some variables that will be used at a later stage too */
@@ -1294,12 +1204,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
     const char* foundOperator;    /* the operator which will be identified*/
     int zlop;                    /* the index of the identified zero level operation */
     char* var_def_type = looks_like_var_def(cc, expr_trim, expr_len);
-    int func_def = looks_like_function_def(expr_trim, expr_len, node, cc, success);
-    if(!success)
-    {
-        psuccess = false;
-        return 0;
-    }
+    int func_def = looks_like_function_def(expr_trim, expr_len, node, cc, psuccess);
+    SUCCES_OR_RETURN 0;
 
     method* func_call = NULL; /* if this entry is a function call or or not ... */
     char* index = mcompiler->new_string(expr_len);
@@ -1325,13 +1231,9 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
     if(is_list_value(expr))
     {
-        bool success = true;
-        std::vector<envelope*> *thlist = listv_prepare_list(expr, the_method, orig_expr, cc, result, expwloc, success);
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
+        std::vector<envelope*> *thlist = listv_prepare_list(expr, the_method, orig_expr, cc, result, expwloc, psuccess);
+        SUCCES_OR_RETURN 0;
+
         node->op_type = LIST_VALUE;
         node->reference = new_envelope(thlist, LIST_VALUE, cc->compiler);
         return 0;
@@ -1366,12 +1268,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
     /* check if this is a function definition */
     if(func_def)
     {
-        method* mth = define_method(expr_trim, expr_len, node, cc, expwloc, success);
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
+        method* mth = define_method(expr_trim, expr_len, node, cc, expwloc, psuccess);
+        SUCCES_OR_RETURN 0;
 
         *result = FUNCTION_DEFINITION;
         return mth;
@@ -1383,12 +1281,9 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         std::vector<variable_definition*>* vdl = define_variables(var_def_type, expr_trim,
                                                          node, the_method, cc,
                                                          orig_expr, result,
-                                                         expwloc, success);
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
+                                                         expwloc, psuccess);
+        SUCCES_OR_RETURN 0;
+
         *result = NT_VARIABLE_DEF_LST;
         return vdl;
     }
@@ -1426,12 +1321,9 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                                                      orig_expr, cd, result,
                                                      expwloc,
                                                      METHOD_CALL_CONSTRUCTOR,
-                                                     success);
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
+                                                     psuccess);
+        SUCCES_OR_RETURN 0;
+
         *result = STATEMENT_NEW;
         return cfe;
     }
@@ -1442,12 +1334,9 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         node->info = STR_RETURN;
         expression_tree* expt = new expression_tree(expwloc);
         garbage_bin<expression_tree*>::instance(cc->compiler).place(expt, cc->compiler);
-        build_expr_tree(keyword_return, expt, the_method, orig_expr, cc, result, expwloc, success);
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
+        build_expr_tree(keyword_return, expt, the_method, orig_expr, cc, result, expwloc, psuccess);
+        SUCCES_OR_RETURN 0;
+
         node->reference = new_envelope(expt, RETURN_STATEMENT, cc->compiler);
         *result = RETURN_STATEMENT;
         node->op_type = RETURN_STATEMENT;
@@ -1455,39 +1344,28 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
     }
     if(!strcmp(expr_trim, STR_BREAK))    /* the break keyword */
     {
-        void *v = deal_with_one_word_keyword(cc, node, result, STR_BREAK, STATEMENT_BREAK, success);
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
+        void *v = deal_with_one_word_keyword(cc, node, result, STR_BREAK, STATEMENT_BREAK, psuccess);
+        SUCCES_OR_RETURN 0;
+
         return v;
     }
 
     if(!strcmp(expr_trim, STR_CONTINUE))    /* the continue keyword */
     {
-        void* v = deal_with_one_word_keyword(cc, node, result, STR_CONTINUE, STATEMENT_CONTINUE, success);
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
+        void* v = deal_with_one_word_keyword(cc, node, result, STR_CONTINUE, STATEMENT_CONTINUE, psuccess);
+        SUCCES_OR_RETURN 0;
+
         return v;
     }
 
     /* if or while? */
     if(keyword_if || keyword_while)
     {
-        bool success = true;
         void* t = deal_with_conditional_keywords(keyword_if, keyword_while,
                                               node, expwloc, expr_trim,
                                               expr_len, the_method,
-                                              orig_expr, cc, result, success);
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
+                                              orig_expr, cc, result, psuccess);
+        SUCCES_OR_RETURN 0;
         return t;
     }
 
@@ -1519,12 +1397,9 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             psuccess = false;
             return 0;
         }
-        std::vector<std::string> content = string_list_create_bsep(for_par, C_SEMC, mcompiler, success);
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
+        std::vector<std::string> content = string_list_create_bsep(for_par, C_SEMC, mcompiler, psuccess);
+        SUCCES_OR_RETURN 0;
+
         // this might not be the case .... or
         if(content.empty())
         {
@@ -1549,35 +1424,22 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         rswfor->tree_init_stmt = new expression_tree(expwloc);
         garbage_bin<expression_tree*>::instance(cc->compiler).place(rswfor->tree_init_stmt, cc->compiler);
 
-        bool success = true;
-        build_expr_tree(init_stmt, rswfor->tree_init_stmt, the_method, orig_expr, cc, result, expwloc, success);
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
+        build_expr_tree(init_stmt, rswfor->tree_init_stmt, the_method, orig_expr, cc, result, expwloc, psuccess);
+        SUCCES_OR_RETURN 0;
 
         rswfor->condition = cond_stmt;
         rswfor->tree_condition = new expression_tree(expwloc);
-        build_expr_tree(cond_stmt, rswfor->tree_condition, the_method, orig_expr, cc, result, expwloc, success);
         garbage_bin<expression_tree*>::instance(cc->compiler).place(rswfor->tree_condition, cc->compiler);
 
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
+        build_expr_tree(cond_stmt, rswfor->tree_condition, the_method, orig_expr, cc, result, expwloc, psuccess);
+        SUCCES_OR_RETURN 0;
 
         rswfor->expr = expr_stmt;
         rswfor->tree_expr = new expression_tree(expwloc);
         garbage_bin<expression_tree*>::instance(cc->compiler).place(rswfor->tree_expr, cc->compiler);
 
-        build_expr_tree(expr_stmt, rswfor->tree_expr, the_method, orig_expr, cc, result, expwloc, success);
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
+        build_expr_tree(expr_stmt, rswfor->tree_expr, the_method, orig_expr, cc, result, expwloc, psuccess);
+        SUCCES_OR_RETURN 0;
 
         node->info = STR_FOR;
 
@@ -1611,12 +1473,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
     /* now: find the operators and just play with them */
     foundOperator = NULL;
     int ntype = NO_OPERATOR;                    /* the type number of the node, firstly let's assume the node contains nothing like an operator */
-    zlop = get_operator(expr_trim, &foundOperator, &ntype, success);    /* zlop will contain the index of the zeroth level operator */
-    if(!success)
-    {
-        psuccess = false;
-        return 0;
-    }
+    zlop = get_operator(expr_trim, &foundOperator, &ntype, psuccess);    /* zlop will contain the index of the zeroth level operator */
+    SUCCES_OR_RETURN 0;
 
     /* ok, here start checking what we have gathered till now */
 
@@ -1643,15 +1501,10 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                         ntype = OPERATOR_UNARY_MINUS;
                     }
                     node->op_type = ntype;
-                    node->left = new expression_tree(node, expwloc);
+                    node->left = new expression_tree(expwloc, node);
                     garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
-                    bool success = true;
-                    build_expr_tree(expr_trim + 1, node->left, the_method, orig_expr, cc, result, expwloc, success);
-                    if(!success)
-                    {
-                        psuccess = false;
-                        return 0;
-                    }
+
+                    build_expr_tree(expr_trim + 1, node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
 
                     return NULL;
                 }
@@ -1680,26 +1533,17 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             }
             node->info = foundOperator;
             node->op_type = ntype;
-            node->left=new expression_tree(node, expwloc);
-            node->right=new expression_tree(node, expwloc);
+            node->left=new expression_tree(expwloc, node);
+            node->right=new expression_tree(expwloc, node);
             garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
             garbage_bin<expression_tree*>::instance(cc->compiler).place(node->right, cc->compiler);
 
             /* the order here is important for the "." operator ... it needs to know the parent in order to identify the object to find its call_context*/
-            bool success = true;
-            build_expr_tree(beforer, node->left, the_method, orig_expr, cc, result, expwloc, success);
-            if(!success)
-            {
-                psuccess = false;
-                return 0;
-            }
+            build_expr_tree(beforer, node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
+            SUCCES_OR_RETURN 0;
 
-            build_expr_tree(afterer, node->right, the_method, orig_expr, cc, result, expwloc, success);
-            if(!success)
-            {
-                psuccess = false;
-                return 0;
-            }
+            build_expr_tree(afterer, node->right, the_method, orig_expr, cc, result, expwloc, psuccess);
+            SUCCES_OR_RETURN 0;
 
         }
 
@@ -1718,7 +1562,6 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
     {
         if(func_call)
         {
-            bool success = true;
             call_frame_entry* cfe = handle_function_call(expr_trim,
                                                          expr_len, node,
                                                          func_call,
@@ -1727,12 +1570,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                                                          cc, result,
                                                          expwloc,
                                                          METHOD_CALL_NORMAL,
-                                                         success);
-            if(!success)
-            {
-                psuccess = false;
-                return 0;
-            }
+                                                         psuccess);
+            SUCCES_OR_RETURN 0;
 
             *result = FUNCTION_CALL;
             return cfe;
@@ -1761,16 +1600,11 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 temp2[strlen(temp2) - 1] = 0;
                 node->info = temp2;
 
-                node->left = new expression_tree(node, expwloc);
+                node->left = new expression_tree(expwloc, node);
                 garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
 
-                bool success = true;
-                build_expr_tree(temp2, node->left, the_method, orig_expr, cc, result, expwloc, success);
-                if(!success)
-                {
-                    psuccess = false;
-                    return 0;
-                }
+                build_expr_tree(temp2, node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
+                SUCCES_OR_RETURN 0;
 
                 node->reference = new_envelope(0, FUNCTION_CALL_NAP_EXEC, cc->compiler);
 #else
@@ -1816,7 +1650,6 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 {
                     if(func_call)
                     {
-                        bool success = true;
                         call_frame_entry* cfe = handle_function_call(expr_trim,
                                                                      expr_len, node,
                                                                      func_call,
@@ -1825,12 +1658,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                                                                      result,
                                                                      expwloc,
                                                                      METHOD_CALL_OF_OBJECT,
-                                                                     success);
-                        if(!success)
-                        {
-                            psuccess = false;
-                            return 0;
-                        }
+                                                                     psuccess);
+                        SUCCES_OR_RETURN 0;
 
                         *result = FUNCTION_CALL;
                         return cfe;
@@ -1842,7 +1671,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 }
 
                 // now see if this is a class variable: a.b = 4
-                std::vector<variable*>::const_iterator it = cd->variable_list_has_variable(expr_trim);
+                std::vector<variable*>::const_iterator it = cd->has_variable(expr_trim);
                 if(it != cd->variables.end())
                 {
                     variable* var = *it;
@@ -1875,17 +1704,11 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         }
         node->info = p;
         node->op_type = ntype;
-        node->left = new expression_tree(node, expwloc);
+        node->left = new expression_tree(expwloc, node);
         garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
 
-        bool success = true;
-        build_expr_tree(expr_trim + 2, node->left, the_method, orig_expr, cc, result, expwloc, success);
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
-
+        build_expr_tree(expr_trim + 2, node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
+        SUCCES_OR_RETURN 0;
     }
     else
         /* check if it's post increment/decrement */
@@ -1902,16 +1725,12 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             node->op_type = ntype;
 
             /* now add the  variable to the tree... */
-            node->left = new expression_tree(node, expwloc);
+            node->left = new expression_tree(expwloc, node);
             garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
             expr_trim[expr_len - 2] = 0;    /* this is to cut down the two ++ or -- signs ... */
-            bool success = true;
-            build_expr_tree(expr_trim, node->left, the_method, orig_expr, cc, result, expwloc, success);
-            if(!success)
-            {
-                psuccess = false;
-                return 0;
-            }
+
+            build_expr_tree(expr_trim, node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
+            SUCCES_OR_RETURN 0;
 
         }
         else if( C_PAR_OP == expr_trim[0] ) /* if this is enclosed in a paranthesis */
@@ -1929,14 +1748,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 }
                 else
                 {
-                    bool success = true;
-                    build_expr_tree(expr_trim, node, the_method, orig_expr, cc, result, expwloc, success);
-                    if(!success)
-                    {
-                        psuccess = false;
-                        return 0;
-                    }
-
+                    build_expr_tree(expr_trim, node, the_method, orig_expr, cc, result, expwloc, psuccess);
+                    SUCCES_OR_RETURN 0;
                 }
             }
             else
@@ -1948,32 +1761,21 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         }
         else if(indexed_elem)    /* if this is something indexed */
         {   /* here we should grab from the end the first set of square parantheses and pass the stuff before it to the indexed, the stuff in it to the index...*/
-            std::vector<std::string> entries = string_list_create_bsep(index, C_COMMA, mcompiler, success);
-            if(!success)
-            {
-                psuccess = false;
-                return 0;
-            }
+            std::vector<std::string> entries = string_list_create_bsep(index, C_COMMA, mcompiler, psuccess);
+            SUCCES_OR_RETURN 0;
 
             std::vector<std::string>::iterator q = entries.begin();
             std::vector<expression_tree*>* index_list = new std::vector<expression_tree*>();
             garbage_bin< std::vector<expression_tree*>* >::instance(mcompiler).place(index_list, mcompiler);
-            multi_dimension_index* dim = new_multi_dimension_index(expr_trim, mcompiler);
 
             node->info = STR_IDXID;
-            node->left = new expression_tree(node, expwloc);
-            node->right = new expression_tree(node, expwloc);
+            node->left = new expression_tree(expwloc, node);
+            node->right = new expression_tree(expwloc, node);
             garbage_bin<expression_tree*>::instance(mcompiler).place(node->left, mcompiler);
             garbage_bin<expression_tree*>::instance(mcompiler).place(node->right, mcompiler);
 
-            bool success = true;
-            build_expr_tree(indexed_elem, node->left, the_method, orig_expr, cc, result, expwloc, success);    /* to discover the indexed element */
-            if(!success)
-            {
-                psuccess = false;
-                return 0;
-            }
-
+            build_expr_tree(indexed_elem, node->left, the_method, orig_expr, cc, result, expwloc, psuccess);    /* to discover the indexed element */
+            SUCCES_OR_RETURN 0;
 
             /* and now identify the indexes and work on them*/
 
@@ -1983,18 +1785,16 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 expression_tree* cur_indx = new expression_tree(expwloc);
                 garbage_bin<expression_tree*>::instance(mcompiler).place(cur_indx, mcompiler);
 
-                bool success = true;
-                build_expr_tree(q->c_str(), cur_indx, the_method, orig_expr, cc, result, expwloc, success);
-                if(!success)
-                {
-                    psuccess = false;
-                    return 0;
-                }
+                build_expr_tree(q->c_str(), cur_indx, the_method, orig_expr, cc, result, expwloc, psuccess);
+                SUCCES_OR_RETURN 0;
 
                 index_list->push_back(cur_indx);
                 q ++;
                 indx_cnt ++;
             }
+
+            multi_dimension_index* dim = alloc_mem(multi_dimension_index, 1, mcompiler);
+
             dim->dimension_values = index_list;
             node->right->reference = new_envelope(dim, MULTI_DIM_INDEX, cc->compiler); /*((variable*)node->father->left->reference->to_interpret)->mult_dim_def*/
             node->right->info = expr_trim;
@@ -2007,7 +1807,6 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             envelope* envl = NULL;
             char* t = mcompiler->duplicate_string(expr_trim);
             int tlen = strlen(t);
-            int templated = 0;
             int env_var = 0;
 
             variable* var = 0;
@@ -2015,12 +1814,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             {
                 /* is t a variable from the method we are running in?
                    (or from the call context ofthe method if any )*/
-                var = the_method->has_variable(cc, t, &templated, &env_var, success);
-                if(!success)
-                {
-                    psuccess = false;
-                    return 0;
-                }
+                var = the_method->has_variable(cc, t, &env_var);
             }
 
             if(env_var)
@@ -2032,7 +1826,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             if(!var)
             {
                 /* is this a variable from the current call context? */
-                std::vector<variable*>::const_iterator varit = cc->variable_list_has_variable(t);
+                std::vector<variable*>::const_iterator varit = cc->has_variable(t);
                 if(varit != cc->variables.end())
                 {
                     var = *varit;
@@ -2043,7 +1837,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                     call_context* cc1 = cc->father;
                     while(cc1)
                     {
-                        varit = cc1->variable_list_has_variable(t);
+                        varit = cc1->has_variable(t);
                         if(varit != cc1->variables.end())
                         {
                             var = *varit;
@@ -2168,13 +1962,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
             if(!envl)
             {
-                bool success = true;
-                build_expr_tree(t, node, the_method, orig_expr, cc, result, expwloc, success);
-                if(!success)
-                {
-                    psuccess = false;
-                    return 0;
-                }
+                build_expr_tree(t, node, the_method, orig_expr, cc, result, expwloc, psuccess);
+                SUCCES_OR_RETURN 0;
 
             }
             node->reference = envl;

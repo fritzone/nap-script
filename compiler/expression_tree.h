@@ -11,17 +11,7 @@ struct expression_with_location;
  */
 struct expression_tree
 {
-    expression_tree(const expression_with_location* pexpwloc)
-    {
-        v_type = BASIC_TYPE_DONTCARE;
-        op_type = NO_OPERATOR;
-        expwloc = pexpwloc;
-        father = 0;
-        left = 0;
-        right = 0;
-    }
-
-    expression_tree(expression_tree* pfather, const expression_with_location* pexpwloc)
+    expression_tree(const expression_with_location* pexpwloc, expression_tree* pfather = 0)
     {
         v_type = BASIC_TYPE_DONTCARE;
         op_type = NO_OPERATOR;
