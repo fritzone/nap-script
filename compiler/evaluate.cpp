@@ -127,7 +127,7 @@ static void deal_with_post_pre_node(nap_compiler* _compiler,
     }
     else
     {
-        cc->compiler()->throw_error("Can not post/pre increment this value");
+        cc->compiler->throw_error("Can not post/pre increment this value");
         psuccess = false;
     }
 }
@@ -264,7 +264,7 @@ static void resolve_op_equal(nap_compiler* _compiler,
     }
     else
     {
-        cc->compiler()->throw_error("Internal: op= not having a variable to increment");
+        cc->compiler->throw_error("Internal: op= not having a variable to increment");
         psuccess = false;
     }
 }
@@ -404,7 +404,7 @@ void resolve_operation(nap_compiler* _compiler,
             }
             else
             {
-                cc->compiler()->throw_error("Internal error in an operation");
+                cc->compiler->throw_error("Internal error in an operation");
                 psuccess = false;
                 return;
             }
@@ -556,7 +556,7 @@ static void do_list_assignment(nap_compiler* _compiler,
         
         code_stream(_compiler) << mov()
                       << SPACE
-                      << ccidx() << C_PAR_OP << (std::string(cc->get_name()) + STR_DOT + var->name) << C_COMMA << '1' << C_PAR_CL
+                      << ccidx() << C_PAR_OP << (std::string(cc->name) + STR_DOT + var->name) << C_COMMA << '1' << C_PAR_CL
                       << C_COMMA
                       << reg() << get_reg_type(var->i_type) << C_PAR_OP << level << C_PAR_CL
                       << NEWLINE ;
@@ -587,7 +587,7 @@ void resolve_assignment(nap_compiler* _compiler, const expression_tree* node,
                 dest = (variable*)(((envelope*)node->left->reference)->to_interpret);
                 if(!dest)
                 {
-                    cc->compiler()->throw_error("cannot find a variable");
+                    cc->compiler->throw_error("cannot find a variable");
                     psuccess = false;
                     return;
                 }
@@ -921,13 +921,13 @@ static void resolve_if_keyword(nap_compiler* _compiler,
     {
 
         std::stringstream ss;
-        ss << my_if->if_branch->get_name() << C_UNDERLINE << cc->get_label_count() << C_UNDERLINE << generate_unique_hash();
+        ss << my_if->if_branch->name << C_UNDERLINE << cc->labels.size() << C_UNDERLINE << generate_unique_hash();
         std::string if_label_name = ss.str();
         ss.str(std::string());
 
         std::string else_label_name;
 
-        ss << cc->get_name() << C_UNDERLINE << cc->get_label_count() << C_UNDERLINE << generate_unique_hash();
+        ss << cc->name << C_UNDERLINE << cc->labels.size() << C_UNDERLINE << generate_unique_hash();
         std::string end_label_name = ss.str();
         ss.str(std::string());
 
@@ -936,7 +936,7 @@ static void resolve_if_keyword(nap_compiler* _compiler,
 
         if(my_if->else_branch) /* if there's an else branch */
         {
-            ss << my_if->else_branch->get_name() << C_UNDERLINE << cc->get_label_count() << C_UNDERLINE << generate_unique_hash();
+            ss << my_if->else_branch->name << C_UNDERLINE << cc->labels.size() << C_UNDERLINE << generate_unique_hash();
             else_label_name = ss.str();
             ss.str(std::string());
             jmp(_compiler, else_label_name);    /* jump to the else branch if the logical operation did no evaluate to true*/
@@ -948,9 +948,9 @@ static void resolve_if_keyword(nap_compiler* _compiler,
 
         code_stream(_compiler) << fully_qualified_label(if_label_name) << NEWLINE;            /* the label for the if branch */
         cc->add_label(-1, if_label_name);    /* for now added with dummy data to the CC*/
-        if(! my_if->if_branch->get_expressions().empty())    /*to solve: if(1); else ...*/
+        if(! my_if->if_branch->expressions.empty())    /*to solve: if(1); else ...*/
         {
-            compile_a_block(_compiler, my_if->if_branch->get_expressions(), level,
+            compile_a_block(_compiler, my_if->if_branch->expressions, level,
                             my_if->if_branch, the_method, forced_mov, success);
             if(!success)
             {
@@ -966,7 +966,7 @@ static void resolve_if_keyword(nap_compiler* _compiler,
             code_stream(_compiler) << fully_qualified_label(else_label_name) << NEWLINE;    /* here place the label so the bytecode will know where to jump */
             cc->add_label(-1, else_label_name);    /* for now added with dummy data to the CC*/
 
-            compile_a_block(_compiler, my_if->else_branch->get_expressions(),
+            compile_a_block(_compiler, my_if->else_branch->expressions,
                             level,
                             my_if->else_branch, the_method, forced_mov, success);
             if(!success)
@@ -984,10 +984,10 @@ static void resolve_if_keyword(nap_compiler* _compiler,
         if(my_if->else_branch)    /* but we have an else branch */
         {
             /* generating a name for the end of the 'if' */
-            char* end_label_name = alloc_mem(char, cc->get_name().length() + 32, _compiler);
-            sprintf(end_label_name, "%s_%d", cc->get_name().c_str(), (int)cc->get_label_count());
+            char* end_label_name = alloc_mem(char, cc->name.length() + 32, _compiler);
+            sprintf(end_label_name, "%s_%d", cc->name.c_str(), (int)cc->labels.size());
             jlbf(_compiler, end_label_name);                /* jump to the end of the if, if the logical expression evaluated to true */
-            compile_a_block(_compiler, my_if->else_branch->get_expressions(), level,
+            compile_a_block(_compiler, my_if->else_branch->expressions, level,
                             my_if->else_branch, the_method, forced_mov, success);
             if(!success)
             {
@@ -1024,13 +1024,13 @@ static void resolve_while_keyword(nap_compiler* _compiler,
     bool success = true;
     /* as a first step we should print the label of the while start and end*/
 
-    char* end_label_name = alloc_mem(char, cc->get_name().length() + 32, _compiler);
-    sprintf(end_label_name, "%s_%d", cc->get_name().c_str(), (int)cc->get_label_count());    /* generating a name for the end of the while */
+    char* end_label_name = alloc_mem(char, cc->name.length() + 32, _compiler);
+    sprintf(end_label_name, "%s_%d", cc->name.c_str(), (int)cc->labels.size());    /* generating a name for the end of the while */
 
     my_while->break_label = my_while->operations->add_break_label(-1, end_label_name);    /* adding the default break label location of the while to the call context */
 
-    char* while_label_name = alloc_mem(char, my_while->operations->get_name().length() + 32, _compiler);
-    sprintf(while_label_name, "%s_%d", my_while->operations->get_name().c_str(), (int)cc->get_label_count());    /* generating a name for the content */
+    char* while_label_name = alloc_mem(char, my_while->operations->name.length() + 32, _compiler);
+    sprintf(while_label_name, "%s_%d", my_while->operations->name.c_str(), (int)cc->labels.size());    /* generating a name for the content */
 
     /* print the while start label */
     code_stream(_compiler) << fully_qualified_label(while_label_name) << NEWLINE ;
@@ -1061,7 +1061,7 @@ static void resolve_while_keyword(nap_compiler* _compiler,
         {
             if(my_while->logical_expr->op_type == NT_VARIABLE_DEF_LST)
             {
-                cc->compiler()->throw_error("ERROR: You cannot declare a variable here\n", NULL);
+                cc->compiler->throw_error("ERROR: You cannot declare a variable here\n", NULL);
                 psuccess = false;
                 return;
             }
@@ -1096,7 +1096,7 @@ static void resolve_while_keyword(nap_compiler* _compiler,
 
     if(my_while->operations)    /* if we have operations in the while */
     {
-        compile_a_block(_compiler, my_while->operations->get_expressions(), level, my_while->operations, the_method, forced_mov, success);
+        compile_a_block(_compiler, my_while->operations->expressions, level, my_while->operations, the_method, forced_mov, success);
         if(!success)
         {
             psuccess = false;
@@ -1148,7 +1148,7 @@ static void resolve_for_keyword(nap_compiler* _compiler,
     if(my_for->operations)    /* if we have operations in the body */
     {
         my_for->operations->add_break_label(-1, end_label->name);
-        compile_a_block(_compiler, my_for->operations->get_expressions(), level, my_for->operations, the_method, forced_mov, success);
+        compile_a_block(_compiler, my_for->operations->expressions, level, my_for->operations, the_method, forced_mov, success);
         if(!success)
         {
             psuccess = false;
@@ -1238,7 +1238,7 @@ void resolve_variable_definition(nap_compiler* _compiler,
             variable_definition* vd = *vdl;
             if(!vd->the_variable)
             {
-                cc->compiler()->throw_error("Internal: A variable declaration is not having an associated variable object", NULL);
+                cc->compiler->throw_error("Internal: A variable declaration is not having an associated variable object", NULL);
                 psuccess = false;
                 return;
             }
@@ -1253,7 +1253,7 @@ void resolve_variable_definition(nap_compiler* _compiler,
                 /* search if we have a definition for it too, such as: Base t = new Derived()*/
                 if(vd->the_value)
                 {
-                    code_stream(_compiler) << push() << SPACE << ref() << SPACE << (std::string(cc->get_name()) + STR_DOT + vd->the_variable->name) << NEWLINE;
+                    code_stream(_compiler) << push() << SPACE << ref() << SPACE << (std::string(cc->name) + STR_DOT + vd->the_variable->name) << NEWLINE;
 
                     expression_tree* tempassign = new expression_tree(node->expwloc);
 
@@ -1330,7 +1330,7 @@ void resolve_variable_definition(nap_compiler* _compiler,
                     {
                         if(!q->expr_def)
                         {
-                            cc->compiler()->throw_error("Internal: Multi-dim initialization is not having an associated expression", NULL);
+                            cc->compiler->throw_error("Internal: Multi-dim initialization is not having an associated expression", NULL);
                             psuccess = false;
                             return;
                         }
@@ -1369,18 +1369,18 @@ static void resolve_break_keyword(nap_compiler* _compiler, call_context* cc, boo
     /* find the first while or for call context. Also consider switch statements*/
     call_context* qcc = cc;
     /* hold the number of stack rollbacks we need to put in here*/
-    while(qcc && qcc->get_type() != CALL_CONTEXT_TYPE_WHILE && qcc->get_type() != CALL_CONTEXT_TYPE_FOR)
+    while(qcc && qcc->type != CALL_CONTEXT_TYPE_WHILE && qcc->type != CALL_CONTEXT_TYPE_FOR)
     {
-        qcc = qcc->get_father();
+        qcc = qcc->father;
     }
     if(!qcc)    /* means this has reached to the highest level and the break was not placed in a for/while/switch*/
     {
-        cc->compiler()->throw_error(E0012_SYNTAXERR);
+        cc->compiler->throw_error(E0012_SYNTAXERR);
         psuccess = false;
         return;
     }
 
-    jmp(_compiler,qcc->get_break_label()->name);
+    jmp(_compiler,qcc->break_label->name);
 }
 
 /**
@@ -1398,7 +1398,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
         reqd_type = BASIC_TYPE_INT;
     }
 
-    cc->compiler()->set_location(node->expwloc);
+    cc->compiler->set_location(node->expwloc);
 
     // funny check to check for empty string:
     if(node && node->info.empty() && node->op_type == BASIC_TYPE_STRING)
@@ -1419,7 +1419,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
             if(node->reference)
             {
                 bt_string* bts = (bt_string*)node->reference->to_interpret;
-                code_stream(_compiler) <<std::string("\"") + bts->the_string() + "\"" ;
+                code_stream(_compiler) <<std::string("\"") + bts->m_the_string + "\"" ;
             }
             break;
         case BASIC_TYPE_INT:
@@ -1655,7 +1655,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                 }
                 else
                 {
-                    cc->compiler()->throw_error("cannot pre/post inc/dec this");
+                    cc->compiler->throw_error("cannot pre/post inc/dec this");
                     psuccess = false;
                     return;
                 }
@@ -1734,7 +1734,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                         parameter* fp = m->get_parameter(pc);
                         if(!fp)
                         {
-                            cc->compiler()->throw_error("parameter not found");
+                            cc->compiler->throw_error("parameter not found");
                             psuccess = false;
                             return;
                         }
@@ -1756,7 +1756,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                         pc ++;
                     }
                     code_stream(_compiler) << call() << SPACE << '$'
-                                  << (std::string(cc->get_name()) + STR_DOT + vd->name) << '@' << m->method_name << NEWLINE;
+                                  << (std::string(cc->name) + STR_DOT + vd->name) << '@' << m->method_name << NEWLINE;
                     if(m->ret_type) // pop something only if the method was defined to return something
                     {
                         code_stream(_compiler) << pop() << SPACE << reg() << get_reg_type(m->ret_type) << C_PAR_OP << level << C_PAR_CL << NEWLINE;
@@ -1814,7 +1814,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                 parameter* fp = m->get_parameter(pc);
                 if(!fp)
                 {
-                    cc->compiler()->throw_error("parameter not found");
+                    cc->compiler->throw_error("parameter not found");
                     psuccess = false;
                     return;
                 }
@@ -1835,12 +1835,12 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                 ingoing_parameters ++;
                 pc ++;
             }
-            code_stream(_compiler) << push() << SPACE << ref() << SPACE << (std::string(cc->get_name()) + STR_DOT + "this") << NEWLINE;
-            code_stream(_compiler) << call() << SPACE << "@crea" << C_PAR_OP << m->the_class->get_name() << C_COMMA << (std::string(cc->get_name()) + STR_DOT + "this").c_str() << C_PAR_CL<< NEWLINE;
+            code_stream(_compiler) << push() << SPACE << ref() << SPACE << (std::string(cc->name) + STR_DOT + "this") << NEWLINE;
+            code_stream(_compiler) << call() << SPACE << "@crea" << C_PAR_OP << m->the_class->name << C_COMMA << (std::string(cc->name) + STR_DOT + "this").c_str() << C_PAR_CL<< NEWLINE;
             code_stream(_compiler) << call()
                           << SPACE
-                          << '$' << (std::string(cc->get_name()) + STR_DOT + "this")
-                          << '@' << (std::string(m->the_class->get_name()) +  STR_DOT + m->method_name).c_str()
+                          << '$' << (std::string(cc->name) + STR_DOT + "this")
+                          << '@' << (std::string(m->the_class->name) +  STR_DOT + m->method_name).c_str()
                           << NEWLINE;
             code_stream(_compiler) << pop() << SPACE << reg() << 'g' << C_PAR_OP << level << C_PAR_CL << NEWLINE;
 
@@ -1862,7 +1862,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                 parameter* fp = m->get_parameter(pc);
                 if(!fp)
                 {
-                    cc->compiler()->throw_error("parameter not found");
+                    cc->compiler->throw_error("parameter not found");
                     psuccess = false;
                     return;
                 }
@@ -1891,7 +1891,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                 pc ++;
             }
             code_stream(_compiler) << call() << SPACE
-                          << '@' << std::string(m->main_cc->get_father()->get_name()) +'.' + m->method_name << NEWLINE;
+                          << '@' << std::string(m->main_cc->father->name) +'.' + m->method_name << NEWLINE;
             if(m->ret_type) // pop something only if the method was defined to return something
             {
                 code_stream(_compiler) << mov()

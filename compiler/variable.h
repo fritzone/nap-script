@@ -61,19 +61,4 @@ struct variable
  */
 multi_dimension_index* new_multi_dimension_index(const char* indx_id, const nap_compiler* _compiler);
 
-/**
- * Creates a new templated variable reference for the give variable
- * and parameters
- */
-variable_template_reference* new_variable_template_reference(variable* var, std::vector<parameter*> pars, const nap_compiler *_compiler);
-
-/**
- * @brief variable_resolve_templates Resolves the templates of the given variable
- * @param the_variable - this is the variable
- * @param the_method - the method in which this variable is
- * @param cc - the "closer" call context of the variable
- * @param expwloc - the expression with location object
- */
-void variable_resolve_templates(variable* the_variable, method* the_method, call_context* cc, const expression_with_location* expwloc);
-
 #endif

@@ -50,7 +50,7 @@ public:
 
     /* TODO: make this private, create another start parsing function ...*/
     void load_next_single_phrase(expression_with_location* expwloc,
-                                 method* cur_method, call_context* cur_cc,
+                                 method* cur_method, call_context* cc,
                                  char* delim, int level, bool &psuccess);
 private:
 
@@ -77,7 +77,7 @@ private:
                          int current_level, int orig_level, bool&psuccess);
 
 
-    void load_next_assembly_block(call_context* par_cc);
+    void load_next_assembly_block(call_context* cc);
 
 private:
     /* name of the file */

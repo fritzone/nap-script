@@ -2,8 +2,7 @@
 #define _METHOD_H_
 
 #include "parser.h"
-
-/* forward declaration, we need this in the method */
+#include "variable_holder.h"
 
 struct call_frame_entry;
 struct call_context_list;
@@ -18,7 +17,7 @@ class nap_compiler;
 /**
  * Contains the definition of a method
  */
-struct method
+struct method : public variable_holder
 {
 
     /**
@@ -70,12 +69,6 @@ struct method
      */
     void feed_parameter_list(char* par_list, const expression_with_location* expwloc, bool &psuccess);
 
-
-    const std::vector<variable*>& get_variables() const
-    {
-        return variables;
-    }
-
     const nap_compiler* get_compiler() const
     {
         return mcompiler;
@@ -98,22 +91,10 @@ struct method
     /* this is the call context of the method, created when the method is created */
     call_context *main_cc;
 
-    /* the current call frame. stores all the variables of the method which are not static. At each calling of a method
-     * this variable gets populated with the call frame that has been constructed for the current stage
-     */
-    call_frame_entry *cur_cf;
-
     /* the definition location 0 - normal, 1 - extern*/
     int def_loc;
 
     uint8_t ret_type;
-
-private:
-    /* the list of struct variables that are defined in the method. This list is used in two situations:
-     * 1. in the interpret phase, when the code is built up, this is used as references to find the variables.
-     * 2. in the running phase, but only for static variables.
-     */
-    std::vector<variable*> variables;
 
     nap_compiler* mcompiler;
 
@@ -141,7 +122,7 @@ struct constructor_call : public method
  */
 struct call_frame_entry
 {
-	call_frame_entry() : the_method(0), parameters(), previous_cf(0) {}
+    call_frame_entry() : the_method(0), parameters() {}
 
     /* this is the method that was called */
     method *the_method;
@@ -149,8 +130,6 @@ struct call_frame_entry
     /* this are the parameters passed to the method */
     std::vector<parameter*> parameters;
 
-    /* holds the previous call frame of the method... just in case*/
-    call_frame_entry *previous_cf;
 };
 
 
