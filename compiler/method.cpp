@@ -28,7 +28,7 @@ method::method(nap_compiler* _compiler, const char* name, char* preturn_type, ca
 {
     call_context* method_main_cc = NULL;
     std::stringstream ss;
-    ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << name;
+    ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << name;
 
     def_loc = DEF_INTERN;
     method_name = name;
@@ -46,13 +46,11 @@ method::method(nap_compiler* _compiler, const char* name, char* preturn_type, ca
         return_type = preturn_type;
     }
     method_main_cc = new call_context(_compiler, CALL_CONTEXT_TYPE_METHOD_MAIN, ss.str(), this, cc);
-    garbage_bin<call_context*>::instance(cc->compiler()).place(method_main_cc, cc->compiler());
+    garbage_bin<call_context*>::instance(cc->compiler).place(method_main_cc, cc->compiler);
     main_cc = method_main_cc;
-
-    cur_cf = 0;
 }
 
-constructor_call::constructor_call(char* name, call_context* cc) : method(cc->compiler(), name, 0, cc)
+constructor_call::constructor_call(char* name, call_context* cc) : method(cc->compiler, name, 0, cc)
 {
     the_class = cc->get_class_declaration(name);
 }
@@ -79,10 +77,9 @@ variable* method::add_new_variable(const std::string& pname,
         }
     }
     bool success = true;
-    variable* v = main_cc->variable_list_add_variable(pname.c_str(),
+    variable* v = variable_list_add_variable(pname.c_str(),
                                                       ptype.c_str(),
                                                       dimension,
-                                                      variables,
                                                       this,
                                                       main_cc, expwloc, success);
     if(!success)
@@ -115,14 +112,14 @@ variable* method::add_new_variable(const std::string& pname,
         *strchr(varname, C_PAR_OP) = 0;
     }
 
-    std::vector<variable*>::const_iterator location = cc->variable_list_has_variable(varname, cc->get_variables());
-    if(location != cc->get_variables().end())
+    std::vector<variable*>::const_iterator location = cc->variable_list_has_variable(varname);
+    if(location != cc->variables.end())
     {
         return *location;
     }
 
     // first run_ is this variable defined in here?
-    location = cc->variable_list_has_variable(varname, variables);
+    location = variable_list_has_variable(varname);
     if(location != variables.end())
     {
         if((*location)->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
@@ -154,11 +151,11 @@ variable* method::add_new_variable(const std::string& pname,
     }
 
     /* variable in the call contexts above our call context? */
-    cc = cc->get_father();
+    cc = cc->father;
     while(cc)
     {
-        location = cc->variable_list_has_variable(varname, cc->get_variables());
-        if(location != cc->get_variables().end())
+        location = cc->variable_list_has_variable(varname);
+        if(location != cc->variables.end())
         {
             if((*location)->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
             {
@@ -168,7 +165,7 @@ variable* method::add_new_variable(const std::string& pname,
             }
             return *location;
         }
-        cc = cc->get_father();
+        cc = cc->father;
     }
 
     return NULL;
@@ -185,7 +182,7 @@ parameter* method::add_parameter(std::string pname,
                                  call_context*cc, bool& psuccess)
 {
     parameter* func_par = new parameter(this, cc);
-    garbage_bin<parameter*>::instance(cc->compiler()).place(func_par, cc->compiler());
+    garbage_bin<parameter*>::instance(cc->compiler).place(func_par, cc->compiler);
 
     size_t indexOfEq = pname.find(C_EQ);
     variable* nvar = NULL;

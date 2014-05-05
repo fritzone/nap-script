@@ -454,9 +454,9 @@ void parsed_file::deal_with_while_loading(call_context* cc, expression_tree* new
 {
     /* firstly create a call context for it */
     std::stringstream ss;
-    ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << STR_WHILE;
+    ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << STR_WHILE;
 
-    call_context* while_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_WHILE, ss.str(), the_method, cc);
+    call_context* while_cc = new call_context(cc->compiler, CALL_CONTEXT_TYPE_WHILE, ss.str(), the_method, cc);
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_WHILE)    /* normal WHILE with { }*/
     {
         bool success = true;
@@ -572,10 +572,10 @@ void parsed_file::deal_with_for_loading(call_context* cc,
 {
     /* firstly create a call context for it */
     std::stringstream ss;
-    ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << STR_FOR;
+    ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << STR_FOR;
 
-    call_context* for_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_FOR, ss.str(), the_method, cc);
-    garbage_bin<call_context*>::instance(cc->compiler()).place(for_cc, cc->compiler());
+    call_context* for_cc = new call_context(cc->compiler, CALL_CONTEXT_TYPE_FOR, ss.str(), the_method, cc);
+    garbage_bin<call_context*>::instance(cc->compiler).place(for_cc, cc->compiler);
 
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR)    /* normal FOR with { }*/
     {
@@ -643,9 +643,9 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
 {
     /* firstly create a call context for it */
     std::stringstream ss;
-    ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << STR_IF;
-    call_context* if_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_IF, ss.str(), the_method, cc);
-    garbage_bin<call_context*>::instance(cc->compiler()).place(if_cc, mcompiler);
+    ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << STR_IF;
+    call_context* if_cc = new call_context(cc->compiler, CALL_CONTEXT_TYPE_IF, ss.str(), the_method, cc);
+    garbage_bin<call_context*>::instance(cc->compiler).place(if_cc, mcompiler);
 
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF)    /* normal IF with { }*/
     {
@@ -705,8 +705,8 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
     if(nextw && !strcmp(nextw, STR_ELSE))
     {
         std::stringstream ss;
-        ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << STR_IF << C_UNDERLINE << STR_ELSE;
-        else_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_ELSE, ss.str(), the_method, cc);
+        ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << STR_IF << C_UNDERLINE << STR_ELSE;
+        else_cc = new call_context(cc->compiler, CALL_CONTEXT_TYPE_ELSE, ss.str(), the_method, cc);
         if(delim2 == C_SEMC)
         {
             expression_with_location* expwloc2 = parser_next_phrase(&delim);
@@ -839,8 +839,8 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
                 case C_OPEN_BLOCK:
                 {
                     std::stringstream ss;
-                    ss << cc->get_name() << STR_CALL_CONTEXT_SEPARATOR << STR_UNNAMED_CC;
-                    call_context* child_cc = new call_context(cc->compiler(), CALL_CONTEXT_TYPE_UNNAMED, ss.str(), the_method, cc);
+                    ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << STR_UNNAMED_CC;
+                    call_context* child_cc = new call_context(cc->compiler, CALL_CONTEXT_TYPE_UNNAMED, ss.str(), the_method, cc);
                     bool success = true;
                     expression_tree* new_node = cc->add_new_expression(STR_OPEN_BLOCK, expwloc, success);
                     if(!success)
@@ -869,7 +869,7 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
                         }
 
                     }
-                    cc = cc->get_father();    /* stepping back */
+                    cc = cc->father;    /* stepping back */
                     current_level --;
                     if(current_level == orig_level)
                     {
@@ -898,7 +898,7 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
                     return;
                 }
 
-                cc = cc->get_father();    /* stepping back */
+                cc = cc->father;    /* stepping back */
                 current_level --;
             }
             can_stop = 1;
@@ -906,7 +906,7 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
     }
 }
 
-void parsed_file::load_next_single_phrase(expression_with_location* expwloc, method* cur_method, call_context* cur_cc, char* delim, int level, bool& psuccess)
+void parsed_file::load_next_single_phrase(expression_with_location* expwloc, method* cur_method, call_context* cc, char* delim, int level, bool& psuccess)
 {
     char* first = expwloc->expression;
     if(first && strlen(first) > 0)
@@ -916,7 +916,7 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
         garbage_bin<expression_tree*>::instance(mcompiler).place(cnode, mcompiler);
 
         bool success = true;
-        void* gen_res = cur_cc->compiler()->get_interpreter().build_expr_tree(first, cnode, cur_method, first, cur_cc, &op_res, expwloc, success);
+        void* gen_res = cc->compiler->get_interpreter().build_expr_tree(first, cnode, cur_method, first, cc, &op_res, expwloc, success);
         if(!success)
         {
             psuccess = false;
@@ -927,11 +927,11 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
         {
         case ASM_BLOCK: /*load the next block and directly feed in the statements to the cnode's envelope*/
         {
-            load_next_assembly_block(cur_cc);    /* loading the function*/
+            load_next_assembly_block(cc);    /* loading the function*/
             break;
         }
         case NT_VARIABLE_DEF_LST:
-            cur_cc->add_compiled_expression(cnode);
+            cc->expressions.push_back(cnode);
             break;
         case FUNCTION_DEFINITION:
             cur_method = (method*)gen_res;
@@ -945,17 +945,17 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
                 {
                     int saved_level = level;
                     level ++;    /* stepping into a method, increase the current level */
-                    call_context* saved_cc = cur_cc; /* saving the current cc*/
-                    cur_cc = cur_method->main_cc;
+                    call_context* saved_cc = cc; /* saving the current cc*/
+                    cc = cur_method->main_cc;
                     bool success = true;
-                    load_next_block(cur_method, cur_cc, level, saved_level, success);    /* loading the function*/
+                    load_next_block(cur_method, cc, level, saved_level, success);    /* loading the function*/
                     if(!success)
                     {
                         psuccess = false;
                         return;
                     }
 
-                    cur_cc = saved_cc; /* restoring the current cc */
+                    cc = saved_cc; /* restoring the current cc */
                 }
             }
             cur_method = NULL;
@@ -964,9 +964,9 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
         case STATEMENT_IF:
         case STATEMENT_IF_1L:
         {
-            cur_cc->add_compiled_expression(cnode);
+            cc->expressions.push_back(cnode);
             bool success = true;
-            deal_with_ifs_loading(cur_cc, cnode, cur_method, *delim, level, expwloc, success);
+            deal_with_ifs_loading(cc, cnode, cur_method, *delim, level, expwloc, success);
             if(!success)
             {
                 psuccess = false;
@@ -978,9 +978,9 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
         case STATEMENT_WHILE:
         case STATEMENT_WHILE_1L:
         {
-            cur_cc->add_compiled_expression(cnode);
+            cc->expressions.push_back(cnode);
             bool success = true;
-            deal_with_while_loading(cur_cc, cnode, cur_method, *delim, level, expwloc, success);
+            deal_with_while_loading(cc, cnode, cur_method, *delim, level, expwloc, success);
             if(!success)
             {
                 psuccess = false;
@@ -992,9 +992,9 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
         case STATEMENT_FOR:
         case STATEMENT_FOR_1L:
         {
-            cur_cc->add_compiled_expression(cnode);
+            cc->expressions.push_back(cnode);
             bool success = true;
-            deal_with_for_loading(cur_cc, cnode, cur_method, *delim, level, expwloc, success);
+            deal_with_for_loading(cc, cnode, cur_method, *delim, level, expwloc, success);
             if(!success)
             {
                 psuccess = false;
@@ -1006,7 +1006,7 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
         case CLASS_DECLARATION:
         {
             bool success = true;
-            deal_with_class_declaration(cur_cc, cnode, 0, *delim, level, expwloc, success);
+            deal_with_class_declaration(cc, cnode, 0, *delim, level, expwloc, success);
             if(!success)
             {
                 psuccess = false;
@@ -1020,13 +1020,13 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
         case FUNCTION_CALL_OF_OBJECT:
         case FUNCTION_CALL_STATIC:
         default:
-            cur_cc->add_compiled_expression(cnode);
+            cc->expressions.push_back(cnode);
             break;
         }
     }
 }
 
-void parsed_file::load_next_assembly_block(call_context* par_cc)
+void parsed_file::load_next_assembly_block(call_context* cc)
 {
     int can_stop = 0;
     while(!can_stop) /*read till we get '}' */
@@ -1042,10 +1042,10 @@ void parsed_file::load_next_assembly_block(call_context* par_cc)
             if(expwloc->expression[0] != '}')
             {
                 expression_tree* tmp = new expression_tree(expwloc) ;
-                garbage_bin<expression_tree*>::instance(par_cc->compiler()).place(tmp, par_cc->compiler());
+                garbage_bin<expression_tree*>::instance(cc->compiler).place(tmp, cc->compiler);
                 tmp->op_type = ASM_BLOCK;
 
-                par_cc->add_compiled_expression(tmp);
+                cc->expressions.push_back(tmp);
             }
         }
         if(delim == '}')

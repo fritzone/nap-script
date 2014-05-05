@@ -251,11 +251,11 @@ std::string fully_qualified_varname(call_context* cc, const variable* v)
     std::string result;
     if(v->cc)
     {
-        result = std::string(v->cc->get_name()) + STR_DOT + v->name;
+        result = std::string(v->cc->name) + STR_DOT + v->name;
     }
     else
     {
-        result = std::string(cc->get_name()) + STR_DOT + v->name;
+        result = std::string(cc->name) + STR_DOT + v->name;
     }
 
     if(v->c_type == "extern")
@@ -266,7 +266,7 @@ std::string fully_qualified_varname(call_context* cc, const variable* v)
 }
 std::string fully_qualified_varname(call_context* cc, const char* v)
 {
-    return std::string(cc->get_name()) + STR_DOT + v;
+    return std::string(cc->name) + STR_DOT + v;
 }
 
 std::string fully_qualified_label(const char* l)
@@ -501,4 +501,49 @@ int is_immediate_byte(const char *t)
     if(t[0] != t[2]) return 0;
     if(t[0] != '\'') return 0;
     return 1;
+}
+
+
+int is_enclosed_string(const char* expr_trim, int expr_len, char encls, char encle)
+{
+    if(expr_trim[0] == encls)    /* we can check them ... */
+    {
+        int i=1;
+        while(i<expr_len)
+        {
+            if(expr_trim[i] == encle && expr_trim[i-1] != '\\' && i < expr_len - 1)
+            {
+                return 0; /* meaning: enclosing character found before end of expression */
+            }
+            i++;
+        }
+
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+/**
+ * @brief is_string returns true if the string is enclosed in quotes
+ * @param expr_trim
+ * @param expr_len
+ * @return
+ */
+int is_string(const char* expr_trim, int expr_len)
+{
+    return is_enclosed_string(expr_trim, expr_len, C_QUOTE, C_QUOTE);
+}
+
+/**
+ * @brief is_statement_string returns true if the strign is enclosed in bacquotes
+ * @param expr_trim
+ * @param expr_len
+ * @return
+ */
+int is_statement_string(const char* expr_trim, int expr_len)
+{
+    return is_enclosed_string(expr_trim, expr_len, C_BACKQUOTE, C_BACKQUOTE);
 }

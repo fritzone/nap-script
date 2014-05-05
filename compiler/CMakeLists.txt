@@ -3,6 +3,7 @@ set(project nap)
 include (GenerateExportHeader)
 
 set(${project}_files
+    ${CMAKE_CURRENT_SOURCE_DIR}/bt_string.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/call_ctx.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/compiler.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/consts.cpp
@@ -21,6 +22,7 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/code_stream.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/charconverter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/parameter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/variable_holder.cpp
     ${CMAKE_SOURCE_DIR}/vm/byte_order.c
 )
 

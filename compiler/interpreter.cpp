@@ -55,7 +55,7 @@ std::vector<envelope*>* interpreter::listv_prepare_list(const char* src,
         skip_whitespace(src, l, &i);
         // read the next list element
         bool read_next=false;
-        char* tmp = alloc_mem(char, l, cc->compiler());    // the worst case
+        char* tmp = alloc_mem(char, l, cc->compiler);    // the worst case
         int j = 0;
         while(!read_next && i < l)
         {
@@ -95,7 +95,7 @@ std::vector<envelope*>* interpreter::listv_prepare_list(const char* src,
                     psuccess = false;
                     return 0;
                 }
-                envelope* expr_holder = new_envelope(new_expression, LIST_ELEMENT, cc->compiler());
+                envelope* expr_holder = new_envelope(new_expression, LIST_ELEMENT, cc->compiler);
                 lst->push_back(expr_holder);
 
                 read_next = true;
@@ -108,7 +108,7 @@ std::vector<envelope*>* interpreter::listv_prepare_list(const char* src,
                     if(src[i+1] == '.')
                     {
                         psuccess = false;
-                        cc->compiler()->throw_error("Dot followed by dot?");
+                        cc->compiler->throw_error("Dot followed by dot?");
                         return 0;
                     }
                 }
@@ -393,7 +393,7 @@ method* interpreter::is_function_call(char *s,  call_context* cc, int* special)
 #if RUNTIME_COMPILATION
         *special = METHOD_CALL_SPECIAL_EXECUTE;
 #else
-        cc->compiler()->throw_error("Cannot compile this code since runtime compilation was disabled");
+        cc->compiler->throw_error("Cannot compile this code since runtime compilation was disabled");
 #endif
         return 0;
     }
@@ -477,10 +477,10 @@ int interpreter::looks_like_function_def(const char* expr, int expr_len, const e
             else
             {
                 /* TODO: check if this is a constructor definition */
-                if(strstr(expr, cc->get_name().c_str()) == expr)
+                if(strstr(expr, cc->name.c_str()) == expr)
                 {
                     // this might be a constructor definition
-                    const char* pfinder = expr + cc->get_name().length();
+                    const char* pfinder = expr + cc->name.length();
                     while(*pfinder && is_whitespace(*pfinder)) pfinder ++;
                     if(*pfinder == '(')
                     {
@@ -592,7 +592,7 @@ char* interpreter::looks_like_var_def(const call_context* cc, char* expr, int ex
     {
         first_word[flc++] = expr[tc++];
     }
-    first_word = trim(first_word, cc->compiler());
+    first_word = trim(first_word, cc->compiler);
 
     if(get_typeid(first_word) != BASIC_TYPE_DONTCARE) /* starts with a type. maybe user defined type*/
     {
@@ -674,8 +674,8 @@ method* interpreter::define_method(const char* expr, int expr_len, expression_tr
     }
     reverse(ret_type, type_counter);
     //printf("Defining function ret_type:[%s] name:[%s] pars:[%s]\n", ret_type, func_name, parameters);
-    func_name = trim(func_name, cc->compiler());
-    ret_type = trim(ret_type, cc->compiler());
+    func_name = trim(func_name, cc->compiler);
+    ret_type = trim(ret_type, cc->compiler);
     if(strlen(func_name) == 0)
     {
         mcompiler->throw_error(E0010_INVFNCDF, expr, NULL);
@@ -685,7 +685,7 @@ method* interpreter::define_method(const char* expr, int expr_len, expression_tr
     created_method = new method(mcompiler, func_name, ret_type, cc);
 
     bool success = true;
-    created_method->feed_parameter_list(trim(parameters, cc->compiler()), expwloc, success);
+    created_method->feed_parameter_list(trim(parameters, cc->compiler), expwloc, success);
     if(!success)
     {
         psuccess = false;
@@ -703,7 +703,7 @@ method* interpreter::define_method(const char* expr, int expr_len, expression_tr
     cc->add_method(created_method);
 
     node->op_type = FUNCTION_DEFINITION;
-    node->reference = new_envelope(created_method, FUNCTION_DEFINITION, cc->compiler());
+    node->reference = new_envelope(created_method, FUNCTION_DEFINITION, cc->compiler);
     return created_method;
 }
 
@@ -781,7 +781,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
     std::vector<std::string>::iterator q = var_names.begin();
     std::vector<variable_definition*>* var_def_list = new std::vector<variable_definition*>(); /* will contain the variable definitions if any*/
 
-    garbage_bin<std::vector<variable_definition*>*>::instance(mcompiler).place(var_def_list, cc->compiler());
+    garbage_bin<std::vector<variable_definition*>*>::instance(mcompiler).place(var_def_list, cc->compiler);
 
     while(q != var_names.end())
     {
@@ -827,7 +827,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
 
             std::vector<std::string>::iterator qDimensionStrings = dimensions.begin();    /* to walk through the dimensions */
             int countedDimensions = 0;
-            mdd = alloc_mem(multi_dimension_def,1, cc->compiler());
+            mdd = alloc_mem(multi_dimension_def,1, cc->compiler);
             qm = mdd;
             while(qDimensionStrings != dimensions.end())
             {
@@ -857,7 +857,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
                 }
                 qm->dimension = -1;
                 qm->expr_def = dim_def_node;
-                qm->next = alloc_mem(multi_dimension_def,1, cc->compiler());
+                qm->next = alloc_mem(multi_dimension_def,1, cc->compiler);
                 qm = qm->next;
                 countedDimensions ++;
                 qDimensionStrings ++;
@@ -926,14 +926,14 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
         }
 
         /* create the variable definition/declaration structure for both of them */
-        var_def = alloc_mem(variable_definition,1, cc->compiler());
+        var_def = alloc_mem(variable_definition,1, cc->compiler);
         var_def->the_variable = added_var;
         var_def->md_def = mdd;
 
         if(deflist)    /* whether we have a definition for this variable. if yes, we need to populate a definition_list */
         {
             expression_tree* var_def_node = new expression_tree(expwloc);
-            garbage_bin<expression_tree*>::instance(cc->compiler()).place(var_def_node, cc->compiler());
+            garbage_bin<expression_tree*>::instance(cc->compiler).place(var_def_node, cc->compiler);
             bool success = true;
             build_expr_tree(deflist, var_def_node, the_method, orig_expr, cc, result, expwloc, success);
             if(!success)
@@ -951,7 +951,7 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
 
     node->op_type = NT_VARIABLE_DEF_LST;
     node->info = expr_trim;
-    node->reference = new_envelope(var_def_list, NT_VARIABLE_DEF_LST, cc->compiler());
+    node->reference = new_envelope(var_def_list, NT_VARIABLE_DEF_LST, cc->compiler);
     return var_def_list;
 }
 
@@ -995,7 +995,7 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
     }    /* this removed the closing paranthesis */
 
 
-    params_body = trim(params_body, cc->compiler());
+    params_body = trim(params_body, cc->compiler);
     //printf("Checking function call:[%s]\n", params_body);
     /* Now: To build the parameter list, and create a call_frame_entry element to insert into the tree */
     parameters = string_list_create_bsep(params_body, ',', mcompiler, success);
@@ -1012,7 +1012,7 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
         if(q->length() > 0)
         {
             cur_par_expr = new expression_tree(expwloc);
-            garbage_bin<expression_tree*>::instance(cc->compiler()).place(cur_par_expr, cc->compiler());
+            garbage_bin<expression_tree*>::instance(cc->compiler).place(cur_par_expr, cc->compiler);
             bool success = true;
             build_expr_tree((*q).c_str(), cur_par_expr, the_method, orig_expr, cc, result, expwloc, success);
             if(!success)
@@ -1021,7 +1021,7 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
                 return 0;
             }
             parameter* cur_par_obj = new parameter(the_method, cc);
-            garbage_bin<parameter*>::instance(cc->compiler()).place(cur_par_obj, cc->compiler());
+            garbage_bin<parameter*>::instance(cc->compiler).place(cur_par_obj, cc->compiler);
             cur_par_obj->expr = cur_par_expr;
 
             pars_list.push_back(cur_par_obj);
@@ -1034,11 +1034,10 @@ call_frame_entry* interpreter::handle_function_call(char *expr_trim, int expr_le
 
     cfe->the_method = func_call;
     cfe->parameters = pars_list;
-    cfe->previous_cf = func_call->cur_cf;
 
     node->info = func_call->method_name;
     node->op_type = FUNCTION_CALL + type_of_call; // TODO: This is tricky and ugly
-    node->reference = new_envelope(cfe, FUNCTION_CALL + type_of_call, cc->compiler());
+    node->reference = new_envelope(cfe, FUNCTION_CALL + type_of_call, cc->compiler);
     cfe->the_method = func_call; //TODO: why was this: cc->get_method(func_call->method_name);
     return cfe;
 }
@@ -1158,18 +1157,18 @@ char* interpreter::is_some_statement(const char* expr_trim, const char* keyword)
  */
 void* interpreter::deal_with_one_word_keyword( call_context* cc, expression_tree* node, int* &result, const char* keyw, int statement, bool& psuccess )
 {
-    if(cc->get_type() != CALL_CONTEXT_TYPE_WHILE && cc->get_type() != CALL_CONTEXT_TYPE_FOR)
+    if(cc->type != CALL_CONTEXT_TYPE_WHILE && cc->type != CALL_CONTEXT_TYPE_FOR)
     {
         int in_iterative_cc = 0;
-        call_context* tmpcc = cc->get_father();
+        call_context* tmpcc = cc->father;
         while(tmpcc)
         {
-            if(tmpcc->get_type() == CALL_CONTEXT_TYPE_WHILE || tmpcc->get_type() == CALL_CONTEXT_TYPE_FOR)
+            if(tmpcc->type == CALL_CONTEXT_TYPE_WHILE || tmpcc->type == CALL_CONTEXT_TYPE_FOR)
             {
                 in_iterative_cc = 1;
                 break;
             }
-            tmpcc = tmpcc->get_father();
+            tmpcc = tmpcc->father;
         }
         if(!in_iterative_cc)
         {
@@ -1179,7 +1178,7 @@ void* interpreter::deal_with_one_word_keyword( call_context* cc, expression_tree
         }
     }
     node->info = mcompiler->duplicate_string(keyw);
-    node->reference = new_envelope(cc, ENV_TYPE_CC, cc->compiler());
+    node->reference = new_envelope(cc, ENV_TYPE_CC, cc->compiler);
     node->op_type = statement;
     *result = statement;
     return node->reference;
@@ -1224,7 +1223,7 @@ void* interpreter::deal_with_conditional_keywords(char* keyword_if,
     {
         node->info = keyw;
         expression_tree* expt = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance(cc->compiler()).place(expt, cc->compiler());
+        garbage_bin<expression_tree*>::instance(cc->compiler).place(expt, cc->compiler);
 
         /* here fetch the part which is in the parentheses after the keyword and build the tree based on that*/
         char *condition = mcompiler->duplicate_string(expr_trim + strlen(keyw));
@@ -1248,13 +1247,13 @@ void* interpreter::deal_with_conditional_keywords(char* keyword_if,
         if(strlen(p) > 1)    /* means: there is a one lined statement after the condition*/
         {
             node->info = p;    /* somehow we must tell the external world what's the next expression */
-            node->reference = new_envelope(expt, one_line_stmt, cc->compiler());
+            node->reference = new_envelope(expt, one_line_stmt, cc->compiler);
             *result = one_line_stmt;
             node->op_type = one_line_stmt;
         }
         else
         {
-            node->reference = new_envelope(expt, stmt, cc->compiler());
+            node->reference = new_envelope(expt, stmt, cc->compiler);
             *result = stmt;
             node->op_type = stmt;
         }
@@ -1334,31 +1333,31 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             return 0;
         }
         node->op_type = LIST_VALUE;
-        node->reference = new_envelope(thlist, LIST_VALUE, cc->compiler());
+        node->reference = new_envelope(thlist, LIST_VALUE, cc->compiler);
         return 0;
     }
 
 
     /* first check: See if this expr is a string like expression, meaning in quotes. */
-    if(bt_string::is_string(expr_trim, expr_len))
+    if(is_string(expr_trim, expr_len))
     {
         expr_trim[expr_len-1] = 0;    // removing the double quotes
         expr_trim++;
         bt_string* the_str = new bt_string(expr_trim);
-        garbage_bin<bt_string*>::instance(cc->compiler()).place(the_str, cc->compiler());
-        node->reference = new_envelope(the_str, BASIC_TYPE_STRING, cc->compiler());
-        node->info = the_str->the_string();
+        garbage_bin<bt_string*>::instance(cc->compiler).place(the_str, cc->compiler);
+        node->reference = new_envelope(the_str, BASIC_TYPE_STRING, cc->compiler);
+        node->info = the_str->m_the_string;
         *result = RESULT_STRING;
         node->op_type = BASIC_TYPE_STRING;
         return expr_trim;
     }
 
     /* this is a 'statement' string, a string which is executed and the result is interpreted by the interpreter backticks: `` */
-    if(bt_string::is_statement_string(expr_trim, expr_len))
+    if(is_statement_string(expr_trim, expr_len))
     {
         expr_trim[expr_len-1] = 0;    /* removing the double quotes */
         expr_trim++;
-        node->reference = new_envelope(new bt_string(expr_trim), BASIC_TYPE_STRING, cc->compiler());
+        node->reference = new_envelope(new bt_string(expr_trim), BASIC_TYPE_STRING, cc->compiler);
         node->info = expr_trim;
         *result = BACKQUOTE_STRING;
         return expr_trim;
@@ -1442,14 +1441,14 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
     {
         node->info = STR_RETURN;
         expression_tree* expt = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance(cc->compiler()).place(expt, cc->compiler());
+        garbage_bin<expression_tree*>::instance(cc->compiler).place(expt, cc->compiler);
         build_expr_tree(keyword_return, expt, the_method, orig_expr, cc, result, expwloc, success);
         if(!success)
         {
             psuccess = false;
             return 0;
         }
-        node->reference = new_envelope(expt, RETURN_STATEMENT, cc->compiler());
+        node->reference = new_envelope(expt, RETURN_STATEMENT, cc->compiler);
         *result = RETURN_STATEMENT;
         node->op_type = RETURN_STATEMENT;
         return node->reference;
@@ -1543,12 +1542,12 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             return 0;
         }
         resw_for* rswfor = new resw_for;
-        garbage_bin<resw_for*>::instance(cc->compiler()).place(rswfor, cc->compiler());
+        garbage_bin<resw_for*>::instance(cc->compiler).place(rswfor, cc->compiler);
 
         rswfor->unique_hash = generate_unique_hash();
         rswfor->init_stmt = init_stmt;
         rswfor->tree_init_stmt = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance(cc->compiler()).place(rswfor->tree_init_stmt, cc->compiler());
+        garbage_bin<expression_tree*>::instance(cc->compiler).place(rswfor->tree_init_stmt, cc->compiler);
 
         bool success = true;
         build_expr_tree(init_stmt, rswfor->tree_init_stmt, the_method, orig_expr, cc, result, expwloc, success);
@@ -1561,7 +1560,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         rswfor->condition = cond_stmt;
         rswfor->tree_condition = new expression_tree(expwloc);
         build_expr_tree(cond_stmt, rswfor->tree_condition, the_method, orig_expr, cc, result, expwloc, success);
-        garbage_bin<expression_tree*>::instance(cc->compiler()).place(rswfor->tree_condition, cc->compiler());
+        garbage_bin<expression_tree*>::instance(cc->compiler).place(rswfor->tree_condition, cc->compiler);
 
         if(!success)
         {
@@ -1571,7 +1570,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
         rswfor->expr = expr_stmt;
         rswfor->tree_expr = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance(cc->compiler()).place(rswfor->tree_expr, cc->compiler());
+        garbage_bin<expression_tree*>::instance(cc->compiler).place(rswfor->tree_expr, cc->compiler);
 
         build_expr_tree(expr_stmt, rswfor->tree_expr, the_method, orig_expr, cc, result, expwloc, success);
         if(!success)
@@ -1596,13 +1595,13 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         if(strlen(p) > 1)    /* means: there is a one lined statement after the condition*/
         {
             node->info = p;    /* somehow we must tell the external world what's the next expression */
-            node->reference = new_envelope(rswfor, STATEMENT_FOR_1L, cc->compiler());
+            node->reference = new_envelope(rswfor, STATEMENT_FOR_1L, cc->compiler);
             *result = STATEMENT_FOR_1L;
             node->op_type = STATEMENT_FOR_1L;
         }
         else
         {
-            node->reference = new_envelope(rswfor, STATEMENT_FOR, cc->compiler());
+            node->reference = new_envelope(rswfor, STATEMENT_FOR, cc->compiler);
             *result = STATEMENT_FOR;
             node->op_type = STATEMENT_FOR;
         }
@@ -1645,7 +1644,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                     }
                     node->op_type = ntype;
                     node->left = new expression_tree(node, expwloc);
-                    garbage_bin<expression_tree*>::instance(cc->compiler()).place(node->left, cc->compiler());
+                    garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
                     bool success = true;
                     build_expr_tree(expr_trim + 1, node->left, the_method, orig_expr, cc, result, expwloc, success);
                     if(!success)
@@ -1683,8 +1682,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             node->op_type = ntype;
             node->left=new expression_tree(node, expwloc);
             node->right=new expression_tree(node, expwloc);
-            garbage_bin<expression_tree*>::instance(cc->compiler()).place(node->left, cc->compiler());
-            garbage_bin<expression_tree*>::instance(cc->compiler()).place(node->right, cc->compiler());
+            garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
+            garbage_bin<expression_tree*>::instance(cc->compiler).place(node->right, cc->compiler);
 
             /* the order here is important for the "." operator ... it needs to know the parent in order to identify the object to find its call_context*/
             bool success = true;
@@ -1749,13 +1748,13 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 node->op_type = FUNCTION_CALL_NAP_EXEC;
 
                 // now parse out the string
-                char* temp = cc->compiler()->duplicate_string(expr_trim);
+                char* temp = cc->compiler->duplicate_string(expr_trim);
                 temp += strlen("nap_execute");
                 while(is_whitespace(*temp))
                 {
                     temp ++;
                 }
-                char* temp2 = cc->compiler()->new_string(strlen(expr_trim));
+                char* temp2 = cc->compiler->new_string(strlen(expr_trim));
                 extract_next_enclosed_phrase(temp, C_PAR_OP, C_PAR_CL, temp2);
                 // and now remove the parentheses
                 temp2 ++;
@@ -1763,7 +1762,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 node->info = temp2;
 
                 node->left = new expression_tree(node, expwloc);
-                garbage_bin<expression_tree*>::instance(cc->compiler()).place(node->left, cc->compiler());
+                garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
 
                 bool success = true;
                 build_expr_tree(temp2, node->left, the_method, orig_expr, cc, result, expwloc, success);
@@ -1773,9 +1772,9 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                     return 0;
                 }
 
-                node->reference = new_envelope(0, FUNCTION_CALL_NAP_EXEC, cc->compiler());
+                node->reference = new_envelope(0, FUNCTION_CALL_NAP_EXEC, cc->compiler);
 #else
-                cc->compiler()->throw_error("Cannot compile this code since runtime compilation was disabled");
+                cc->compiler->throw_error("Cannot compile this code since runtime compilation was disabled");
 #endif
                 return 0;
             }
@@ -1843,12 +1842,12 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 }
 
                 // now see if this is a class variable: a.b = 4
-                std::vector<variable*>::const_iterator it = cd->variable_list_has_variable(expr_trim, cd->get_variables());
-                if(it != cd->get_variables().end())
+                std::vector<variable*>::const_iterator it = cd->variable_list_has_variable(expr_trim);
+                if(it != cd->variables.end())
                 {
                     variable* var = *it;
                     *result = MEMBER_ACCESS_OF_OBJECT;
-                    envelope* envl = new_envelope(var, BASIC_TYPE_VARIABLE, cc->compiler());
+                    envelope* envl = new_envelope(var, BASIC_TYPE_VARIABLE, cc->compiler);
                     node->op_type = MEMBER_ACCESS_OF_OBJECT;
                     node->reference = envl;
                     return envl;
@@ -1877,7 +1876,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
         node->info = p;
         node->op_type = ntype;
         node->left = new expression_tree(node, expwloc);
-        garbage_bin<expression_tree*>::instance(cc->compiler()).place(node->left, cc->compiler());
+        garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
 
         bool success = true;
         build_expr_tree(expr_trim + 2, node->left, the_method, orig_expr, cc, result, expwloc, success);
@@ -1904,7 +1903,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
             /* now add the  variable to the tree... */
             node->left = new expression_tree(node, expwloc);
-            garbage_bin<expression_tree*>::instance(cc->compiler()).place(node->left, cc->compiler());
+            garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
             expr_trim[expr_len - 2] = 0;    /* this is to cut down the two ++ or -- signs ... */
             bool success = true;
             build_expr_tree(expr_trim, node->left, the_method, orig_expr, cc, result, expwloc, success);
@@ -1997,7 +1996,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 indx_cnt ++;
             }
             dim->dimension_values = index_list;
-            node->right->reference = new_envelope(dim, MULTI_DIM_INDEX, cc->compiler()); /*((variable*)node->father->left->reference->to_interpret)->mult_dim_def*/
+            node->right->reference = new_envelope(dim, MULTI_DIM_INDEX, cc->compiler); /*((variable*)node->father->left->reference->to_interpret)->mult_dim_def*/
             node->right->info = expr_trim;
             node->op_type = MULTI_DIM_INDEX;
         }
@@ -2027,32 +2026,32 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             if(env_var)
             {
                 node->op_type = ENVIRONMENT_VARIABLE;
-                envl = new_envelope(t, ENVIRONMENT_VARIABLE, cc->compiler());
+                envl = new_envelope(t, ENVIRONMENT_VARIABLE, cc->compiler);
             }
 
             if(!var)
             {
                 /* is this a variable from the current call context? */
-                std::vector<variable*>::const_iterator varit = cc->variable_list_has_variable(t, cc->get_variables());
-                if(varit != cc->get_variables().end())
+                std::vector<variable*>::const_iterator varit = cc->variable_list_has_variable(t);
+                if(varit != cc->variables.end())
                 {
                     var = *varit;
                 }
                 else
                 {
                     // is this a variable in a call context above the current one?
-                    call_context* cc1 = cc->get_father();
+                    call_context* cc1 = cc->father;
                     while(cc1)
                     {
-                        varit = cc1->variable_list_has_variable(t, cc1->get_variables());
-                        if(varit != cc1->get_variables().end())
+                        varit = cc1->variable_list_has_variable(t);
+                        if(varit != cc1->variables.end())
                         {
                             var = *varit;
                             break;
                         }
                         else
                         {
-                            cc1 = cc1->get_father();
+                            cc1 = cc1->father;
                         }
                     }
                 }
@@ -2062,14 +2061,14 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             if(!var)
             {
                 int tt;
-                if(cc->compiler()->vm_chain())
+                if(cc->compiler->vm_chain())
                 {
-                    if(nap_vmi_has_variable(cc->compiler()->vm_chain(), t, &tt))
+                    if(nap_vmi_has_variable(cc->compiler->vm_chain(), t, &tt))
                     {
                         // it is a variable in the father VM
                         var = new variable(1, tt, t, "extern", cc);
-                        garbage_bin<variable*>::instance(cc->compiler()).place(var, cc->compiler());
-                        envl = new_envelope(var, BASIC_TYPE_EXTERN_VARIABLE, cc->compiler());
+                        garbage_bin<variable*>::instance(cc->compiler).place(var, cc->compiler);
+                        envl = new_envelope(var, BASIC_TYPE_EXTERN_VARIABLE, cc->compiler);
                         node->op_type = BASIC_TYPE_EXTERN_VARIABLE;
                     }
                 }
@@ -2078,7 +2077,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             if(var)    /* if this is a variable */
             {
                 // TODO: Check if this is a class variable
-                envl = new_envelope(var, BASIC_TYPE_VARIABLE, cc->compiler());
+                envl = new_envelope(var, BASIC_TYPE_VARIABLE, cc->compiler);
                 node->op_type = BASIC_TYPE_VARIABLE;
             }
 
@@ -2106,9 +2105,9 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
             if(isnumber(t))
             {
-                number* nr = new number(t, cc->compiler());
-                garbage_bin<number*>::instance(cc->compiler()).place(nr, cc->compiler());
-                envl = new_envelope(nr, nr->type(), cc->compiler());
+                number* nr = new number(t, cc->compiler);
+                garbage_bin<number*>::instance(cc->compiler).place(nr, cc->compiler);
+                envl = new_envelope(nr, nr->type(), cc->compiler);
                 node->op_type = nr->type();
             }
             else
@@ -2117,22 +2116,22 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 uint8_t temp = (uint8_t)(t[1]);
                 char s[12];
                 sprintf(s, "%d", temp);
-                number* nr = new number(s, cc->compiler());
-                garbage_bin<number*>::instance(cc->compiler()).place(nr, cc->compiler());
-                envl = new_envelope(nr, nr->type(), cc->compiler());
+                number* nr = new number(s, cc->compiler);
+                garbage_bin<number*>::instance(cc->compiler).place(nr, cc->compiler);
+                envl = new_envelope(nr, nr->type(), cc->compiler);
                 node->op_type = nr->type();
             }
             else
             if(!strcmp(t, "true"))
             {
-                envl = new_envelope(0, KEYWORD_TRUE, cc->compiler());
+                envl = new_envelope(0, KEYWORD_TRUE, cc->compiler);
                 node->op_type = KEYWORD_TRUE;
                 *result = KEYWORD_TRUE;
             }
             else
             if(!strcmp(t, "false"))
             {
-                envl = new_envelope(0, KEYWORD_FALSE, cc->compiler());
+                envl = new_envelope(0, KEYWORD_FALSE, cc->compiler);
                 node->op_type = KEYWORD_FALSE;
                 *result = KEYWORD_FALSE;
             }
@@ -2155,7 +2154,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
                 *tcname = 0;
                 class_declaration* cd = new class_declaration(mcompiler, the_class_name, cc);
 
-                envl = new_envelope(cd, CLASS_DECLARATION, cc->compiler());
+                envl = new_envelope(cd, CLASS_DECLARATION, cc->compiler);
                 node->op_type = CLASS_DECLARATION;
                 *result = CLASS_DECLARATION;
             }
@@ -2163,7 +2162,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             if(!strcmp(expr, "asm"))
             {
                 *result = ASM_BLOCK;
-                envl = new_envelope(0, ASM_BLOCK, cc->compiler());
+                envl = new_envelope(0, ASM_BLOCK, cc->compiler);
                 node->op_type = ASM_BLOCK;
             }
 

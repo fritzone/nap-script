@@ -184,4 +184,22 @@ std::string generate_unique_hash();
  */
 std::vector<std::string> string_list_create_bsep(const std::string &instr, char sep, const nap_compiler *_compiler, bool &psuccess);
 
+int is_enclosed_string(const char* expr_trim, int expr_len, char encls, char encle);
+
+/**
+ * @brief is_string returns true if the string is enclosed in quotes
+ * @param expr_trim
+ * @param expr_len
+ * @return
+ */
+int is_string(const char* expr_trim, int expr_len);
+
+/**
+ * @brief is_statement_string returns true if the strign is enclosed in bacquotes
+ * @param expr_trim
+ * @param expr_len
+ * @return
+ */
+int is_statement_string(const char* expr_trim, int expr_len);
+
 #endif
