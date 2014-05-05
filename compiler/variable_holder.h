@@ -17,7 +17,7 @@ struct variable_holder
      * @param s - the name of the variable
      * @param first - the list we're searching
      */
-    std::vector<variable*>::const_iterator variable_list_has_variable(const std::string &s);
+    std::vector<variable*>::const_iterator has_variable(const std::string &s);
 
     /**
      * Adds a new hash  variable to the variable list. Creates a variable object and adds that to the list
@@ -29,12 +29,11 @@ struct variable_holder
      * @param cc - and/or in this call context
      * @param expwloc - at this location in the script file
      */
-    variable* variable_list_add_variable(const char *var_name,
+    variable* add_variable(const char *var_name,
                                          const char* var_type,
                                          int var_size,
                                          method* the_method,
-                                         call_context* cc,
-                                         const expression_with_location* expwloc, bool &psuccess);
+                                         call_context* cc, bool &psuccess);
 
     /* the list of variable that have been defined in this container */
     std::vector<variable*> variables;

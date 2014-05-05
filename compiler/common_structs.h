@@ -8,11 +8,14 @@
 #include <string>
 #include <list>
 
+#define SUCCES_OR_RETURN  if(!psuccess) return
+
+
+
 struct call_context;
 struct call_context_list;
 struct method;
 struct class_declaration;
-struct call_frame_entry;
 struct expression_tree;
 struct expression_tree_list;
 struct parameter;
@@ -98,9 +101,6 @@ struct multi_dimension_index
 
     /* the values that are used to build this dimension list */
     std::vector<expression_tree*>* dimension_values;
-
-    /* some id to uniquely identify this index */
-    char *id;
 };
 
 /**
@@ -119,7 +119,7 @@ struct multi_dimension_def
     long dimension;
 
     /* whether this dimension is a dynamic one or not. See how this gets initialized / evaluated */
-    char dynamic;
+    bool dynamic;
 
     /* the dimension if it's an expression. In this case the evaluator will initialize the dimension*/
     struct expression_tree *expr_def;
@@ -139,45 +139,6 @@ struct variable_definition
 
     /*the multi dimension definition for this variable if any, NULL if none*/
     struct multi_dimension_def *md_def;
-};
-
-/**
- * Holds the information for the calling of a templated variable. Populated at interpret time,
- * used at run time.
- */
-struct variable_template_reference
-{
-    /* this is the variable we are referencing to */
-    struct variable *the_variable;
-
-    /* these are the parameters that the user passed in */
-    std::vector<parameter*> templ_pars;
-};
-
-/**
- * Class, describing a label, a jump location.
- */
-struct bytecode_label
-{
-    bytecode_label() : name(), bytecode_location(0), type(LABEL_PLAIN) {}
-
-    enum label_type
-    {
-        LABEL_PLAIN = 0,
-        LABEL_BREAK = 1,
-        LABEL_CONTINUE = 2
-    };
-
-    /* the name of the label */
-    std::string name;
-
-    /* the location of the label in the bytecode stream */
-    long bytecode_location;
-
-    /* the type of the location, can be 0 if this is just a plain label,
-     *1 if this is a "break" location label,
-     *2 if this is a "continue" location label */
-    label_type type;
 };
 
 #endif

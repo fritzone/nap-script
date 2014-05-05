@@ -61,7 +61,6 @@ constructor_call::constructor_call(char* name, call_context* cc) : method(cc->co
  */
 variable* method::add_new_variable(const std::string& pname,
                                    const std::string& ptype, int dimension,
-                                   const expression_with_location* expwloc,
                                    bool& psuccess)
 {
     if(pname.empty())
@@ -76,17 +75,10 @@ variable* method::add_new_variable(const std::string& pname,
             }
         }
     }
-    bool success = true;
-    variable* v = variable_list_add_variable(pname.c_str(),
-                                                      ptype.c_str(),
-                                                      dimension,
-                                                      this,
-                                                      main_cc, expwloc, success);
-    if(!success)
-    {
-        psuccess = false;
-        return 0;
-    }
+
+    variable* v = add_variable(pname.c_str(), ptype.c_str(), dimension, this,
+                               main_cc, psuccess);
+    SUCCES_OR_RETURN 0;
     return v;
 }
 
@@ -97,7 +89,7 @@ variable* method::add_new_variable(const std::string& pname,
  * 3. if reached to the method's main cc find variable in all the CC's above
  * 4. find the variables of the method (meaning: parameters)
  */
- variable* method::has_variable(call_context* cc, char* varname, int* templed, int* env_var, bool& psuccess)
+ variable* method::has_variable(call_context* cc, char* varname, int* env_var)
 {
     //printf("\t[MGV]: Variable [%s] in method [%s]\n", varname, the_method?the_method->name:"global");
     if(varname[0] == C_DOLLAR)        /* is this an enviornment variable? */
@@ -106,28 +98,16 @@ variable* method::add_new_variable(const std::string& pname,
         return NULL;
     }
 
-    if(strchr(varname, C_PAR_OP))    /* this is a templated variable */
-    {
-        *templed = 1;
-        *strchr(varname, C_PAR_OP) = 0;
-    }
-
-    std::vector<variable*>::const_iterator location = cc->variable_list_has_variable(varname);
+    std::vector<variable*>::const_iterator location = cc->has_variable(varname);
     if(location != cc->variables.end())
     {
         return *location;
     }
 
     // first run_ is this variable defined in here?
-    location = variable_list_has_variable(varname);
+    location = variable_holder::has_variable(varname);
     if(location != variables.end())
     {
-        if((*location)->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
-        {
-            mcompiler->throw_error(E0020_ACCTNOTP, (*location)->name, NULL);
-            psuccess = false;
-            return 0;
-        }
         return *location;
     }
 
@@ -140,12 +120,6 @@ variable* method::add_new_variable(const std::string& pname,
 
         if(v)
         {
-            if(v->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
-            {
-                mcompiler->throw_error(E0020_ACCTNOTP, v->name, NULL);
-                psuccess = false;
-                return 0;
-            }
             return v;
         }
     }
@@ -154,15 +128,9 @@ variable* method::add_new_variable(const std::string& pname,
     cc = cc->father;
     while(cc)
     {
-        location = cc->variable_list_has_variable(varname);
+        location = cc->has_variable(varname);
         if(location != cc->variables.end())
         {
-            if((*location)->templ_parameters.empty() && *templed)    /* variable accessed as templated but in fact has no templates */
-            {
-                mcompiler->throw_error(E0020_ACCTNOTP, (*location)->name, NULL);
-                psuccess = false;
-                return 0;
-            }
             return *location;
         }
         cc = cc->father;
@@ -192,53 +160,28 @@ parameter* method::add_parameter(std::string pname,
         std::string afterEq = pname.substr(indexOfEq + 1);
         int res = -1;
         func_par->initial_value = new expression_tree(pexpwloc);
-        bool success = true;
+
         char* tmp = new char[afterEq.length() + 1];
         afterEq.copy(tmp, afterEq.length());
         mcompiler->get_interpreter().build_expr_tree(tmp,
                                                      func_par->initial_value,
                                                      this, tmp, main_cc,
-                                                     &res, pexpwloc, success);
+                                                     &res, pexpwloc, psuccess);
         delete tmp;
-        if(!success)
-        {
-            psuccess = false;
-            return 0;
-        }
+        SUCCES_OR_RETURN 0;
         pname = pname.substr(0, indexOfEq);
         strim(pname);
     }
-    bool success = true;
 
-    nvar = add_new_variable(pname, ptype, pdimension, pexpwloc, success);
-    if(!success)
-    {
-        psuccess = false;
-        return 0;
-    }
+    nvar = add_new_variable(pname, ptype, pdimension, psuccess);
+    SUCCES_OR_RETURN 0;
 
     nvar->func_par = func_par;
 
-    if(ptype == "int")
-    {
-        func_par->type = BASIC_TYPE_INT;
-    }
-
-    if(ptype == "byte")
-    {
-        func_par->type = BASIC_TYPE_BYTE;
-    }
-
-    if(ptype == "string")
-    {
-        func_par->type = BASIC_TYPE_STRING;
-    }
-
-    if(ptype == "real")
-    {
-        func_par->type = BASIC_TYPE_REAL;
-    }
-
+    if(ptype == "int") func_par->type = BASIC_TYPE_INT;
+    if(ptype == "byte") func_par->type = BASIC_TYPE_BYTE;
+    if(ptype == "string") func_par->type = BASIC_TYPE_STRING;
+    if(ptype == "real") func_par->type = BASIC_TYPE_REAL;
 
     func_par->name = pname;
     parameters.push_back(func_par);
@@ -248,7 +191,7 @@ parameter* method::add_parameter(std::string pname,
 parameter* method::get_parameter(size_t i)
 {
     // TODO: This was variables[i].the_parameter ... why?
-    if(i < variables.size())
+    if(i < parameters.size())
     {
         return parameters[i];
     }
@@ -263,13 +206,8 @@ parameter* method::get_parameter(size_t i)
  */
 void method::feed_parameter_list(char* par_list, const expression_with_location* expwloc, bool& psuccess)
 {
-    bool success = true;
-    std::vector<std::string> entries = string_list_create_bsep(par_list, C_COMMA, mcompiler, success);
-    if(!success)
-    {
-        psuccess = false;
-        return;
-    }
+    std::vector<std::string> entries = string_list_create_bsep(par_list, C_COMMA, mcompiler, psuccess);
+    SUCCES_OR_RETURN;
 
     std::vector<std::string>::iterator q = entries.begin();
     while(q != entries.end())
@@ -314,15 +252,10 @@ void method::feed_parameter_list(char* par_list, const expression_with_location*
             }
             strim(par_name);
             strim(par_type);
-            bool success = true;
             if(def_loc == DEF_INTERN)
             {
-                parameter* new_par_decl = add_parameter(par_name, par_type, 1, expwloc, main_cc, success);
-                if(!success)
-                {
-                    psuccess = false;
-                    return;
-                }
+                parameter* new_par_decl = add_parameter(par_name, par_type, 1, expwloc, main_cc, psuccess);
+                SUCCES_OR_RETURN;
 
                 /* here we should identify the dimension of the parameter */
                 if(par_type.find(C_SQPAR_CL) != std::string::npos
@@ -333,15 +266,10 @@ void method::feed_parameter_list(char* par_list, const expression_with_location*
             }
             else
             {
-                add_parameter("", par_type, 1, expwloc, main_cc, success);
-                if(!success)
-                {
-                    psuccess = false;
-                    return;
-                }
+                add_parameter("", par_type, 1, expwloc, main_cc, psuccess);
+                SUCCES_OR_RETURN;
             }
         }
         q ++;
     }
 }
-

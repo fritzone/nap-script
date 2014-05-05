@@ -459,14 +459,8 @@ void parsed_file::deal_with_while_loading(call_context* cc, expression_tree* new
     call_context* while_cc = new call_context(cc->compiler, CALL_CONTEXT_TYPE_WHILE, ss.str(), the_method, cc);
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_WHILE)    /* normal WHILE with { }*/
     {
-        bool success = true;
-        load_next_block(the_method, while_cc, current_level + 1, current_level, success);    /* loading the function*/
-        if(!success)
-        {
-            psuccess = false;
-            return;
-        }
-
+        load_next_block(the_method, while_cc, current_level + 1, current_level, psuccess);    /* loading the function*/
+        SUCCES_OR_RETURN;
     }
     else if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_WHILE_1L) /* while (a) if (b) if (c) { blabla; }*/
     {
@@ -475,26 +469,17 @@ void parsed_file::deal_with_while_loading(call_context* cc, expression_tree* new
         expression_with_location* next_exp = alloc_mem(expression_with_location,1, mcompiler);
         next_exp->location = expwloc->location;
         next_exp->expression = (mcompiler->duplicate_string(new_node->info.c_str()));
-        bool success = true;
-        load_next_single_phrase(next_exp, the_method, while_cc, &d, current_level + 1, success);
-        if(!success)
-        {
-            psuccess = false;
-            return;
-        }
+
+        load_next_single_phrase(next_exp, the_method, while_cc, &d, current_level + 1, psuccess);
+        SUCCES_OR_RETURN;
 
         new_node->op_type = STATEMENT_WHILE;
         new_node->info = STR_WHILE;
     }
     else if(C_SEMC == delim && new_node->op_type == STATEMENT_WHILE_1L)            /* one lined while, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
-        bool success = true;
-        while_cc->add_new_expression(new_node->info.c_str(), expwloc, success);
-        if(!success)
-        {
-            psuccess = false;
-            return;
-        }
+        while_cc->add_new_expression(new_node->info.c_str(), expwloc, psuccess);
+        SUCCES_OR_RETURN;
 
         new_node->op_type = STATEMENT_WHILE;
         new_node->info = STR_WHILE;
@@ -548,13 +533,8 @@ void parsed_file::deal_with_class_declaration(call_context* /*cc*/,
     int nlevel  = -1;
     while(nexpwloc)
     {
-        bool success = true;
-        npf->load_next_single_phrase(nexpwloc, nmethod, class_cc, &ndelim, nlevel, success);
-        if(!success)
-        {
-            psuccess = false;
-            return;
-        }
+        npf->load_next_single_phrase(nexpwloc, nmethod, class_cc, &ndelim, nlevel, psuccess);
+        SUCCES_OR_RETURN;
 
         nexpwloc = npf->parser_next_phrase(&ndelim);
     }
@@ -579,14 +559,8 @@ void parsed_file::deal_with_for_loading(call_context* cc,
 
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR)    /* normal FOR with { }*/
     {
-        bool success = true;
-        load_next_block(the_method, for_cc, current_level + 1, current_level, success);    /* loading the function*/
-        if(!success)
-        {
-            psuccess = false;
-            return;
-        }
-
+        load_next_block(the_method, for_cc, current_level + 1, current_level, psuccess);    /* loading the function*/
+        SUCCES_OR_RETURN;
     }
     else if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR_1L) /* for (a) if (b) if (c) { blabla; }*/
     {
@@ -595,26 +569,17 @@ void parsed_file::deal_with_for_loading(call_context* cc,
         expression_with_location* next_exp = alloc_mem(expression_with_location,1, mcompiler);
         next_exp->location = expwloc->location;
         next_exp->expression = mcompiler->duplicate_string(new_node->info.c_str());
-        bool success = true;
-        load_next_single_phrase(next_exp, the_method, for_cc, &d, current_level + 1, success);
-        if(!success)
-        {
-            psuccess = false;
-            return;
-        }
+
+        load_next_single_phrase(next_exp, the_method, for_cc, &d, current_level + 1, psuccess);
+        SUCCES_OR_RETURN;
 
         new_node->op_type = STATEMENT_FOR;
         new_node->info = STR_FOR;
     }
     else if(C_SEMC == delim && new_node->op_type == STATEMENT_FOR_1L)            /* one lined for, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
-        bool success = true;
-        for_cc->add_new_expression(new_node->info.c_str(), expwloc, success);
-        if(!success)
-        {
-            psuccess = false;
-            return;
-        }
+        for_cc->add_new_expression(new_node->info.c_str(), expwloc, psuccess);
+        SUCCES_OR_RETURN;
 
         new_node->op_type = STATEMENT_FOR;
         new_node->info = STR_FOR;
@@ -649,14 +614,8 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
 
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF)    /* normal IF with { }*/
     {
-        bool success = true;
-        load_next_block(the_method, if_cc, current_level + 1, current_level, success);    /* loading the function*/
-        if(!success)
-        {
-            psuccess = false;
-            return;
-        }
-
+        load_next_block(the_method, if_cc, current_level + 1, current_level, psuccess);    /* loading the function*/
+        SUCCES_OR_RETURN;
     }
     else if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF_1L) /* if (a) if (b) if (c) { blabla; }*/
     {
@@ -665,26 +624,17 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
         expression_with_location* next_exp = alloc_mem(expression_with_location,1, mcompiler);
         next_exp->location = expwloc->location;
         next_exp->expression = mcompiler->duplicate_string(new_node->info.c_str());
-        bool success = true;
-        load_next_single_phrase(next_exp, the_method, if_cc, &d, current_level + 1, success);
-        if(!success)
-        {
-            psuccess = false;
-            return;
-        }
+
+        load_next_single_phrase(next_exp, the_method, if_cc, &d, current_level + 1, psuccess);
+        SUCCES_OR_RETURN;
 
         new_node->op_type = STATEMENT_IF;
         new_node->info = STR_IF;
     }
     else if(C_SEMC == delim && new_node->op_type == STATEMENT_IF_1L)            /* one lined if, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
-        bool success = true;
-        if_cc->add_new_expression(new_node->info.c_str(), expwloc, success);
-        if(!success)
-        {
-            psuccess = false;
-            return;
-        }
+        if_cc->add_new_expression(new_node->info.c_str(), expwloc, psuccess);
+        SUCCES_OR_RETURN;
 
         new_node->op_type = STATEMENT_IF;
         new_node->info = STR_IF;
@@ -713,14 +663,8 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
             char* else_expression = trim(expwloc2->expression + strlen(STR_ELSE), mcompiler);
             if(strlen(else_expression) > 1)
             {
-                bool success = true;
-                else_cc->add_new_expression(else_expression, expwloc2, success);
-                if(!success)
-                {
-                    psuccess = false;
-                    return;
-                }
-
+                else_cc->add_new_expression(else_expression, expwloc2, psuccess);
+                SUCCES_OR_RETURN;
             }
         }
         else if(C_OPEN_BLOCK == delim2)
@@ -733,14 +677,8 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
                 {   /* else followed by another statement. Load it with the single phrase loader int the else_cc */
                     char delim3 = 0;
                     expression_with_location* expwloc3 = parser_next_phrase(&delim3);
-                    bool success = true;
-                    load_next_single_phrase(expwloc3, the_method, else_cc, &delim3, current_level, success);
-                    if(!success)
-                    {
-                        psuccess = false;
-                        return;
-                    }
-
+                    load_next_single_phrase(expwloc3, the_method, else_cc, &delim3, current_level, psuccess);
+                    SUCCES_OR_RETURN;
                 }
                 else
                 {
@@ -752,13 +690,8 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
             else
             {
                 position ++;    /* skip the { */
-                bool success = true;
-                load_next_block(the_method, else_cc, current_level, current_level + 1, success);    /* loading the function*/
-                if(!success)
-                {
-                    psuccess = false;
-                    return;
-                }
+                load_next_block(the_method, else_cc, current_level, current_level + 1, psuccess);    /* loading the function*/
+                SUCCES_OR_RETURN;
             }
         }
     }
@@ -790,44 +723,27 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
             {
                 if( strlen(expwloc->expression) > 0 )
                 {
-                    bool success = true;
-                    expression_tree* new_node = cc->add_new_expression(expwloc->expression, expwloc, success);
-                    if(!success)
-                    {
-                        psuccess = false;
-                        return;
-                    }
+                    expression_tree* new_node = cc->add_new_expression(expwloc->expression, expwloc, psuccess);
+                    SUCCES_OR_RETURN;
 
                     /* now check whether this node was an If, a for, a while, a do or anything else that might need loading more rows and creating more contexts */
                     if(new_node->op_type == STATEMENT_IF || new_node->op_type == STATEMENT_IF_1L)
                     {
                         use_delim = 0;
-                        deal_with_ifs_loading(cc, new_node, the_method, delim, current_level, expwloc, success);
-                        if(!success)
-                        {
-                            psuccess = false;
-                            return;
-                        }
+                        deal_with_ifs_loading(cc, new_node, the_method, delim, current_level, expwloc, psuccess);
+                        SUCCES_OR_RETURN;
                     }
                     else if(new_node->op_type == STATEMENT_WHILE || new_node->op_type == STATEMENT_WHILE_1L)
                     {
                         use_delim = 0;
-                        deal_with_while_loading(cc, new_node, the_method, delim, current_level, expwloc, success);
-                        if(!success)
-                        {
-                            psuccess = false;
-                            return;
-                        }
+                        deal_with_while_loading(cc, new_node, the_method, delim, current_level, expwloc, psuccess);
+                        SUCCES_OR_RETURN;
                     }
                     else if(new_node->op_type == STATEMENT_FOR || new_node->op_type == STATEMENT_FOR_1L)
                     {
                         use_delim = 0;
-                        deal_with_for_loading(cc, new_node, the_method, delim, current_level, expwloc, success);
-                        if(!success)
-                        {
-                            psuccess = false;
-                            return;
-                        }
+                        deal_with_for_loading(cc, new_node, the_method, delim, current_level, expwloc, psuccess);
+                        SUCCES_OR_RETURN;
                     }
                 }
             }
@@ -841,14 +757,8 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
                     std::stringstream ss;
                     ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << STR_UNNAMED_CC;
                     call_context* child_cc = new call_context(cc->compiler, CALL_CONTEXT_TYPE_UNNAMED, ss.str(), the_method, cc);
-                    bool success = true;
-                    expression_tree* new_node = cc->add_new_expression(STR_OPEN_BLOCK, expwloc, success);
-                    if(!success)
-                    {
-                        psuccess = false;
-                        return;
-                    }
-
+                    expression_tree* new_node = cc->add_new_expression(STR_OPEN_BLOCK, expwloc, psuccess);
+                    SUCCES_OR_RETURN;
                     //todo: add a new expression in the current call CONTEXT to start executing the next call context.
                     new_node->reference = new_envelope(child_cc, ENV_TYPE_CC, mcompiler);
                     cc = child_cc;
@@ -860,14 +770,8 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
                 {
                     if(expwloc->expression[0] != C_CLOSE_BLOCK) // put a new close block only if this is not a method def.
                     {
-                        bool success = true;
-                        cc->add_new_expression(STR_CLOSE_BLOCK, expwloc, success);
-                        if(!success)
-                        {
-                            psuccess = false;
-                            return;
-                        }
-
+                        cc->add_new_expression(STR_CLOSE_BLOCK, expwloc, psuccess);
+                        SUCCES_OR_RETURN;
                     }
                     cc = cc->father;    /* stepping back */
                     current_level --;
@@ -890,13 +794,8 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
         {
             if(delim == C_CLOSE_BLOCK)
             {
-                bool success = true;
-                cc->add_new_expression("}", expwloc, success);
-                if(!success)
-                {
-                    psuccess = false;
-                    return;
-                }
+                cc->add_new_expression("}", expwloc, psuccess);
+                SUCCES_OR_RETURN;
 
                 cc = cc->father;    /* stepping back */
                 current_level --;
@@ -915,13 +814,8 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
         expression_tree* cnode = new expression_tree(expwloc);
         garbage_bin<expression_tree*>::instance(mcompiler).place(cnode, mcompiler);
 
-        bool success = true;
-        void* gen_res = cc->compiler->get_interpreter().build_expr_tree(first, cnode, cur_method, first, cc, &op_res, expwloc, success);
-        if(!success)
-        {
-            psuccess = false;
-            return;
-        }
+        void* gen_res = cc->compiler->get_interpreter().build_expr_tree(first, cnode, cur_method, first, cc, &op_res, expwloc, psuccess);
+        SUCCES_OR_RETURN;
 
         switch(op_res)
         {
@@ -947,14 +841,9 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
                     level ++;    /* stepping into a method, increase the current level */
                     call_context* saved_cc = cc; /* saving the current cc*/
                     cc = cur_method->main_cc;
-                    bool success = true;
-                    load_next_block(cur_method, cc, level, saved_level, success);    /* loading the function*/
-                    if(!success)
-                    {
-                        psuccess = false;
-                        return;
-                    }
 
+                    load_next_block(cur_method, cc, level, saved_level, psuccess);    /* loading the function*/
+                    SUCCES_OR_RETURN;
                     cc = saved_cc; /* restoring the current cc */
                 }
             }
@@ -965,13 +854,9 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
         case STATEMENT_IF_1L:
         {
             cc->expressions.push_back(cnode);
-            bool success = true;
-            deal_with_ifs_loading(cc, cnode, cur_method, *delim, level, expwloc, success);
-            if(!success)
-            {
-                psuccess = false;
-                return;
-            }
+
+            deal_with_ifs_loading(cc, cnode, cur_method, *delim, level, expwloc, psuccess);
+            SUCCES_OR_RETURN;
 
             break;
         }
@@ -979,40 +864,22 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
         case STATEMENT_WHILE_1L:
         {
             cc->expressions.push_back(cnode);
-            bool success = true;
-            deal_with_while_loading(cc, cnode, cur_method, *delim, level, expwloc, success);
-            if(!success)
-            {
-                psuccess = false;
-                return;
-            }
-
+            deal_with_while_loading(cc, cnode, cur_method, *delim, level, expwloc, psuccess);
+            SUCCES_OR_RETURN;
             break;
         }
         case STATEMENT_FOR:
         case STATEMENT_FOR_1L:
         {
             cc->expressions.push_back(cnode);
-            bool success = true;
-            deal_with_for_loading(cc, cnode, cur_method, *delim, level, expwloc, success);
-            if(!success)
-            {
-                psuccess = false;
-                return;
-            }
-
+            deal_with_for_loading(cc, cnode, cur_method, *delim, level, expwloc, psuccess);
+            SUCCES_OR_RETURN;
             break;
         }
         case CLASS_DECLARATION:
         {
-            bool success = true;
-            deal_with_class_declaration(cc, cnode, 0, *delim, level, expwloc, success);
-            if(!success)
-            {
-                psuccess = false;
-                return;
-            }
-
+            deal_with_class_declaration(cc, cnode, 0, *delim, level, expwloc, psuccess);
+            SUCCES_OR_RETURN;
             break;
         }
         case FUNCTION_CALL:

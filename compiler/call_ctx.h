@@ -9,6 +9,33 @@
 
 class nap_compiler;
 
+
+/**
+ * Class, describing a label, a jump location.
+ */
+struct bytecode_label
+{
+    bytecode_label() : name(), bytecode_location(0), type(LABEL_PLAIN) {}
+
+    enum label_type
+    {
+        LABEL_PLAIN = 0,
+        LABEL_BREAK = 1,
+        LABEL_CONTINUE = 2
+    };
+
+    /* the name of the label */
+    std::string name;
+
+    /* the location of the label in the bytecode stream */
+    long bytecode_location;
+
+    /* the type of the location, can be 0 if this is just a plain label,
+     *1 if this is a "break" location label,
+     *2 if this is a "continue" location label */
+    label_type type;
+};
+
 /*
  * The call context is something like a namespace and/or code-block ... See the code
  * below, to understand:
@@ -80,8 +107,7 @@ public: /* Public methods */
      */
     variable *add_variable(const char *name,
                            const char *type,
-                           int dimension,
-                           const expression_with_location *expwloc, bool &psuccess);
+                           int dimension, bool &psuccess);
 
 
     /**
@@ -98,13 +124,13 @@ public: /* Public methods */
      * @param name - the name of the label
      * @return - the bytecode label object of the new label
      */
-    bytecode_label *add_break_label(long position, const std::string &name);
+    bytecode_label add_break_label(long position, const std::string &name);
 
 
     /**
      * Creates a new label structure and inserts it into the vector of the bytecode labels of this call_context
      */
-    bytecode_label *provide_label();
+    bytecode_label provide_label();
 
     /**
      * @brief call_context_add_new_expression add a new expression to this call context
@@ -155,9 +181,9 @@ public: /* Public members */
     method *ccs_method;
 
     /* this is a vector of label locations for this*/
-    std::vector<bytecode_label *> labels;
+    std::vector<bytecode_label> labels;
 
-    bytecode_label *break_label;
+    bytecode_label break_label;
 
     /* the classes that are defined in this call context */
     std::vector<class_declaration *> classes;

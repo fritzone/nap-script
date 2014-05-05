@@ -42,15 +42,8 @@ bool nap_compiler::set_source(const char *src, bool& psuccess)
     }
 
     mEmbedded = true;
-    bool success = true;
-    parse(success);
-    if(!success)
-    {
-        psuccess = false;
-        return 0;
-    }
-
-    return true;
+    parse(psuccess);
+    return psuccess;
 }
 
 void nap_compiler::parse(bool& psuccess)
@@ -68,11 +61,9 @@ void nap_compiler::parse(bool& psuccess)
             if(std::find(loaded_files.begin(), loaded_files.end(), exp_trim) == loaded_files.end())
             {
                 loaded_files.push_back(exp_trim);
-                bool success = true;
-                load_file(exp_trim, success);
-                if(!success)
+                load_file(exp_trim, psuccess);
+                if(!psuccess)
                 {
-                    psuccess = false;
                     return;
                 }
 
@@ -81,11 +72,9 @@ void nap_compiler::parse(bool& psuccess)
         }
         else
         {
-            bool success = true;
-            mpf->load_next_single_phrase(expwloc, cur_method, cur_cc, &delim, level, success);
-            if(!success)
+            mpf->load_next_single_phrase(expwloc, cur_method, cur_cc, &delim, level, psuccess);
+            if(!psuccess)
             {
-                psuccess = false;
                 return;
             }
 
@@ -102,14 +91,7 @@ void nap_compiler::load_file(const std::string & file_name, bool &psuccess)
     {
         return;
     }
-    bool success = true;
-    parse(success);
-    if(!success)
-    {
-        psuccess = false;
-        return;
-    }
-
+    parse(psuccess);
 }
 
 bool nap_compiler::compile()
