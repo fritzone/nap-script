@@ -23,7 +23,7 @@
 /**
  * Creates a new method
  */
-method::method(nap_compiler* _compiler, const char* name, char* preturn_type, call_context* cc) :
+method::method(nap_compiler* _compiler, const std::string &name, const std::string &preturn_type, call_context* cc) :
     library_name("-"), return_type(""), ret_type(0), mcompiler(_compiler)
 {
     call_context* method_main_cc = NULL;
@@ -32,16 +32,16 @@ method::method(nap_compiler* _compiler, const char* name, char* preturn_type, ca
 
     def_loc = DEF_INTERN;
     method_name = name;
-    if(preturn_type && strstr(preturn_type, "extern"))
+    if(!preturn_type.empty() && starts_with(preturn_type, "extern"))
     {
         /* if this method is a method defined somewhere else ... such as your C++ application */
-        char* after_ext = preturn_type + 6;
+        const char* after_ext = preturn_type.c_str() + 6;
         return_type = after_ext;
         strim(return_type);
         def_loc = DEF_EXTERN;
     }
     else
-    if(preturn_type)
+    if(!preturn_type.empty())
     {
         return_type = preturn_type;
     }
@@ -209,7 +209,7 @@ parameter* method::get_parameter(size_t i)
 /**
  * Populates the parameters of this method with the definitions from the string
  */
-void method::feed_parameter_list(char* par_list, const expression_with_location* expwloc, bool& psuccess)
+void method::feed_parameter_list(const char* par_list, const expression_with_location* expwloc, bool& psuccess)
 {
     std::vector<std::string> entries = string_list_create_bsep(par_list, C_COMMA, mcompiler, psuccess);
     SUCCES_OR_RETURN;
