@@ -1061,14 +1061,15 @@ char* interpreter::is_indexed(const std::string& expr_trim, int expr_len, char**
  * Checks if the expression passed in some statement that starts with a reserved word.
  * The return value is the part after the keywords
  */
-char* interpreter::is_some_statement(const std::string& expr_trim, const char* keyword)
+std::string interpreter::is_some_statement(const std::string& expr_trim, const std::string& keyword)
 {
-    if( expr_trim.compare(0, strlen(keyword), keyword) == 0)
+    if( starts_with(expr_trim, keyword) )
     {
-        char* retv = trim(mcompiler->duplicate_string(expr_trim.c_str() + strlen(keyword)), mcompiler);
+        std::string retv = expr_trim.substr(keyword.length());
+        strim(retv);
         return retv;
     }
-    return NULL;
+    return "";
 }
 
 /**
@@ -1106,8 +1107,8 @@ void* interpreter::deal_with_one_word_keyword( call_context* cc, expression_tree
 /**
  * This method deals with preparing structures for the keywords if/while since these are handled quite similarly this phase
  */
-void* interpreter::deal_with_conditional_keywords(char* keyword_if,
-                                                  char* keyword_while,
+void* interpreter::deal_with_conditional_keywords(const std::string& keyword_if,
+                                                  const std::string& keyword_while,
                                                   expression_tree* node,
                                                   const expression_with_location* expwloc,
                                                   const std::string& expr_trim,
@@ -1122,15 +1123,16 @@ void* interpreter::deal_with_conditional_keywords(char* keyword_if,
     int stmt = -1;
     const char* keyw = NULL;
     /* Check if this is an IF or a WHILE statement, since these two are handled the same way mostly */
-    if(keyword_if || keyword_while)
+    if(!keyword_if.empty() || !keyword_while.empty())
     {
-        if(keyword_if)
+        if(!keyword_if.empty())
         {
             one_line_stmt = STATEMENT_IF_1L;
             stmt = STATEMENT_IF;
             keyw = STR_IF;
         }
-        else if(keyword_while)
+        else
+        if(!keyword_while.empty())
         {
             one_line_stmt = STATEMENT_WHILE_1L;
             stmt = STATEMENT_WHILE;
@@ -1221,11 +1223,11 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
     char* indexed_elem = strchr(expr_trim.c_str(), C_SQPAR_CL)
             && strchr(expr_trim.c_str(), C_SQPAR_OP) ? is_indexed(expr_trim, expr_len, &index): NULL;
 
-    char* keyword_return = is_some_statement(expr_trim, STR_RETURN);
-    char* keyword_if = is_some_statement(expr_trim, STR_IF);
-    char* keyword_while = is_some_statement(expr_trim, STR_WHILE);
-    char* keyword_for = is_some_statement(expr_trim, STR_FOR);
-    char* keyword_new = is_some_statement(expr_trim, STR_NEW);
+    std::string keyword_return = is_some_statement(expr_trim, STR_RETURN);
+    std::string  keyword_if = is_some_statement(expr_trim, STR_IF);
+    std::string  keyword_while = is_some_statement(expr_trim, STR_WHILE);
+    std::string  keyword_for = is_some_statement(expr_trim, STR_FOR);
+    std::string  keyword_new = is_some_statement(expr_trim, STR_NEW);
 
     if(expr == STR_CLOSE_BLOCK) /* destroy the call context*/
     {
@@ -1301,10 +1303,10 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
 
     /* now check if any keyword is used here, and deal with that */
 
-    if(keyword_new)
+    if(!keyword_new.empty())
     {
         node->op_type = STATEMENT_NEW;
-        char* constructor_name = mcompiler->duplicate_string(keyword_new);
+        char* constructor_name = mcompiler->duplicate_string(keyword_new.c_str());
         if(strchr(constructor_name, '('))
         {
             *strchr(constructor_name, '(') = 0;
@@ -1340,7 +1342,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
     }
 
     /* check if this is a 'return' statement */
-    if(keyword_return)
+    if(!keyword_return.empty())
     {
         node->info = STR_RETURN;
         expression_tree* expt = new expression_tree(expwloc);
@@ -1370,7 +1372,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
     }
 
     /* if or while? */
-    if(keyword_if || keyword_while)
+    if(!keyword_if.empty() || !keyword_while.empty())
     {
         void* t = deal_with_conditional_keywords(keyword_if, keyword_while,
                                               node, expwloc, expr_trim,
@@ -1381,11 +1383,11 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
     }
 
     /* the for keyword? */
-    if(keyword_for)
+    if(!keyword_for.empty())
     {
-        char* fors_trm = trim(keyword_for, mcompiler);
-        int fors_len = strlen(fors_trm);
-        if(fors_trm[0] != C_PAR_OP && fors_trm[fors_len - 1] != C_PAR_CL)
+        strim(keyword_for);
+        int fors_len = keyword_for.length();
+        if(keyword_for[0] != C_PAR_OP && keyword_for[fors_len - 1] != C_PAR_CL)
         {
             mcompiler->throw_error(E0012_SYNTAXERR);
             psuccess = false;
@@ -1396,10 +1398,10 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
         int done = 0;
         while(!done && j < fors_len)
         {
-            if(fors_trm[j] == C_PAR_OP) level ++;
-            if(fors_trm[j] == C_PAR_CL) level --;
+            if(keyword_for[j] == C_PAR_OP) level ++;
+            if(keyword_for[j] == C_PAR_CL) level --;
             if(level == 0) done = 1;
-            if(!done)for_par[i++] = fors_trm[j++];
+            if(!done)for_par[i++] = keyword_for[j++];
         }
         for_par = trim(for_par, mcompiler);
         if(strlen(for_par) == 0)
@@ -1743,7 +1745,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
             node->left = new expression_tree(expwloc, node);
             garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
             //expr_trim[expr_len - 2] = 0;    /* this is to cut down the two ++ or -- signs ... */
-            std::string ep2(expr_trim.substr(0, expr_trim.length() - 2));
+            std::string ep2(expr_trim.substr(0, expr_len- 2));
             build_expr_tree(ep2.c_str(), node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
             SUCCES_OR_RETURN 0;
 
@@ -1756,7 +1758,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
                 expr_trim ++;
                 expr_trim = trim(expr_trim, mcompiler);
                 */
-                expr_trim = expr_trim.substr(1, expr_trim.length() - 2);
+                expr_trim = expr_trim.substr(1, expr_len - 2);
                 strim(expr_trim);
 
                 if(expr_trim.empty())
