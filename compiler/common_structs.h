@@ -29,8 +29,9 @@ struct variable;
 struct file_location
 {
 
-    file_location(long plocation, long pstart_line, long pend_line, const std::string& file)
-        : location(plocation), start_line_number(pstart_line), end_line_number(pend_line), file_name(file)
+    file_location(long plocation, long pstart_line, long pend_line, int file_index)
+        : location(plocation), start_line_number(pstart_line),
+          end_line_number(pend_line), mfile_index(file_index)
     {}
 
     /* the location in the 'content' of the parsed_file structure */
@@ -42,8 +43,9 @@ struct file_location
     /* the last line number */
     int end_line_number;
 
-    /* this is the file name */
-    std::string file_name;
+    /* this is the index of the file name in the map of */
+    int mfile_index;
+
 };
 
 /**

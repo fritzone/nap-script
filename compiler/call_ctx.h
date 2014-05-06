@@ -64,6 +64,20 @@ struct bytecode_label
 struct call_context : public variable_holder
 {
 
+    //0 - global, 1 - named, 2 - chained
+    enum CC_TYPE
+    {
+        CC_GLOBAL = 0,
+        CC_NAMED = 1,
+        CC_CHAINED = 2,
+        CC_UNNAMED = 3,
+        CC_IF = 4,
+        CC_ELSE = 5,
+        CC_WHILE = 5,
+        CC_FOR = 7,
+        CC_CLASS = 320
+    };
+
 public: /* Public methods */
 
     /**
@@ -74,7 +88,7 @@ public: /* Public methods */
      * @param father - the father of this call cotnext
      **/
     call_context (nap_compiler* _compiler,
-                  int ptype,
+                  CC_TYPE ptype,
                   const std::string& pname,
                   method *the_method,
                   call_context *pfather);
@@ -166,7 +180,7 @@ public: /* Public members */
     std::vector<method*> methods;
 
     /* the type of the call context: 0 - global, 1 - named, 2 - chained*/
-    int type;
+    CC_TYPE type;
 
     /* the name of the call context */
     std::string name;

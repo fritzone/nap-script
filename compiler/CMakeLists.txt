@@ -3,6 +3,7 @@ set(project nap)
 include (GenerateExportHeader)
 
 set(${project}_files
+    # Source files
     ${CMAKE_CURRENT_SOURCE_DIR}/bt_string.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/call_ctx.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/compiler.cpp
@@ -11,7 +12,6 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/method.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/opr_hndl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/parser.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/type.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/evaluate.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/file_abstraction.cpp
@@ -21,6 +21,36 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/code_stream.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/charconverter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/variable_holder.cpp
+
+    # Header files
+    ${CMAKE_CURRENT_SOURCE_DIR}/bt_string.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/call_ctx.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/charconverter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/code_finalizer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/code_output.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/code_stream.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/common_structs.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/compiler.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/consts.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/envelope.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/evaluate.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression_tree.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/file_abstraction.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/garbage_bin.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/interpreter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/method.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/number.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/opr_hndl.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/parameter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/parser.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/res_wrds.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/sys_brkp.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/type.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/utils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/variable.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/variable_holder.h
+
+    # From VM
     ${CMAKE_SOURCE_DIR}/vm/byte_order.c
 )
 

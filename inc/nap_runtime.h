@@ -57,7 +57,8 @@ struct nap_runtime;
  * data of the previous bytecode chunk is purged, and the new one is injected
  * into the internal structures of the nap virtual machine.
  *
- * The \c nap_runtime_create does not
+ * You need to call \c nap_runtime_shutdown when you are done working with the
+ * runtime in order to free the memory allocated by the runtime.
  *
  * @param[in] name The name of the environment. If NULL means not used.
  *

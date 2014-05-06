@@ -141,9 +141,4 @@ enum cmp_typeids
     COMP_LAST
 };
 
-/**
- * Returns the type identifier for the given type
- */
-int get_typeid(const std::string& type);
-
 #endif

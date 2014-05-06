@@ -25,7 +25,7 @@ using namespace std;
 /**
  * Creates a new call context object
  */
-call_context::call_context(nap_compiler *_compiler, int ptype, const string &pname,
+call_context::call_context(nap_compiler *_compiler, CC_TYPE ptype, const string &pname,
                            method* the_method, call_context* pfather)
     : compiler(_compiler)
 {
@@ -44,7 +44,7 @@ call_context::~call_context()
 }
 
 class_declaration::class_declaration(nap_compiler *_compiler, const char* pname, call_context* pfather) :
-    call_context(_compiler, CLASS_DECLARATION, pname, 0,  pfather)
+    call_context(_compiler, CC_CLASS, pname, 0,  pfather)
 {
     parent_class = 0;
     pfather->classes.push_back(this);
@@ -111,9 +111,11 @@ method* call_context::get_method(const string &pname)
         struct funtable_entry* fe = nap_vm_get_method(chain, pname.c_str());
         if(fe)
         {
-            call_context* chain_cc = new call_context(compiler, 2, "-", 0, 0);
+            call_context* chain_cc = new call_context(compiler, CC_CHAINED, "-", 0, 0);
             garbage_bin<call_context*>::instance(compiler).place(chain_cc, compiler);
+
             method* m = new method(compiler, pname.c_str(), (char*)get_reg_type(fe->return_type), chain_cc);
+
             garbage_bin<method*>::instance(compiler).place(m, compiler);
             for(int i=0; i<fe->parameter_count; i++)
             {
@@ -121,7 +123,8 @@ method* call_context::get_method(const string &pname)
                 m->add_parameter(std::string("par_") +  get_reg_type(fe->parameter_types[i]), get_reg_type(fe->parameter_types[i]), 1, 0, chain_cc, success);
                 if(!success) return 0;
             }
-            // and populate the method's parameters from the funtable :)
+
+
             return m;
         }
         chain = chain->parent;

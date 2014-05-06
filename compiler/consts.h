@@ -75,23 +75,23 @@ extern const char *STR_SHRIGHT;
  */
 const char C_PAR_OP            = '(';
 const char C_PAR_CL            = ')';
-const char C_SQPAR_OP        = '[';
+const char C_SQPAR_OP          = '[';
 const char C_BRACKET_OP        = '{';
-const char C_SQPAR_CL        = ']';
+const char C_SQPAR_CL          = ']';
 const char C_LT                = '<';
 const char C_GT                = '>';
-const char C_QUOTE            = '"';
+const char C_QUOTE             = '"';
 const char C_SQUOTE            = '\'';
-const char C_BACKQUOTE        = '`';
-const char C_BACKSLASH        = '\\';
-const char C_SPACE            = ' ';
-const char C_HASH            = '#';
-const char C_SLASH            = C_DIV;
-const char C_STAR            = C_MUL;
-const char C_NEWLINE        = '\n';
+const char C_BACKQUOTE         = '`';
+const char C_BACKSLASH         = '\\';
+const char C_SPACE             = ' ';
+const char C_HASH              = '#';
+const char C_SLASH             = C_DIV;
+const char C_STAR              = C_MUL;
+const char C_NEWLINE           = '\n';
 const char C_CARRET            = '\r';
-const char C_TAB            = '\t';
-const char C_UNDERLINE      = '_';
+const char C_TAB               = '\t';
+const char C_UNDERLINE         = '_';
 
 /*
  * x= operators (+=, -=, etc ...)
@@ -125,15 +125,6 @@ extern const char *STR_GLOBAL;
  * Numerical constants
  */
 const int MAX_IDENTIFIER_LENGTH            = 1024;
-
-const int CALL_CONTEXT_TYPE_GLOBAL        = 0;
-const int CALL_CONTEXT_TYPE_METHOD_MAIN    = 1;
-const int CALL_CONTEXT_TYPE_CLASS        = 2;
-const int CALL_CONTEXT_TYPE_UNNAMED        = 3;
-const int CALL_CONTEXT_TYPE_IF            = 4;
-const int CALL_CONTEXT_TYPE_ELSE        = 5;
-const int CALL_CONTEXT_TYPE_WHILE        = 6;
-const int CALL_CONTEXT_TYPE_FOR            = 7;
 
 const int DEF_INTERN                           = 0; // a normal method
 const int DEF_EXTERN                           = 1; // an "extern" method defined in native code/library

@@ -1135,7 +1135,7 @@ static void resolve_break_keyword(nap_compiler* _compiler, call_context* cc, boo
     /* find the first while or for call context. Also consider switch statements*/
     call_context* qcc = cc;
     /* hold the number of stack rollbacks we need to put in here*/
-    while(qcc && qcc->type != CALL_CONTEXT_TYPE_WHILE && qcc->type != CALL_CONTEXT_TYPE_FOR)
+    while(qcc && qcc->type != call_context::CC_WHILE && qcc->type != call_context::CC_FOR)
     {
         qcc = qcc->father;
     }

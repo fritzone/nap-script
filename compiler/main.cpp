@@ -3,32 +3,6 @@
 #include "garbage_bin.h"
 
 #include "nap_types.h"
-//void fun(nap_int_t a)
-//{
-//    printf("%d", a);
-//}
-
-//struct nap_ext_par_desc
-//{
-//    void* p1;
-//    void* p2;
-//    void* p3;
-//    void* p4;
-//    void* p5;
-//    void *p6;
-//    void *p7;
-//};
-
-
-////nap_ext_v__i
-//typedef void (*nap_ext_v__i)(nap_int_t);
-//void nap_ext_caller_v__i(void* fun, nap_ext_par_desc* pars)
-//{
-//    nap_ext_v__i local_fun = (nap_ext_v__i)fun;
-//    local_fun( *((int*)(pars->p1)) );
-//}
-
-
 
 int main(int argc, char* argv[])
 {

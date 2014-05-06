@@ -22,27 +22,6 @@
 #include <set>
 
 /**
- * Transforms a character to a string
- */
-char *c2str(char c, const nap_compiler *_compiler)
-{
-char *s = alloc_mem(char,2, _compiler);
-    s[0] = c;
-    s[1] = 0;
-    return s;
-}
-
-/**
- * return the substring of src before pos
- */
-char* before(int pos, const char *src, const nap_compiler *_compiler)
-{
-char *befs = alloc_mem(char,pos+1, _compiler);
-    strncpy(befs, src, pos);
-    return befs;
-}
-
-/**
  * return the substring of src after pos
  */
 char* after(int pos, const char *src, const nap_compiler *_compiler)
@@ -546,4 +525,20 @@ int is_string(const char* expr_trim, int expr_len)
 int is_statement_string(const char* expr_trim, int expr_len)
 {
     return is_enclosed_string(expr_trim, expr_len, C_BACKQUOTE, C_BACKQUOTE);
+}
+
+/**
+ * Returns the type ID of the given text type...
+ */
+int get_typeid(const std::string &type)
+{
+    if(type == STR_INT) return BASIC_TYPE_INT;
+    if(type == STR_BYTE) return BASIC_TYPE_BYTE;
+    if(type == STR_REAL) return BASIC_TYPE_REAL;
+    if(type == STR_CHAR) return BASIC_TYPE_CHAR;
+    if(type == STR_BOOL) return BASIC_TYPE_BOOL;
+    if(type == STR_STRING) return BASIC_TYPE_STRING;
+    if(type == STR_VOID) return BASIC_TYPE_VOID;
+
+    return BASIC_TYPE_DONTCARE;
 }
