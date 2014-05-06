@@ -43,7 +43,7 @@ int isoperator(char c);
 
 int isparanthesis(char c);
 
-int isnumber(const char *s);
+int isnumber(const std::string &s);
 
 int is_identifier_char(char c);
 
@@ -56,35 +56,11 @@ int is_whitespace(char c);
 int is_valid_variable_name(const char* name);
 
 /* check for an immediate byte value expressed as character: 'A' -> 65*/
-int is_immediate_byte(const char* t);
+int is_immediate_byte(const std::string &t);
 
 /*
  * Utility functions
  */
-
-/**
- * Returns the substring of src after pos. The character at pos is not included.
- * @param pos the position
- * @param src the source string
- * Returns a new string, user must `free` it.
- */
-char* after(int pos, const char *src, const nap_compiler *_compiler);
-
-/**
- * Trims the trailing spaces, tabs, newlines from input, returns the trimmed string.
- * This method Modifies the input, returns the modified version.
- * This method does not allocate any memory.
- * @param src the string to trim
- */
-char *rtrim(const char* src, const nap_compiler *_compiler);
-
-/**
- * Trims the leading spaces, tabs, newlines from input, returns the trimmed string.
- * This method creates a new string, modifies and returns it.
- * This method allocates memory, the user must free.
- * @param src the string to trim
- */
-char *ltrim(const char* src, const nap_compiler *_compiler);
 
 /**
  * Trims the leading/trailing spaces, tabs, newlines from input, returns the trimmed string.
@@ -120,14 +96,14 @@ void skip_sq_pars(const char* expr, int expr_len, int* i);
 /**
  * Skips the whitespace in the given string
  */
-void skip_whitespace(const char* expr, int expr_len, int* i);
+void skip_whitespace(const std::string &expr, int expr_len, int* i);
 
 /**
  * Extracts a phrase from the input string which is enclosed between c_starter and c_ender, the result will
  * be places in o_result, and it will return the first character after the extracted pahrase and the enclosing
  * ender in the input
  */
-char* extract_next_enclosed_phrase(char* input, char c_starter, char c_ender, char* o_result);
+char* extract_next_enclosed_phrase(const char *input, char c_starter, char c_ender, char* o_result);
 
 extern long mem_alloc_count;
 extern void** mem_allocation;
@@ -145,7 +121,7 @@ template <class T> T* allocate(size_t count, const nap_compiler* _compiler)
 
 char other_par(char c);
 
-bool valid_variable_name(const char* nm);
+bool valid_variable_name(const std::string &nm);
 /**
  * Returns the type of the operator as a struct number for faster access
  */
@@ -169,7 +145,7 @@ std::string generate_unique_hash();
  */
 std::vector<std::string> string_list_create_bsep(const std::string &instr, char sep, const nap_compiler *_compiler, bool &psuccess);
 
-int is_enclosed_string(const char* expr_trim, int expr_len, char encls, char encle);
+int is_enclosed_string(const std::string &expr_trim, int expr_len, char encls, char encle);
 
 /**
  * @brief is_string returns true if the string is enclosed in quotes
@@ -177,7 +153,7 @@ int is_enclosed_string(const char* expr_trim, int expr_len, char encls, char enc
  * @param expr_len
  * @return
  */
-int is_string(const char* expr_trim, int expr_len);
+int is_string(const std::string &expr_trim, int expr_len);
 
 /**
  * @brief is_statement_string returns true if the strign is enclosed in bacquotes
@@ -185,11 +161,14 @@ int is_string(const char* expr_trim, int expr_len);
  * @param expr_len
  * @return
  */
-int is_statement_string(const char* expr_trim, int expr_len);
+int is_statement_string(const std::string &expr_trim, int expr_len);
 
 /**
  * Returns the type identifier for the given type
  */
 int get_typeid(const std::string& type);
+
+
+bool starts_with(const std::string& s1, const std::string& s2) ;
 
 #endif

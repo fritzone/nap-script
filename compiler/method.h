@@ -62,7 +62,7 @@ struct method : public variable_holder
      * @param env_var
      * @return
      */
-    variable* has_variable(call_context* cc, char* varname, int* env_var);
+    variable* has_variable(call_context* cc, const std::string &varname, int* env_var);
 
     /**
      * @brief feed_parameter_list Feeds in the given parameter list to the method for it to create its parameter structures

@@ -22,55 +22,6 @@
 #include <set>
 
 /**
- * return the substring of src after pos
- */
-char* after(int pos, const char *src, const nap_compiler *_compiler)
-{
-int len = strlen(src);
-char *afts= alloc_mem(char,len - pos + 1, _compiler);
-    strncpy(afts, src + pos + 1, len - pos + 1);
-    return afts;
-}
-
-
-/**
- * Trims the trailing spaces, tabs, newlines from input, returns the trimmed string
- */
-char *rtrim(const char* src, const nap_compiler *_compiler )
-{
-char *res = _compiler->duplicate_string(src);
-int endPos = strlen(res)-1;
-    if(endPos == -1)
-    {
-        return EMPTY;
-    }
-    while(is_whitespace(res[endPos]))
-    {
-        res[endPos] = 0;
-        endPos -- ;
-    }
-    return res;
-}
-
-/**
-* Trims the leading spaces, tabs, newlines from input, returns the trimmed string. User must free the returned string
-*/
-char *ltrim(const char* src, const nap_compiler *_compiler)
-{
-    if(!src)
-    {
-        return EMPTY;
-    }
-
-    int endPos = strlen(src);
-    int i = 0;
-    
-    while(i<endPos && is_whitespace(src[i])) i++;
-    
-    return _compiler->duplicate_string(src + i);
-}
-
-/**
  * Removes leading, trailing spaces
  */
 char* trim(const char* src, const nap_compiler *_compiler)
@@ -143,16 +94,17 @@ void skip_sq_pars(const char* expr, int expr_len, int* i)
 }
 
 
-void skip_whitespace(const char* expr, int expr_len, int* i)
+void skip_whitespace(const std::string& expr, int expr_len, int* i)
 {
     while(*i < expr_len && is_whitespace(expr[*i])) (*i) ++;
 }
 
-char* extract_next_enclosed_phrase(char* input, char c_starter, char c_ender, char* o_result)
+char* extract_next_enclosed_phrase(const char* input, char c_starter, char c_ender, char* o_result)
 {
-int level = 0;
-char* p = input, *result = o_result;
-int can_stop = 0;
+    int level = 0;
+    const char* p = input;
+    char *result = o_result;
+    int can_stop = 0;
     while(*p && !can_stop)
     {
         if(*p == c_starter) level ++;
@@ -160,17 +112,19 @@ int can_stop = 0;
         if(level == -1) can_stop = 1;
         if(*p == C_QUOTE || *p == C_BACKQUOTE || *p == C_SQUOTE)
         {
-        char m_ender = *p;
-            *result ++ = *p ++;
+            char m_ender = *p;
+            *result ++ = *p;
+            p ++;
             while(*p && *p != m_ender)
             {
-                *result ++ = *p ++;
+                *result ++ = *p;
+                p++;
             }
         }
         if(!can_stop) *result ++ = *p ++;
     }
     p++;
-    return p;
+    return const_cast<char*>(p);
 }
 
 char other_par(char c)
@@ -182,9 +136,9 @@ char other_par(char c)
     return c;
 }
 
-bool valid_variable_name(const char* nm)
+bool valid_variable_name(const std::string& nm)
 {
-    int l = strlen(nm);
+    int l = nm.length();
     if(l < 1 || l > 255)
     {
         return false;
@@ -312,7 +266,7 @@ int isparanthesis(char c)
 /*
  * returns 1 if s is a  number
  */
-int isnumber(const char *s)
+int isnumber(const std::string& s)
 {
     unsigned int i;
     for(i=0; s[i]; i++)
@@ -474,16 +428,16 @@ std::vector<std::string> string_list_create_bsep(const std::string& instr, char 
 }
 
 
-int is_immediate_byte(const char *t)
+int is_immediate_byte(const std::string& t)
 {
-    if(strlen(t) != 3) return 0;
+    if(t.length() != 3) return 0;
     if(t[0] != t[2]) return 0;
     if(t[0] != '\'') return 0;
     return 1;
 }
 
 
-int is_enclosed_string(const char* expr_trim, int expr_len, char encls, char encle)
+int is_enclosed_string(const std::string& expr_trim, int expr_len, char encls, char encle)
 {
     if(expr_trim[0] == encls)    /* we can check them ... */
     {
@@ -511,7 +465,7 @@ int is_enclosed_string(const char* expr_trim, int expr_len, char encls, char enc
  * @param expr_len
  * @return
  */
-int is_string(const char* expr_trim, int expr_len)
+int is_string(const std::string& expr_trim, int expr_len)
 {
     return is_enclosed_string(expr_trim, expr_len, C_QUOTE, C_QUOTE);
 }
@@ -522,7 +476,7 @@ int is_string(const char* expr_trim, int expr_len)
  * @param expr_len
  * @return
  */
-int is_statement_string(const char* expr_trim, int expr_len)
+int is_statement_string(const std::string& expr_trim, int expr_len)
 {
     return is_enclosed_string(expr_trim, expr_len, C_BACKQUOTE, C_BACKQUOTE);
 }
@@ -541,4 +495,9 @@ int get_typeid(const std::string &type)
     if(type == STR_VOID) return BASIC_TYPE_VOID;
 
     return BASIC_TYPE_DONTCARE;
+}
+
+bool starts_with(const std::string& s1, const std::string& s2)
+{
+    return s2.size() <= s1.size() && s1.compare(0, s2.size(), s2) == 0;
 }

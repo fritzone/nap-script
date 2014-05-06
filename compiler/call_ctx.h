@@ -119,8 +119,8 @@ public: /* Public methods */
      * @param expwloc - the location of the piece of code for this
      * @return - the newly created variable
      */
-    variable *add_variable(const char *name,
-                           const char *type,
+    variable *add_variable(const std::string &name,
+                           const std::string &type,
                            int dimension, bool &psuccess);
 
 
@@ -217,7 +217,7 @@ struct class_declaration : public call_context
      * @param father - the call context in which this is
      * @return the newly created class declaration
      */
-    class_declaration (nap_compiler* _compiler, const char *pname, call_context *pfather);
+    class_declaration (nap_compiler* _compiler, const std::string& name, call_context *pfather);
 
     class_declaration *parent_class;
     std::vector<class_declaration *> implemented_interfaces;

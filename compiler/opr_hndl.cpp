@@ -14,9 +14,9 @@
  * Returns -1 in case nothing was found or the location of the operator which comes first
  * between op1, op2 in the list
  */
-int level_0_char_operator(const nap_compiler* _compiler, const char *expr, char op1, char op2, int need_first, bool& psuccess)
+int level_0_char_operator(const nap_compiler* _compiler, const std::string &expr, char op1, char op2, int need_first, bool& psuccess)
 {
-    signed int i=0, len = strlen(expr);
+    signed int i=0, len = expr.length();
     if(len == 1 && expr[0] != op1 && expr[0] != op2)
     {
         return -1;
@@ -166,9 +166,9 @@ int level_0_char_operator(const nap_compiler* _compiler, const char *expr, char 
  * Look for a level 0 operator, specifies if we need the last occurence or the first
  * The operator can be longer than a single character
  */
-int level_0_longer_operator(const nap_compiler* _compiler, const char *expr, const char* op, int need_last, bool& psuccess)
+int level_0_longer_operator(const nap_compiler* _compiler, const std::string& expr, const char* op, int need_last, bool& psuccess)
 {
-signed int len = strlen(expr), lenopc = strlen(op), i = 0;
+signed int len = expr.length(), lenopc = strlen(op), i = 0;
 int last_idx = -1, level = 0;
 
     while(i<len)
@@ -291,7 +291,7 @@ int last_idx = -1, level = 0;
 /**
  * Looks for a lvel 0 additive operator, such as + -
  */
-int level_0_add_operator(const nap_compiler* _compiler, const char* expr, bool& psuccess)
+int level_0_add_operator(const nap_compiler* _compiler, const std::string& expr, bool& psuccess)
 {
     return level_0_char_operator(_compiler, expr, C_ADD, C_SUB, 0, psuccess);
 }
@@ -300,7 +300,7 @@ int level_0_add_operator(const nap_compiler* _compiler, const char* expr, bool& 
  * Looks for level 0 bitwise operators:
  * && || !
  */
-int level_0_logical_operator(const nap_compiler* _compiler, const char* expr, bool& psuccess)
+int level_0_logical_operator(const nap_compiler* _compiler, const std::string& expr, bool& psuccess)
 {
     int opr = level_0_longer_operator(_compiler, expr, STR_LOGIC_OR, 0, psuccess);
     if(opr > -1) return opr;
@@ -321,7 +321,7 @@ int level_0_logical_operator(const nap_compiler* _compiler, const char* expr, bo
  * Looks for level 0 bitwise operators:
  * & | ~ ^
  */
-int level_0_bitwise_operator(const nap_compiler* _compiler,const char* expr, bool &psuccess)
+int level_0_bitwise_operator(const nap_compiler* _compiler, const std::string& expr, bool &psuccess)
 {
     int opr = level_0_longer_operator(_compiler, expr, STR_BIT_OR, 0, psuccess);
     SUCCES_OR_RETURN -1;
@@ -345,7 +345,7 @@ int level_0_bitwise_operator(const nap_compiler* _compiler,const char* expr, boo
 /**
  * Looks for a level 0 multiplicative operator
  */
-int level_0_multiply_operator(const nap_compiler* _compiler,const char *expr, bool& psuccess)
+int level_0_multiply_operator(const nap_compiler* _compiler, const std::string& expr, bool& psuccess)
 {
     int posMply = level_0_longer_operator(_compiler, expr, STR_MUL, 1, psuccess);
     SUCCES_OR_RETURN -1;
@@ -359,7 +359,7 @@ int level_0_multiply_operator(const nap_compiler* _compiler,const char *expr, bo
 /**
  * Looks for a level 0 assignment operator
  */
-int level_0_assignment_operator(const nap_compiler* _compiler,const char *expr, bool& psuccess)
+int level_0_assignment_operator(const nap_compiler* _compiler, const std::string& expr, bool& psuccess)
 {
     int t = level_0_longer_operator(_compiler, expr, STR_EQUAL, 0, psuccess);
     SUCCES_OR_RETURN -1;
@@ -369,7 +369,7 @@ int level_0_assignment_operator(const nap_compiler* _compiler,const char *expr, 
 /**
  * Looks for a level 0 dot operator
  */
-int level_0_dot_operator(const nap_compiler* _compiler, const char *expr, bool& psuccess)
+int level_0_dot_operator(const nap_compiler* _compiler, const std::string &expr, bool& psuccess)
 {
     int t = level_0_longer_operator(_compiler, expr, STR_DOT, 0, psuccess);
     SUCCES_OR_RETURN -1;
@@ -379,7 +379,7 @@ int level_0_dot_operator(const nap_compiler* _compiler, const char *expr, bool& 
 /**
  * Finds the shift operations on the 0th level. Left shift has priority
  */
-int level_0_shift(const nap_compiler* _compiler, const char* expr, bool& psuccess)
+int level_0_shift(const nap_compiler* _compiler, const std::string &expr, bool& psuccess)
 {
     int posleft = level_0_longer_operator(_compiler, expr, STR_SHLEFT, 0, psuccess);
     SUCCES_OR_RETURN -1;
@@ -394,7 +394,7 @@ int level_0_shift(const nap_compiler* _compiler, const char* expr, bool& psucces
 * Looks for a level 0 comparison operator.
 * Returns the index, if any found and the found_operator is populated with the found op
 */
-int level_0_comparison_operator(const nap_compiler* _compiler, const char *expr, const char** found_operator, bool& psuccess)
+int level_0_comparison_operator(const nap_compiler* _compiler, const std::string &expr, const char** found_operator, bool& psuccess)
 {
     int l0_cmp_op = level_0_longer_operator(_compiler, expr, STR_EQUALEQUAL, 0, psuccess);
     SUCCES_OR_RETURN -1;
@@ -452,7 +452,7 @@ int level_0_comparison_operator(const nap_compiler* _compiler, const char *expr,
 /**
  * Finds the first ocurence of a level 0 x= operator.
  */
-int level_0_sg_eq_operator(const nap_compiler* _compiler, const char *expr, const char** found_operator, int* found_type, bool&psuccess)
+int level_0_sg_eq_operator(const nap_compiler* _compiler, const std::string &expr, const char** found_operator, int* found_type, bool&psuccess)
 {
     int l0_seq_op = level_0_longer_operator(_compiler, expr, STR_PLUS_EQUAL, 0, psuccess);
     SUCCES_OR_RETURN -1;
