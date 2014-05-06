@@ -25,8 +25,8 @@ std::vector<variable*>::const_iterator variable_holder::has_variable(const std::
 /**
  * This function adds a new  variable to the hashlist in first. Always adds the new  variable to the head of the list
  */
-variable* variable_holder::add_variable(const char *var_name,
-                                     const char* var_type,
+variable* variable_holder::add_variable(const std::string& var_name,
+                                     const std::string& var_type,
                                      int var_size,
                                      method* the_method,
                                      call_context* cc,

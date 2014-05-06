@@ -17,17 +17,17 @@ class number
 {
 public:
 
-    number(const char* src, const nap_compiler* _compiler) : mcompiler(_compiler)
+    number(const std::string& src, const nap_compiler* _compiler) : mcompiler(_compiler)
     {
         int type = number_get_type(src);
         if (BASIC_TYPE_INT == type)
         {
-            number_from_long(atol(src));
+            number_from_long(atol(src.c_str()));
         }
         else
         if (BASIC_TYPE_REAL == type)
         {
-            number_from_double(atof(src));
+            number_from_double(atof(src.c_str()));
         }
     }
 
@@ -66,10 +66,10 @@ private:
     /**
      * Returns the type of the given string as a  number... or at least tries to guess
      */
-    int number_get_type(const char *src)
+    int number_get_type(const std::string& src)
     {
         int i = 0;
-        int len = strlen(src);
+        int len = src.length();
         if (!isnumber(src))
         {
             return 0;

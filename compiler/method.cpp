@@ -94,7 +94,7 @@ variable* method::add_new_variable(const std::string& pname,
  * 3. if reached to the method's main cc find variable in all the CC's above
  * 4. find the variables of the method (meaning: parameters)
  */
- variable* method::has_variable(call_context* cc, char* varname, int* env_var)
+ variable* method::has_variable(call_context* cc, const std::string& varname, int* env_var)
 {
     //printf("\t[MGV]: Variable [%s] in method [%s]\n", varname, the_method?the_method->name:"global");
     if(varname[0] == C_DOLLAR)        /* is this an enviornment variable? */
@@ -119,8 +119,8 @@ variable* method::add_new_variable(const std::string& pname,
     /* parameter as a $sign? */
     if(varname[0] == C_DOLLAR)
     {
-        varname++;
-        int varc = atoi(varname);
+        std::string real_varname = varname.substr(1);
+        int varc = atoi(real_varname.c_str());
         variable* v = variables[varc];
 
         if(v)

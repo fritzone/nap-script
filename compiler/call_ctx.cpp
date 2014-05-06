@@ -43,8 +43,8 @@ call_context::~call_context()
     }
 }
 
-class_declaration::class_declaration(nap_compiler *_compiler, const char* pname, call_context* pfather) :
-    call_context(_compiler, CC_CLASS, pname, 0,  pfather)
+class_declaration::class_declaration(nap_compiler *_compiler, const string &name, call_context* pfather) :
+    call_context(_compiler, CC_CLASS, name, 0,  pfather)
 {
     parent_class = 0;
     pfather->classes.push_back(this);
@@ -61,7 +61,7 @@ void call_context::add_method(method* the_method)
 /**
  * Adds a variable to the call context
  */
-variable* call_context::add_variable(const char* name, const char* type,
+variable* call_context::add_variable(const std::string& name, const std::string& type,
                                      int dimension,
                                      bool& psuccess)
 {

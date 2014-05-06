@@ -31,8 +31,8 @@ struct variable_holder
      * @param cc - and/or in this call context
      * @param expwloc - at this location in the script file
      */
-    variable* add_variable(const char *var_name,
-                                         const char* var_type,
+    variable* add_variable(const std::string &var_name,
+                                         const std::string &var_type,
                                          int var_size,
                                          method* the_method,
                                          call_context* cc, bool &psuccess);
