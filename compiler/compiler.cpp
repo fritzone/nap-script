@@ -18,7 +18,7 @@ nap_compiler::nap_compiler() : opcode_counter(0),
     mfirst_entry(true), mvm_chain(0), mvar_counter(0), minterpreter(this), mgbb(garbage_bin_bin::instance()),
     mfinalError("OK"), mErrorCode(0), mEmbedded(false), print_assembly(false)
 {
-    cur_cc = new call_context(this, 0, "global", NULL, NULL) ;
+    cur_cc = new call_context(this, call_context::CC_GLOBAL, "global", NULL, NULL) ;
     global_cc = cur_cc;
     cur_method = 0;
 }
@@ -44,6 +44,24 @@ bool nap_compiler::set_source(const char *src, bool& psuccess)
     mEmbedded = true;
     parse(psuccess);
     return psuccess;
+}
+
+int nap_compiler::file_index_for_name(const std::string& n) const
+{
+    std::vector<std::string>::const_iterator it = std::find(loaded_files.begin(), loaded_files.end(), n);
+    return std::distance(loaded_files.begin(), it);
+}
+
+std::string nap_compiler::filename(size_t i) const
+{
+    if(i < loaded_files.size())
+    {
+        return loaded_files.at(i);
+    }
+    else
+    {
+        return "N/A";
+    }
 }
 
 void nap_compiler::parse(bool& psuccess)
@@ -92,6 +110,10 @@ void nap_compiler::load_file(const std::string & file_name, bool &psuccess)
         return;
     }
     parse(psuccess);
+    if(psuccess)
+    {
+        loaded_files.push_back(file_name);
+    }
 }
 
 bool nap_compiler::compile()
@@ -188,13 +210,13 @@ char* nap_compiler::new_string(int size) const
 std::string nap_compiler::prepare_location() const
 {
     std::stringstream ss;
-    ss << "expr:[" << location->expression
+    ss << "expr:[" << exp_w_location->expression
        << "]";
 
-    if(!location->location->file_name.empty())
+    if(!exp_w_location->location->mfile_index != -1)
     {
-        ss << "file:[" << location->location->file_name
-           << "] ~line:[" << location->location->start_line_number << "]";
+        ss << "file:[" << exp_w_location->location->mfile_index
+           << "] ~line:[" << exp_w_location->location->start_line_number << "]";
     }
     mErrorCode = 1;
     return ss.str();
@@ -273,7 +295,7 @@ void nap_compiler::throw_index_out_of_range(const char* variable_name, int maxim
 
 void nap_compiler::set_location(const expression_with_location* loc)
 {
-    location = loc;
+    exp_w_location = loc;
 }
 
 std::auto_ptr<nap_compiler> nap_compiler::create_compiler()

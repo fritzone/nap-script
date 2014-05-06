@@ -12,9 +12,14 @@ struct parsed_file
 {
 public:
 
-    parsed_file(const nap_compiler* _compiler);
+    parsed_file(const nap_compiler* _compiler): name(), position(0),
+        content_size(0), current_line(1), mcompiler(_compiler)
+    {}
 
-    parsed_file(const char *content, const nap_compiler* _compiler);
+    parsed_file(const char *pcontent, size_t content_len, const nap_compiler* _compiler) :
+        name(), content(pcontent), position(0), content_size(content_len),
+        current_line(1), mcompiler(_compiler)
+    {}
 
     /**
      * Retrieves the next phrase from the given parsed file. The phrase delimitators are the followings:
@@ -84,7 +89,7 @@ private:
     std::string name;
 
     /* this is the content of the file*/
-    char *content;
+    std::string content;
 
     /* the current position of the reader */
     long position;

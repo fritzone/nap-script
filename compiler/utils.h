@@ -63,21 +63,6 @@ int is_immediate_byte(const char* t);
  */
 
 /**
- * Transforms a character to a string
- * @param c the character to transform
- * Caller is responsible for deleting the result using `free`
- */
-char *c2str(char c, const nap_compiler*);
-
-/**
- * Returns the substring of src before pos. The character at pos is not included.
- * @param pos the position
- * @param src the source string
- * Returns a new string, user must `free` it.
- */
-char* before(int pos, const char *src, const nap_compiler *_compiler);
-
-/**
  * Returns the substring of src after pos. The character at pos is not included.
  * @param pos the position
  * @param src the source string
@@ -147,16 +132,16 @@ char* extract_next_enclosed_phrase(char* input, char c_starter, char c_ender, ch
 extern long mem_alloc_count;
 extern void** mem_allocation;
 
-template <class T> T* allocate(size_t count, const nap_compiler* _compiler, const char*f ,long l)
+template <class T> T* allocate(size_t count, const nap_compiler* _compiler)
 {
     T* tmp = new T[count];
     memset(tmp, 0, count * sizeof(T));
-    garbage_bin<T*>::instance(_compiler).throwIn(tmp, f, l, _compiler, count);
+    garbage_bin<T*>::instance(_compiler).throwIn(tmp, _compiler);
 
     return tmp;
 }
 
-#define alloc_mem(type,count,compiler) allocate<type>(count, compiler, __FILE__, __LINE__)
+#define alloc_mem(type,count,compiler) allocate<type>(count, compiler)
 
 char other_par(char c);
 
@@ -201,5 +186,10 @@ int is_string(const char* expr_trim, int expr_len);
  * @return
  */
 int is_statement_string(const char* expr_trim, int expr_len);
+
+/**
+ * Returns the type identifier for the given type
+ */
+int get_typeid(const std::string& type);
 
 #endif

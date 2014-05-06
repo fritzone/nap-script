@@ -171,7 +171,7 @@ public:
 
     void parse(bool &psuccess);
 
-    void deliver_bytecode(uint8_t*& location, size_t& label_entry);
+    void deliver_bytecode(uint8_t*& exp_w_location, size_t& label_entry);
 
     /**
      * Duplicates src
@@ -227,6 +227,9 @@ public:
 
     struct nap_vm *mvm_chain;
 
+    int file_index_for_name(const std::string& n) const;
+    std::string filename(size_t) const;
+
 private:
 
     call_context* cur_cc;
@@ -260,7 +263,7 @@ private:
 
     garbage_bin_bin& mgbb;
 
-    const expression_with_location* location;
+    const expression_with_location* exp_w_location;
 
     mutable std::string mfinalError;
     mutable int mErrorCode;

@@ -48,31 +48,31 @@ void code_stream::output_bytecode(const char* s)
 
     if(mcompiler->mlast_cmd_for_bytecode.empty())
     {
-        if(mcompiler->print_assembly && mcompiler->location)
+        if(mcompiler->print_assembly && mcompiler->exp_w_location)
         {
-            fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->location->expression,
-                    mcompiler->location->location->file_name.c_str(),
-                    mcompiler->location->location->start_line_number,
-                    mcompiler->location->location->end_line_number);
+            fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->exp_w_location->expression,
+                    mcompiler->filename(mcompiler->exp_w_location->location->mfile_index).c_str(),
+                    mcompiler->exp_w_location->location->start_line_number,
+                    mcompiler->exp_w_location->location->end_line_number);
         }
-		if(mcompiler->location)
+        if(mcompiler->exp_w_location)
 		{
-			mcompiler->mlast_cmd_for_bytecode = mcompiler->location->expression;
+            mcompiler->mlast_cmd_for_bytecode = mcompiler->exp_w_location->expression;
 		}
     }
     else
     {
 
-        if(mcompiler->location && mcompiler->mlast_cmd_for_bytecode != mcompiler->location->expression)
+        if(mcompiler->exp_w_location && mcompiler->mlast_cmd_for_bytecode != mcompiler->exp_w_location->expression)
         {
             if(mcompiler->print_assembly)
             {
-                fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->location->expression,
-                    mcompiler->location->location->file_name.c_str(),
-                    mcompiler->location->location->start_line_number,
-                    mcompiler->location->location->end_line_number);
+                fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->exp_w_location->expression,
+                    mcompiler->filename(mcompiler->exp_w_location->location->mfile_index).c_str(),
+                    mcompiler->exp_w_location->location->start_line_number,
+                    mcompiler->exp_w_location->location->end_line_number);
             }
-			mcompiler->mlast_cmd_for_bytecode = mcompiler->location->expression;
+            mcompiler->mlast_cmd_for_bytecode = mcompiler->exp_w_location->expression;
 		}
     }
 

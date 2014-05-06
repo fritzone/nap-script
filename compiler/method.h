@@ -28,6 +28,8 @@ struct method : public variable_holder
      */
     method(nap_compiler *_compiler, const char *name, char* preturn_type, call_context* cc);
 
+    virtual ~method();
+
     /**
      * Adds a new parameter to the method
      * @param name - the name of the parameter
@@ -91,7 +93,6 @@ struct method : public variable_holder
     uint8_t ret_type;
 
     nap_compiler* mcompiler;
-
 };
 
 /**

@@ -29,7 +29,7 @@ private:
                                                const expression_with_location* expwloc, bool &psuccess);
 
      std::vector<variable_definition*>* define_variables(char* var_def_type,
-                                                         char* expr_trim,
+                                                         const char *expr_trim,
                                                          expression_tree* node,
                                                          method* the_method,
                                                          call_context* cc,
@@ -52,7 +52,7 @@ private:
                                           char* keyword_while,
                                           expression_tree* node,
                                           const expression_with_location* expwloc,
-                                          char* expr_trim,
+                                          const char *expr_trim,
                                           int expr_len,
                                           method* the_method,
                                           const char* orig_expr,
@@ -62,13 +62,13 @@ private:
      method* define_method(const char* expr, int expr_len, expression_tree* node,
                            call_context* cc, const expression_with_location* expwloc, bool &psuccess);
 
-     int get_operator(const char* expr, const char** foundOperator, int* ntype, bool &psuccess);
+     int get_operator(const char* expr, const char **foundOperator, int* ntype, bool &psuccess);
 
      int looks_like_function_def(const char* expr, int expr_len, const expression_tree* node, call_context* cc, bool &psuccess);
 
      bool is_list_value(const char* what);
 
-     char* looks_like_var_def(const call_context* cc, char* expr, int expr_len);
+     char* looks_like_var_def(const call_context* cc, const char *expr, int expr_len);
 
      int var_declaration_followed_by_initialization(const std::string &pexpr);
 
@@ -80,7 +80,7 @@ private:
 
      void* deal_with_one_word_keyword(call_context* cc, expression_tree* node, int* &result, const char* keyw, int statement, bool &psuccess);
 
-     method* is_function_call(char *s,  call_context* cc, int *special);
+     method* is_function_call(const char *s,  call_context* cc, int *special);
 private:
 
     nap_compiler* mcompiler;

@@ -425,7 +425,6 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
         child_vm = nap_vm_inject(runtime->vm->btyecode_chunks[nap_regi(runtime->vm, 0)]->code,
                 runtime->vm->btyecode_chunks[nap_regi(runtime->vm, 0)]->length, INTERRUPT);
 
-
         if(child_vm == NULL)
         {
             nap_compiler::release_compiler(compiler);

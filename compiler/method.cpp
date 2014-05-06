@@ -45,9 +45,14 @@ method::method(nap_compiler* _compiler, const char* name, char* preturn_type, ca
     {
         return_type = preturn_type;
     }
-    method_main_cc = new call_context(_compiler, CALL_CONTEXT_TYPE_METHOD_MAIN, ss.str(), this, cc);
+    method_main_cc = new call_context(_compiler, call_context::CC_NAMED, ss.str(), this, cc);
     garbage_bin<call_context*>::instance(cc->compiler).place(method_main_cc, cc->compiler);
     main_cc = method_main_cc;
+}
+
+method::~method()
+{
+    //    delete main_cc;
 }
 
 constructor_call::constructor_call(char* name, call_context* cc) : method(cc->compiler, name, 0, cc)

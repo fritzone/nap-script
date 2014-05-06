@@ -217,18 +217,21 @@ int interpreter::get_operator(const char* expr, const char** foundOperator, int*
     if(zlmlt != -1)
     {
         zlop = zlmlt;
-        *foundOperator = c2str(expr[zlop], mcompiler);    /* will be "*" or "/" or "%" */
+
         if(C_MUL == expr[zlop])
         {
             *ntype = OPERATOR_MULTIPLY;
+            *foundOperator = STR_MUL;
         }
         else if(C_DIV == expr[zlop])
         {
             *ntype = OPERATOR_DIVIDE;
+            *foundOperator = STR_DIV;
         }
         else if(C_MOD == expr[zlop])
         {
             *ntype = OPERATOR_MODULO;
+            *foundOperator = STR_MOD;
         }
     }
 
@@ -326,7 +329,7 @@ int interpreter::get_operator(const char* expr, const char** foundOperator, int*
 /*
  * this checks if an expression is a function or not (ex: sin(x) is s function)
  */
-method* interpreter::is_function_call(char *s,  call_context* cc, int* special)
+method* interpreter::is_function_call(const char *s,  call_context* cc, int* special)
 {
     unsigned int i=0;
     *special = 0;
@@ -536,7 +539,7 @@ bool interpreter::is_list_value(const char* what)
  * Returns the type if this expression looks like a variable definition. Return NULL if not.
  * Also checks if the variable defined is a class instance. (ie: TestClass a;)
  */
-char* interpreter::looks_like_var_def(const call_context* cc, char* expr, int expr_len)
+char* interpreter::looks_like_var_def(const call_context* cc, const char* expr, int expr_len)
 {
     char* first_word = mcompiler->new_string(expr_len);
     int flc = 0;
@@ -708,7 +711,7 @@ int interpreter::accepted_variable_name(const std::string& name)
  * Defines the variables that can be found below ...
  */
 std::vector<variable_definition*>* interpreter::define_variables(char* var_def_type,
-                                                                 char* expr_trim,
+                                                                 const char* expr_trim,
                                                                  expression_tree* node,
                                                                  method* the_method,
                                                                  call_context* cc,
@@ -800,15 +803,13 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
 
         /* check whether we have direct initialization */
         int eqp = var_declaration_followed_by_initialization(name);
-        char* deflist = NULL;                /* the definition list for this variable */
+        std::string deflist = "";                /* the definition list for this variable */
         if(eqp)
         {
-            char* name_val = mcompiler->duplicate_string(name.c_str());
-            char* pos_eq = name_val + eqp;
-            *pos_eq = 0; // TODO: This is ugly, fix it!
-            name = name_val;
+            deflist = name.substr(eqp + 1);
+            name = name.substr(0, eqp);
             strim(name);
-            deflist = pos_eq + 1;
+            strim(deflist);
         }
 
         if(idx_def_start)
@@ -859,11 +860,11 @@ std::vector<variable_definition*>* interpreter::define_variables(char* var_def_t
         var_def->the_variable = added_var;
         var_def->md_def = mdd;
 
-        if(deflist)    /* whether we have a definition for this variable. if yes, we need to populate a definition_list */
+        if(!deflist.empty())    /* whether we have a definition for this variable. if yes, we need to populate a definition_list */
         {
             expression_tree* var_def_node = new expression_tree(expwloc);
             garbage_bin<expression_tree*>::instance(cc->compiler).place(var_def_node, cc->compiler);
-            build_expr_tree(deflist, var_def_node, the_method, orig_expr, cc, result, expwloc, psuccess);
+            build_expr_tree(deflist.c_str(), var_def_node, the_method, orig_expr, cc, result, expwloc, psuccess);
             SUCCES_OR_RETURN 0;
 
             var_def->the_value = var_def_node;
@@ -1072,13 +1073,13 @@ char* interpreter::is_some_statement(const char* expr_trim, const char* keyword)
  */
 void* interpreter::deal_with_one_word_keyword( call_context* cc, expression_tree* node, int* &result, const char* keyw, int statement, bool& psuccess )
 {
-    if(cc->type != CALL_CONTEXT_TYPE_WHILE && cc->type != CALL_CONTEXT_TYPE_FOR)
+    if(cc->type != call_context::CC_WHILE && cc->type != call_context::CC_FOR)
     {
         int in_iterative_cc = 0;
         call_context* tmpcc = cc->father;
         while(tmpcc)
         {
-            if(tmpcc->type == CALL_CONTEXT_TYPE_WHILE || tmpcc->type == CALL_CONTEXT_TYPE_FOR)
+            if(tmpcc->type == call_context::CC_WHILE || tmpcc->type == call_context::CC_FOR)
             {
                 in_iterative_cc = 1;
                 break;
@@ -1106,7 +1107,7 @@ void* interpreter::deal_with_conditional_keywords(char* keyword_if,
                                                   char* keyword_while,
                                                   expression_tree* node,
                                                   const expression_with_location* expwloc,
-                                                  char* expr_trim,
+                                                  const char* expr_trim,
                                                   int expr_len,
                                                   method* the_method,
                                                   const char* orig_expr,
@@ -1201,7 +1202,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
     /* some variables that will be used at a later stage too */
     char* expr_trim = trim(expr, mcompiler);
     int expr_len = strlen(expr_trim);
-    const char* foundOperator;    /* the operator which will be identified*/
+    const char* foundOperator;    /* the operator which will be identified. first byte: operator, second byte: 0*/
     int zlop;                    /* the index of the identified zero level operation */
     char* var_def_type = looks_like_var_def(cc, expr_trim, expr_len);
     int func_def = looks_like_function_def(expr_trim, expr_len, node, cc, psuccess);
@@ -1480,8 +1481,8 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
 
     if(zlop!=-1)    /* we have found an operator on the zero.th level */
     {
-        char *beforer = trim(before(zlop, expr_trim, mcompiler), mcompiler);
-        if(strlen(beforer) == 0)
+        std::string beforer = std::string(expr_trim).substr(0, zlop);
+        if(beforer.empty())
         {
             /* now we should check for the 'unary' +- operators */
             if(ntype == OPERATOR_ADD || ntype == OPERATOR_MINUS || ntype == OPERATOR_BITWISE_COMP || ntype == OPERATOR_NOT)
@@ -1539,7 +1540,7 @@ void* interpreter::build_expr_tree(const char *expr, expression_tree* node, meth
             garbage_bin<expression_tree*>::instance(cc->compiler).place(node->right, cc->compiler);
 
             /* the order here is important for the "." operator ... it needs to know the parent in order to identify the object to find its call_context*/
-            build_expr_tree(beforer, node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
+            build_expr_tree(beforer.c_str(), node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
             SUCCES_OR_RETURN 0;
 
             build_expr_tree(afterer, node->right, the_method, orig_expr, cc, result, expwloc, psuccess);

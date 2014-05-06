@@ -22,8 +22,8 @@ void parsed_file::remove_comments()
     while (cloc < content_size)
     {
         /* grab a whole bunch of comments at once ... */
-        /* first comment style: Unix style # (removed) and C++'s //. Both of these go till end of line*/
-        if (/*C_HASH == content[cloc] ||*/ (C_SLASH == content[cloc] && cloc + 1 < content_size && content[cloc + 1] == C_SLASH))
+        /* first comment style: C++'s // */
+        if ((C_SLASH == content[cloc] && cloc + 1 < content_size && content[cloc + 1] == C_SLASH))
         {
             while (cloc < content_size && (content[cloc] != '\n' && content[cloc] != '\r'))    /* End-line ... */
             {
@@ -41,28 +41,18 @@ void parsed_file::remove_comments()
             {
                 content[cloc++] = C_SPACE;
             }
+
+            // Did we run out of the code? ie: Unfinished comment?
+            if(cloc == content_size - 1)
+            {
+                mcompiler->throw_error("Comment is not closed till the end of the file");
+                return;
+            }
             content[cloc++] = C_SPACE;                /* and the closing ones too */
             content[cloc++] = C_SPACE;
         }
         cloc ++;
     }
-}
-
-parsed_file::parsed_file(const nap_compiler *_compiler) : name(), mcompiler(_compiler)
-{
-    position = 0;
-    content = 0;
-    content_size = 0;
-    current_line = 1;
-}
-
-parsed_file::parsed_file(const char *pcontent, const nap_compiler* _compiler) : name(), mcompiler(_compiler)
-{
-    position = 0;
-    content = alloc_mem(char, strlen(pcontent), mcompiler);
-    strcpy(content, pcontent);
-    content_size = strlen(content);
-    current_line = 1;
 }
 
 /**
@@ -91,9 +81,12 @@ parsed_file *parsed_file::open_file(const std::string& name,  const nap_compiler
         return NULL;
     }
     fseek(fp, 0, SEEK_SET);
-    f->content = alloc_mem(char, size, _compiler);
+    char* s = (char*)calloc(size + 1, 1);
     f->content_size = size;
-    fread(f->content, size, sizeof(char), fp);
+
+    fread(s, size, sizeof(char), fp);
+    f->content = s;
+    free(s);
     fclose(fp);
     f->position = 0;
     f->current_line = 1;
@@ -105,11 +98,9 @@ parsed_file *parsed_file::set_source(const char *src,  const nap_compiler* _comp
 {
     parsed_file *f = new parsed_file(_compiler);
     long size = strlen(src);
-    /* the file pointer*/
 
-    f->content = alloc_mem(char, size, _compiler);
     f->content_size = size;
-    memcpy(f->content, src, size);
+    f->content = src;
 
     f->position = 0;
     f->current_line = 1;
@@ -128,7 +119,7 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
     }
     previous_position = position;
     expression_with_location *expwloc = alloc_mem(expression_with_location, 1, mcompiler);
-    expwloc->location = new file_location(position, current_line, current_line, name);
+    expwloc->location = new file_location(position, current_line, current_line, mcompiler->file_index_for_name(name) );
     garbage_bin<file_location*>::instance(mcompiler).place(expwloc->location, mcompiler);
 
     long cur_save = position;
@@ -334,7 +325,7 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
     size = cur_save - position;
     char *phrase = NULL;
     phrase = mcompiler->new_string(size + 1);
-    strncpy(phrase, content + position, size);
+    strncpy(phrase, content.c_str() + position, size);
     position = cur_save + skipper; /* to skip the delimiter */
 
     /* now patch the phrase, so that \n or \r or \t will be replaced with a space */
@@ -456,7 +447,7 @@ void parsed_file::deal_with_while_loading(call_context* cc, expression_tree* new
     std::stringstream ss;
     ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << STR_WHILE;
 
-    call_context* while_cc = new call_context(cc->compiler, CALL_CONTEXT_TYPE_WHILE, ss.str(), the_method, cc);
+    call_context* while_cc = new call_context(cc->compiler, call_context::CC_WHILE, ss.str(), the_method, cc);
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_WHILE)    /* normal WHILE with { }*/
     {
         load_next_block(the_method, while_cc, current_level + 1, current_level, psuccess);    /* loading the function*/
@@ -523,7 +514,7 @@ void parsed_file::deal_with_class_declaration(call_context* /*cc*/,
     }
     position = pos + 1;     // skips the closing brace
     new_block[nbpos - 1] = 0;   // remove the closing brace
-    parsed_file* npf = new parsed_file(new_block, mcompiler);
+    parsed_file* npf = new parsed_file(new_block, strlen(new_block), mcompiler);
     npf->name = this->name;
     expression_with_location* nexpwloc = NULL;
     char ndelim = 0;
@@ -554,7 +545,7 @@ void parsed_file::deal_with_for_loading(call_context* cc,
     std::stringstream ss;
     ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << STR_FOR;
 
-    call_context* for_cc = new call_context(cc->compiler, CALL_CONTEXT_TYPE_FOR, ss.str(), the_method, cc);
+    call_context* for_cc = new call_context(cc->compiler, call_context::CC_FOR, ss.str(), the_method, cc);
     garbage_bin<call_context*>::instance(cc->compiler).place(for_cc, cc->compiler);
 
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR)    /* normal FOR with { }*/
@@ -609,7 +600,7 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
     /* firstly create a call context for it */
     std::stringstream ss;
     ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << STR_IF;
-    call_context* if_cc = new call_context(cc->compiler, CALL_CONTEXT_TYPE_IF, ss.str(), the_method, cc);
+    call_context* if_cc = new call_context(cc->compiler, call_context::CC_IF, ss.str(), the_method, cc);
     garbage_bin<call_context*>::instance(cc->compiler).place(if_cc, mcompiler);
 
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF)    /* normal IF with { }*/
@@ -656,7 +647,7 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
     {
         std::stringstream ss;
         ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << STR_IF << C_UNDERLINE << STR_ELSE;
-        else_cc = new call_context(cc->compiler, CALL_CONTEXT_TYPE_ELSE, ss.str(), the_method, cc);
+        else_cc = new call_context(cc->compiler, call_context::CC_ELSE, ss.str(), the_method, cc);
         if(delim2 == C_SEMC)
         {
             expression_with_location* expwloc2 = parser_next_phrase(&delim);
@@ -756,7 +747,7 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
                 {
                     std::stringstream ss;
                     ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << STR_UNNAMED_CC;
-                    call_context* child_cc = new call_context(cc->compiler, CALL_CONTEXT_TYPE_UNNAMED, ss.str(), the_method, cc);
+                    call_context* child_cc = new call_context(cc->compiler, call_context::CC_UNNAMED, ss.str(), the_method, cc);
                     expression_tree* new_node = cc->add_new_expression(STR_OPEN_BLOCK, expwloc, psuccess);
                     SUCCES_OR_RETURN;
                     //todo: add a new expression in the current call CONTEXT to start executing the next call context.
