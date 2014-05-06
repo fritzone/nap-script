@@ -598,9 +598,9 @@ method* interpreter::define_method(const std::string& expr, int expr_len, expres
     int name_counter = 0;
     int type_counter = 0;
     method* created_method = NULL;
-    char* parameters = mcompiler->new_string(expr_len);    /* will hold the parameters */
-    char* func_name = mcompiler->new_string(expr_len);        /* will hold the name of the function .. maybe optimize it a bit*/
-    char* ret_type = mcompiler->new_string(expr_len);        /* will hold the return type definition */
+    std::string parameters;    /* will hold the parameters */
+    std::string func_name;        /* will hold the name of the function .. maybe optimize it a bit*/
+    std::string ret_type;        /* will hold the return type definition */
     int can_stop = 0;
     int level = 1;
     while(i && !can_stop)                    /* this reads backwards */
@@ -608,7 +608,7 @@ method* interpreter::define_method(const std::string& expr, int expr_len, expres
         if(expr[i] == C_PAR_CL) level ++;
         if(expr[i] == C_PAR_OP) level --;
         if(level == 0) can_stop = 1;
-        if(!can_stop) parameters[par_counter++] = expr[i--];
+        if(!can_stop) parameters += expr[i--];
     }
     if(i == 0)
     {
@@ -616,41 +616,35 @@ method* interpreter::define_method(const std::string& expr, int expr_len, expres
         psuccess = false;
         return 0;
     }
-    reverse(parameters, par_counter);
+    std::reverse(parameters.begin(), parameters.end());
     i --;
     while(is_whitespace(expr[i])) i--;
     while(i>-1 && is_identifier_char(expr[i]))
     {
-        func_name[name_counter++] = expr[i--];
+        func_name += expr[i--];
     }
-    reverse(func_name, name_counter);
+    std::reverse(func_name.begin(), func_name.end());
     i--;
     while(i > -1)
     {
-        ret_type[type_counter++] = expr[i--];
+        ret_type += expr[i--];
     }
-    reverse(ret_type, type_counter);
+    std::reverse(ret_type.begin(), ret_type.end());
     //printf("Defining function ret_type:[%s] name:[%s] pars:[%s]\n", ret_type, func_name, parameters);
-    func_name = trim(func_name, cc->compiler);
-    ret_type = trim(ret_type, cc->compiler);
-    if(strlen(func_name) == 0)
+    strim(func_name);
+    strim(ret_type);
+    strim(parameters);
+    if(func_name.empty())
     {
         mcompiler->throw_error(E0010_INVFNCDF, expr, NULL);
         psuccess = false;
         return 0;
     }
     created_method = new method(mcompiler, func_name, ret_type, cc);
-    created_method->feed_parameter_list(trim(parameters, cc->compiler), expwloc, psuccess);
+    created_method->feed_parameter_list(parameters.c_str(), expwloc, psuccess);
     SUCCES_OR_RETURN 0;
 
-    if(!strcmp(created_method->return_type.c_str(), "int")) created_method->ret_type = BASIC_TYPE_INT;
-    if(!strcmp(created_method->return_type.c_str(), "byte")) created_method->ret_type = BASIC_TYPE_BYTE;
-    if(!strcmp(created_method->return_type.c_str(), "real")) created_method->ret_type = BASIC_TYPE_REAL;
-    if(!strcmp(created_method->return_type.c_str(), "string")) created_method->ret_type = BASIC_TYPE_STRING;
-    if(!strcmp(created_method->return_type.c_str(), "bool")) created_method->ret_type = BASIC_TYPE_BOOL;
-
-    // TODO: the others too
-
+    created_method->ret_type = get_typeid(created_method->return_type);
     cc->add_method(created_method);
 
     node->op_type = FUNCTION_DEFINITION;

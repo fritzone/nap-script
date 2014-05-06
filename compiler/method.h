@@ -26,7 +26,7 @@ struct method : public variable_holder
      * @param return_type
      * @param cc
      */
-    method(nap_compiler *_compiler, const char *name, char* preturn_type, call_context* cc);
+    method(nap_compiler *_compiler, const std::string& name, const std::string& preturn_type, call_context* cc);
 
     virtual ~method();
 
@@ -69,7 +69,7 @@ struct method : public variable_holder
      * @param par_list
      * @param expwloc
      */
-    void feed_parameter_list(char* par_list, const expression_with_location* expwloc, bool &psuccess);
+    void feed_parameter_list(const char *par_list, const expression_with_location* expwloc, bool &psuccess);
 
     /* the name of the method */
     std::string method_name;
