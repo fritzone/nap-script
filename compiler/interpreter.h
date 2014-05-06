@@ -47,8 +47,8 @@ private:
                                             const expression_with_location* expwloc,
                                             int type_of_call, bool &psuccess);
 
-     void* deal_with_conditional_keywords(char* keyword_if,
-                                          char* keyword_while,
+     void* deal_with_conditional_keywords(const std::string &keyword_if,
+                                          const std::string &keyword_while,
                                           expression_tree* node,
                                           const expression_with_location* expwloc,
                                           const std::string &expr_trim,
@@ -75,7 +75,7 @@ private:
 
      char* is_indexed(const std::string &expr_trim, int expr_len, char** index);
 
-     char* is_some_statement(const std::string &expr_trim, const char* keyword);
+     std::string is_some_statement(const std::string &expr_trim, const std::string &keyword);
 
      void* deal_with_one_word_keyword(call_context* cc, expression_tree* node, int* &result, const char* keyw, int statement, bool &psuccess);
 
