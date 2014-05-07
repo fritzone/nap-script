@@ -12,7 +12,9 @@ struct expression_with_location;
 struct variable_holder
 {
 
-    virtual ~variable_holder() {}
+    variable_holder();
+
+    virtual ~variable_holder();
 
     /**
      * Checks if the variable named 's' is in the hash list 'first'

@@ -29,6 +29,12 @@ nap_compiler::~nap_compiler()
     {
         mgbb.empty(this);
     }
+
+    for(size_t i=0; i<mexternal_methods.size(); i++)
+    {
+        delete mexternal_methods[i];
+    }
+
     delete global_cc;
     delete mpf;
 }
@@ -62,6 +68,11 @@ std::string nap_compiler::filename(size_t i) const
     {
         return "N/A";
     }
+}
+
+void nap_compiler::add_external_method(method *m)
+{
+    mexternal_methods.push_back(m);
 }
 
 void nap_compiler::parse(bool& psuccess)
@@ -213,10 +224,10 @@ std::string nap_compiler::prepare_location() const
     ss << "expr:[" << exp_w_location->expression
        << "]";
 
-    if(!exp_w_location->location->mfile_index != -1)
+    if(exp_w_location->location.mfile_index != -1)
     {
-        ss << "file:[" << exp_w_location->location->mfile_index
-           << "] ~line:[" << exp_w_location->location->start_line_number << "]";
+        ss << "file:[" << exp_w_location->location.mfile_index
+           << "] ~line:[" << exp_w_location->location.start_line_number << "]";
     }
     mErrorCode = 1;
     return ss.str();

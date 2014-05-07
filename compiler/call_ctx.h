@@ -174,6 +174,8 @@ public: /* Public methods */
      */
     class_declaration *get_class_declaration(const std::string &required_name) const;
 
+    void add_child_cc(call_context* child_cc);
+
 public: /* Public members */
 
     /* the methods of this call context */
@@ -203,6 +205,8 @@ public: /* Public members */
     std::vector<class_declaration *> classes;
 
     nap_compiler* compiler;
+
+    std::vector<call_context*> children;
 };
 
 /**

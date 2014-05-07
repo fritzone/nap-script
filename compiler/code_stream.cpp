@@ -51,9 +51,9 @@ void code_stream::output_bytecode(const char* s)
         if(mcompiler->print_assembly && mcompiler->exp_w_location)
         {
             fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->exp_w_location->expression,
-                    mcompiler->filename(mcompiler->exp_w_location->location->mfile_index).c_str(),
-                    mcompiler->exp_w_location->location->start_line_number,
-                    mcompiler->exp_w_location->location->end_line_number);
+                    mcompiler->filename(mcompiler->exp_w_location->location.mfile_index).c_str(),
+                    mcompiler->exp_w_location->location.start_line_number,
+                    mcompiler->exp_w_location->location.end_line_number);
         }
         if(mcompiler->exp_w_location)
 		{
@@ -68,9 +68,9 @@ void code_stream::output_bytecode(const char* s)
             if(mcompiler->print_assembly)
             {
                 fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->exp_w_location->expression,
-                    mcompiler->filename(mcompiler->exp_w_location->location->mfile_index).c_str(),
-                    mcompiler->exp_w_location->location->start_line_number,
-                    mcompiler->exp_w_location->location->end_line_number);
+                    mcompiler->filename(mcompiler->exp_w_location->location.mfile_index).c_str(),
+                    mcompiler->exp_w_location->location.start_line_number,
+                    mcompiler->exp_w_location->location.end_line_number);
             }
             mcompiler->mlast_cmd_for_bytecode = mcompiler->exp_w_location->expression;
 		}
@@ -272,7 +272,7 @@ void code_stream::output_bytecode(const char* s)
             }
         }
         else
-        if(s[ 0 ] == '@') // function call
+        if(s[0] == '@') // function call
         {
             uint8_t last = mcompiler->getLastOpcode() ;
             if(s[1] == '#') // builtin function

@@ -230,6 +230,8 @@ public:
     int file_index_for_name(const std::string& n) const;
     std::string filename(size_t) const;
 
+    void add_external_method(method*);
+
 private:
 
     call_context* cur_cc;
@@ -272,6 +274,9 @@ private:
     // the last command for the bytecode generation. Used for the debugging feature
     std::string mlast_cmd_for_bytecode;
     bool print_assembly;
+
+    // the external methods that are used by this compiler
+    std::vector<method*> mexternal_methods;
 
     friend class code_stream;
 };

@@ -7,6 +7,18 @@
 /**
  * this function checks if s appears in the hashtable
  */
+variable_holder::variable_holder() : variables()
+{
+}
+
+variable_holder::~variable_holder()
+{
+    for(size_t i=0; i<variables.size(); i++)
+    {
+        delete variables[i];
+    }
+}
+
 std::vector<variable*>::const_iterator variable_holder::has_variable(const std::string& s)
 {
     std::vector<variable*>::const_iterator q = variables.begin();
@@ -60,8 +72,6 @@ variable* variable_holder::add_variable(const std::string& var_name,
     }
 
     variable* var = new variable(var_size, itype, var_name, var_type, cc);
-    garbage_bin<variable*>::instance(cc->compiler).place(var, cc->compiler);
-
     variables.push_back(var);
     return var;
 }
