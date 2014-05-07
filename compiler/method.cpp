@@ -24,14 +24,13 @@
  * Creates a new method
  */
 method::method(nap_compiler* _compiler, const std::string &name, const std::string &preturn_type, call_context* cc) :
-    library_name("-"), return_type(""), ret_type(0), mcompiler(_compiler)
+    method_name (name), library_name("-"), return_type(preturn_type), def_loc(DEF_INTERN),
+    ret_type(0), mcompiler(_compiler), owns_cc(false)
 {
     call_context* method_main_cc = NULL;
     std::stringstream ss;
     ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << name;
 
-    def_loc = DEF_INTERN;
-    method_name = name;
     if(!preturn_type.empty() && starts_with(preturn_type, "extern"))
     {
         /* if this method is a method defined somewhere else ... such as your C++ application */
@@ -40,19 +39,24 @@ method::method(nap_compiler* _compiler, const std::string &name, const std::stri
         strim(return_type);
         def_loc = DEF_EXTERN;
     }
-    else
-    if(!preturn_type.empty())
-    {
-        return_type = preturn_type;
-    }
+
     method_main_cc = new call_context(_compiler, call_context::CC_NAMED, ss.str(), this, cc);
-    garbage_bin<call_context*>::instance(cc->compiler).place(method_main_cc, cc->compiler);
     main_cc = method_main_cc;
 }
 
 method::~method()
 {
-    //    delete main_cc;
+    if(owns_cc)
+    {
+        // this will delete the main_cc of this too!
+        delete main_cc->father;
+    }
+
+    for(size_t i=0; i<parameters.size(); i++)
+    {
+        delete parameters[i];
+    }
+
 }
 
 constructor_call::constructor_call(char* name, call_context* cc) : method(cc->compiler, name, 0, cc)
@@ -152,10 +156,9 @@ parameter* method::add_parameter(std::string pname,
                                  const std::string& ptype,
                                  int pdimension,
                                  const expression_with_location* pexpwloc,
-                                 call_context*cc, bool& psuccess)
+                                 bool& psuccess)
 {
-    parameter* func_par = new parameter(this);
-    garbage_bin<parameter*>::instance(cc->compiler).place(func_par, cc->compiler);
+    parameter* func_par = new parameter(this, pname, get_typeid(ptype));
 
     size_t indexOfEq = pname.find(C_EQ);
     variable* nvar = NULL;
@@ -180,15 +183,8 @@ parameter* method::add_parameter(std::string pname,
 
     nvar = add_new_variable(pname, ptype, pdimension, psuccess);
     SUCCES_OR_RETURN 0;
-
     nvar->func_par = func_par;
 
-    if(ptype == "int") func_par->type = BASIC_TYPE_INT;
-    if(ptype == "byte") func_par->type = BASIC_TYPE_BYTE;
-    if(ptype == "string") func_par->type = BASIC_TYPE_STRING;
-    if(ptype == "real") func_par->type = BASIC_TYPE_REAL;
-
-    func_par->name = pname;
     parameters.push_back(func_par);
     return func_par;
 }
@@ -259,7 +255,7 @@ void method::feed_parameter_list(const char* par_list, const expression_with_loc
             strim(par_type);
             if(def_loc == DEF_INTERN)
             {
-                parameter* new_par_decl = add_parameter(par_name, par_type, 1, expwloc, main_cc, psuccess);
+                parameter* new_par_decl = add_parameter(par_name, par_type, 1, expwloc, psuccess);
                 SUCCES_OR_RETURN;
 
                 /* here we should identify the dimension of the parameter */
@@ -271,7 +267,7 @@ void method::feed_parameter_list(const char* par_list, const expression_with_loc
             }
             else
             {
-                add_parameter("", par_type, 1, expwloc, main_cc, psuccess);
+                add_parameter("", par_type, 1, expwloc, psuccess);
                 SUCCES_OR_RETURN;
             }
         }

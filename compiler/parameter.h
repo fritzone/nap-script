@@ -6,6 +6,8 @@ struct envelope;
 struct call_context;
 struct method;
 
+#include "expression_tree.h"
+
 #include <string>
 
 /**
@@ -15,8 +17,17 @@ struct method;
  */
 struct parameter
 {
-    parameter(method* pthe_method) : simple_value(1), the_method(pthe_method)
+    parameter(method* pthe_method, const std::string& pname, int ptype) : name(pname),
+         initial_value(0), simple_value(1), the_method(pthe_method), type(ptype)
     {}
+
+    ~parameter()
+    {
+        if(initial_value)
+        {
+            delete initial_value;
+        }
+    }
 
     /* the name of the parameter (as used on te function's side). This is not used on the client side*/
     std::string name;
@@ -24,7 +35,7 @@ struct parameter
     /* the expression of this parameter as read from the source file. Used at function calling */
     expression_tree *expr;
 
-    /* the initial value of the parameter, like: int f (int a=10, b)*/
+    /* the initial value of the parameter, like "10" from "int f (int a=10, b)" */
     expression_tree *initial_value;
 
     /* 1 if the value is simpl (meaning, no dimensions) 0 if the value is not so simple, meaning dimensions */

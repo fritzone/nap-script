@@ -354,7 +354,6 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
         std::auto_ptr<nap_compiler> compiler = nap_compiler::create_compiler();
         compiler->set_vmchain(runtime->vm);
         bool success = true;
-
         bool source_set = compiler->set_source(script, success);
 
         if(!source_set)
@@ -416,8 +415,6 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
             return NAP_EXECUTE_FAILURE;
         }
 
-        garbage_bin_bin::instance().empty(compiler.get());
-        nap_compiler::release_compiler(compiler);
         nap_set_regi(runtime->vm, 0, runtime->vm->chunk_counter - 1);
 
         // create a new VM to call the method

@@ -55,6 +55,11 @@ void parsed_file::remove_comments()
     }
 }
 
+void parsed_file::add_new_expression(expression_with_location *expw)
+{
+    expressions.push_back(expw);
+}
+
 /**
  * Opens the given file, creates a new prsed file structure
  */
@@ -111,6 +116,14 @@ parsed_file *parsed_file::set_source(const char *src,  const nap_compiler* _comp
 /**
  * Reads the next phrase, returns it
  */
+parsed_file::~parsed_file()
+{
+    for(size_t i=0; i<expressions.size(); i++)
+    {
+        delete expressions[i];
+    }
+}
+
 expression_with_location* parsed_file::parser_next_phrase(char *delim)
 {
     if(position >= content_size)
@@ -118,9 +131,11 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
         return NULL;
     }
     previous_position = position;
-    expression_with_location *expwloc = alloc_mem(expression_with_location, 1, mcompiler);
-    expwloc->location = new file_location(position, current_line, current_line, mcompiler->file_index_for_name(name) );
-    garbage_bin<file_location*>::instance(mcompiler).place(expwloc->location, mcompiler);
+    // owned by the parsed file
+    expression_with_location *expwloc = new expression_with_location;
+    add_new_expression(expwloc);
+
+    expwloc->location = file_location(position, current_line, current_line, mcompiler->file_index_for_name(name) );
 
     long cur_save = position;
 
@@ -129,8 +144,8 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
     {
         if(content[cur_save] == '\r' || content[cur_save] == '\n')
         {
-            expwloc->location->start_line_number ++;
-            expwloc->location->end_line_number ++;
+            expwloc->location.start_line_number ++;
+            expwloc->location.end_line_number ++;
             current_line ++;
         }
         cur_save ++;
@@ -347,7 +362,7 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
             }
             if(can_inc_endline)
             {
-                expwloc->location->end_line_number  ++;
+                expwloc->location.end_line_number  ++;
             }
 
             current_line ++;
@@ -546,7 +561,6 @@ void parsed_file::deal_with_for_loading(call_context* cc,
     ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << STR_FOR;
 
     call_context* for_cc = new call_context(cc->compiler, call_context::CC_FOR, ss.str(), the_method, cc);
-    garbage_bin<call_context*>::instance(cc->compiler).place(for_cc, cc->compiler);
 
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_FOR)    /* normal FOR with { }*/
     {
@@ -601,7 +615,6 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
     std::stringstream ss;
     ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << STR_IF;
     call_context* if_cc = new call_context(cc->compiler, call_context::CC_IF, ss.str(), the_method, cc);
-    garbage_bin<call_context*>::instance(cc->compiler).place(if_cc, mcompiler);
 
     if(C_OPEN_BLOCK == delim && new_node->op_type == STATEMENT_IF)    /* normal IF with { }*/
     {

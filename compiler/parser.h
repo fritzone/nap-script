@@ -13,13 +13,15 @@ struct parsed_file
 public:
 
     parsed_file(const nap_compiler* _compiler): name(), position(0),
-        content_size(0), current_line(1), mcompiler(_compiler)
+        content_size(0), current_line(1), mcompiler(_compiler), expressions()
     {}
 
     parsed_file(const char *pcontent, size_t content_len, const nap_compiler* _compiler) :
         name(), content(pcontent), position(0), content_size(content_len),
-        current_line(1), mcompiler(_compiler)
+        current_line(1), mcompiler(_compiler), expressions()
     {}
+
+    virtual ~parsed_file();
 
     /**
      * Retrieves the next phrase from the given parsed file. The phrase delimitators are the followings:
@@ -48,6 +50,8 @@ public:
     char* parser_preview_next_word(char* delim);
 
     void remove_comments();
+
+    void add_new_expression(expression_with_location* expw);
 
     static parsed_file* open_file(const std::string &name,  const nap_compiler* _compiler );
 
@@ -104,6 +108,8 @@ private:
     long previous_position;
 
     const nap_compiler* mcompiler;
+
+    std::vector<expression_with_location*> expressions;
 };
 
 #endif

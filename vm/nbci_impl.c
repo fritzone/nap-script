@@ -124,13 +124,9 @@ void nap_vm_cleanup(struct nap_vm* vm)
     /* free the allocated stack */
     for(tempst = vm->cec->stack_pointer; tempst > -1; tempst --)
     {
-        if(vm->cec->stack[tempst] && vm->cec->stack[tempst]->type == OPCODE_INT) /* or float/string */
-        {
-            /* this wa already freed in the metatable */
-        }
-        else /* register type */
-        if(vm->cec->stack[tempst] && (vm->cec->stack[tempst]->type == OPCODE_REG
-                                 || vm->cec->stack[tempst]->type == STACK_ENTRY_MARKER_NAME))
+        /* The variables are freed in the metatable, this is reserved for
+         * freeing stuff pushed for registers */
+        if(vm->cec->stack[tempst] && vm->cec->stack[tempst]->var_def == NULL)
         {
             NAP_MEM_FREE(vm->cec->stack[tempst]->value);
         }

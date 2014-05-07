@@ -29,6 +29,10 @@ struct variable;
 struct file_location
 {
 
+    file_location() : location(-1), start_line_number(-1),
+        end_line_number(-1), mfile_index(-1)
+    {}
+
     file_location(long plocation, long pstart_line, long pend_line, int file_index)
         : location(plocation), start_line_number(pstart_line),
           end_line_number(pend_line), mfile_index(file_index)
@@ -53,11 +57,14 @@ struct file_location
  */
 struct expression_with_location
 {
+
+    expression_with_location() : expression(0) {}
+
     /* this is an expression as read from the input file*/
     char *expression;
 
     /* the location of this expression in the input file */
-    file_location *location;
+    file_location location;
 };
 
 /**

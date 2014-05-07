@@ -36,7 +36,7 @@ struct method : public variable_holder
      * @param type - the type of the parameter (as string)
      * @param modifiable - if the parameter is a reference or not (C++ rulez :) )
      */
-    parameter* add_parameter(std::string pname,  const std::string &ptype, int pdimension, const expression_with_location* pexpwloc, call_context *cc, bool &psuccess);
+    parameter* add_parameter(std::string pname,  const std::string &ptype, int pdimension, const expression_with_location* pexpwloc, bool &psuccess);
 
     /**
      * @brief get_parameter return the parameter at the given location
@@ -93,6 +93,11 @@ struct method : public variable_holder
     uint8_t ret_type;
 
     nap_compiler* mcompiler;
+
+    /* Tells us if this method owns his CC, ie: the cc was created specially for
+       this method and not inherited from above. This is the case of external
+       methods that are inherited from virtual machines above us*/
+    bool owns_cc;
 };
 
 /**

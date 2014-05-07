@@ -594,9 +594,6 @@ std::string interpreter::looks_like_var_def(const call_context* cc, const std::s
 method* interpreter::define_method(const std::string& expr, int expr_len, expression_tree* node, call_context* cc, const expression_with_location* expwloc, bool& psuccess)
 {
     int i=expr_len - 2; /* the first one: to skip the paranthesys, the second one is the last character inside the parantheses*/
-    int par_counter = 0;
-    int name_counter = 0;
-    int type_counter = 0;
     method* created_method = NULL;
     std::string parameters;    /* will hold the parameters */
     std::string func_name;        /* will hold the name of the function .. maybe optimize it a bit*/
@@ -933,7 +930,7 @@ call_frame_entry* interpreter::handle_function_call(const std::string& expr_trim
             garbage_bin<expression_tree*>::instance(cc->compiler).place(cur_par_expr, cc->compiler);
             build_expr_tree((*q).c_str(), cur_par_expr, the_method, orig_expr, cc, result, expwloc, psuccess);
             SUCCES_OR_RETURN 0;
-            parameter* cur_par_obj = new parameter(the_method);
+            parameter* cur_par_obj = new parameter(the_method, "", -1);
             garbage_bin<parameter*>::instance(cc->compiler).place(cur_par_obj, cc->compiler);
             cur_par_obj->expr = cur_par_expr;
 

@@ -27,12 +27,17 @@ using namespace std;
  */
 call_context::call_context(nap_compiler *_compiler, CC_TYPE ptype, const string &pname,
                            method* the_method, call_context* pfather)
-    : compiler(_compiler)
+    : compiler(_compiler), children()
 {
     name = pname == "global"?pname : pname + "_" + generate_unique_hash();
     type = ptype;
     ccs_method = the_method;
     father = pfather;
+
+    if(father)
+    {
+        father->add_child_cc(this);
+    }
 }
 
 call_context::~call_context()
@@ -40,6 +45,11 @@ call_context::~call_context()
     for(size_t i=0; i<methods.size(); i++)
     {
         delete methods[i];
+    }
+
+    for(size_t i=0; i<children.size(); i++)
+    {
+        delete children[i];
     }
 }
 
@@ -112,15 +122,14 @@ method* call_context::get_method(const string &pname)
         if(fe)
         {
             call_context* chain_cc = new call_context(compiler, CC_CHAINED, "-", 0, 0);
-            garbage_bin<call_context*>::instance(compiler).place(chain_cc, compiler);
-
             method* m = new method(compiler, pname.c_str(), (char*)get_reg_type(fe->return_type), chain_cc);
-
-            garbage_bin<method*>::instance(compiler).place(m, compiler);
+            this->compiler->add_external_method(m);
+            // methods which are externals own their own fake cc, they should delete them!
+            m->owns_cc = true;
             for(int i=0; i<fe->parameter_count; i++)
             {
                 bool success = true;
-                m->add_parameter(std::string("par_") +  get_reg_type(fe->parameter_types[i]), get_reg_type(fe->parameter_types[i]), 1, 0, chain_cc, success);
+                m->add_parameter(std::string("par_") +  get_reg_type(fe->parameter_types[i]), get_reg_type(fe->parameter_types[i]), 1, 0, success);
                 if(!success) return 0;
             }
 
@@ -403,4 +412,9 @@ class_declaration* call_context::get_class_declaration(const std::string& requir
     {
         return 0;
     }
+}
+
+void call_context::add_child_cc(call_context *child_cc)
+{
+    children.push_back(child_cc);
 }

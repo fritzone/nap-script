@@ -2,6 +2,9 @@
 #include "nbci.h"
 #include "gtest/gtest.h"
 
+#include "compiler.h"
+#include "nap_runtime.h"
+
 TEST(Assembly, PushPop)
 {
   nap_runtime* runtime = nap_runtime_create("$");
@@ -403,10 +406,13 @@ TEST(Functions, DefaultReturnValue)
  */
 TEST(Functions, ExternalCalling)
 {
-    SCRIPT_START
-    "                               \
-    extern void external_callee(int, int); \
-    external_callee(1,2);           \
+    nap_runtime* runtime = nap_runtime_create("$");
+    ASSERT_FALSE(runtime == NULL);
+
+    int found_indicator;
+    nap_bytecode_chunk* bytecode = nap_runtime_compile(runtime,    "  \
+    extern void external_callee(int, int);                            \
+    external_callee(1,2);                                             \
     "
     SCRIPT_END
 
@@ -418,5 +424,6 @@ TEST(Functions, ExternalCalling)
 NAP_EXPORTS
 void external_callee(nap_int_t a, nap_int_t b)
 {
+    printf("%"PRINT_d" %"PRINT_d"\n", a, b);
     if(a != 1 || b != 2) FAIL();
 }
