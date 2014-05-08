@@ -30,30 +30,27 @@ void code_finalizer::finalize_metatable()
     f.write_stuff_to_file_32(meta_count);
     for(unsigned int i=0; i<meta_count; i++)
     {
-        f.write_stuff_to_file_32(mcompiler->variables()[i]->meta_location);
+        f.write_stuff_to_file_32(mcompiler->variables()[i].meta_location);
         std::string ex = "extern";
-        if(mcompiler->variables()[i]->name.compare(0, ex.length(), ex ) == 0)
+        if(mcompiler->variables()[i].name.compare(0, ex.length(), ex ) == 0)
         {
             // starts with extern
-            mcompiler->variables()[i]->type = 1;
+            mcompiler->variables()[i].type = bc_variable_entry::VT_EXTERN;
         }
-        else
-        {
-            mcompiler->variables()[i]->type = 0;
-        }
-        f.write_stuff_to_file_8(mcompiler->variables()[i]->type);
 
-        uint16_t var_name_length = (uint16_t)mcompiler->variables()[i]->name.length();
+        f.write_stuff_to_file_8(mcompiler->variables()[i].type);
+
+        uint16_t var_name_length = (uint16_t)mcompiler->variables()[i].name.length();
         // find out if this is a global/extern variable or not: if there is only one dot
         // in the name, it is a global/extern variable
         // TODO: include a debugging flag option to write out all the variable names
-        size_t n = std::count(mcompiler->variables()[i]->name.begin(),
-                              mcompiler->variables()[i]->name.end(), '.');
+        size_t n = std::count(mcompiler->variables()[i].name.begin(),
+                              mcompiler->variables()[i].name.end(), '.');
         if(n == 1 || 1) // global/extern variable. Skip the "global." or "extern." // ||1 to write out all time
         {          // WARNING: this code counts on tha both global and extern have 6 characters.
             uint16_t globlen = (uint16_t)strlen("global") + 1;
             f.write_stuff_to_file_16(var_name_length - globlen);
-            const char* vname = mcompiler->variables()[i]->name.c_str();
+            const char* vname = mcompiler->variables()[i].name.c_str();
             vname += globlen;
             f.write_string_to_file(vname, var_name_length - globlen, 0);
         }
@@ -74,10 +71,10 @@ void code_finalizer::finalize_strtable()
     f.write_stuff_to_file_32(strtable_count);
     for(unsigned int i=0; i<strtable_count; i++)
     {
-        f.write_stuff_to_file_32( mcompiler->stringtable()[i]->index);
+        f.write_stuff_to_file_32( mcompiler->stringtable()[i].index);
         f.write_stuff_to_file_32( 0 );
-        const char* str =  mcompiler->stringtable()[i]->the_string.c_str();
-        size_t used_len = f.write_string_to_file(str,  mcompiler->stringtable()[i]->length, 1);
+        const char* str =  mcompiler->stringtable()[i].the_string.c_str();
+        size_t used_len = f.write_string_to_file(str,  mcompiler->stringtable()[i].length, 1);
         // and update the real size
         f.write_stuff_to_file_32(used_len / 4, f.ftell() - used_len - 4);
     }
@@ -94,23 +91,25 @@ void code_finalizer::finalize_jumptable()
     f.write_stuff_to_file_32(jumptable_count);
     for(unsigned int i=0; i<jumptable_count; i++)
     {
-        label_entry* je = mcompiler->jumptable()[i];
-        uint16_t l = (uint16_t)je->name.length();
+        label_entry& je = mcompiler->jumptable()[i];
+        uint16_t l = (uint16_t)je.name.length();
 
-        f.write_stuff_to_file_32(je->bytecode_location); // the actual location in code
+        f.write_stuff_to_file_32(je.bytecode_location); // the actual location in code
 
         // see if this is a call from the parent
-        if(je->name[0] == '-') // indicates the parent
+        if(je.name[0] == '-') // indicates the parent
         {
-            je->type = 3;
-            je->name = je->name.substr(je->name.find('.') + 1);
-            l = (uint16_t)je->name.length();
+            je.type = label_entry::LE_PARENT_CALL;
+            je.name = je.name.substr(je.name.find('.') + 1);
+            l = (uint16_t)je.name.length();
         }
-        f.write_stuff_to_file_8(je->type);      // 0, 1, 2 .. .see there
-        if(je->type == 1 || je->type == 2 || je->type == 3)
+        f.write_stuff_to_file_8(je.type);      // 0, 1, 2 .. .see there
+        if(je.type == label_entry::LE_CALL
+                || je.type == label_entry::LE_MEHOD_CALL
+                || je.type ==  label_entry::LE_PARENT_CALL)
         {
             f.write_stuff_to_file_16(l);            // The length of the name
-            f.write_string_to_file(je->name.c_str(), l, 0);
+            f.write_string_to_file(je.name.c_str(), l, 0);
         }
     }
 
@@ -133,9 +132,9 @@ void code_finalizer::finalize_funtable()
 
         for(uint32_t jc=0; jc<jumptable_count; jc++)
         {
-            label_entry* je = mcompiler->jumptable()[jc];
-            const char *n = je->name.c_str();
-            if(je->name.find("global.") != std::string::npos)
+            label_entry je = mcompiler->jumptable()[jc];
+            const char *n = je.name.c_str();
+            if(je.name.find("global.") != std::string::npos)
             {
                 n += 7;
             }

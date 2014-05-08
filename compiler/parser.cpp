@@ -815,8 +815,8 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
     if(first && strlen(first) > 0)
     {
         int op_res = -1;
-        expression_tree* cnode = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance(mcompiler).place(cnode, mcompiler);
+        expression_tree* cnode = expwloc->new_expression();
+
 
         void* gen_res = cc->compiler->get_interpreter().build_expr_tree(first, cnode, cur_method, first, cc, &op_res, expwloc, psuccess);
         SUCCES_OR_RETURN;
@@ -912,8 +912,7 @@ void parsed_file::load_next_assembly_block(call_context* cc)
         {
             if(expwloc->expression[0] != '}')
             {
-                expression_tree* tmp = new expression_tree(expwloc) ;
-                garbage_bin<expression_tree*>::instance(cc->compiler).place(tmp, cc->compiler);
+                expression_tree* tmp = expwloc->new_expression();
                 tmp->op_type = ASM_BLOCK;
 
                 cc->expressions.push_back(tmp);

@@ -11,13 +11,20 @@ public:
 
     interpreter(nap_compiler* _compiler);
 
+    ~interpreter();
+
+    void add_expression(expression_tree* node)
+    {
+        mexpressions.push_back(node);
+    }
+
     /**
      * Builds an expression from the given string. Stores it in the tree found at node
      */
     void* build_expr_tree(const std::string &expr, expression_tree* node,
                           method* the_method, const char* orig_expr,
                           call_context* cc, int* result,
-                          const expression_with_location* location, bool &psuccess);
+                          expression_with_location *location, bool &psuccess);
 
 private:
 
@@ -26,7 +33,7 @@ private:
                                                const char* orig_expr,
                                                call_context* cc,
                                                int* result,
-                                               const expression_with_location* expwloc, bool &psuccess);
+                                               expression_with_location *expwloc, bool &psuccess);
 
      std::vector<variable_definition*>* define_variables(const std::string &var_def_type,
                                                          const std::string &expr_trim,
@@ -35,7 +42,7 @@ private:
                                                          call_context* cc,
                                                          const char* orig_expr,
                                                          int* result,
-                                                         const expression_with_location* expwloc, bool &psuccess);
+                                                         expression_with_location *expwloc, bool &psuccess);
 
      call_frame_entry* handle_function_call(const std::string &expr_trim,
                                             expression_tree* node,
@@ -44,13 +51,13 @@ private:
                                             const char* orig_expr,
                                             call_context* cc,
                                             int* result,
-                                            const expression_with_location* expwloc,
+                                            expression_with_location *expwloc,
                                             int type_of_call, bool &psuccess);
 
      void* deal_with_conditional_keywords(const std::string &keyword_if,
                                           const std::string &keyword_while,
                                           expression_tree* node,
-                                          const expression_with_location* expwloc,
+                                          expression_with_location *expwloc,
                                           const std::string &expr_trim,
                                           int expr_len,
                                           method* the_method,
@@ -59,7 +66,7 @@ private:
                                           int* &result , bool &psuccess);
 
      method* define_method(const std::string &expr, int expr_len, expression_tree* node,
-                           call_context* cc, const expression_with_location* expwloc, bool &psuccess);
+                           call_context* cc, expression_with_location *expwloc, bool &psuccess);
 
      int get_operator(const std::string &expr, const char **foundOperator, int* ntype, bool &psuccess);
 
@@ -83,6 +90,10 @@ private:
 private:
 
     nap_compiler* mcompiler;
+
+    // has a list of all the expressions this interpreter has created.
+    // Will be deleted upon deletion of this object
+    std::vector<expression_tree*> mexpressions;
 };
 
 #endif
