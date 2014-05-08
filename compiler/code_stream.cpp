@@ -252,22 +252,20 @@ void code_stream::output_bytecode(const char* s)
             int idx = -1;
             for(unsigned int i=0; i<mcompiler->jumptable().size(); i++)
             {
-                if(!strcmp(mcompiler->jumptable()[i]->name.c_str(), lblName.c_str()))
+                if(!strcmp(mcompiler->jumptable()[i].name.c_str(), lblName.c_str()))
                 {
                     idx = i;
                 }
             }
             if(idx > -1) // found a label
             {
-                mcompiler->jumptable()[idx]->bytecode_location = f.ftell();
+                mcompiler->jumptable()[idx].bytecode_location = f.ftell();
             }
             else /* possibly creating a label before using it */
             {
-                label_entry* le = new label_entry;
-                garbage_bin<label_entry*>::instance(mcompiler).place(le, mcompiler);
-
-                le->bytecode_location = f.ftell();
-                le->name = lblName;
+                label_entry le;
+                le.bytecode_location = f.ftell();
+                le.name = lblName;
                 mcompiler->add_jumptable_entry(le);
             }
         }
@@ -307,15 +305,13 @@ void code_stream::output_bytecode(const char* s)
         else
         if(s[0] == '\"') // string. Every mention of it creates a new stringtable entry
         {
-            bc_string_table_entry* entry = new bc_string_table_entry;
-            entry->index =  mcompiler->stringtable().size();
-            entry->the_string = expr.substr(1, expr.length() - 2);
-            entry->length = expr.length() - 2;
+            bc_string_table_entry entry (mcompiler->stringtable().size(),
+                                         expr.length() - 2,
+                                         expr.substr(1, expr.length() - 2) );
             mcompiler->add_stringtable_entry(entry);
             // write directly the opcode string, no immediate specifier
             f.write_stuff_to_file_8(OPCODE_STRING);
-            f.write_stuff_to_file_32(entry->index);
-            garbage_bin<bc_string_table_entry*>::instance(mcompiler).place(entry, mcompiler);
+            f.write_stuff_to_file_32(entry.index);
         }
         else
         {
@@ -364,7 +360,7 @@ void code_stream::output_bytecode(const char* s)
                     int idx = -1;
                     for(unsigned int i=0; i<mcompiler->variables().size(); i++)
                     {
-                        if(mcompiler->variables()[i]->name == expr)
+                        if(mcompiler->variables()[i].name == expr)
                         {
                             idx = i;
                         }
@@ -373,18 +369,15 @@ void code_stream::output_bytecode(const char* s)
                     if(idx > -1)
                     {
                         f.write_stuff_to_file_8(OPCODE_VAR);
-                        f.write_stuff_to_file_32(mcompiler->variables()[idx]->meta_location);
+                        f.write_stuff_to_file_32(mcompiler->variables()[idx].meta_location);
                     }
                     else
                     {
-                        bc_variable_entry* new_var = new bc_variable_entry;
-                        new_var->meta_location = mcompiler->var_counter();
-                        new_var->name = expr;
+                        bc_variable_entry new_var(mcompiler->var_counter(), expr);
                         mcompiler->add_variable(new_var);
                         f.write_stuff_to_file_8(OPCODE_VAR);
                         f.write_stuff_to_file_32(mcompiler->var_counter());
                         mcompiler->inc_var_counter();
-                        garbage_bin<bc_variable_entry*>::instance(mcompiler).place(new_var, mcompiler);
                     }
                 }
             }
@@ -393,7 +386,7 @@ void code_stream::output_bytecode(const char* s)
                 int idx = -1;
                 for(unsigned int i=0; i<mcompiler->jumptable().size(); i++)
                 {
-                    if(mcompiler->jumptable()[i]->name == expr)
+                    if(mcompiler->jumptable()[i].name == expr)
                     {
                         idx = i;
                     }
@@ -405,16 +398,17 @@ void code_stream::output_bytecode(const char* s)
                 }
                 else // let's create a label
                 {
-                    label_entry* le = new label_entry;
-                    garbage_bin<label_entry*>::instance(mcompiler).place(le, mcompiler);
+                    label_entry le;
 
-                    le->bytecode_location = 0;
-                    le->name = expr;
-                    mcompiler->add_jumptable_entry(le);
+                    le.bytecode_location = 0;
+                    le.name = expr;
+
                     if(mcompiler->getLastOpcode() == OPCODE_CALL)
                     {
-                        le->type = 1;
+                        le.type = label_entry::LE_CALL;
                     }
+
+                    mcompiler->add_jumptable_entry(le);
                     NUMBER_INTEGER_TYPE index = mcompiler->jumptable().size() - 1; // the real idx
                     f.write_stuff_to_file_32(index);
                 }                

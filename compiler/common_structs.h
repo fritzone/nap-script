@@ -57,8 +57,16 @@ struct file_location
  */
 struct expression_with_location
 {
-
     expression_with_location() : expression(0) {}
+
+    ~expression_with_location();
+
+    expression_tree* new_expression();
+
+    expression_tree* new_expression(expression_tree*);
+
+    // Contains a list of tree expressions that were created from this
+    std::vector<expression_tree*> compiled_expressions;
 
     /* this is an expression as read from the input file*/
     char *expression;
@@ -136,7 +144,8 @@ struct multi_dimension_def
 
 
 /**
- * Contains a variable definition; to be evaluated at run time, to be created at interpretation time
+ * Contains a variable definition; to be compiled at compile time,
+ * to be created at interpretation time
  */
 struct variable_definition
 {

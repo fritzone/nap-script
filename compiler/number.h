@@ -31,6 +31,11 @@ public:
         }
     }
 
+    ~number()
+    {
+
+    }
+
     int type() const
     {
         return m_type;

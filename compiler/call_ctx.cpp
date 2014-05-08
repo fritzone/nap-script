@@ -157,11 +157,10 @@ bytecode_label call_context::add_break_label(long position, const std::string& n
 /**
  * Adds a new expression to the method's list
  */
-expression_tree* call_context::add_new_expression(const char* expr, const expression_with_location* expwloc, bool& psuccess)
+expression_tree* call_context::add_new_expression(const char* expr, expression_with_location* expwloc, bool& psuccess)
 {
     psuccess = true;
-    expression_tree* new_expression = new expression_tree(expwloc);
-    garbage_bin<expression_tree*>::instance(compiler).place(new_expression, compiler);
+    expression_tree* new_expression = expwloc->new_expression();
 
     int res;
     compiler->get_interpreter().build_expr_tree(expr, new_expression, ccs_method, expr, this, &res, expwloc, psuccess);

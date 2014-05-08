@@ -14,6 +14,7 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/parser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/evaluate.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/expression_with_location.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/file_abstraction.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/garbage_bin.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/code_output.cpp

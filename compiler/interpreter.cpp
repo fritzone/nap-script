@@ -27,12 +27,16 @@ interpreter::interpreter(nap_compiler* _compiler) : mcompiler(_compiler)
 {
 }
 
+interpreter::~interpreter()
+{
+}
+
 std::vector<envelope*>* interpreter::listv_prepare_list(const std::string& src,
                                                         method* the_method,
                                                         const char* orig_expr,
                                                         call_context* cc,
                                                         int* result,
-                                                        const expression_with_location* expwloc, bool& psuccess)
+                                                        expression_with_location* expwloc, bool& psuccess)
 {
     psuccess = true;
     int l = src.length();
@@ -591,7 +595,9 @@ std::string interpreter::looks_like_var_def(const call_context* cc, const std::s
 /**
  * Defines a method
  */
-method* interpreter::define_method(const std::string& expr, int expr_len, expression_tree* node, call_context* cc, const expression_with_location* expwloc, bool& psuccess)
+method* interpreter::define_method(const std::string& expr, int expr_len,
+                                   expression_tree* node, call_context* cc,
+                                   expression_with_location* expwloc, bool& psuccess)
 {
     int i=expr_len - 2; /* the first one: to skip the paranthesys, the second one is the last character inside the parantheses*/
     method* created_method = NULL;
@@ -708,7 +714,7 @@ std::vector<variable_definition*>* interpreter::define_variables(const std::stri
                                                                  call_context* cc,
                                                                  const char* orig_expr,
                                                                  int* result,
-                                                                 const expression_with_location* expwloc, bool& psuccess)
+                                                                 expression_with_location* expwloc, bool& psuccess)
 {
     psuccess = true;
     std::string copied = expr_trim.substr(var_def_type.length());
@@ -764,8 +770,7 @@ std::vector<variable_definition*>* interpreter::define_variables(const std::stri
             qm = mdd;
             while(qDimensionStrings != dimensions.end())
             {
-                expression_tree* dim_def_node = new expression_tree(expwloc);
-                garbage_bin<expression_tree*>::instance(mcompiler).place(dim_def_node, mcompiler);
+                expression_tree* dim_def_node = expwloc->new_expression();
 
                 if(qDimensionStrings->length() > 0)
                 {
@@ -853,8 +858,7 @@ std::vector<variable_definition*>* interpreter::define_variables(const std::stri
 
         if(!deflist.empty())    /* whether we have a definition for this variable. if yes, we need to populate a definition_list */
         {
-            expression_tree* var_def_node = new expression_tree(expwloc);
-            garbage_bin<expression_tree*>::instance(cc->compiler).place(var_def_node, cc->compiler);
+            expression_tree* var_def_node = expwloc->new_expression();
             build_expr_tree(deflist.c_str(), var_def_node, the_method, orig_expr, cc, result, expwloc, psuccess);
             SUCCES_OR_RETURN 0;
 
@@ -888,7 +892,7 @@ std::vector<variable_definition*>* interpreter::define_variables(const std::stri
 call_frame_entry* interpreter::handle_function_call(const std::string& expr_trim, expression_tree* node,
         method* func_call, method* the_method,
         const char* orig_expr, call_context* cc, int* result,
-        const expression_with_location* expwloc, int type_of_call, bool& psuccess)
+        expression_with_location* expwloc, int type_of_call, bool& psuccess)
 {
     std::string params_body (expr_trim.substr(func_call->method_name.length() + 1));
     std::vector<std::string> parameters;
@@ -926,12 +930,14 @@ call_frame_entry* interpreter::handle_function_call(const std::string& expr_trim
         expression_tree* cur_par_expr = NULL;
         if(q->length() > 0)
         {
-            cur_par_expr = new expression_tree(expwloc);
-            garbage_bin<expression_tree*>::instance(cc->compiler).place(cur_par_expr, cc->compiler);
+            cur_par_expr = expwloc->new_expression();
+
             build_expr_tree((*q).c_str(), cur_par_expr, the_method, orig_expr, cc, result, expwloc, psuccess);
             SUCCES_OR_RETURN 0;
+
+            // this parameter will be delete in the call_frame_entry's destructor
             parameter* cur_par_obj = new parameter(the_method, "", -1);
-            garbage_bin<parameter*>::instance(cc->compiler).place(cur_par_obj, cc->compiler);
+
             cur_par_obj->expr = cur_par_expr;
 
             pars_list.push_back(cur_par_obj);
@@ -1101,7 +1107,7 @@ void* interpreter::deal_with_one_word_keyword( call_context* cc, expression_tree
 void* interpreter::deal_with_conditional_keywords(const std::string& keyword_if,
                                                   const std::string& keyword_while,
                                                   expression_tree* node,
-                                                  const expression_with_location* expwloc,
+                                                  expression_with_location* expwloc,
                                                   const std::string& expr_trim,
                                                   int expr_len,
                                                   method* the_method,
@@ -1134,8 +1140,7 @@ void* interpreter::deal_with_conditional_keywords(const std::string& keyword_if,
     if(keyw)
     {
         node->info = keyw;
-        expression_tree* expt = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance(cc->compiler).place(expt, cc->compiler);
+        expression_tree* expt = expwloc->new_expression();
 
         /* here fetch the part which is in the parentheses after the keyword and build the tree based on that*/
         std::string condition =  expr_trim.substr(strlen(keyw));
@@ -1193,7 +1198,11 @@ void* interpreter::deal_with_conditional_keywords(const std::string& keyword_if,
  * 3. multiplication (*, /, %)
  * 4. addition (+, -)
  */
-void* interpreter::build_expr_tree(const std::string& expr, expression_tree* node, method* the_method, const char* orig_expr, call_context* cc, int* result, const expression_with_location* expwloc, bool& psuccess)
+void* interpreter::build_expr_tree(const std::string& expr, expression_tree* node,
+                                   method* the_method, const char* orig_expr,
+                                   call_context* cc, int* result,
+                                   expression_with_location* expwloc,
+                                   bool& psuccess)
 {
     psuccess = true;
     mcompiler->set_location(expwloc);
@@ -1336,8 +1345,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
     if(!keyword_return.empty())
     {
         node->info = STR_RETURN;
-        expression_tree* expt = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance(cc->compiler).place(expt, cc->compiler);
+        expression_tree* expt = expwloc->new_expression();
         build_expr_tree(keyword_return, expt, the_method, orig_expr, cc, result, expwloc, psuccess);
         SUCCES_OR_RETURN 0;
 
@@ -1425,22 +1433,19 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
 
         rswfor->unique_hash = generate_unique_hash();
         rswfor->init_stmt = init_stmt;
-        rswfor->tree_init_stmt = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance(cc->compiler).place(rswfor->tree_init_stmt, cc->compiler);
+        rswfor->tree_init_stmt = expwloc->new_expression();
 
         build_expr_tree(init_stmt, rswfor->tree_init_stmt, the_method, orig_expr, cc, result, expwloc, psuccess);
         SUCCES_OR_RETURN 0;
 
         rswfor->condition = cond_stmt;
-        rswfor->tree_condition = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance(cc->compiler).place(rswfor->tree_condition, cc->compiler);
+        rswfor->tree_condition = expwloc->new_expression();
 
         build_expr_tree(cond_stmt, rswfor->tree_condition, the_method, orig_expr, cc, result, expwloc, psuccess);
         SUCCES_OR_RETURN 0;
 
         rswfor->expr = expr_stmt;
-        rswfor->tree_expr = new expression_tree(expwloc);
-        garbage_bin<expression_tree*>::instance(cc->compiler).place(rswfor->tree_expr, cc->compiler);
+        rswfor->tree_expr = expwloc->new_expression();
 
         build_expr_tree(expr_stmt, rswfor->tree_expr, the_method, orig_expr, cc, result, expwloc, psuccess);
         SUCCES_OR_RETURN 0;
@@ -1507,8 +1512,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
                         ntype = OPERATOR_UNARY_MINUS;
                     }
                     node->op_type = ntype;
-                    node->left = new expression_tree(expwloc, node);
-                    garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
+                    node->left = expwloc->new_expression(node);
 
                     build_expr_tree(afterer.c_str(), node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
 
@@ -1540,10 +1544,8 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
             }
             node->info = foundOperator;
             node->op_type = ntype;
-            node->left=new expression_tree(expwloc, node);
-            node->right=new expression_tree(expwloc, node);
-            garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
-            garbage_bin<expression_tree*>::instance(cc->compiler).place(node->right, cc->compiler);
+            node->left = expwloc->new_expression(node);
+            node->right = expwloc->new_expression(node);
 
             /* the order here is important for the "." operator ... it needs to know the parent in order to identify the object to find its call_context*/
             build_expr_tree(beforer.c_str(), node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
@@ -1607,8 +1609,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
                 temp2[strlen(temp2) - 1] = 0;
                 node->info = temp2;
 
-                node->left = new expression_tree(expwloc, node);
-                garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
+                node->left = expwloc->new_expression(node);
 
                 build_expr_tree(temp2, node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
                 SUCCES_OR_RETURN 0;
@@ -1711,8 +1712,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
         }
         node->info = p;
         node->op_type = ntype;
-        node->left = new expression_tree(expwloc, node);
-        garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
+        node->left = expwloc->new_expression(node);
 
         std::string ep2(expr_trim.substr(2));
         build_expr_tree(ep2.c_str(), node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
@@ -1733,8 +1733,8 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
             node->op_type = ntype;
 
             /* now add the  variable to the tree... */
-            node->left = new expression_tree(expwloc, node);
-            garbage_bin<expression_tree*>::instance(cc->compiler).place(node->left, cc->compiler);
+            node->left = expwloc->new_expression(node);
+
             //expr_trim[expr_len - 2] = 0;    /* this is to cut down the two ++ or -- signs ... */
             std::string ep2(expr_trim.substr(0, expr_len- 2));
             build_expr_tree(ep2.c_str(), node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
@@ -1781,10 +1781,8 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
             garbage_bin< std::vector<expression_tree*>* >::instance(mcompiler).place(index_list, mcompiler);
 
             node->info = STR_IDXID;
-            node->left = new expression_tree(expwloc, node);
-            node->right = new expression_tree(expwloc, node);
-            garbage_bin<expression_tree*>::instance(mcompiler).place(node->left, mcompiler);
-            garbage_bin<expression_tree*>::instance(mcompiler).place(node->right, mcompiler);
+            node->left = expwloc->new_expression(node);
+            node->right = expwloc->new_expression(node);
 
             build_expr_tree(indexed_elem, node->left, the_method, orig_expr, cc, result, expwloc, psuccess);    /* to discover the indexed element */
             SUCCES_OR_RETURN 0;
@@ -1794,8 +1792,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
             int indx_cnt = 0;
             while(q != entries.end())
             {
-                expression_tree* cur_indx = new expression_tree(expwloc);
-                garbage_bin<expression_tree*>::instance(mcompiler).place(cur_indx, mcompiler);
+                expression_tree* cur_indx = expwloc->new_expression();
 
                 build_expr_tree(q->c_str(), cur_indx, the_method, orig_expr, cc, result, expwloc, psuccess);
                 SUCCES_OR_RETURN 0;

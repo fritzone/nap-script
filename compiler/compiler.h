@@ -29,14 +29,28 @@ struct bc_named_marks
  */
 struct bc_variable_entry
 {
+    enum VariableType
+    {
+        VT_INTERNAL = 0,
+        VT_EXTERN = 1
+    };
+
+    bc_variable_entry(NUMBER_INTEGER_TYPE ploc, const std::string& pname, VariableType pvt = VT_INTERNAL) :
+        meta_location(ploc), name(pname), type(pvt)
+    {}
+
     NUMBER_INTEGER_TYPE meta_location;
     std::string name;
-    uint8_t type; // 0 - internal, 1 - external (from the parent VM)
+    VariableType type; // 0 - internal, 1 - external (from the parent VM)
 };
 
 
 struct bc_string_table_entry
 {
+    bc_string_table_entry(NUMBER_INTEGER_TYPE pindex, uint32_t plen, const std::string& ps) :
+        index(pindex), length(plen), the_string(ps)
+    {}
+
     NUMBER_INTEGER_TYPE index;
     uint32_t length;
     std::string the_string;
@@ -44,13 +58,21 @@ struct bc_string_table_entry
 
 struct label_entry
 {
-    label_entry() : bytecode_location(0), type(0), name() {}
+    enum LabelEntryType
+    {
+        LE_GENERAL = 0,
+        LE_CALL = 1,
+        LE_MEHOD_CALL = 2,
+        LE_PARENT_CALL = 3,
+    };
+
+    label_entry() : bytecode_location(0), type(LE_GENERAL), name() {}
 
     // where this is in the bytecode stream
     NUMBER_INTEGER_TYPE bytecode_location;
 
     // if this is a function (1) or not (0) or method call (2)
-    uint8_t type;
+    LabelEntryType type;
 
     // and the name of it
     std::string name;
@@ -80,32 +102,32 @@ public:
     unsigned char getLastOpcode() const;
     void setLastOpcode(unsigned char value);
 
-    std::vector<bc_variable_entry*>& variables()
+    std::vector<bc_variable_entry>& variables()
     {
         return mvariables;
     }
 
-    void add_variable(bc_variable_entry* new_var)
+    void add_variable(bc_variable_entry new_var)
     {
         mvariables.push_back(new_var);
     }
 
-    const std::vector<bc_string_table_entry*>& stringtable() const
+    std::vector<bc_string_table_entry>& stringtable()
     {
         return mstringtable;
     }
 
-    void add_stringtable_entry(bc_string_table_entry* entry)
+    void add_stringtable_entry(bc_string_table_entry entry)
     {
         mstringtable.push_back(entry);
     }
 
-    const std::vector<label_entry*>& jumptable() const
+    std::vector<label_entry>& jumptable()
     {
         return mjumptable;
     }
 
-    void add_jumptable_entry(label_entry* le)
+    void add_jumptable_entry(label_entry le)
     {
         mjumptable.push_back(le);
     }
@@ -245,13 +267,13 @@ private:
     unsigned char last_opcode;
 
     // a list of variables that will be added to the "meta" section of the bytecode file
-    std::vector<bc_variable_entry*> mvariables;
+    std::vector<bc_variable_entry> mvariables;
 
     // the string table of the aplication
-    std::vector<bc_string_table_entry*> mstringtable;
+    std::vector<bc_string_table_entry> mstringtable;
 
     // the table holding all the jump location in the code
-    std::vector<label_entry*> mjumptable;
+    std::vector<label_entry> mjumptable;
 
     // this counts the variables
     NUMBER_INTEGER_TYPE mvar_counter;

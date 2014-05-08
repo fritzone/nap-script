@@ -11,7 +11,7 @@ struct expression_with_location;
  */
 struct expression_tree
 {
-    expression_tree(const expression_with_location* pexpwloc, expression_tree* pfather = 0)
+    expression_tree(expression_with_location* pexpwloc, expression_tree* pfather = 0)
     {
         v_type = BASIC_TYPE_DONTCARE;
         op_type = NO_OPERATOR;
@@ -43,7 +43,7 @@ struct expression_tree
     struct expression_tree *father;
 
     /* this is the physical location of the expression (file, line, etc)*/
-    const expression_with_location *expwloc;
+    expression_with_location *expwloc;
 };
 
 /**

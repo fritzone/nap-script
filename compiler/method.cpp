@@ -59,6 +59,15 @@ method::~method()
 
 }
 
+call_frame_entry::~call_frame_entry()
+{
+    for(size_t i=0; i<parameters.size(); i++)
+    {
+        delete parameters[i];
+    }
+}
+
+
 constructor_call::constructor_call(char* name, call_context* cc) : method(cc->compiler, name, 0, cc)
 {
     the_class = cc->get_class_declaration(name);
@@ -155,7 +164,7 @@ variable* method::add_new_variable(const std::string& pname,
 parameter* method::add_parameter(std::string pname,
                                  const std::string& ptype,
                                  int pdimension,
-                                 const expression_with_location* pexpwloc,
+                                 expression_with_location* pexpwloc,
                                  bool& psuccess)
 {
     parameter* func_par = new parameter(this, pname, get_typeid(ptype));
@@ -205,7 +214,7 @@ parameter* method::get_parameter(size_t i)
 /**
  * Populates the parameters of this method with the definitions from the string
  */
-void method::feed_parameter_list(const char* par_list, const expression_with_location* expwloc, bool& psuccess)
+void method::feed_parameter_list(const char* par_list, expression_with_location* expwloc, bool& psuccess)
 {
     std::vector<std::string> entries = string_list_create_bsep(par_list, C_COMMA, mcompiler, psuccess);
     SUCCES_OR_RETURN;
