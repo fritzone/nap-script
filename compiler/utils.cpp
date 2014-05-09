@@ -22,24 +22,6 @@
 #include <set>
 
 /**
- * Removes leading, trailing spaces
- */
-char* trim(const char* src, const nap_compiler *_compiler)
-{
-    const char *start = src;
-    while(*start && is_whitespace(*start)) start ++;
-    if(!*start)
-    {
-        return (char*)"";
-    }
-    const char* end = src + strlen(src)- 1;
-    while(end > src && is_whitespace(*end)) end --;
-    char* trimd2 = alloc_mem(char, end + 1 - start + 1, _compiler);
-    strncpy(trimd2, start, end - start + 1);
-    return trimd2;
-}
-
-/**
  * Returns the maximum between the two numbers
  */
 int max_int(int a, int b)
@@ -99,11 +81,11 @@ void skip_whitespace(const std::string& expr, int expr_len, int* i)
     while(*i < expr_len && is_whitespace(expr[*i])) (*i) ++;
 }
 
-char* extract_next_enclosed_phrase(const char* input, char c_starter, char c_ender, char* o_result)
+std::string extract_next_enclosed_phrase(const char* input, char c_starter, char c_ender)
 {
     int level = 0;
     const char* p = input;
-    char *result = o_result;
+    std::string result;
     int can_stop = 0;
     while(*p && !can_stop)
     {
@@ -113,18 +95,20 @@ char* extract_next_enclosed_phrase(const char* input, char c_starter, char c_end
         if(*p == C_QUOTE || *p == C_BACKQUOTE || *p == C_SQUOTE)
         {
             char m_ender = *p;
-            *result ++ = *p;
+            result += *p;
             p ++;
             while(*p && *p != m_ender)
             {
-                *result ++ = *p;
+                result += *p;
                 p++;
             }
         }
-        if(!can_stop) *result ++ = *p ++;
+        if(!can_stop)
+        {
+            result += *p ++;
+        }
     }
-    p++;
-    return const_cast<char*>(p);
+    return result;
 }
 
 char other_par(char c)

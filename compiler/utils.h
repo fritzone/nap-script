@@ -63,14 +63,6 @@ int is_immediate_byte(const std::string &t);
  */
 
 /**
- * Trims the leading/trailing spaces, tabs, newlines from input, returns the trimmed string.
- * This method creates a new string, modifies and returns it.
- * This method allocates memory, the user must free.
- * @param src the string to trim
- */
-char *trim(const char* src, const nap_compiler *_compiler);
-
-/**
  * Returns the maximum between the two integers
  * @param a - the first number
  * @param b - the second
@@ -103,7 +95,7 @@ void skip_whitespace(const std::string &expr, int expr_len, int* i);
  * be places in o_result, and it will return the first character after the extracted pahrase and the enclosing
  * ender in the input
  */
-char* extract_next_enclosed_phrase(const char *input, char c_starter, char c_ender, char* o_result);
+std::string extract_next_enclosed_phrase(const char *input, char c_starter, char c_ender);
 
 extern long mem_alloc_count;
 extern void** mem_allocation;

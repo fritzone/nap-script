@@ -152,7 +152,7 @@ public: /* Public methods */
      * @param expwloc - the location of the expression in the file
      * @return the new expression_tree object
      */
-    expression_tree *add_new_expression(const char *expr, expression_with_location *expwloc, bool &psuccess);
+    expression_tree *add_new_expression(const std::string &expr, expression_with_location *expwloc, bool &psuccess);
 
 
     /**

@@ -47,7 +47,7 @@ public:
      * Previews the next word from the parsed file, without modifying the buffer's position.
      * Returns the word, and populates the delim with the delimiter.
      */
-    char* parser_preview_next_word(char* delim);
+    std::string parser_preview_next_word(char* delim);
 
     void remove_comments();
 

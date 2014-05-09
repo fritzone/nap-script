@@ -594,14 +594,14 @@ static void populate_maximal_type(const expression_tree* node, int& foundreq)
         case BASIC_TYPE_VARIABLE:
         case BASIC_TYPE_CLASS_VAR:
             {
-            variable* var = (variable*)node->reference->to_interpret;
+                variable* var = (variable*)node->reference->to_interpret;
                 if(var->i_type > foundreq) foundreq = var->i_type;
             }
             break;
         case MULTI_DIM_INDEX:    /* left: contains a variable that will be indexed. right->reference = env with multi_dimension_index:*/
             if(node->left && node->right && node->left->reference && (BASIC_TYPE_VARIABLE == node->left->reference->type || BASIC_TYPE_CLASS_VAR == node->left->reference->type) )
             {
-            variable* var = (variable*)node->left->reference->to_interpret;
+                variable* var = (variable*)node->left->reference->to_interpret;
                 if(var->i_type > foundreq) foundreq = var->i_type;
             }
             break;
@@ -625,27 +625,9 @@ bool is_logical_operation(expression_tree* node)
     return false;
 }
 
-
-// trim from start
-static inline std::string &ltrim(std::string &s) {
-        s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
-        return s;
-}
-
-// trim from end
-static inline std::string &rtrim(std::string &s) {
-        s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
-        return s;
-}
-
-// trim from both ends
-static inline std::string &trim(std::string &s) {
-        return ltrim(rtrim(s));
-}
-
-static std::vector<std::string> chop_up(const char* s)
+static std::vector<std::string> chop_up(const std::string& s)
 {
-    const char* q = s;
+    const char* q = s.c_str();
     std::vector<std::string> result;
     while(*q)
     {
@@ -810,8 +792,11 @@ static void resolve_if_keyword(nap_compiler* _compiler,
         if(my_if->else_branch)    /* but we have an else branch */
         {
             /* generating a name for the end of the 'if' */
-            char* end_label_name = alloc_mem(char, cc->name.length() + 32, _compiler);
-            sprintf(end_label_name, "%s_%d", cc->name.c_str(), (int)cc->labels.size());
+            std::stringstream ss;
+            ss << cc->name.c_str() << C_UNDERLINE << (int)cc->labels.size();
+            std::string s = ss.str();
+            const char* end_label_name = s.c_str();
+
             jlbf(_compiler, end_label_name);                /* jump to the end of the if, if the logical expression evaluated to true */
             compile_a_block(_compiler, my_if->else_branch->expressions, level,
                             my_if->else_branch, the_method, forced_mov, psuccess);
@@ -844,14 +829,17 @@ static void resolve_while_keyword(nap_compiler* _compiler,
 {
     resw_while* my_while = (resw_while*)node->reference->to_interpret;
     /* as a first step we should print the label of the while start and end*/
-
-    char* end_label_name = alloc_mem(char, cc->name.length() + 32, _compiler);
-    sprintf(end_label_name, "%s_%d", cc->name.c_str(), (int)cc->labels.size());    /* generating a name for the end of the while */
+    std::stringstream ss;
+    ss << cc->name << C_UNDERLINE << (int)cc->labels.size();
+    std::string s = ss.str();
+    const char* end_label_name = s.c_str();
 
     my_while->break_label = my_while->operations->add_break_label(-1, end_label_name);    /* adding the default break label location of the while to the call context */
 
-    char* while_label_name = alloc_mem(char, my_while->operations->name.length() + 32, _compiler);
-    sprintf(while_label_name, "%s_%d", my_while->operations->name.c_str(), (int)cc->labels.size());    /* generating a name for the content */
+    std::stringstream ss1;
+    ss << my_while->operations->name << C_UNDERLINE << (int)cc->labels.size();
+    std::string s1 = ss1.str();
+    const char* while_label_name = s1.c_str();
 
     /* print the while start label */
     code_stream(_compiler) << fully_qualified_label(while_label_name) << NEWLINE ;
