@@ -44,12 +44,9 @@ struct resw_while
  */
 struct resw_for
 {
-    resw_for():init_stmt(0), condition(0), expr(0), tree_init_stmt(0),
-        tree_condition(0), tree_expr(0), operations(0), unique_hash() {}
-
-    char* init_stmt;
-    char* condition;
-    char* expr;
+    resw_for() : tree_init_stmt(0), tree_condition(0), tree_expr(0),
+        operations(0), unique_hash()
+    {}
 
     expression_tree* tree_init_stmt;
     expression_tree* tree_condition;

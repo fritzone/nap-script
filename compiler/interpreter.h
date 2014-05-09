@@ -59,7 +59,6 @@ private:
                                           expression_tree* node,
                                           expression_with_location *expwloc,
                                           const std::string &expr_trim,
-                                          int expr_len,
                                           method* the_method,
                                           const char* orig_expr,
                                           call_context* cc,
@@ -80,7 +79,7 @@ private:
 
      int accepted_variable_name(const std::string &name);
 
-     char* is_indexed(const std::string &expr_trim, int expr_len, char** index);
+     std::string is_indexed(const std::string &expr_trim, int expr_len, std::string &index);
 
      std::string is_some_statement(const std::string &expr_trim, const std::string &keyword);
 

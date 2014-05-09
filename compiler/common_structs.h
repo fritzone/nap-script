@@ -57,7 +57,7 @@ struct file_location
  */
 struct expression_with_location
 {
-    expression_with_location() : expression(0) {}
+    expression_with_location(){}
 
     ~expression_with_location();
 
@@ -69,7 +69,7 @@ struct expression_with_location
     std::vector<expression_tree*> compiled_expressions;
 
     /* this is an expression as read from the input file*/
-    char *expression;
+    std::string expression;
 
     /* the location of this expression in the input file */
     file_location location;
@@ -92,16 +92,27 @@ struct envelope
     void *to_interpret;
 };
 
-/**
- * Definition for an indexed element
- **/
-struct indexed
-{
-    /* the actual index when the index is one-dimensional */
-    int idx;
 
-    /* and what we are indexing. This usually is a struct variable */
-    struct envelope *base;
+/**
+ * Represents a multi-dimensional structure: int x[12,34,67];
+ * Also, it can represent some expression instead of a single number. In case expr_def is NULL
+ * the dimension value must contain a valid value. In case dimension is -1 the expr_def
+ * must contain an expression wchich will be evaluated run-time.
+ * This structure is used in the declaration/definition of the variables
+ */
+struct multi_dimension_def
+{
+    /* the relation to the next element */
+    multi_dimension_def *next;
+
+    /* the dimension if a direct number*/
+    long dimension;
+
+    /* whether this dimension is a dynamic one or not. See how this gets initialized / evaluated */
+    bool dynamic;
+
+    /* the dimension if it's an expression. In this case the evaluator will initialize the dimension*/
+    expression_tree *expr_def;
 };
 
 /**
@@ -114,34 +125,11 @@ struct indexed
 struct multi_dimension_index
 {
     /* the way this dimension is defined */
-    struct multi_dimension_def *dimension_definition;
+    multi_dimension_def *dimension_definition;
 
     /* the values that are used to build this dimension list */
     std::vector<expression_tree*>* dimension_values;
 };
-
-/**
- * Represents a multi-dimensional structure: int x[12,34,67];
- * Also, it can represent some expression instead of a single number. In case expr_def is NULL
- * the dimension value must contain a valid value. In case dimension is -1 the expr_def
- * must contain an expression wchich will be evaluated run-time.
- * This structure is used in the declaration/definition of the variables
- */
-struct multi_dimension_def
-{
-    /* the relation to the next element */
-    struct multi_dimension_def *next;
-
-    /* the dimension if a direct number*/
-    long dimension;
-
-    /* whether this dimension is a dynamic one or not. See how this gets initialized / evaluated */
-    bool dynamic;
-
-    /* the dimension if it's an expression. In this case the evaluator will initialize the dimension*/
-    struct expression_tree *expr_def;
-};
-
 
 /**
  * Contains a variable definition; to be compiled at compile time,
@@ -150,13 +138,13 @@ struct multi_dimension_def
 struct variable_definition
 {
     /* the variable */
-    struct variable *the_variable;
+    variable *the_variable;
 
     /* the value that will be assigned to it*/
-    struct expression_tree *the_value;
+    expression_tree *the_value;
 
     /*the multi dimension definition for this variable if any, NULL if none*/
-    struct multi_dimension_def *md_def;
+    multi_dimension_def *md_def;
 };
 
 #endif

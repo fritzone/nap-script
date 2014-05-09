@@ -3,12 +3,9 @@
 
 #include "type.h"
 #include "utils.h"
-#include "garbage_bin.h"
 
 #include <stdlib.h>
 #include <string.h>
-
-class nap_compiler;
 
 /**
  * Represents a  number.
@@ -17,7 +14,7 @@ class number
 {
 public:
 
-    number(const std::string& src, const nap_compiler* _compiler) : mcompiler(_compiler)
+    number(const std::string& src)
     {
         int type = number_get_type(src);
         if (BASIC_TYPE_INT == type)
@@ -33,7 +30,7 @@ public:
 
     ~number()
     {
-
+        free(m_location);
     }
 
     int type() const
@@ -50,22 +47,18 @@ private:
 
     void number_from_long(long src)
     {
-        long *new_long = new long;
+        long *new_long = (long*)calloc(1, sizeof(long));
         *new_long = src;
         m_type = BASIC_TYPE_INT;
         m_location = new_long;
-
-        garbage_bin<long*>::instance(mcompiler).place(new_long, mcompiler);
-
     }
 
     void number_from_double(double src)
     {
-        double *new_double = new double;
+        double *new_double = (double*)calloc(1, sizeof(double));
         *new_double = src;
         m_type = BASIC_TYPE_REAL;
         m_location = new_double;
-        garbage_bin<double*>::instance(mcompiler).place(new_double, mcompiler);
     }
 
     /**
@@ -96,8 +89,6 @@ private:
 
     /* the location of the number */
     void *m_location;
-
-    const nap_compiler* mcompiler;
 };
 
 #endif

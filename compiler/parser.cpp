@@ -14,13 +14,28 @@
 #include <sstream>
 
 /**
+ * Reads the next phrase, returns it
+ */
+parsed_file::~parsed_file()
+{
+    for(size_t i=0; i<expressions.size(); i++)
+    {
+        delete expressions[i];
+    }
+}
+
+/**
  * This file removes the comments from the input file. This is the first step and should be done right after the
  */
 void parsed_file::remove_comments()
 {
     int cloc = 0;
+    std::string new_content = "";
     while (cloc < content_size)
     {
+
+        bool already_inced = false;
+
         /* grab a whole bunch of comments at once ... */
         /* first comment style: C++'s // */
         if ((C_SLASH == content[cloc] && cloc + 1 < content_size && content[cloc + 1] == C_SLASH))
@@ -29,30 +44,59 @@ void parsed_file::remove_comments()
             {
                 content[cloc] = C_SPACE;
                 cloc ++;
+                already_inced = true;
             }
         }
+
+
         /* second comment style: C's classic comments. like this. */
         if (C_SLASH == content[cloc] && cloc + 1 < content_size && C_STAR == content[cloc + 1])
         {
             content[cloc++] = C_SPACE;                 /* skip the / and * */
             content[cloc++] = C_SPACE;
 
-            while (cloc < content_size - 1 && (C_STAR != content[cloc] && C_SLASH != content[cloc + 1]))    /* End-comment ... will stop at the closing '*' */
-            {
-                content[cloc++] = C_SPACE;
-            }
-
-            // Did we run out of the code? ie: Unfinished comment?
-            if(cloc == content_size - 1)
+            char a = content[cloc];
+            if(cloc + 1 >= content_size - 1)
             {
                 mcompiler->throw_error("Comment is not closed till the end of the file");
                 return;
             }
-            content[cloc++] = C_SPACE;                /* and the closing ones too */
-            content[cloc++] = C_SPACE;
+
+            char b = content[cloc + 1];
+
+            while(true)
+            {
+                a = content[cloc];
+                b = content[cloc + 1];
+                content[cloc++] = C_SPACE; // overwrites the *
+
+                // Did we run out of the code? ie: Unfinished comment?
+                if(cloc == content_size - 1)
+                {
+                    mcompiler->throw_error("Comment is not closed till the end of the file");
+                    return;
+                }
+
+                if(a == C_STAR && b == C_SLASH )
+                {
+                    break;
+                }
+            }
+
+            content[cloc++] = C_SPACE; // overwrites the /
+            already_inced = true;
         }
-        cloc ++;
+        else
+        {
+            new_content += content[cloc];
+        }
+        if(!already_inced)
+        {
+            cloc ++;
+        }
     }
+    content = new_content;
+    content_size = new_content.size();
 }
 
 void parsed_file::add_new_expression(expression_with_location *expw)
@@ -89,7 +133,13 @@ parsed_file *parsed_file::open_file(const std::string& name,  const nap_compiler
     char* s = (char*)calloc(size + 1, 1);
     f->content_size = size;
 
-    fread(s, size, sizeof(char), fp);
+    size_t r = fread(s, size, sizeof(char), fp);
+    if(r == 0)
+    {
+        free(s);
+        fclose(fp);
+        return f;
+    }
     f->content = s;
     free(s);
     fclose(fp);
@@ -111,17 +161,6 @@ parsed_file *parsed_file::set_source(const char *src,  const nap_compiler* _comp
     f->current_line = 1;
     f->remove_comments();
     return f;
-}
-
-/**
- * Reads the next phrase, returns it
- */
-parsed_file::~parsed_file()
-{
-    for(size_t i=0; i<expressions.size(); i++)
-    {
-        delete expressions[i];
-    }
 }
 
 expression_with_location* parsed_file::parser_next_phrase(char *delim)
@@ -338,9 +377,9 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
     }
 
     size = cur_save - position;
-    char *phrase = NULL;
-    phrase = mcompiler->new_string(size + 1);
-    strncpy(phrase, content.c_str() + position, size);
+    std::string phrase;
+    phrase = content.substr(position, size);
+
     position = cur_save + skipper; /* to skip the delimiter */
 
     /* now patch the phrase, so that \n or \r or \t will be replaced with a space */
@@ -374,26 +413,20 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
             phrase[i] = C_SPACE;
         }
     }
-    phrase = trim(phrase, mcompiler);
-    if (phrase[strlen(phrase) - 1] == C_SEMC)
+
+    strim(phrase);
+    if (phrase[phrase.length() - 1] == C_SEMC)
     {
-        phrase[strlen(phrase) - 1] = 0;
+        phrase = phrase.substr(0, phrase.length() - 1);
     }
     expwloc->expression = phrase;
-
-    //expwloc->location->start_line_number = expwloc->location->end_line_number;
-
-    /*fprintf(stderr, "BBB: %s \t\t\t|||start:%d end:%d\n", expwloc->expression,
-            expwloc->location->start_line_number,
-            expwloc->location->end_line_number);*/
-
     return expwloc;
 }
 
 /**
  * Previews the next word, does not touch the parser's position
  */
-char *parsed_file::parser_preview_next_word(char *delim)
+std::string parsed_file::parser_preview_next_word(char *delim)
 {
     int save_prev_p = position;
     int save_prev_prev_p = previous_position;
@@ -409,15 +442,15 @@ char *parsed_file::parser_preview_next_word(char *delim)
     {
         return NULL;
     }
-    char *fw = expwloc->expression;
+    const char *fw = expwloc->expression.c_str();
+    std::string s;
     while (is_identifier_char(*fw))
     {
+        s += (*fw);
         fw ++;
     }
-    char *result = mcompiler->new_string(fw - expwloc->expression + 1);
-    strncpy(result, expwloc->expression, fw - expwloc->expression);
-    result = trim(result, mcompiler);
-    return result;
+    strim(s);
+    return s;
 }
 
 /**
@@ -441,13 +474,13 @@ void parsed_file::parser_skip_whitespace()
 void parsed_file::parser_skip_next_word()
 {
     char delim;
-    char *next_word = parser_preview_next_word(&delim);
-    if (!next_word)
+    std::string next_word = parser_preview_next_word(&delim);
+    if (next_word.empty())
     {
         return;
     }
     parser_skip_whitespace();
-    position += strlen(next_word);
+    position += next_word.length();
     parser_skip_whitespace();
 }
 
@@ -474,7 +507,7 @@ void parsed_file::deal_with_while_loading(call_context* cc, expression_tree* new
         char d = delim;
         expression_with_location* next_exp = alloc_mem(expression_with_location,1, mcompiler);
         next_exp->location = expwloc->location;
-        next_exp->expression = (mcompiler->duplicate_string(new_node->info.c_str()));
+        next_exp->expression = strdup(new_node->info.c_str());
 
         load_next_single_phrase(next_exp, the_method, while_cc, &d, current_level + 1, psuccess);
         SUCCES_OR_RETURN;
@@ -571,9 +604,9 @@ void parsed_file::deal_with_for_loading(call_context* cc,
     {
         /* load the next statements into the for's call context */
         char d = delim;
-        expression_with_location* next_exp = alloc_mem(expression_with_location,1, mcompiler);
+        expression_with_location* next_exp = new expression_with_location;
         next_exp->location = expwloc->location;
-        next_exp->expression = mcompiler->duplicate_string(new_node->info.c_str());
+        next_exp->expression = new_node->info;
 
         load_next_single_phrase(next_exp, the_method, for_cc, &d, current_level + 1, psuccess);
         SUCCES_OR_RETURN;
@@ -583,7 +616,7 @@ void parsed_file::deal_with_for_loading(call_context* cc,
     }
     else if(C_SEMC == delim && new_node->op_type == STATEMENT_FOR_1L)            /* one lined for, load the next expression, which is being 'hacked' into new_node.info by the interpreter  */
     {
-        for_cc->add_new_expression(new_node->info.c_str(), expwloc, psuccess);
+        for_cc->add_new_expression(new_node->info, expwloc, psuccess);
         SUCCES_OR_RETURN;
 
         new_node->op_type = STATEMENT_FOR;
@@ -625,9 +658,9 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
     {
         /* load the next statements into the if's call context */
         char d = delim;
-        expression_with_location* next_exp = alloc_mem(expression_with_location,1, mcompiler);
+        expression_with_location* next_exp = new expression_with_location;
         next_exp->location = expwloc->location;
-        next_exp->expression = mcompiler->duplicate_string(new_node->info.c_str());
+        next_exp->expression = strdup(new_node->info.c_str());
 
         load_next_single_phrase(next_exp, the_method, if_cc, &d, current_level + 1, psuccess);
         SUCCES_OR_RETURN;
@@ -654,9 +687,9 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
 
     /* here read the next word check if it's a plain 'else' */
     char delim2;
-    char* nextw = parser_preview_next_word(&delim2);
+    std::string nextw = parser_preview_next_word(&delim2);
     call_context* else_cc = NULL;
-    if(nextw && !strcmp(nextw, STR_ELSE))
+    if(nextw == STR_ELSE)
     {
         std::stringstream ss;
         ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << STR_IF << C_UNDERLINE << STR_ELSE;
@@ -664,10 +697,10 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
         if(delim2 == C_SEMC)
         {
             expression_with_location* expwloc2 = parser_next_phrase(&delim);
-            char* else_expression = trim(expwloc2->expression + strlen(STR_ELSE), mcompiler);
-            if(strlen(else_expression) > 1)
+            std::string s = expwloc2->expression.substr(strlen(STR_ELSE));
+            if(s.length() > 1)
             {
-                else_cc->add_new_expression(else_expression, expwloc2, psuccess);
+                else_cc->add_new_expression(s, expwloc2, psuccess);
                 SUCCES_OR_RETURN;
             }
         }
@@ -725,7 +758,7 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
         {
             if(expwloc)
             {
-                if( strlen(expwloc->expression) > 0 )
+                if( !expwloc->expression.empty() )
                 {
                     expression_tree* new_node = cc->add_new_expression(expwloc->expression, expwloc, psuccess);
                     SUCCES_OR_RETURN;
@@ -811,14 +844,14 @@ void parsed_file::load_next_block(method* the_method, call_context* par_cc, int 
 
 void parsed_file::load_next_single_phrase(expression_with_location* expwloc, method* cur_method, call_context* cc, char* delim, int level, bool& psuccess)
 {
-    char* first = expwloc->expression;
-    if(first && strlen(first) > 0)
+    if(!expwloc->expression.empty())
     {
         int op_res = -1;
         expression_tree* cnode = expwloc->new_expression();
 
 
-        void* gen_res = cc->compiler->get_interpreter().build_expr_tree(first, cnode, cur_method, first, cc, &op_res, expwloc, psuccess);
+        void* gen_res = cc->compiler->get_interpreter().build_expr_tree(expwloc->expression,
+                                                                        cnode, cur_method, expwloc->expression.c_str(), cc, &op_res, expwloc, psuccess);
         SUCCES_OR_RETURN;
 
         switch(op_res)

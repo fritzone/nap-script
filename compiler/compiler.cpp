@@ -82,9 +82,9 @@ void nap_compiler::parse(bool& psuccess)
     expression_with_location* expwloc = mpf->parser_next_phrase(&delim);
     while(expwloc)
     {
-        if(strstr(expwloc->expression, "import") == expwloc->expression)
+        if(starts_with(expwloc->expression, "import"))
         {
-            std::string exp_trim = expwloc->expression + 6;
+            std::string exp_trim = expwloc->expression.substr(6);
             exp_trim = strim(exp_trim);
 
             if(std::find(loaded_files.begin(), loaded_files.end(), exp_trim) == loaded_files.end())
@@ -194,28 +194,6 @@ void nap_compiler::place_bytes(int pos, const void *addr, int count)
     {
         bytecode.push_back( *((char*)addr + i) );
     }
-}
-
-
-/**
- * Duplicates src
- */
-char* nap_compiler::duplicate_string(const char* s) const
-{
-    char *d = alloc_mem(char, strlen(s) + 1, this);   // Space for length plus nul
-    if (d == NULL) return NULL;          // No memory
-    strcpy (d,s);                        // Copy the characters
-    return d;
-}
-
-
-/**
- * Creates a new string
- */
-char* nap_compiler::new_string(int size) const
-{
-    char* tmp = alloc_mem(char, size + 1, this);
-    return tmp;
 }
 
 std::string nap_compiler::prepare_location() const

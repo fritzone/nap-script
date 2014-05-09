@@ -50,7 +50,7 @@ void code_stream::output_bytecode(const char* s)
     {
         if(mcompiler->print_assembly && mcompiler->exp_w_location)
         {
-            fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->exp_w_location->expression,
+            fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->exp_w_location->expression.c_str(),
                     mcompiler->filename(mcompiler->exp_w_location->location.mfile_index).c_str(),
                     mcompiler->exp_w_location->location.start_line_number,
                     mcompiler->exp_w_location->location.end_line_number);
@@ -67,7 +67,7 @@ void code_stream::output_bytecode(const char* s)
         {
             if(mcompiler->print_assembly)
             {
-                fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->exp_w_location->expression,
+                fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->exp_w_location->expression.c_str(),
                     mcompiler->filename(mcompiler->exp_w_location->location.mfile_index).c_str(),
                     mcompiler->exp_w_location->location.start_line_number,
                     mcompiler->exp_w_location->location.end_line_number);

@@ -195,16 +195,6 @@ public:
 
     void deliver_bytecode(uint8_t*& exp_w_location, size_t& label_entry);
 
-    /**
-     * Duplicates src
-     */
-    char* duplicate_string(const char* s) const;
-
-    /**
-     * Creates a new string
-     */
-    char* new_string(int size) const;
-
     void throw_error(const char* error) const;
 
     void throw_error(const char* error, const std::string& par) const ;
