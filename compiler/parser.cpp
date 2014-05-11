@@ -64,7 +64,7 @@ void parsed_file::remove_comments()
 
             char b = content[cloc + 1];
 
-            while(true)
+			for (;;)
             {
                 a = content[cloc];
                 b = content[cloc + 1];
