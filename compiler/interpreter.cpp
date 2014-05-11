@@ -646,7 +646,7 @@ method* interpreter::define_method(const std::string& expr, int expr_len,
     created_method->feed_parameter_list(parameters.c_str(), expwloc, psuccess);
     SUCCES_OR_RETURN 0;
 
-    created_method->ret_type = get_typeid(created_method->return_type);
+    created_method->ret_type = (uint8_t)get_typeid(created_method->return_type);
     cc->add_method(created_method);
 
     node->op_type = FUNCTION_DEFINITION;

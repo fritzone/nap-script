@@ -38,7 +38,7 @@ void code_finalizer::finalize_metatable()
             mcompiler->variables()[i].type = bc_variable_entry::VT_EXTERN;
         }
 
-        f.write_stuff_to_file_8(mcompiler->variables()[i].type);
+        f.write_stuff_to_file_8((uint8_t)mcompiler->variables()[i].type);
 
         uint16_t var_name_length = (uint16_t)mcompiler->variables()[i].name.length();
         // find out if this is a global/extern variable or not: if there is only one dot
@@ -103,7 +103,7 @@ void code_finalizer::finalize_jumptable()
             je.name = je.name.substr(je.name.find('.') + 1);
             l = (uint16_t)je.name.length();
         }
-        f.write_stuff_to_file_8(je.type);      // 0, 1, 2 .. .see there
+        f.write_stuff_to_file_8((uint8_t)je.type);      // 0, 1, 2 .. .see there
         if(je.type == label_entry::LE_CALL
                 || je.type == label_entry::LE_MEHOD_CALL
                 || je.type ==  label_entry::LE_PARENT_CALL)
