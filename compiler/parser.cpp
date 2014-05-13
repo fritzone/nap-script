@@ -505,7 +505,8 @@ void parsed_file::deal_with_while_loading(call_context* cc, expression_tree* new
     {
         /* load the next statements into the while's call context */
         char d = delim;
-        expression_with_location* next_exp = alloc_mem(expression_with_location,1, mcompiler);
+        expression_with_location* next_exp = new expression_with_location;
+        add_new_expression(next_exp);
         next_exp->location = expwloc->location;
         next_exp->expression = strdup(new_node->info.c_str());
 
@@ -545,24 +546,22 @@ void parsed_file::deal_with_class_declaration(call_context* /*cc*/,
                                         int /*current_level*/,
                                         expression_with_location* /*expwloc*/, bool& psuccess)
 {
-    char* new_block = alloc_mem(char, content_size - position, mcompiler); // should be enough ...
+    std::string new_block;
     int lev = 1;
     int pos = position;
-    int nbpos = 0;
     bool can_go = true;
 
     while(can_go && pos < content_size)
     {
-        new_block[nbpos] = content[pos];
+        new_block += content[pos];
         if(content[pos] == '{') lev ++;
         if(content[pos] == '}') lev --;
         if(lev == 0) can_go = false;
         pos ++;
-        nbpos ++;
     }
     position = pos + 1;     // skips the closing brace
-    new_block[nbpos - 1] = 0;   // remove the closing brace
-    parsed_file* npf = new parsed_file(new_block, strlen(new_block), mcompiler);
+    new_block = new_block.substr(0, new_block.length() - 1); // remove closing brace
+    parsed_file* npf = new parsed_file(new_block.c_str(), new_block.length(), mcompiler);
     npf->name = this->name;
     expression_with_location* nexpwloc = NULL;
     char ndelim = 0;
