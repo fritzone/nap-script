@@ -3,6 +3,7 @@
 
 #include <memory.h>
 #include <string>
+#include <stdint.h>
 
 #include "garbage_bin.h"
 
@@ -162,5 +163,15 @@ int get_typeid(const std::string& type);
 
 
 bool starts_with(const std::string& s1, const std::string& s2) ;
+
+/**
+ * Returns the type of the given string as a  number... or at least tries to guess
+ */
+int number_get_type(const std::string& src);
+
+#define pack754_32(f) (pack754((f), 32, 8))
+#define pack754_64(f) (pack754((f), 64, 11))
+
+uint64_t pack754(long double f, unsigned bits, unsigned expbits);
 
 #endif

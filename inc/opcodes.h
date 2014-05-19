@@ -2,12 +2,13 @@
 #define _OPCODES_H_
 
 static const unsigned char OPCODE_INT           = (unsigned char)0x01; /**/
-static const unsigned char OPCODE_FLOAT         = (unsigned char)0x02;
+static const unsigned char OPCODE_REAL         = (unsigned char)0x02;
 static const unsigned char OPCODE_STRING        = (unsigned char)0x03;
 static const unsigned char OPCODE_BYTE          = (unsigned char)0x04; /**/
 static const unsigned char OPCODE_IDX           = (unsigned char)0x05;
 static const unsigned char OPCODE_CHAR          = (unsigned char)0x06; /**/
-static const unsigned char OPCODE_IMMEDIATE     = (unsigned char)0x11; /**/
+static const unsigned char OPCODE_IMMEDIATE_INT = (unsigned char)0x11; /**/
+static const unsigned char OPCODE_IMMEDIATE_REAL= (unsigned char)0x12; /**/
 static const unsigned char OPCODE_SHORT         = (unsigned char)0x16; /**/
 static const unsigned char OPCODE_INC           = (unsigned char)0x1C; /**/
 static const unsigned char OPCODE_DEC           = (unsigned char)0x1D; /**/

@@ -485,3 +485,55 @@ bool starts_with(const std::string& s1, const std::string& s2)
 {
     return s2.size() <= s1.size() && s1.compare(0, s2.size(), s2) == 0;
 }
+
+/**
+ * Returns the type of the given string as a  number... or at least tries to guess
+ */
+int number_get_type(const std::string& src)
+{
+    int i = 0;
+    int len = src.length();
+    if (!isnumber(src))
+    {
+        return 0;
+    }
+    while (i < len)
+    {
+        if (src[i] == '.')
+        {
+            return BASIC_TYPE_REAL;
+        }
+        i++;
+    }
+
+    return BASIC_TYPE_INT;
+}
+
+uint64_t pack754(long double f, unsigned bits, unsigned expbits)
+{
+    long double fnorm;
+    int shift;
+    long long sign, exp, significand;
+    unsigned significandbits = bits - expbits - 1; // -1 for sign bit
+
+    if (f == 0.0) return 0; // get this special case out of the way
+
+    // check sign and begin normalization
+    if (f < 0) { sign = 1; fnorm = -f; }
+    else { sign = 0; fnorm = f; }
+
+    // get the normalized form of f and track the exponent
+    shift = 0;
+    while(fnorm >= 2.0) { fnorm /= 2.0; shift++; }
+    while(fnorm < 1.0) { fnorm *= 2.0; shift--; }
+    fnorm = fnorm - 1.0;
+
+    // calculate the binary form (non-float) of the significand data
+    significand = fnorm * ((1LL<<significandbits) + 0.5f);
+
+    // get the biased exponent
+    exp = shift + ((1<<(expbits-1)) - 1); // shift + bias
+
+    // return the final answer
+    return (sign<<(bits-1)) | (exp<<(bits-expbits-1)) | significand;
+}

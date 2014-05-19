@@ -162,6 +162,42 @@ nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found)
     return NAP_NO_VALUE;
 }
 
+nap_real_t nap_vm_get_real(struct nap_vm* vm, char* name, int* found)
+{
+    size_t i;
+    char* finame = name;
+
+    if(name == NULL)
+    {
+        *found = 0;
+        return NAP_NO_VALUE;
+    }
+
+    for(i=0; i<vm->meta_size; i++)
+    {
+        if(vm->metatable[i]->instantiation)
+        {
+            if(vm->metatable[i]->instantiation->value)
+            {
+                if(vm->metatable[i]->instantiation->type == STACK_ENTRY_REAL)
+                {
+                    if(vm->metatable[i]->name && !strcmp(vm->metatable[i]->name, finame))
+                    {
+                        if(finame != name)
+                        {
+                            NAP_MEM_FREE(finame);
+                        }
+                        *found = 1;
+                        return *(nap_real_t*)(vm->metatable[i]->instantiation->value);
+                    }
+                }
+            }
+        }
+    }
+    *found = 0;
+    return NAP_NO_VALUE;
+}
+
 nap_byte_t nap_vm_get_byte(struct nap_vm* vm, char* name, int *found)
 {
     size_t i;

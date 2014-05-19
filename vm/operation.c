@@ -146,10 +146,10 @@ int nap_operation(struct nap_vm* vm)
             uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
             uint8_t add_source = vm->content[nap_step_ip(vm)]; /* what are we adding to it*/
 
-            if(add_source == OPCODE_IMMEDIATE) /* immediate value (1,..) added to register */
+            if(add_source == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) added to register */
             {
                 int success = 0;
-                nap_int_t imm_operand = nap_read_immediate(vm, &success);
+                nap_int_t imm_operand = nap_read_immediate_int(vm, &success);
                 if(success == NAP_FAILURE)
                 {
                     return NAP_FAILURE;

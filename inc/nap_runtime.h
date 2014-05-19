@@ -211,7 +211,7 @@ NAP_LIB_API nap_byte_t nap_runtime_get_byte(struct nap_runtime* runtime,
  *         such variable, otherwise the value indeed is NAP_NO_VALUE.
  **/
 NAP_LIB_API nap_real_t nap_runtime_get_real(struct nap_runtime* runtime,
-                                            const char* variable_name);
+                                            const char* variable_name, int *found);
 
 /******************************************************************************/
 

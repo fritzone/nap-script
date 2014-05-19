@@ -107,7 +107,7 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "byte")  opcode = OPCODE_BYTE;
     if(expr == "bool")  opcode = OPCODE_INT; /*bool treated as int in the bytecode*/
     if(expr == "char")  opcode = OPCODE_STRING;
-    if(expr == "real") opcode = OPCODE_FLOAT;
+    if(expr == "real") opcode = OPCODE_REAL;
     if(expr == "string")  opcode = OPCODE_STRING;
     if(expr == "idx")  opcode = OPCODE_IDX;
     if(expr == "intr")  opcode = OPCODE_INTR;
@@ -161,13 +161,21 @@ void code_stream::output_bytecode(const char* s)
         }
         else
         {
-            opcode = OPCODE_IMMEDIATE;
+            // TODO: check, if the number is a real, change the opcode
+            if(number_get_type(expr) == BASIC_TYPE_INT)
+            {
+                opcode = OPCODE_IMMEDIATE_INT;
+            }
+            else
+            {
+                opcode = OPCODE_IMMEDIATE_REAL;
+            }
         }
     }
     
     if(opcode)
     {
-        if(opcode == OPCODE_IMMEDIATE && mcompiler->opcode_counter > 2 &&
+        if(opcode == OPCODE_IMMEDIATE_INT && mcompiler->opcode_counter > 2 &&
                 (   mcompiler->opcodes()[mcompiler->opcode_counter - 2] == OPCODE_REG
                  || mcompiler->opcodes()[mcompiler->opcode_counter - 1] == OPCODE_INTR)
                 )
@@ -182,7 +190,7 @@ void code_stream::output_bytecode(const char* s)
         mcompiler->opcode_counter ++;
         mcompiler->setLastOpcode(opcode);
 
-        if(opcode == OPCODE_IMMEDIATE)
+        if(opcode == OPCODE_IMMEDIATE_INT)
         {
             if(mcompiler->opcode_counter > 3 && mcompiler->opcodes()[mcompiler->opcode_counter - 3] == OPCODE_REG)
             { // if this counts a register
@@ -207,18 +215,18 @@ void code_stream::output_bytecode(const char* s)
             }
             else
             {
-                NUMBER_INTEGER_TYPE nr = atoi(expr.c_str());
-                
+                NUMBER_INTEGER_TYPE nr = atoll(expr.c_str());
+
                 // the size of the number
                 uint8_t type = OPCODE_BYTE;
                 if(nr > 255) type = OPCODE_SHORT;
                 if(nr > 65535) type = OPCODE_LONG;
                 if(nr > 4294967294u) type = OPCODE_HUGE;
-                
+
                 // if yes, switch on the first bit in the type
                 if(expr[0] == '-') type |= 0x80;
                 f.write_stuff_to_file_8(type);
-                
+
                 // and now write the number according to the size
                 if(type == OPCODE_BYTE)
                 {
@@ -237,11 +245,17 @@ void code_stream::output_bytecode(const char* s)
                 }
                 if(type == OPCODE_HUGE)
                 {
-                    int64_t nrf = atoi(expr.c_str());
+                    int64_t nrf = atoll(expr.c_str());
                     f.write_stuff_to_file_64((uint64_t)nrf);
                 }
             }
 
+        }
+        else
+        if(opcode == OPCODE_IMMEDIATE_REAL)
+        {
+            long double v = strtold(expr.c_str(), 0);
+            f.write_stuff_to_file_64(pack754_64(v));
         }
     }
     else

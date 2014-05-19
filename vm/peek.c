@@ -17,10 +17,10 @@ int nap_peek(struct nap_vm *vm)
     nap_index_t peek_index = 0; /* the index that's peeked */
     uint8_t peek_target = 0;    /* this normally is OPCODE_VAR for compiled code*/
 
-    if(peek_index_type == OPCODE_IMMEDIATE) /* immediate value (1,..) */
+    if(peek_index_type == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) */
     {
         int success = 0;
-        peek_index = (nap_index_t)nap_read_immediate(vm, &success);
+        peek_index = (nap_index_t)nap_read_immediate_int(vm, &success);
         if(success == NAP_FAILURE)
         {
             return NAP_FAILURE;

@@ -497,7 +497,7 @@ nap_byte_t nap_read_byte(struct nap_vm* vm)
     return nr;
 }
 
-nap_int_t nap_read_immediate(struct nap_vm* vm, int* success)
+nap_int_t nap_read_immediate_int(struct nap_vm* vm, int* success)
 {
     uint8_t imm_size = vm->content[nap_step_ip(vm)];
     nap_int_t nr = 0;
@@ -946,6 +946,11 @@ nap_int_t nap_regi(struct nap_vm *vm, uint8_t register_index)
     return vm->cec->regi[register_index];
 }
 
+nap_real_t nap_regr(struct nap_vm *vm, uint8_t register_index)
+{
+    return vm->cec->regr[register_index];
+}
+
 void nap_set_regi(struct nap_vm *vm, uint8_t register_index, nap_int_t v)
 {
     vm->cec->regi[register_index] = v;
@@ -959,6 +964,11 @@ void nap_set_regidx(struct nap_vm *vm, uint8_t register_index, nap_int_t v)
 nap_int_t nap_regidx(struct nap_vm *vm, uint8_t register_index)
 {
     return vm->cec->regidx[register_index];
+}
+
+void nap_set_regr(struct nap_vm *vm, uint8_t register_index, nap_real_t v)
+{
+    vm->cec->regr[register_index] = v;
 }
 
 
@@ -1018,4 +1028,41 @@ struct nap_string_register* nap_regs(struct nap_vm *vm, uint8_t register_index)
 int64_t nap_sp(struct nap_vm *vm)
 {
     return vm->cec->stack_pointer;
+}
+
+
+nap_real_t unpack754(uint64_t i, unsigned bits, unsigned expbits)
+{
+    long double result;
+    long long shift;
+    unsigned bias;
+    unsigned significandbits = bits - expbits - 1; // -1 for sign bit
+
+    if (i == 0) return 0.0;
+
+    // pull the significand
+    result = (i&((1LL<<significandbits)-1)); // mask
+    result /= (1LL<<significandbits); // convert back to float
+    result += 1.0f; // add the one back on
+
+    // deal with the exponent
+    bias = (1<<(expbits-1)) - 1;
+    shift = ((i>>significandbits)&((1LL<<expbits)-1)) - bias;
+    while(shift > 0) { result *= 2.0; shift--; }
+    while(shift < 0) { result /= 2.0; shift++; }
+
+    // sign it
+    result *= (i>>(bits-1))&1? -1.0: 1.0;
+
+    return result;
+}
+
+
+nap_real_t nap_read_immediate_real(struct nap_vm *vm)
+{
+    uint64_t* immediate_r = (uint64_t*)(vm->content + nap_ip(vm));
+    uint64_t temp_64 = htovm_64(*immediate_r);
+    nap_real_t v = unpack754_64(temp_64);
+    nap_move_ip(vm, 8, FORWARD);
+    return v;
 }

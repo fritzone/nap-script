@@ -61,29 +61,6 @@ private:
         m_location = new_double;
     }
 
-    /**
-     * Returns the type of the given string as a  number... or at least tries to guess
-     */
-    int number_get_type(const std::string& src)
-    {
-        int i = 0;
-        int len = src.length();
-        if (!isnumber(src))
-        {
-            return 0;
-        }
-        while (i < len)
-        {
-            if (src[i] == '.')
-            {
-                return BASIC_TYPE_REAL;
-            }
-            i++;
-        }
-
-        return BASIC_TYPE_INT;
-    }
-
     /* type of the struct number */
     int m_type;
 

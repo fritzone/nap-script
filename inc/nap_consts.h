@@ -13,7 +13,7 @@ static const int NAP_EXECUTE_FAILURE = 0;
 static const int NAP_VARIABLE_FOUND     = 1;
 
 /** Means the requested variable was not found */
-static const int NAP_VARIABLE_NOT_FOUND = 0;
+#define NAP_VARIABLE_NOT_FOUND 0;
 
 /** Represents that there is no such value*/
 #define NAP_NO_VALUE 0xFF
