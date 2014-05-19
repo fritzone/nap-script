@@ -35,7 +35,7 @@ TEST(Floats, BasicRealOperations)
     "
     SCRIPT_END
 
-    ASSERT_DOUBLE_EQ(56.0, VAR_REAL(b));
+    ASSERT_DOUBLE_EQ((double)56.0, (double)VAR_REAL(b));
 
     SCRIPT_SHUTDOWN
 }
