@@ -26,6 +26,20 @@ TEST(Assembly, PushPop)
   SCRIPT_SHUTDOWN
 }
 
+TEST(Floats, BasicRealOperations)
+{
+    SCRIPT_START
+    "                                    \
+        real a = 5.6;                    \
+        real b = a * 10;                 \
+    "
+    SCRIPT_END
+
+    ASSERT_DOUBLE_EQ(56.0, VAR_REAL(b));
+
+    SCRIPT_SHUTDOWN
+}
+
 TEST(Operations, BasicIntVariableOperations)
 {
 

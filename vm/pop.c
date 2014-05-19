@@ -23,7 +23,7 @@ int nap_pop(struct nap_vm* vm)
     {
         uint8_t register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
 
-        /* we are dealing with an INT type register */
+        /* we are popping an INT type register */
         if(register_type == OPCODE_INT)
         {
             uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/

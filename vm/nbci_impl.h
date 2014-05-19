@@ -169,6 +169,10 @@ struct nap_string_register;
   #endif
 #endif
 
+/* Macros for handling the real numbers */
+#define unpack754_32(i) (unpack754((i), 32, 8))
+#define unpack754_64(i) (unpack754((i), 64, 11))
+
 /**
  * Returns 1 if the vm has a variable with the given name and populate the
  * *type with the type of the variable. *type will be -1 if no variable
@@ -215,7 +219,15 @@ struct variable_entry* nap_fetch_variable(struct nap_vm* vm, nap_index_t var_ind
  * @param vm
  * @return
  */
-nap_int_t nap_read_immediate(struct nap_vm* vm, int* success);
+nap_int_t nap_read_immediate_int(struct nap_vm* vm, int* success);
+
+/**
+ * @brief nap_read_immediate_real
+ * @param vm
+ * @param success
+ * @return
+ */
+nap_real_t nap_read_immediate_real(struct nap_vm* vm);
 
 /**
  * Read an immediate byte from the bytecode stream and return it
@@ -300,7 +312,13 @@ void nap_set_regi(struct nap_vm* vm, uint8_t register_index, nap_int_t v);
 /* Returns the given int register from the given VM */
 nap_int_t nap_regi(struct nap_vm* vm, uint8_t register_index);
 
-/* Sets the givenregsiter to the given value */
+/* Returns the given int register from the given VM */
+nap_real_t nap_regr(struct nap_vm* vm, uint8_t register_index);
+
+/* Sets the given regsiter to the given value */
+void nap_set_regr(struct nap_vm* vm, uint8_t register_index, nap_real_t v);
+
+/* Sets the given regsiter to the given value */
 void nap_set_regidx(struct nap_vm* vm, uint8_t register_index, nap_int_t v);
 
 /* Return the nap register index from the given position */
@@ -331,6 +349,9 @@ int nap_set_regs(struct nap_vm* vm, uint8_t register_index,
 
 /* Returns the string register's value */
 struct nap_string_register* nap_regs(struct nap_vm* vm, uint8_t register_index);
+
+/* returns a real from the packed unsignd int */
+nap_real_t unpack754(uint64_t i, unsigned bits, unsigned expbits);
 
 #ifdef __cplusplus
 }

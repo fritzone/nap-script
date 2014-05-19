@@ -176,10 +176,22 @@ NAP_LIB_API nap_int_t nap_runtime_get_int(struct nap_runtime* runtime,
 
 
 
-NAP_LIB_API nap_real_t nap_runtime_get_real(nap_runtime * /*runtime*/,
-                                const char * /*variable_name*/)
+NAP_LIB_API nap_real_t nap_runtime_get_real(nap_runtime * runtime,
+                                const char * variable_name, int* found)
 {
-    return 0;
+    if(runtime != NULL)
+    {
+        char* t = (char*)calloc(strlen(variable_name) + 1, 1);
+        strcpy(t, variable_name);
+        nap_real_t temp = nap_vm_get_real(runtime->vm, t, found);
+        free(t);
+        return temp;
+    }
+    else
+    {
+        *found = NAP_VARIABLE_NOT_FOUND;
+        return NAP_NO_VALUE;
+    }
 }
 
 
@@ -273,7 +285,7 @@ int nap_execute_method(nap_runtime *runtime, void *return_value, const char *met
                 method_cmd += ss.str();
             }
 
-            if(fe->parameter_types[i] == OPCODE_FLOAT)
+            if(fe->parameter_types[i] == OPCODE_REAL)
             {
                 nap_real_t v = va_arg(argptr, nap_real_t);
                 std::stringstream ss;
@@ -316,7 +328,7 @@ int nap_execute_method(nap_runtime *runtime, void *return_value, const char *met
                 (*(nap_byte_t*)return_value) = runtime->vm->cec->rvb;
             }
             else
-            if(fe->return_type == OPCODE_FLOAT)
+            if(fe->return_type == OPCODE_REAL)
             {
                 (*(nap_real_t*)return_value) = runtime->vm->cec->rvr;
             }

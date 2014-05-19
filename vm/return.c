@@ -15,10 +15,14 @@ int nap_return(struct nap_vm *vm)
         uint8_t register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
         uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
 
-        /* we are dealing with an INT type register */
-        if(register_type == OPCODE_INT)
+        if(register_type == OPCODE_INT) /* we are dealing with an INT register */
         {
             vm->cec->rvi = nap_regi(vm, register_index);
+        }
+        else
+        if(register_type == OPCODE_REAL) /* we are dealing with an REAL register */
+        {
+            vm->cec->rvr = nap_regr(vm, register_index);
         }
         else
         if(register_type == OPCODE_BYTE)

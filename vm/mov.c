@@ -236,7 +236,7 @@ static int mov_into_byte_register(struct nap_vm* vm)
     uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
     uint8_t move_source = vm->content[nap_step_ip(vm)]; /* what are we moving in*/
 
-    if(move_source == OPCODE_IMMEDIATE) /* immediate value (1,..) */
+    if(move_source == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) */
     {
         nap_set_regb(vm, register_index, nap_read_byte(vm));
     }
@@ -452,10 +452,10 @@ static int mov_into_int_register(struct nap_vm* vm)
     uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
     uint8_t move_source = vm->content[nap_step_ip(vm)]; /* what are we moving in*/
 
-    if(move_source == OPCODE_IMMEDIATE) /* immediate value (1,..) */
+    if(move_source == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) */
     {
         int success = 0;
-        nap_set_regi(vm, register_index, nap_read_immediate(vm, &success));
+        nap_set_regi(vm, register_index, nap_read_immediate_int(vm, &success));
         if(success == NAP_FAILURE)
         {
             return NAP_FAILURE;
@@ -633,6 +633,68 @@ static int mov_into_int_register(struct nap_vm* vm)
     return NAP_SUCCESS;
 }
 
+static int mov_into_real_register(struct nap_vm* vm)
+{
+    uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+    uint8_t move_source = vm->content[nap_step_ip(vm)]; /* what are we moving in*/
+
+    if(move_source == OPCODE_IMMEDIATE_REAL) /* immediate value (1,..) */
+    {
+        nap_set_regr(vm, register_index, nap_read_immediate_real(vm));
+    }
+    else
+    if(move_source == OPCODE_VAR) /* movin a variable into reg*/
+    {
+        nap_index_t var_index = nap_fetch_index(vm);
+        /* and fetch the variable from the given index */
+        struct variable_entry* var = nap_fetch_variable(vm, var_index);
+        ASSERT_NOT_NULL_VAR(var)
+        CHECK_VARIABLE_INSTANTIATON(var)
+        CHECK_VARIABLE_TYPE(var, STACK_ENTRY_REAL)
+
+        /* and moving the value in the regsiter itself */
+        nap_set_regr(vm, register_index, *(nap_real_t*)var->instantiation->value);
+    }
+    else
+    if(move_source == OPCODE_RV) /* moving the return value of some function in a reg*/
+    {
+        uint8_t return_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+        if(return_type == OPCODE_REAL)                 /* handles: mov reg int 0, rv int*/
+        {
+            nap_set_regr(vm, register_index, vm->cec->rvr);
+        }
+        else
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+    }
+    else
+    if(move_source == OPCODE_REG) /* moving a register in another int reg */
+    {
+        uint8_t second_register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+        if(second_register_type == OPCODE_INT) /* moving an int register in another int register */
+        {
+            uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+            nap_set_regr(vm, register_index, (nap_real_t)nap_regi(vm, second_register_index));
+        }
+        else
+        if(second_register_type == OPCODE_REAL) /* moving an int register in another int register */
+        {
+            uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+            nap_set_regr(vm, register_index, nap_regr(vm, second_register_index));
+        }
+        else
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+    }
+    else
+    {
+        NAP_NOT_IMPLEMENTED
+    }
+    return NAP_SUCCESS;
+}
+
 static int mov_into_string_register(struct nap_vm* vm)
 {
     uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
@@ -685,10 +747,10 @@ static int mov_into_index_register(struct nap_vm* vm)
 {
     uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
     uint8_t move_source = vm->content[nap_step_ip(vm)]; /* the index definition */
-    if(move_source == OPCODE_IMMEDIATE) /* immediate value (1,..) */
+    if(move_source == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) */
     {
         int success = 0;
-        nap_set_regidx(vm, register_index, nap_read_immediate(vm, &success));
+        nap_set_regidx(vm, register_index, nap_read_immediate_int(vm, &success));
         if(success == NAP_FAILURE)
         {
             return NAP_FAILURE;
@@ -727,6 +789,11 @@ static int mov_into_register(struct nap_vm* vm)
         mov_into_byte_register(vm);
     }
     else
+    if(register_type == OPCODE_REAL)
+    {
+        mov_into_real_register(vm);
+    }
+    else
     {
         NAP_NOT_IMPLEMENTED
     }
@@ -759,16 +826,36 @@ static int mov_into_variable(struct nap_vm* vm)
                 /* perform the operation only if the values are not the same already*/
                 if(var->instantiation->value)
                 {
-                    if(*(nap_int_t*)var->instantiation->value != nap_regi(vm, register_index))
-                    {
-                        *(nap_int_t*)var->instantiation->value = nap_regi(vm, register_index);
-                    }
+                    *(nap_int_t*)var->instantiation->value = nap_regi(vm, register_index);
                 }
                 else /* allocate the memory for the value */
                 {
                     nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
 					NAP_NN_ASSERT(vm, temp);
                     *temp = nap_regi(vm, register_index);
+                    var->instantiation->value = temp;
+                }
+            }
+            else
+            { /* here: convert the value to hold the requested type */
+                NAP_NOT_IMPLEMENTED
+            }
+        }
+        else
+        if(register_type == OPCODE_REAL) /* we are dealing with a REAL type register */
+        {
+            /* to check if the variable is the same type. If not, convert */
+            if(var->instantiation->type == OPCODE_REAL)
+            {
+                if(var->instantiation->value)
+                {
+                    *(nap_real_t*)var->instantiation->value = nap_regr(vm, register_index);
+                }
+                else /* allocate the memory for the value */
+                {
+                    nap_real_t* temp = NAP_MEM_ALLOC(1, nap_real_t);
+                    NAP_NN_ASSERT(vm, temp);
+                    *temp = nap_regr(vm, register_index);
                     var->instantiation->value = temp;
                 }
             }

@@ -1520,77 +1520,84 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
     SUCCES_OR_RETURN 0;
 
     /* ok, here start checking what we have gathered till now */
+    int isNumber = isnumber(expr_trim);
 
-    if(zlop!=-1)    /* we have found an operator on the zero.th level */
+    // 1. if we have found an operator on the zero.th level,
+    if(zlop != -1)
     {
-        std::string beforer = std::string(expr_trim).substr(0, zlop);
-        if(beforer.empty())
+        // 2. but see that it is not the "." opwrator
+        // 3. and this expression is not a number */
+        if( !(foundOperator[0] == '.' && isNumber) )
         {
-            /* now we should check for the 'unary' +- operators */
-            if(ntype == OPERATOR_ADD || ntype == OPERATOR_MINUS || ntype == OPERATOR_BITWISE_COMP || ntype == OPERATOR_NOT)
+            std::string beforer = std::string(expr_trim).substr(0, zlop);
+            if(beforer.empty())
             {
-                /* check if this is a number or not ?*/
-                std::string afterer = expr_trim.substr(1);
-                afterer = strim(afterer);
-                if(!isnumber(afterer.c_str()))
+                /* now we should check for the 'unary' +- operators */
+                if(ntype == OPERATOR_ADD || ntype == OPERATOR_MINUS || ntype == OPERATOR_BITWISE_COMP || ntype == OPERATOR_NOT)
                 {
-                    node->info = foundOperator;
-                    if(ntype == OPERATOR_ADD)
+                    /* check if this is a number or not ?*/
+                    std::string afterer = expr_trim.substr(1);
+                    afterer = strim(afterer);
+                    if(!isnumber(afterer.c_str()))
                     {
-                        ntype = OPERATOR_UNARY_PLUS;
+                        node->info = foundOperator;
+                        if(ntype == OPERATOR_ADD)
+                        {
+                            ntype = OPERATOR_UNARY_PLUS;
+                        }
+                        else if(ntype == OPERATOR_MINUS)
+                        {
+                            ntype = OPERATOR_UNARY_MINUS;
+                        }
+                        node->op_type = ntype;
+                        node->left = expwloc->new_expression(node);
+
+                        build_expr_tree(afterer.c_str(), node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
+
+                        return NULL;
                     }
-                    else if(ntype == OPERATOR_MINUS)
+                    else
                     {
-                        ntype = OPERATOR_UNARY_MINUS;
+                        zlop = -1;
                     }
-                    node->op_type = ntype;
-                    node->left = expwloc->new_expression(node);
-
-                    build_expr_tree(afterer.c_str(), node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
-
-                    return NULL;
                 }
-                else
+                else    /* right now we are not dealing with more unary operators */
                 {
-                    zlop = -1;
+                    mcompiler->throw_error(E0012_SYNTAXERR, expr);
+                    psuccess = false;
+                    return 0;
                 }
             }
-            else    /* right now we are not dealing with more unary operators */
+            else
             {
-                mcompiler->throw_error(E0012_SYNTAXERR, expr);
-                psuccess = false;
-                return 0;
+                /* finding the part which is after the operator */
+                int l = strlen(foundOperator) ;
+                std::string afterer =  expr_trim.substr(zlop + (foundOperator ?  l : 0));
+                strim(afterer);
+                if(afterer.length() == 0)
+                {
+                    mcompiler->throw_error(E0012_SYNTAXERR, expr);
+                    psuccess = false;
+                    return 0;
+                }
+                node->info = foundOperator;
+                node->op_type = ntype;
+                node->left = expwloc->new_expression(node);
+                node->right = expwloc->new_expression(node);
+
+                /* the order here is important for the "." operator ... it needs to know the parent in order to identify the object to find its call_context*/
+                build_expr_tree(beforer.c_str(), node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
+                SUCCES_OR_RETURN 0;
+
+                build_expr_tree(afterer.c_str(), node->right, the_method, orig_expr, cc, result, expwloc, psuccess);
+                SUCCES_OR_RETURN 0;
+
             }
-        }
-        else
-        {
-            /* finding the part which is after the operator */
-            int l = strlen(foundOperator) ;
-            std::string afterer =  expr_trim.substr(zlop + (foundOperator ?  l : 0));
-            strim(afterer);
-            if(afterer.length() == 0)
+
+            if(zlop != -1)
             {
-                mcompiler->throw_error(E0012_SYNTAXERR, expr);
-                psuccess = false;
-                return 0;
+                return NULL;
             }
-            node->info = foundOperator;
-            node->op_type = ntype;
-            node->left = expwloc->new_expression(node);
-            node->right = expwloc->new_expression(node);
-
-            /* the order here is important for the "." operator ... it needs to know the parent in order to identify the object to find its call_context*/
-            build_expr_tree(beforer.c_str(), node->left, the_method, orig_expr, cc, result, expwloc, psuccess);
-            SUCCES_OR_RETURN 0;
-
-            build_expr_tree(afterer.c_str(), node->right, the_method, orig_expr, cc, result, expwloc, psuccess);
-            SUCCES_OR_RETURN 0;
-
-        }
-
-        if(zlop != -1)
-        {
-            return NULL;
         }
     }
 

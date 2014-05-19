@@ -136,6 +136,7 @@ struct nap_execution_context
     /* registers ofthe VM */
     nap_byte_t                 regb  [REGISTER_COUNT]; /* the byte registers  */
     nap_int_t                  regi  [REGISTER_COUNT]; /* the int registers   */
+    nap_real_t                 regr  [REGISTER_COUNT]; /* the real registers  */
     nap_int_t                  regidx[REGISTER_COUNT]; /* the index register  */
     struct nap_string_register regs  [REGISTER_COUNT]; /* the string registers*/
     enum flag_status lbf;                              /* the last bool flag  */
@@ -299,6 +300,27 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
 nap_int_t nap_vm_get_int(struct nap_vm* vm, char* name, int* found);
 
 /**
+ * @brief nap_vm_get_real returns the value of the int variable called "name"
+ *
+ * The variable must have been defined in the global namespace in the script
+ * otherwise it is not relevant.
+ *
+ * The method will populate the *found with 1 if the variable was found and with
+ * 0 if the variable was not found.
+ *
+ * The method will return the value of the variable if found or \c NAP_NO_VALUE
+ * if not found.
+ *
+ * The *found parameter should be used for error checking, not the return value.
+ *
+ * @param vm - the VM in which this runs
+ * @param name - the name of the variable
+ * @param [out] found - if we found it or not. Set to 1 or 0.
+ * @return the value, or NAP_NO_VALUE if not found
+ */
+nap_real_t nap_vm_get_real(struct nap_vm* vm, char* name, int* found);
+
+/**
  * @brief nap_vm_get_byte returns the value of the byte variable called "name"
  *
  * The variable must have been defined in the global namespace in the script
@@ -331,8 +353,8 @@ nap_byte_t nap_vm_get_byte(struct nap_vm* vm, char* name, int* found);
  * The nap VM internally stores the strings as UTF-32BE, however this method
  * converts the internal string into the host encoding and returns that value,
  * i.e. a \0 terminated local string. The user must free the returned value to
- * avoid memory leaks. The string is allocated with calloc(), please use the
- * corresponding free() call.
+ * avoid memory leaks. The string is allocated with \c calloc(), please use the
+ * corresponding \c free() call.
  *
  * @param vm - the VM in which this runs
  * @param name - the name of the variable

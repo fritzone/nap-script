@@ -81,10 +81,10 @@ int nap_comparison(struct nap_vm* vm)
             uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
             uint8_t cmp_second = vm->content[nap_step_ip(vm)]; /* what are we checking against*/
 
-            if(cmp_second == OPCODE_IMMEDIATE) /* comparing int register with immediate value (1,..) */
+            if(cmp_second == OPCODE_IMMEDIATE_INT) /* comparing int register with immediate value (1,..) */
             {
                 int success = 0;
-                nap_int_t immediate = nap_read_immediate(vm, &success);
+                nap_int_t immediate = nap_read_immediate_int(vm, &success);
                 if(success == NAP_FAILURE)
                 {
                     return NAP_FAILURE;

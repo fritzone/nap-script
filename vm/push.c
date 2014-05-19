@@ -21,9 +21,9 @@ int nap_push(struct nap_vm *vm)
 
     /* see for push int global.XX, push string global.YY ... ie: declaring a variable */
     if(   se->type == STACK_ENTRY_INT
+       || se->type == STACK_ENTRY_REAL
        || se->type == STACK_ENTRY_BYTE
        || se->type == STACK_ENTRY_STRING) /* STACK_ENTRY_STRING is the same as OPCODE_STRING */
-        /* or real */
     {
         uint8_t push_what = vm->content[nap_step_ip(vm)];
 
@@ -43,6 +43,13 @@ int nap_push(struct nap_vm *vm)
                 ve->instantiation->value = NAP_MEM_ALLOC(1, nap_int_t);
                 NAP_NN_ASSERT(vm, ve->instantiation->value);
                 *(nap_int_t*)ve->instantiation->value = 0;
+            }
+            else
+            if(se->type == STACK_ENTRY_REAL) /* pushing a real */
+            {
+                ve->instantiation->value = NAP_MEM_ALLOC(1, nap_real_t);
+                NAP_NN_ASSERT(vm, ve->instantiation->value);
+                *(nap_real_t*)ve->instantiation->value = 0.0;
             }
             else
             if(se->type == STACK_ENTRY_BYTE) /* pushing a byte */
@@ -125,6 +132,17 @@ int nap_push(struct nap_vm *vm)
             se->value = temp;
         }
         else
+        if(se->type == OPCODE_REAL) /* pushing a real register */
+        {
+            nap_real_t* temp = NAP_MEM_ALLOC(1, nap_real_t);
+            NAP_NN_ASSERT(vm, temp);
+
+            *temp = nap_regr(vm, register_index);
+
+            /* setting the value of the stack entry */
+            se->value = temp;
+        }
+        else
         if(se->type == OPCODE_BYTE) /* pushing a byte register */
         {
             nap_byte_t* temp = NAP_MEM_ALLOC(1, nap_byte_t);
@@ -154,12 +172,12 @@ int nap_push(struct nap_vm *vm)
         }
     }
     else
-    if(se->type == OPCODE_IMMEDIATE)
+    if(se->type == OPCODE_IMMEDIATE_INT)
     {
         /* immediate values (23, 42) are pushed as ints */
         int success = 0;
         nap_int_t* temp = NULL;
-        nap_int_t nr = nap_read_immediate(vm, &success);
+        nap_int_t nr = nap_read_immediate_int(vm, &success);
         
         if(!success)
         {
@@ -192,6 +210,17 @@ int nap_push(struct nap_vm *vm)
             NAP_NN_ASSERT(vm, temp);
 
             *temp = *(nap_int_t*)ve->instantiation->value;
+
+            /* setting the value of the stack entry */
+            se->value = temp;
+        }
+        else
+        if(se->type == STACK_ENTRY_REAL) /* pushing a real variable */
+        {                               /* STACK_ENTRY_REAL = OPCODE_REAL */
+            nap_real_t* temp = NAP_MEM_ALLOC(1, nap_real_t);
+            NAP_NN_ASSERT(vm, temp);
+
+            *temp = *(nap_real_t*)ve->instantiation->value;
 
             /* setting the value of the stack entry */
             se->value = temp;
