@@ -215,7 +215,7 @@ void code_stream::output_bytecode(const char* s)
             }
             else
             {
-                NUMBER_INTEGER_TYPE nr = atoll(expr.c_str());
+				NUMBER_INTEGER_TYPE nr = (NUMBER_INTEGER_TYPE)atoll(expr.c_str());
 
                 // the size of the number
                 uint8_t type = OPCODE_BYTE;

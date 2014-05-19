@@ -1033,7 +1033,7 @@ int64_t nap_sp(struct nap_vm *vm)
 
 nap_real_t unpack754(uint64_t i, unsigned bits, unsigned expbits)
 {
-    long double result;
+    nap_real_t result;
     long long shift;
     unsigned bias;
     unsigned significandbits = bits - expbits - 1; // -1 for sign bit
@@ -1041,7 +1041,7 @@ nap_real_t unpack754(uint64_t i, unsigned bits, unsigned expbits)
     if (i == 0) return 0.0;
 
     // pull the significand
-    result = (i&((1LL<<significandbits)-1)); // mask
+    result = (nap_real_t)(i&((1LL<<significandbits)-1)); // mask
     result /= (1LL<<significandbits); // convert back to float
     result += 1.0f; // add the one back on
 

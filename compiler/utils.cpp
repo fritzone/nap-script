@@ -529,7 +529,7 @@ uint64_t pack754(long double f, unsigned bits, unsigned expbits)
     fnorm = fnorm - 1.0;
 
     // calculate the binary form (non-float) of the significand data
-    significand = fnorm * ((1LL<<significandbits) + 0.5f);
+    significand = (long long)(fnorm * ((1LL<<significandbits) + 0.5f));
 
     // get the biased exponent
     exp = shift + ((1<<(expbits-1)) - 1); // shift + bias

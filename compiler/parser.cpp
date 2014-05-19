@@ -508,7 +508,7 @@ void parsed_file::deal_with_while_loading(call_context* cc, expression_tree* new
         expression_with_location* next_exp = new expression_with_location;
         add_new_expression(next_exp);
         next_exp->location = expwloc->location;
-        next_exp->expression = strdup(new_node->info.c_str());
+        next_exp->expression = new_node->info;
 
         load_next_single_phrase(next_exp, the_method, while_cc, &d, current_level + 1, psuccess);
         SUCCES_OR_RETURN;
@@ -659,7 +659,7 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
         char d = delim;
         expression_with_location* next_exp = new expression_with_location;
         next_exp->location = expwloc->location;
-        next_exp->expression = strdup(new_node->info.c_str());
+        next_exp->expression = new_node->info;
 
         load_next_single_phrase(next_exp, the_method, if_cc, &d, current_level + 1, psuccess);
         SUCCES_OR_RETURN;
