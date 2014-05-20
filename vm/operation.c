@@ -20,7 +20,7 @@
  *
  * @throws a system error if the operation is division and the operand is zero
  */
-int do_int_operation(struct nap_vm* vm, nap_int_t* target, nap_int_t operand,
+static int do_int_operation(struct nap_vm* vm, nap_int_t* target, nap_int_t operand,
                       uint8_t opcode)
 {
     if(opcode == OPCODE_ADD)
@@ -96,6 +96,55 @@ int do_int_operation(struct nap_vm* vm, nap_int_t* target, nap_int_t operand,
 }
 
 /**
+ * @brief Perform the given operation to be found in the opcode, stores the
+ *        result in target
+ *
+ * @param vm - the virtual machine
+ * @param target - the target of the operation, and the first operand
+ * @param operand - the operand with which we perform
+ * @param opcode - the operation we perform
+ *
+ * @throws a system error if the operation is division and the operand is zero
+ */
+static int do_real_operation(struct nap_vm* vm, nap_real_t* target, nap_real_t operand,
+                      uint8_t opcode)
+{
+    if(opcode == OPCODE_ADD)
+    {
+        *target += operand;
+    }
+    else
+    if(opcode == OPCODE_SUB)
+    {
+        *target -= operand;
+    }
+    else
+    if(opcode == OPCODE_DIV)
+    {
+        if(operand == 0)
+        {
+            nap_set_error(vm, ERR_VM_0023);
+            return NAP_FAILURE;
+        }
+        else
+        {
+            *target /= operand;
+        }
+    }
+    else
+    if(opcode == OPCODE_MUL)
+    {
+        *target *= operand;
+    }
+    else
+    {
+        NAP_NOT_IMPLEMENTED
+    }
+    return NAP_SUCCESS;
+}
+
+
+/**
  * @brief do_string_operation performs a string operation.
  *
  * @param vm the VM in which we perform the operation
@@ -134,9 +183,9 @@ static int do_string_operation(struct nap_vm *vm, nap_string_t *target,
 
 int nap_operation(struct nap_vm* vm)
 {
-    uint8_t add_target = vm->content[nap_step_ip(vm)];   /* where we add (reg, var)*/
+    uint8_t operation_target = vm->content[nap_step_ip(vm)];   /* where we add (reg, var)*/
 
-    if(add_target == OPCODE_REG) /* we add into a register? */
+    if(operation_target == OPCODE_REG) /* we add into a register? */
     {
         uint8_t register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
 
@@ -144,9 +193,9 @@ int nap_operation(struct nap_vm* vm)
         if(register_type == OPCODE_INT)
         {
             uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
-            uint8_t add_source = vm->content[nap_step_ip(vm)]; /* what are we adding to it*/
+            uint8_t operation_source = vm->content[nap_step_ip(vm)]; /* what are we adding to it*/
 
-            if(add_source == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) added to register */
+            if(operation_source == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) added to register */
             {
                 int success = 0;
                 nap_int_t imm_operand = nap_read_immediate_int(vm, &success);
@@ -159,21 +208,21 @@ int nap_operation(struct nap_vm* vm)
                                         imm_operand, vm->cec->current_opcode);
             }
             else
-            if(add_source == OPCODE_VAR) /* adding a variable to the reg*/
+            if(operation_source == OPCODE_VAR) /* adding a variable to the reg*/
             {
                 nap_index_t var_index = nap_fetch_index(vm);
                 struct variable_entry* var = nap_fetch_variable(vm, var_index);
                 ASSERT_NOT_NULL_VAR(var)
                 CHECK_VARIABLE_INSTANTIATON(var)
-                CHECK_VARIABLE_TYPE(var,STACK_ENTRY_INT)
+                CHECK_VARIABLE_TYPE(var, STACK_ENTRY_INT)
 
                 /* and moving the value in the regsiter itself */
                 return do_int_operation(vm, &vm->cec->regi[register_index],
-                                        *(int64_t*)var->instantiation->value,
+                                        *(nap_int_t*)var->instantiation->value,
                                         vm->cec->current_opcode);
             }
             else
-            if(add_source == OPCODE_REG) /* adding a register to a register */
+            if(operation_source == OPCODE_REG) /* adding a register to a register */
             {
                 uint8_t second_register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
                 /* we are dealing with an INT type second register */
@@ -182,6 +231,68 @@ int nap_operation(struct nap_vm* vm)
                     uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
                     return do_int_operation(vm, &vm->cec->regi[register_index],
                                             nap_regi(vm, second_register_index),
+                                            vm->cec->current_opcode);
+                }
+                else
+                {
+                    NAP_NOT_IMPLEMENTED
+                }
+            }
+            else
+            {
+                NAP_NOT_IMPLEMENTED
+            }
+        }
+        else
+        if(register_type == OPCODE_REAL)
+        {
+            uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+            uint8_t operation_source = vm->content[nap_step_ip(vm)]; /* what are we adding to it*/
+
+            if(operation_source == OPCODE_IMMEDIATE_REAL) /* immediate value (1,..) added to register */
+            {
+                nap_real_t imm_operand = nap_read_immediate_real(vm);
+                return do_real_operation(vm, &vm->cec->regr[register_index],
+                                        imm_operand, vm->cec->current_opcode);
+            }
+            else
+            if(operation_source == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) added to register */
+            {
+                int success = 0;
+                nap_int_t imm_operand = nap_read_immediate_int(vm, &success);
+                nap_real_t real_operand = 0;
+                if(success == NAP_FAILURE)
+                {
+                    return NAP_FAILURE;
+                }
+                real_operand = (nap_real_t)imm_operand;
+                return do_real_operation(vm, &vm->cec->regr[register_index],
+                                        real_operand, vm->cec->current_opcode);
+            }
+            else
+            if(operation_source == OPCODE_VAR) /* adding a variable to the reg*/
+            {
+                nap_index_t var_index = nap_fetch_index(vm);
+                struct variable_entry* var = nap_fetch_variable(vm, var_index);
+                ASSERT_NOT_NULL_VAR(var)
+                CHECK_VARIABLE_INSTANTIATON(var)
+                CHECK_VARIABLE_TYPE(var, STACK_ENTRY_REAL)
+
+                /* and moving the value in the regsiter itself */
+                return do_real_operation(vm, &vm->cec->regr[register_index],
+                                        *(nap_real_t*)var->instantiation->value,
+                                        vm->cec->current_opcode);
+            }
+            else
+            if(operation_source == OPCODE_REG) /* adding a register to a register */
+            {
+                uint8_t second_register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+                /* we are dealing with an INT type second register */
+                if(second_register_type == OPCODE_INT)
+                {
+                    uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+                    return do_real_operation(vm, &vm->cec->regr[register_index],
+                                            nap_regr(vm, second_register_index),
                                             vm->cec->current_opcode);
                 }
                 else
@@ -260,7 +371,7 @@ int nap_operation(struct nap_vm* vm)
         }
     }
     else
-    if(add_target == OPCODE_VAR) /* we move into a variable */
+    if(operation_target == OPCODE_VAR) /* we move into a variable */
     {
         nap_index_t var_index = nap_fetch_index(vm);
         struct variable_entry* var = nap_fetch_variable(vm, var_index);

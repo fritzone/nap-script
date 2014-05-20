@@ -35,11 +35,27 @@ void nap_vm_dump(struct nap_vm* vm, FILE *fp)
                            ,i, vm->meta_size);
                 }
                 else
+                if(vm->metatable[i]->instantiation->type == STACK_ENTRY_BYTE)
+                {
+                    fprintf(fp, "E:[%s=%d](%" PRINT_u "/%" PRINT_st ")\n",
+                           vm->metatable[i]->name,
+                           *(nap_byte_t*)(vm->metatable[i]->instantiation->value)
+                           ,i, vm->meta_size);
+                }
+                else
                 if(vm->metatable[i]->instantiation->type == STACK_ENTRY_STRING)
                 {
                     fprintf(fp, "E:[%s=%s](%" PRINT_u "/%" PRINT_st ")\n",
                            vm->metatable[i]->name,
                            (char*)(vm->metatable[i]->instantiation->value)
+                           ,i, vm->meta_size);
+                }
+                else
+                if(vm->metatable[i]->instantiation->type == STACK_ENTRY_REAL)
+                {
+                    fprintf(fp, "E:[%s=%.5Lf](%" PRINT_u "/%" PRINT_st ")\n",
+                           vm->metatable[i]->name,
+                           *(nap_real_t*)(vm->metatable[i]->instantiation->value)
                            ,i, vm->meta_size);
                 }
                 else
@@ -253,16 +269,7 @@ void nap_vm_run(struct nap_vm* vm)
         else
         if(vm->cec->current_opcode == OPCODE_EXIT) /* quit the application ... */
         {
-            if(vm->environment == STANDALONE) /* only if not run in a library */
-            {
-                /* free the allocated metatable */
-                nap_vm_cleanup(vm);
-                exit(0);
-            }
-            else
-            {
-                return;
-            }
+            return;
         }
         else
         if(vm->cec->current_opcode == OPCODE_CLBF) /* clear last boolean flag */
