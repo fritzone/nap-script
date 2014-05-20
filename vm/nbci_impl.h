@@ -41,7 +41,7 @@ struct nap_string_register;
     {                                                                          \
     if(vm->environment == STANDALONE)                                          \
     {                                                                          \
-        fprintf(stderr, "%s", error);                                          \
+        fprintf(stderr, "%s\n", error);                                        \
         nap_vm_cleanup(vm);                                                    \
         exit(EXIT_FAILURE);                                                    \
     }                                                                          \
