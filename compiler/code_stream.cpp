@@ -223,30 +223,28 @@ void code_stream::output_bytecode(const char* s)
                 if(nr > 65535) type = OPCODE_LONG;
                 if(nr > 4294967294u) type = OPCODE_HUGE;
 
-                // if yes, switch on the first bit in the type
-                if(expr[0] == '-') type |= 0x80;
                 f.write_stuff_to_file_8(type);
 
                 // and now write the number according to the size
                 if(type == OPCODE_BYTE)
                 {
-                    uint8_t nrf = (uint8_t)atoi(expr.c_str());
+                    int8_t nrf = (uint8_t)atoi(expr.c_str());
                     f.write_stuff_to_file_8(nrf);
                 }
                 if(type == OPCODE_SHORT)
                 {
                     int16_t nrf = (int16_t)atoi(expr.c_str());
-                    f.write_stuff_to_file_16((uint16_t)nrf);
+                    f.write_stuff_to_file_16((int16_t)nrf);
                 }
                 if(type == OPCODE_LONG)
                 {
                     int32_t nrf = atoi(expr.c_str());
-                    f.write_stuff_to_file_32((uint32_t)nrf);
+                    f.write_stuff_to_file_32((int32_t)nrf);
                 }
                 if(type == OPCODE_HUGE)
                 {
                     int64_t nrf = atoll(expr.c_str());
-                    f.write_stuff_to_file_64((uint64_t)nrf);
+                    f.write_stuff_to_file_64((int64_t)nrf);
                 }
             }
 

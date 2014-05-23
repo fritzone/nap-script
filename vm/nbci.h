@@ -94,6 +94,9 @@ typedef uint16_t (*interrupt)(struct nap_vm*);
 /* the function pointer for the handling of a byteocde operation */
 typedef int (*nap_op_handler)(struct nap_vm* vm);
 
+/* the function pointer for handling various mov targets */
+typedef int (*nap_mov_handler)(struct nap_vm*);
+
 /* a structure representing a string register */
 struct nap_string_register
 {
@@ -221,6 +224,9 @@ struct nap_vm
 
     /* the array of opcode handlers */
     nap_op_handler opcode_handlers[OPCODE_COUNT];
+
+    /* the array of mov target handlers */
+    nap_mov_handler mov_handlers[OPCODE_COUNT];
 
     /* what error each opcode will report if not succesfully executed */
     int opcode_error_codes[OPCODE_COUNT];

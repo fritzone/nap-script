@@ -259,6 +259,7 @@ int nap_push(struct nap_vm *vm)
         NAP_NOT_IMPLEMENTED
     }
 
+    /* TODO: reallocate if required */
     vm->cec->stack[++ vm->cec->stack_pointer ] = se;
     return NAP_SUCCESS;
 }

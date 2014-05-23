@@ -82,7 +82,7 @@ static char* error_table[ERROR_COUNT + 1] =
     "[VM-0022] Invalid internal call",
     "[VM-0023] Division by zero",
 
-    "LAST_ENTRY_FOR_FUNNY_COMPILERS_WHO_DONT_LIKE_COMMAS_AT_LAST_POSITON_IN_AN_INITIALIZATION"
+    "LAST_ENTRY_FOR_FUNNY_COMPILERS_WHO_DONT_LIKE_COMMAS_AT_LAST_POSITON"
 };
 
 /**
@@ -410,6 +410,11 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     vm->opcode_handlers[OPCODE_INTR] = nap_handle_interrupt; vm->opcode_error_codes[OPCODE_INTR] = ERR_VM_0017;
     vm->opcode_handlers[OPCODE_CLIDX] = nap_clidx; vm->opcode_error_codes[OPCODE_CLIDX] = 0;
     vm->opcode_handlers[OPCODE_LEAVE] = nap_leave; vm->opcode_error_codes[OPCODE_LEAVE] = ERR_VM_0021;
+
+    /* setting the mov handlers */
+    vm->mov_handlers[OPCODE_REG] = mov_into_register;
+    vm->mov_handlers[OPCODE_VAR] = mov_into_variable;
+    vm->mov_handlers[OPCODE_CCIDX] = mov_into_indexed;
 
     /* setting the container type of the VM*/
     vm->environment = target;
@@ -1030,7 +1035,6 @@ int64_t nap_sp(struct nap_vm *vm)
     return vm->cec->stack_pointer;
 }
 
-
 nap_real_t unpack754(uint64_t i, unsigned bits, unsigned expbits)
 {
     nap_real_t result;
@@ -1056,7 +1060,6 @@ nap_real_t unpack754(uint64_t i, unsigned bits, unsigned expbits)
 
     return result;
 }
-
 
 nap_real_t nap_read_immediate_real(struct nap_vm *vm)
 {
