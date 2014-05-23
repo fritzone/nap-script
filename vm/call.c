@@ -56,6 +56,7 @@ int nap_call(struct nap_vm *vm)
         /* patch the stack of the parent */
         for(i=0; i<=nap_sp(vm); i++)
         {
+            /* TODO: reallocate if required */
             vm->parent->cec->stack[parent_sp + i + 1] = vm->cec->stack[i];
             vm->parent->cec->stack_pointer ++;
         }

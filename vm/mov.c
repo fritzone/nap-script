@@ -764,7 +764,7 @@ static int mov_into_index_register(struct nap_vm* vm)
     return NAP_SUCCESS;
 }
 
-static int mov_into_register(struct nap_vm* vm)
+int mov_into_register(struct nap_vm* vm)
 {
     uint8_t register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
 
@@ -801,7 +801,7 @@ static int mov_into_register(struct nap_vm* vm)
     return NAP_SUCCESS;
 }
 
-static int mov_into_variable(struct nap_vm* vm)
+int mov_into_variable(struct nap_vm* vm)
 {
     nap_index_t var_index = nap_fetch_index(vm);
     struct variable_entry* var = nap_fetch_variable(vm, var_index);
@@ -939,7 +939,7 @@ static int mov_into_variable(struct nap_vm* vm)
  * 3. mov int[x1,x2, ... ,xn], something -> will put in the array of ints at
  *    the given position the given something value.
  */
-static int mov_into_indexed(struct nap_vm* vm)
+int mov_into_indexed(struct nap_vm* vm)
 {
     uint8_t ccidx_target = vm->content[nap_step_ip(vm)];  /* should be a variable */
     if(ccidx_target == OPCODE_VAR)
@@ -1106,23 +1106,12 @@ static int mov_into_indexed(struct nap_vm* vm)
 int nap_mov(struct nap_vm* vm)
 {
     uint8_t mov_target = vm->content[nap_step_ip(vm)];   /* where we move (reg, var)*/
-
-    if(mov_target == OPCODE_REG) /* do we move in a register? */
+    if(vm->mov_handlers[mov_target]) /* do we have a handler for this target? */
     {
-        return mov_into_register(vm);
+        return vm->mov_handlers[mov_target](vm);
     }
-    else
-    if(mov_target == OPCODE_VAR) /* we move into a variable */
+    else /* check the user provided mov handlers */
     {
-        return mov_into_variable(vm);
-    }
-    else
-    if(mov_target == OPCODE_CCIDX) /* we move into an indexed variable */
-    {
-        return mov_into_indexed(vm);
-    }
-    else /* what comes is moving in a structure member, etc ...*/
-    {
-        NAP_NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED;
     }
 }

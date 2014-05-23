@@ -26,6 +26,7 @@ int nap_marks(struct nap_vm *vm)
     marker->type = STACK_ENTRY_MARKER_NAME;
     marker->value = temp;
 
+    /* TODO: Reallocate if required */
     vm->cec->stack[++ vm->cec->stack_pointer] = marker;
     return NAP_SUCCESS;
 }
