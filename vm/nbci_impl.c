@@ -482,26 +482,6 @@ nap_index_t nap_fetch_index(struct nap_vm* vm)
     return htovm_32(*p_var_index);
 }
 
-nap_byte_t nap_read_byte(struct nap_vm* vm)
-{
-    uint8_t imm_size = vm->content[nap_step_ip(vm)];
-    nap_byte_t nr = 0;
-    /* and now read the number according to the size */
-    if(imm_size == OPCODE_BYTE)
-    {
-        nap_byte_t* immediate = (nap_byte_t*)(vm->content + nap_ip(vm));
-        nr = *immediate;
-        nap_step_ip(vm);
-    }
-    else
-    {
-        printf("invalid mov into byte size [mov]: 0x%x", imm_size);
-        NAP_NOT_IMPLEMENTED
-    }
-
-    return nr;
-}
-
 nap_int_t nap_read_immediate_int(struct nap_vm* vm, int* success)
 {
     uint8_t imm_size = vm->content[nap_step_ip(vm)];

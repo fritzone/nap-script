@@ -134,7 +134,8 @@ struct nap_string_register
 struct nap_execution_context
 {
 
-    uint64_t         cc;                       /* the instruction pointer    */
+    uint64_t         cc;                       /* the instruction pointer     */
+    uint64_t        lia;                       /* last instruction address    */
 
     /* registers ofthe VM */
     nap_byte_t                 regb  [REGISTER_COUNT]; /* the byte registers  */

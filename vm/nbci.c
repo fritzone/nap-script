@@ -259,6 +259,7 @@ void nap_vm_run(struct nap_vm* vm)
     while(nap_ip(vm) < vm->meta_location)
     {
         vm->cec->current_opcode = vm->content[nap_ip(vm)];
+        vm->cec->lia = nap_ip(vm);
         nap_step_ip(vm);
 
         if(vm->opcode_handlers[vm->cec->current_opcode] != 0)

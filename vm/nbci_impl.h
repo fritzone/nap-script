@@ -9,6 +9,7 @@ extern "C" {
 #include "stack.h"
 
 #include <stddef.h>
+#include <string.h>
 
 /* types for manipulating the addresses, indexes, etc */
 typedef uint32_t nap_addr_t;    /* the type of a NAP address*/
@@ -86,11 +87,17 @@ struct nap_string_register;
 /* Macro for leaving the application in case of an unimplemented opcode */
 #define NAP_NOT_IMPLEMENTED                                                    \
     do {                                                                       \
-    char t[256];                                                               \
+    char t[256], offending_command[256] = {0}, tmp[10];                        \
+    uint64_t bc = 0;                                                           \
+    for(bc = vm->cec->lia; bc != nap_ip(vm); bc++) {                           \
+        SNPRINTF(tmp, 10, "%x ", vm->content[bc]);                             \
+        strcat(offending_command, tmp);                                        \
+    }                                                                          \
     SNPRINTF(t, 256, "NI: file [%s] line [%d] instr [%x] "                     \
-                    "opcode [%x] at %" PRINT_u " (%" PRINT_x ")\n\n",          \
+                    "opcode [%x] at %" PRINT_u " (%" PRINT_x ") cmd: %s\n\n",  \
             __FILE__, __LINE__, vm->content[nap_ip(vm) - 1],                   \
-            vm->cec->current_opcode, nap_ip(vm) - 1, nap_ip(vm) - 1);          \
+            vm->cec->current_opcode, nap_ip(vm) - 1, nap_ip(vm) - 1,           \
+            offending_command);                                                \
     NAP_REPORT_ERROR(vm, t);                                                   \
     } while(0);
 
