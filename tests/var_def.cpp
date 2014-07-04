@@ -22,6 +22,25 @@ TEST(VariableDefinitions, SimpleIndexedOperationInt)
     SCRIPT_SHUTDOWN;
 }
 
+/* Define an int variable as a substring */
+TEST(VariableDefinitions, IntFromSubstring)
+{
+    SCRIPT_START
+    "                              \
+        string a = \"12456789\";   \
+        int t = a[1,3];            \
+        int t2 = a[3,4];           \
+        int t3 = a[3];             \
+        int t4 = a[3, a.len - 1];  \
+    "
+    SCRIPT_END
+
+    ASSERT_EQ(245, VAR_INT(t));
+    ASSERT_EQ(56, VAR_INT(t2));
+    ASSERT_EQ(5, VAR_INT(t3));
+    ASSERT_EQ(56789, VAR_INT(t4));
+    SCRIPT_SHUTDOWN
+}
 
 /* Define a one dim array, set the first element to a value, and see that it
    is as expected */

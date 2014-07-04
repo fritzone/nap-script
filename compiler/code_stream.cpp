@@ -215,7 +215,7 @@ void code_stream::output_bytecode(const char* s)
             }
             else
             {
-				NUMBER_INTEGER_TYPE nr = (NUMBER_INTEGER_TYPE)atoll(expr.c_str());
+                uint64_t nr = (uint64_t)atoll(expr.c_str());
 
                 // the size of the number
                 uint8_t type = OPCODE_BYTE;
@@ -282,7 +282,7 @@ void code_stream::output_bytecode(const char* s)
             }
         }
         else
-        if(s[0] == '@') // function call
+        if(s[0] == '@') // (internal) function call
         {
             uint8_t last = mcompiler->getLastOpcode() ;
             if(s[1] == '#') // builtin function
@@ -292,15 +292,27 @@ void code_stream::output_bytecode(const char* s)
                     f.write_stuff_to_file_8(OPCODE_CCIDX);
                     mcompiler->setLastOpcode(OPCODE_CCIDX);
                 }
-                if(last == OPCODE_CALL)
+                else
+                if(expr == "@#len")
                 {
-                    if(expr == "@#grow")
+                    f.write_stuff_to_file_8(OPCODE_LEN);
+                    mcompiler->setLastOpcode(OPCODE_LEN);
+                }
+                else
+                if(expr == "@#grow")
+                {
+                    // grow must be preceeded by a "call" command.
+                    if(last == OPCODE_CALL)
                     {
                         // fix the last opcode to be the OPCODE GROW, however the
                         // last opcode (the CALL) does not go in the bytecode stream
                         mcompiler->modify_last_opcode(OPCODE_CALL_INT);
                         f.write_stuff_to_file_8(OPCODE_GROW);
                         mcompiler->setLastOpcode(OPCODE_GROW);
+                    }
+                    else
+                    {
+                        mcompiler->throw_error("@#grow not preceeded by a \"call\" command");
                     }
                 }
 

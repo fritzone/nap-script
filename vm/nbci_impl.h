@@ -83,6 +83,15 @@ struct nap_string_register;
 /* to make less use of the CC_MUL in the code */
 #define NAP_STRING_COPY(dest,src,count) memcpy(dest,src,NAP_STRING_LEN(count));
 
+#define ASSERT_VARIABLE_INDEX_ALLOWED(var, idx)                                \
+    if((signed)idx < 0 || var->instantiation->len <= idx)                      \
+    {                                                                          \
+        char s[512];                                                           \
+        SNPRINTF(s, 512, "Invalid index for variable [%s]. "                   \
+               "Req:[%"PRINT_d"] Avail:[%"PRINT_d"]", var->name, idx, var->instantiation->len);\
+        vm->error_description = s;                                             \
+        return NAP_FAILURE;                                                    \
+    }
 
 /* Macro for leaving the application in case of an unimplemented opcode */
 #define NAP_NOT_IMPLEMENTED                                                    \
@@ -99,6 +108,7 @@ struct nap_string_register;
             vm->cec->current_opcode, nap_ip(vm) - 1, nap_ip(vm) - 1,           \
             offending_command);                                                \
     NAP_REPORT_ERROR(vm, t);                                                   \
+    return NAP_FAILURE;                                                        \
     } while(0);
 
 /* macro to try to call a function and leave the app in case of error with the
@@ -359,6 +369,18 @@ struct nap_string_register* nap_regs(struct nap_vm* vm, uint8_t register_index);
 
 /* returns a real from the packed unsignd int */
 nap_real_t unpack754(uint64_t i, unsigned bits, unsigned expbits);
+
+/**
+ * @brief nap_int_to_string converts the given number to a nap string (UTF32-BE)
+ *
+ * The caller manages the string
+ *
+ * @param value [in]  the value to convert
+ * @param len   [out] the length of the outgoing string
+ *
+ * @return the converted UTF32-BE string
+ */
+char* nap_int_to_string(nap_int_t value, size_t* len);
 
 #ifdef __cplusplus
 }

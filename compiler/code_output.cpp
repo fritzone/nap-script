@@ -451,9 +451,9 @@ void mov_target_index_register_source_int_register(nap_compiler* _compiler, int&
     code_stream(_compiler)
             << mov()
             << SPACE
-            << reg() << idx() << int_() << C_PAR_OP << idxc << C_PAR_CL
+            << reg() << idx() << C_PAR_OP << idxc << C_PAR_CL
             << C_COMMA
-            << reg() << get_reg_type(BASIC_TYPE_INT) << C_PAR_OP << level + 1 << C_PAR_CL
+            << reg() << get_reg_type(BASIC_TYPE_INT) << C_PAR_OP << level << C_PAR_CL
             << NEWLINE;
 }
 

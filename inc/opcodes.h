@@ -12,8 +12,12 @@ static const unsigned char OPCODE_SHORT         = (unsigned char)0x16; /**/
 static const unsigned char OPCODE_INC           = (unsigned char)0x1C; /**/
 static const unsigned char OPCODE_DEC           = (unsigned char)0x1D; /**/
 static const unsigned char OPCODE_INTR          = (unsigned char)0x1E;
+
+/* internal functions also have their opcod. TODO: should these be interrupts? */
 static const unsigned char OPCODE_CCIDX         = (unsigned char)0x21;
 static const unsigned char OPCODE_GROW          = (unsigned char)0x22;
+static const unsigned char OPCODE_LEN           = (unsigned char)0x23;
+
 static const unsigned char OPCODE_LONG          = (unsigned char)0x32; /**/
 static const unsigned char OPCODE_SHL           = (unsigned char)0x54; /**/
 static const unsigned char OPCODE_SHR           = (unsigned char)0x55; /**/

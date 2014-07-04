@@ -19,7 +19,7 @@ else()
     unset(enable-runtime-compilation)
 endif()
 
-include_directories( ${include_interrupt_dirs} )
+include_directories( ${include_interrupt_dirs} ${NAP_ROOT}/compiler )
 
 if(enable-runtime-compilation AND NOT build-compiler)
     MESSAGE(FATAL_ERROR "You cannot have runtime compilation without building the compiler")
@@ -50,6 +50,8 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/clidx.c
     ${CMAKE_CURRENT_SOURCE_DIR}/operation.c
     ${CMAKE_CURRENT_SOURCE_DIR}/unary.c
+
+    ${NAP_ROOT}/compiler/charconverter.cpp
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/vm 
