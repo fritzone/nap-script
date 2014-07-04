@@ -8,7 +8,7 @@
 
 #include <locale>
 
-char* to_nap_format(const char* in, size_t in_len, size_t& used_len)
+char* to_nap_format(const char* in, size_t in_len, size_t* used_len)
 {
     setlocale(LC_ALL, "");
     char* t1 = setlocale(LC_CTYPE, "");
@@ -50,7 +50,7 @@ char* to_nap_format(const char* in, size_t in_len, size_t& used_len)
                     &converted,
                     &out_len);
     iconv_close(foo);
-    used_len = CC_MUL * saved_in_len - out_len;
+    *used_len = CC_MUL * saved_in_len - out_len;
 
     if(ret == -1)
     {

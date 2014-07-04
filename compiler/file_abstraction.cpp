@@ -41,7 +41,7 @@ size_t file_abstraction::write_string_to_file(const char* s, int cnt, int needs_
     if(needs_conv)
     {
         size_t used_len = cnt;
-        char* t = to_nap_format(s, cnt, used_len);
+        char* t = to_nap_format(s, cnt, &used_len);
         if(t == 0)
         {
             mcompiler->place_bytes(pos, s, cnt);

@@ -43,11 +43,14 @@
 #include "call_intern.h"
 #include "unary.h"
 
+/* character comverter from the compiler */
+#include "charconverter.h"
+
 /* system headers */
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "string.h"
+#include <string.h>
 #include <locale.h>
 #include <errno.h>
 #include <iconv.h>
@@ -980,6 +983,15 @@ int nap_copy_return_values(const struct nap_vm *src, struct nap_vm *dst)
     dst->cec->rvr = src->cec->rvr;
 
     return NAP_SUCCESS;
+}
+
+char* nap_int_to_string(nap_int_t value, size_t* len)
+{
+    char s[1024]; /* temporary value */
+    char* t = NULL; /* the return value */
+    SNPRINTF(s, 1024, "%" PRINT_d "", value);
+    t = to_nap_format(s, strlen(t), len);
+    return t;
 }
 
 int nap_set_regs(struct nap_vm* vm, uint8_t register_index,

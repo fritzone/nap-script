@@ -444,6 +444,10 @@ static int mov_into_byte_register(struct nap_vm* vm)
                     size_t end_index = (size_t)nap_regidx(vm, 1);
                     size_t temp_len = end_index - start_index + 1;
                     int success = NAP_SUCCESS;
+
+                    ASSERT_VARIABLE_INDEX_ALLOWED(var, start_index);
+                    ASSERT_VARIABLE_INDEX_ALLOWED(var, end_index);
+
 					if(end_index < start_index)
 					{
                         /* TODO: error message? */
@@ -484,6 +488,25 @@ static int mov_into_int_register(struct nap_vm* vm)
     uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
     uint8_t move_source = vm->content[nap_step_ip(vm)]; /* what are we moving in*/
 
+    if(move_source == OPCODE_LEN) /* the length of a variable */
+    {
+        uint8_t length_of = vm->content[nap_step_ip(vm)];
+        if(length_of == OPCODE_VAR)
+        {
+            nap_index_t var_index = nap_fetch_index(vm);
+            /* and fetch the variable from the given index */
+            struct variable_entry* var = nap_fetch_variable(vm, var_index);
+            ASSERT_NOT_NULL_VAR(var)
+            CHECK_VARIABLE_INSTANTIATON(var)
+
+            nap_set_regi(vm, register_index, var->instantiation->len);
+        }
+        else
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+    }
+    else
     if(move_source == OPCODE_IMMEDIATE_INT) /* immediate integer value*/
     {
         int success = NAP_SUCCESS;
@@ -687,6 +710,10 @@ static int mov_into_int_register(struct nap_vm* vm)
                     size_t end_index = (size_t)nap_regidx(vm, 1);
                     size_t temp_len = end_index - start_index + 1;
                     int success = NAP_SUCCESS;
+
+                    ASSERT_VARIABLE_INDEX_ALLOWED(var, start_index);
+                    ASSERT_VARIABLE_INDEX_ALLOWED(var, end_index);
+
                     nap_set_regi(vm, register_index,
                                  nap_int_string_to_number(vm,
                                     (char*)var->instantiation->value + start_index * CC_MUL,
@@ -785,7 +812,7 @@ static int mov_into_real_register(struct nap_vm* vm)
         if(return_type == OPCODE_STRING)              /* handles: mov reg int 0, rv string*/
         {
             int error = NAP_SUCCESS;
-            nap_set_regr(vm, register_index, (nap_real_t)nap_int_string_to_number(vm, vm->cec->rvs,
+            nap_set_regr(vm, register_index, (nap_real_t)nap_int_string_to_number(vm, vm->cec->rvs, /* TODO: This should be nap_real_string_to_number*/
                                                                 vm->cec->rvl, &error) );
             return error;
         }
@@ -912,7 +939,7 @@ static int mov_into_real_register(struct nap_vm* vm)
 
                     /* and finally put the "character" in the register */
                     nap_set_regr(vm, register_index,
-                                 (nap_real_t)nap_int_string_to_number(vm,
+                                 (nap_real_t)nap_int_string_to_number(vm, /* TODO: This should be nap_real_string_to_number*/
                                                           (char*)var->instantiation->value + real_index * CC_MUL,
                                                           1, &success)
                                  ); /* taking only one character */
@@ -925,8 +952,12 @@ static int mov_into_real_register(struct nap_vm* vm)
                     size_t end_index = (size_t)nap_regidx(vm, 1);
                     size_t temp_len = end_index - start_index + 1;
                     int success = NAP_SUCCESS;
+
+                    ASSERT_VARIABLE_INDEX_ALLOWED(var, start_index);
+                    ASSERT_VARIABLE_INDEX_ALLOWED(var, end_index);
+
                     nap_set_regr(vm, register_index,
-                                 (nap_real_t)nap_int_string_to_number(vm,
+                                 (nap_real_t)nap_int_string_to_number(vm, /* TODO: This should be nap_real_string_to_number*/
                                     (char*)var->instantiation->value + start_index * CC_MUL,
                                     temp_len, &success));
                     return success;
@@ -997,9 +1028,118 @@ static int mov_into_string_register(struct nap_vm* vm)
         }
     }
     else
+    if(move_source == OPCODE_CCIDX) /* moving an indexed in the string reg */
+    {
+        uint8_t ccidx_target = vm->content[nap_step_ip(vm)];  /* should be a variable */
+        if(ccidx_target == OPCODE_VAR)
+        {
+            nap_index_t var_index = nap_fetch_index(vm);
+            struct variable_entry* var = nap_fetch_variable(vm, var_index);
+            uint8_t ctr_used_index_regs = 0;
+            char* error = NULL;
+            int64_t idx = -1;
+
+            ASSERT_NOT_NULL_VAR(var)
+            CHECK_VARIABLE_INSTANTIATON(var)
+
+            /* now should come the index reg counter of vm->ccidx,
+               a simple byte since there are max 256 indexes */
+            ctr_used_index_regs = vm->content[nap_step_ip(vm)];
+            idx = deliver_flat_index(vm, var, ctr_used_index_regs, &error);
+
+            if(idx < 0) /* error? */
+            {
+                /* do not use the set_error here, the string was allocated
+                   copying it would be a memory leak*/
+                vm->error_description = error;
+                return NAP_FAILURE;
+            }
+
+            /* setting the string register to be an element from an int array */
+            if(var->instantiation->type == OPCODE_INT)
+            {
+                size_t len = 0;
+                char* s_nr = nap_int_to_string ( (nap_int_t)((nap_int_t*)var->instantiation->value)[idx], &len );
+                nap_set_regs(vm, register_index, s_nr, len);
+                free(s_nr);
+            }
+            else
+            /* setting the string register to be an element from a byte array */
+            if(var->instantiation->type == OPCODE_BYTE)
+            {
+                size_t len = 0;
+                char* s_nr = nap_int_to_string ( (nap_int_t)((nap_byte_t*)var->instantiation->value)[idx], &len );
+                nap_set_regs(vm, register_index, s_nr, len);
+                free(s_nr);
+            }
+            else
+            /* setting the string register to be an element from a real array */
+            if(var->instantiation->type == OPCODE_REAL)
+            {
+                NAP_NOT_IMPLEMENTED
+//                nap_set_regs(vm,
+//                             register_index,
+//                             nap_real_to_string ( (nap_real_t)((nap_real_t*)var->instantiation->value)[idx] )
+//                             );
+            }
+            else
+            if(var->instantiation->type == OPCODE_STRING) /* possibly: mov reg string(0), string[2]*/
+            {
+                if(ctr_used_index_regs == 1)
+                {
+                    int success = NAP_SUCCESS;
+                    /* this is a string, accessing a character from it:
+                     so calculate the "real" index of the variable based
+                     on the regidx vector and ctr_used_index_regs
+                    */
+                    size_t real_index = (size_t)nap_regidx(vm, 0);
+                    if(real_index >= var->instantiation->len)
+                    {
+                        return nap_int_set_index_overflow(vm, var->name,
+                                       real_index, var->instantiation->len);
+                    }
+
+                    /* and finally put the "character" in the register */
+                    nap_set_regs(vm, register_index, (char*)var->instantiation->value + real_index * CC_MUL, 1); /* taking only one character */
+                    return success;
+                }
+                else
+                if(ctr_used_index_regs == 2) /* string[2,5] = "ABC" - removes from the string the substring [2,5] and puts in the new string */
+                {
+                    size_t start_index = (size_t)nap_regidx(vm, 0); /* starting from this */
+                    size_t end_index = (size_t)nap_regidx(vm, 1);
+                    size_t temp_len = end_index - start_index + 1;
+                    int success = NAP_SUCCESS;
+
+                    ASSERT_VARIABLE_INDEX_ALLOWED(var, start_index);
+                    ASSERT_VARIABLE_INDEX_ALLOWED(var, end_index);
+
+                    nap_set_regs(vm, register_index,
+                                    (char*)var->instantiation->value + start_index * CC_MUL,
+                                    temp_len);
+                    return success;
+                }
+                else /* string [x,y,z] make no sense */
+                {
+                    return nap_vm_set_error_description(vm,
+                              "Cannot use more than 2 indexes on strings");
+                }
+            }
+            else
+            {
+                NAP_NOT_IMPLEMENTED /* No other type of indexables */
+            }
+        }
+        else /* what else can be indexed? */
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+    }
+    else
     {
         NAP_NOT_IMPLEMENTED
     }
+    return NAP_SUCCESS;
 }
 
 static int mov_into_index_register(struct nap_vm* vm)
@@ -1008,11 +1148,231 @@ static int mov_into_index_register(struct nap_vm* vm)
     uint8_t move_source = vm->content[nap_step_ip(vm)]; /* the index definition */
     if(move_source == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) */
     {
-        int success = 0;
+        int success = NAP_SUCCESS;
         nap_set_regidx(vm, register_index, nap_read_immediate_int(vm, &success));
-        if(success == NAP_FAILURE)
+        return success;
+    }
+    if(move_source == OPCODE_IMMEDIATE_REAL) /* immediate real value */
+    {
+        nap_set_regidx(vm, register_index, (nap_int_t)nap_read_immediate_real(vm));
+    }
+    else
+    if(move_source == OPCODE_VAR) /* movin a variable into reg*/
+    {
+        nap_index_t var_index = nap_fetch_index(vm);
+        /* and fetch the variable from the given index */
+        struct variable_entry* var = nap_fetch_variable(vm, var_index);
+        ASSERT_NOT_NULL_VAR(var)
+        CHECK_VARIABLE_INSTANTIATON(var)
+        if(var->instantiation->type == STACK_ENTRY_INT)
         {
-            return NAP_FAILURE;
+            nap_set_regidx(vm, register_index, *(nap_int_t*)var->instantiation->value );
+        }
+        else
+        if(var->instantiation->type == STACK_ENTRY_REAL)
+        {
+            nap_set_regidx(vm, register_index, (nap_int_t)(*(nap_real_t*)var->instantiation->value) );
+        }
+        else
+        if(var->instantiation->type == STACK_ENTRY_STRING)
+        {
+            int error = NAP_SUCCESS; /* might lose some numbers */
+            nap_set_regidx(vm,
+                         register_index,
+                         nap_int_string_to_number(
+                             vm, (nap_string_t)var->instantiation->value,
+                             var->instantiation->len, &error)
+                         );
+            return error;
+        }
+        else
+        if(var->instantiation->type == STACK_ENTRY_BYTE)
+        {
+            nap_set_regidx(vm, register_index, (nap_int_t)(*(nap_byte_t*)var->instantiation->value));
+        }
+        else
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+    }
+    else
+    if(move_source == OPCODE_RV) /* moving the return value of some function in a reg*/
+    {
+        uint8_t return_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+        if(return_type == OPCODE_INT)                 /* handles: mov reg int 0, rv int*/
+        {
+            nap_set_regidx(vm, register_index, vm->cec->rvi);
+        }
+        else
+        if(return_type == OPCODE_STRING)              /* handles: mov reg int 0, rv string*/
+        {
+            int error = NAP_SUCCESS;
+            nap_set_regidx(vm, register_index, nap_int_string_to_number(vm, vm->cec->rvs,
+                                                                vm->cec->rvl, &error) );
+            return error;
+        }
+        else
+        if(return_type == OPCODE_BYTE)                 /* handles: mov reg int 0, rv byte*/
+        {
+            nap_set_regidx(vm, register_index, (nap_int_t)vm->cec->rvb);
+        }
+        else
+        if(return_type == OPCODE_REAL)                 /* handles: mov reg int 0, rv real*/
+        {
+            nap_set_regidx(vm, register_index, (nap_int_t)vm->cec->rvr); /* WARNING! Possile loss of data*/
+        }
+        else
+        {
+            NAP_NOT_IMPLEMENTED /* UNKNOWN return type */
+        }
+    }
+    else
+    if(move_source == OPCODE_REG) /* moving a register in another int reg */
+    {
+        uint8_t second_register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+        if(second_register_type == OPCODE_INT) /* moving an int register in another int register */
+        {
+            uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+            nap_set_regidx(vm, register_index, nap_regi(vm, second_register_index));
+        }
+        else
+        if(second_register_type == OPCODE_STRING) /* moving a string reg into an int register */
+        {
+            uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+            int error = NAP_SUCCESS;
+            nap_set_regidx(vm, register_index,
+                         nap_int_string_to_number(vm,
+                                nap_regs(vm, second_register_index)->s,
+                                nap_regs(vm, second_register_index)->l,
+                                &error)
+                         );
+            return error;
+        }
+        else
+        if(second_register_type == OPCODE_BYTE) /* moving a byte register in the int register */
+        {
+            uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+            nap_set_regidx(vm, register_index, (nap_int_t)nap_regb(vm, second_register_index));
+        }
+        else
+        if(second_register_type == OPCODE_REAL) /* moving a real register in the int register */
+        {
+            uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+            nap_set_regidx(vm, register_index,
+                         (nap_int_t)nap_regr(vm, second_register_index)); /* WARNING" Possible loss of data*/
+        }
+        else
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+    }
+    else
+    if(move_source == OPCODE_CCIDX) /* moving an indexed in an int reg */
+    {
+        uint8_t ccidx_target = vm->content[nap_step_ip(vm)];  /* should be a variable */
+        if(ccidx_target == OPCODE_VAR)
+        {
+            nap_index_t var_index = nap_fetch_index(vm);
+            struct variable_entry* var = nap_fetch_variable(vm, var_index);
+            uint8_t ctr_used_index_regs = 0;
+            char* error = NULL;
+            int64_t idx = -1;
+
+            ASSERT_NOT_NULL_VAR(var)
+            CHECK_VARIABLE_INSTANTIATON(var)
+
+            /* now should come the index reg counter of vm->ccidx,
+               a simple byte since there are max 256 indexes */
+            ctr_used_index_regs = vm->content[nap_step_ip(vm)];
+            idx = deliver_flat_index(vm, var, ctr_used_index_regs, &error);
+
+            if(idx < 0) /* error? */
+            {
+                /* do not use the set_error here, the string was allocated
+                   copying it would be a memory leak*/
+                vm->error_description = error;
+                return NAP_FAILURE;
+            }
+
+            /* moving only if this int register goes to an int var*/
+            if(var->instantiation->type == OPCODE_INT)
+            {
+                /* casting it to nap_int_t is ok, since
+                 * var->instantiation->type == OPCODE_INT so we have
+                 * allocated nap_int_t variable in the grow */
+                nap_set_regidx(vm, register_index, ((nap_int_t*)var->instantiation->value)[idx]);
+            }
+            else
+            /* moving an indexed byte variable into the byte register*/
+            if(var->instantiation->type == OPCODE_BYTE)
+            {
+                nap_set_regidx(vm, register_index,
+                             (nap_int_t)(((nap_byte_t*)var->instantiation->value)[idx]));
+            }
+            else
+            /* moving an indexed real variable into the byte register*/
+            if(var->instantiation->type == OPCODE_REAL)
+            {
+                nap_set_regidx(vm, register_index,
+                             (nap_int_t)(((nap_real_t*)var->instantiation->value)[idx]));
+            }
+            else
+            if(var->instantiation->type == OPCODE_STRING) /* possibly: mov reg int(0), string[2]*/
+            {
+                if(ctr_used_index_regs == 1)
+                {
+                    int success = NAP_SUCCESS;
+                    /* this is a string, accessing a character from it:
+                     so calculate the "real" index ofthe variable based
+                     on the regidx vector and ctr_used_index_regs
+                    */
+                    size_t real_index = (size_t)nap_regidx(vm, 0);
+                    if(real_index >= var->instantiation->len)
+                    {
+                        return nap_int_set_index_overflow(vm, var->name,
+                                       real_index, var->instantiation->len);
+                    }
+
+                    /* and finally put the "character" in the register */
+                    nap_set_regidx(vm, register_index,
+                                 nap_int_string_to_number(vm,
+                                                          (char*)var->instantiation->value + real_index * CC_MUL,
+                                                          1, &success)
+                                 ); /* taking only one character */
+                    return success;
+                }
+                else
+                if(ctr_used_index_regs == 2) /* string[2,5] = "ABC" - removes from the string the substring [2,5] and puts in the new string */
+                {
+                    size_t start_index = (size_t)nap_regidx(vm, 0); /* starting from this */
+                    size_t end_index = (size_t)nap_regidx(vm, 1);
+                    size_t temp_len = end_index - start_index + 1;
+                    int success = NAP_SUCCESS;
+
+                    ASSERT_VARIABLE_INDEX_ALLOWED(var, start_index);
+                    ASSERT_VARIABLE_INDEX_ALLOWED(var, end_index);
+
+                    nap_set_regidx(vm, register_index,
+                                 nap_int_string_to_number(vm,
+                                    (char*)var->instantiation->value + start_index * CC_MUL,
+                                    temp_len, &success));
+                    return success;
+                }
+                else /* string [x,y,z] make no sense */
+                {
+                    return nap_vm_set_error_description(vm,
+                              "Cannot use more than 2 indexes on strings");
+                }
+            }
+            else
+            {
+                NAP_NOT_IMPLEMENTED /* No other type of indexables */
+            }
+
+        }
+        else /* what else can be indexed? */
+        {
+            NAP_NOT_IMPLEMENTED
         }
     }
     else
@@ -1167,6 +1527,19 @@ int mov_into_variable(struct nap_vm* vm)
 
                 var->instantiation->value = temp;
                 var->instantiation->len = nap_regs(vm, register_index)->l;
+            }
+            else /* moving a string register into a non string variable */
+            if(var->instantiation->type == OPCODE_INT)
+            {
+                nap_int_t value;
+                int error = NAP_SUCCESS; /* might lose some numbers */
+
+                value = nap_int_string_to_number(vm,
+                           nap_regs(vm, register_index)->s,
+                           nap_regs(vm, register_index)->l, &error);
+
+                *((nap_int_t*)var->instantiation->value) = value;
+                return error;
             }
             else
             {
