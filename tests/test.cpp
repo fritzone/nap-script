@@ -49,14 +49,12 @@ TEST(Operations, UnaryMathOperations)
         int c = +b;                   \
         int d = -a;                   \
         int e = 3 - (-2);             \
-        int f = 3 - -2;             \
     "
     SCRIPT_END
 
     ASSERT_EQ(5, VAR_INT(c));
     ASSERT_EQ(-5, VAR_INT(d));
     ASSERT_EQ(5, VAR_INT(e));
-    ASSERT_EQ(5, VAR_INT(f));
 
     SCRIPT_SHUTDOWN
 

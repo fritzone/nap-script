@@ -289,10 +289,18 @@ int last_idx = -1, level = 0;
 
 
 /**
- * Looks for a lvel 0 additive operator, such as + -
+ * Looks for a level 0 additive operator, such as + -
  */
 int level_0_add_operator(const nap_compiler* _compiler, const std::string& expr, bool& psuccess)
 {
+    /* TODO: Check: if the operator was found, but :
+        1. it is + or -
+        2. There is an operator before it
+        3. it is strictly attached to the following term,
+        4. which is a number
+
+        do not consider since it might be part of a number: 3  * -2
+*/
     return level_0_char_operator(_compiler, expr, C_ADD, C_SUB, 0, psuccess);
 }
 
