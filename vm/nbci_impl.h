@@ -382,6 +382,22 @@ nap_real_t unpack754(uint64_t i, unsigned bits, unsigned expbits);
  */
 char* nap_int_to_string(nap_int_t value, size_t* len);
 
+/**
+ * @brief deliver_flat_index delivers a flat memory index for the given variable
+ *
+ * The calculation is done based on the value of the index registers of the VM.
+ *
+ * @param vm           [in] the host VM
+ * @param ve           [in] the variable entry on which we are working
+ * @param used_indexes [in] the number of used index
+ * @param error        [out] the error if any.
+ *
+ * @return a flat location representing the index
+ */
+int64_t deliver_flat_index(struct nap_vm* vm,
+                           const struct variable_entry* ve,
+                           uint8_t used_indexes, char** error);
+
 #ifdef __cplusplus
 }
 #endif

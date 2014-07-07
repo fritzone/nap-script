@@ -27,88 +27,6 @@ static int nap_int_set_index_overflow(struct nap_vm* vm,
 }
 
 /**
- * @brief deliver_flat_index Delivers a flat index according to the index
- * registers of the vm for the given variable.
- *
- * The algorithm is like:
- *
- * array[N, M, K] -> flat_memory[N * M * K]
- * flat_index(i, j, k) = (M*N) * i + M * j + k
- * array[N, M, K, L] -> flat_memory[N * M * K * L]
- * flat_index(i, j, k, l) = (M*N*K) * i + (M*N) * j + M* k + l
- *
- * @param vm - the virtual machine in which we are running
- * @param ve - the variable entry
- * @param used_indexes - the number of used indexes
- * @param error - the address of an error string to be populated, just in case
- *
- * @return the real index, or:
- *   INVALID_INDEX_COUNT - if the caller specified an invalid index count (ie:
- *                         the number of indexes of the variable is not equal
- *                         to the requested used_indexes)
- *   INDEX_OUT_OF_RANGE - in case any of the idnexes runs out from the interval
- */
-static int64_t deliver_flat_index(struct nap_vm* vm,
-                                   const struct variable_entry* ve,
-                                   uint8_t used_indexes, char** error)
-{
-    int64_t to_ret = 0;
-    uint8_t i = 0;
-
-    /* moving block of arrays is not permitted yet :( */
-
-    /* checking the validity of the requested index count */
-    if(used_indexes != ve->dimension_count && ve->instantiation->type != STACK_ENTRY_STRING)
-    {
-        char* s = NAP_MEM_ALLOC(256, char);
-        NAP_NN_ASSERT(vm, s);
-
-        SNPRINTF(s, 256,
-                "Invalid index count used for [%s]. "
-                 "Requested: %d available: %d",
-                 ve->name, used_indexes, ve->dimension_count);
-        *error = s;
-        return INVALID_INDEX_COUNT;
-    }
-
-    /* and calculating the index */
-    for(; i<used_indexes; i++)
-    {
-        int j = 0;
-        int64_t dim_multiplier = 1;
-
-        /* is this a valid index? */
-        if( ( (nap_regidx(vm, i) < 0) || (nap_regidx(vm, i) >= ve->dimensions[i]))
-                && ve->instantiation->type != STACK_ENTRY_STRING )
-        {
-            char* s = NAP_MEM_ALLOC(256, char);
-            NAP_NN_ASSERT(vm, s);
-
-            SNPRINTF(s, 256,
-                    "Multi dim index out of range for [%s]. "
-                     "Dim Index: %d, requested: %" PRINT_d " available: %" PRINT_d,
-                     ve->name, i, nap_regidx(vm, i), ve->dimensions[i]);
-            *error = s;
-            return INDEX_OUT_OF_RANGE; /* an index overflow */
-        }
-
-        /* the big dimension multiplier */
-        while(j < used_indexes - i - 1)
-        {
-            dim_multiplier *= ve->dimensions[j ++];
-        }
-
-        /* and multiplying it with the requested index */
-        dim_multiplier *= nap_regidx(vm, i);
-
-        /* updating the final index*/
-        to_ret += dim_multiplier;
-    }
-
-    return to_ret;
-}
-
-/**
  * Moves a string
  */
 static int move_string_into_substring(struct nap_vm* vm, nap_int_t start_index, nap_int_t end_index,
@@ -1405,12 +1323,12 @@ int mov_into_register(struct nap_vm* vm)
     else
     if(register_type == OPCODE_BYTE)
     {
-        mov_into_byte_register(vm);
+        return mov_into_byte_register(vm);
     }
     else
     if(register_type == OPCODE_REAL)
     {
-        mov_into_real_register(vm);
+        return mov_into_real_register(vm);
     }
     else
     {

@@ -40,6 +40,28 @@ TEST(Floats, BasicRealOperations)
     SCRIPT_SHUTDOWN
 }
 
+TEST(Operations, UnaryMathOperations)
+{
+    SCRIPT_START
+    "                                 \
+        int a = 5;                    \
+        int b = -5;                   \
+        int c = +b;                   \
+        int d = -a;                   \
+        int e = 3 - (-2);             \
+        int f = 3 - -2;             \
+    "
+    SCRIPT_END
+
+    ASSERT_EQ(5, VAR_INT(c));
+    ASSERT_EQ(-5, VAR_INT(d));
+    ASSERT_EQ(5, VAR_INT(e));
+    ASSERT_EQ(5, VAR_INT(f));
+
+    SCRIPT_SHUTDOWN
+
+}
+
 TEST(Operations, BasicIntVariableOperations)
 {
 

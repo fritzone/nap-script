@@ -129,6 +129,8 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "xor") opcode = OPCODE_XOR;
     if(expr == "not") opcode = OPCODE_NOT;
     if(expr == "bcom") opcode = OPCODE_BCOM;
+    if(expr == "neg") opcode = OPCODE_NEG;
+    if(expr == "pos") opcode = OPCODE_POS;
     if(expr == "eq") opcode = OPCODE_EQ;
     if(expr == "lt") opcode = OPCODE_LT;
     if(expr == "gt") opcode = OPCODE_GT;
