@@ -67,6 +67,110 @@ static int nap_vm_set_lbf_to_op_result(struct nap_vm* vm, nap_int_t reg,
     return NAP_SUCCESS;
 }
 
+/* compares an integer register to something */
+static int nap_compare_reg_int(struct nap_vm* vm)
+{
+    uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+    uint8_t cmp_second = vm->content[nap_step_ip(vm)]; /* what are we checking against*/
+
+    if(cmp_second == OPCODE_IMMEDIATE_INT) /* comparing int register with immediate int value (1,..) */
+    {
+        int success = NAP_SUCCESS;
+        nap_int_t immediate = nap_read_immediate_int(vm, &success);
+        if(success == NAP_FAILURE)
+        {
+            return NAP_FAILURE;
+        }
+
+        return nap_vm_set_lbf_to_op_result(vm, nap_regi(vm, register_index),
+                                           immediate, vm->cec->current_opcode);
+    }
+    else
+    if(cmp_second == OPCODE_IMMEDIATE_REAL) /* comparing int register with immediate real value (1,..) */
+    {
+        nap_real_t immediate = nap_read_immediate_real(vm);
+        return nap_vm_set_lbf_to_op_result(vm,
+                                           nap_regi(vm, register_index),
+                                           (nap_int_t)immediate, vm->cec->current_opcode);
+    }
+    else
+    if(cmp_second == OPCODE_VAR)            /* int register compared to a variable */
+    {
+        nap_index_t var_index = nap_fetch_index(vm);
+        struct variable_entry* ve = nap_fetch_variable(vm, var_index);
+
+        ASSERT_NOT_NULL_VAR(ve);
+        CHECK_VARIABLE_INSTANTIATON(ve);
+
+        if(ve->instantiation->type == STACK_ENTRY_INT) /* comparing int register with an int variable */
+        {
+            return nap_vm_set_lbf_to_op_result(vm,
+                                               nap_regi(vm, register_index),
+                                               *(nap_int_t*)ve->instantiation->value,
+                                               vm->cec->current_opcode);
+        }
+        else
+        if(ve->instantiation->type == STACK_ENTRY_BYTE) /* comparing int register with a byte variable */
+        {
+            return nap_vm_set_lbf_to_op_result(vm,
+                                               nap_regi(vm, register_index),
+                                               (nap_int_t)(*(nap_byte_t*)ve->instantiation->value),
+                                               vm->cec->current_opcode);
+        }
+        else
+        if(ve->instantiation->type == STACK_ENTRY_REAL) /* comparing int register with a real variable */
+        {
+            return nap_vm_set_lbf_to_op_result(vm,
+                                               nap_regi(vm, register_index),
+                                               (nap_int_t)(*(nap_real_t*)ve->instantiation->value),
+                                               vm->cec->current_opcode);
+        }
+        else
+        if(ve->instantiation->type == STACK_ENTRY_STRING)
+        {
+            int error = NAP_SUCCESS; /* might lose some numbers */
+            nap_int_t v = nap_int_string_to_number(
+                        vm, (nap_string_t)ve->instantiation->value,
+                        ve->instantiation->len, &error);
+
+            if(error == NAP_FAILURE)
+            {
+                return NAP_FAILURE;
+            }
+
+            return nap_vm_set_lbf_to_op_result(vm, nap_regi(vm, register_index),
+                                               v, vm->cec->current_opcode);
+        }
+
+        else /* comparing int register with another kind of variable */
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+    }
+    else
+    if(cmp_second == OPCODE_REG)
+    {
+        uint8_t second_register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+
+        if(second_register_type == OPCODE_INT) /* comparing int reg with another INT type register */
+        {
+            uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+            return nap_vm_set_lbf_to_op_result(vm,
+                                               nap_regi(vm, register_index),
+                                               nap_regi(vm, second_register_index),
+                                               vm->cec->current_opcode);
+        }
+        else /* comparing int reg with another type register */
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+    }
+    else /* comparing an int register to something else. What might that be? */
+    {
+        NAP_NOT_IMPLEMENTED
+    }
+}
+
 int nap_comparison(struct nap_vm* vm)
 {
     uint8_t cmp_first = vm->content[nap_step_ip(vm)];   /* what to check (reg only)*/
@@ -78,64 +182,8 @@ int nap_comparison(struct nap_vm* vm)
         /* we are dealing with an INT type register */
         if(register_type == OPCODE_INT)
         {
-            uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
-            uint8_t cmp_second = vm->content[nap_step_ip(vm)]; /* what are we checking against*/
-
-            if(cmp_second == OPCODE_IMMEDIATE_INT) /* comparing int register with immediate value (1,..) */
-            {
-                int success = 0;
-                nap_int_t immediate = nap_read_immediate_int(vm, &success);
-                if(success == NAP_FAILURE)
-                {
-                    return NAP_FAILURE;
-                }
-                
-                return nap_vm_set_lbf_to_op_result(vm,
-                                                   nap_regi(vm, register_index),
-                                                   immediate, vm->cec->current_opcode);
-            }
-            else
-            if(cmp_second == OPCODE_VAR) /* int register compared to a variable */
-            {
-                nap_index_t var_index = nap_fetch_index(vm);
-                struct variable_entry* ve = nap_fetch_variable(vm, var_index);
-                ASSERT_NOT_NULL_VAR(ve);
-
-                if(ve->instantiation->type == OPCODE_INT) /* comparing int register with an int variable */
-                {
-                    return nap_vm_set_lbf_to_op_result(vm,
-                                                       nap_regi(vm, register_index),
-                                                       *(nap_int_t*)ve->instantiation->value,
-                                                       vm->cec->current_opcode);
-                }
-                else /* comparing int register with another kind of variable */
-                {
-                    NAP_NOT_IMPLEMENTED
-                }
-            }
-            else
-            if(cmp_second == OPCODE_REG)
-            {
-                uint8_t second_register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
-
-                if(second_register_type == OPCODE_INT) /* comparing int reg with another INT type register */
-                {
-                    uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
-                    return nap_vm_set_lbf_to_op_result(vm,
-                                                       nap_regi(vm, register_index),
-                                                       nap_regi(vm, second_register_index),
-                                                       vm->cec->current_opcode);
-                }
-                else /* comparing int reg with another type register */
-                {
-                    NAP_NOT_IMPLEMENTED
-                }
-            }
-            else /* comparing an int register to something else. What might that be? */
-            {
-                NAP_NOT_IMPLEMENTED
-            }
-        } /* some other type of register is compared against something */
+            nap_compare_reg_int(vm);
+        }
         else
         {
             NAP_NOT_IMPLEMENTED
