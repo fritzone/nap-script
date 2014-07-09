@@ -76,25 +76,9 @@ static int move_string_into_substring(struct nap_vm* vm, nap_int_t start_index, 
     return NAP_SUCCESS;
 }
 
-/**
- * @brief nap_int_string_to_number returns a number from the given string
- *
- * @param to_conv this is the string that will be converted into a number.
- *        It is encoded with UTF-32BE
- * @param len the length of the string, not the length of the memory area
- * @param error [out] will be populated with NAP_SUCCESS in case of success
- *        or NAP_FAILURE in case of failure
- *
- * @return NAP_NO_VALUE in case of memory allocation error (in this case *error
- *        is populated to NAP_FAILURE) or the number as converted by strtoll and
- *        *error populated to NAP_FAILURE in case of strtoll failed, or the
- *        number as converted by strtoll and the *error set to NAP_SUCCESS in
- *        case of a succesfull conversion
- */
-static nap_int_t nap_int_string_to_number(struct nap_vm* vm,
-                                          const char* to_conv,
-                                          size_t len,
-                                          int* error)
+/* Returns a number from the given string */
+nap_int_t nap_int_string_to_number(struct nap_vm* vm, const char* to_conv,
+                                          size_t len, int* error)
 {
     int base = 10;
     char* endptr = NULL;
@@ -365,13 +349,8 @@ static int mov_into_byte_register(struct nap_vm* vm)
 
                     ASSERT_VARIABLE_INDEX_ALLOWED(var, start_index);
                     ASSERT_VARIABLE_INDEX_ALLOWED(var, end_index);
+                    ASSERT_INDEX_RELATIONS(var, start_index, end_index);
 
-					if(end_index < start_index)
-					{
-                        /* TODO: error message? */
-						return NAP_FAILURE;
-					}
-						 
                     nap_set_regb(vm, register_index,
                                  (nap_byte_t)nap_int_string_to_number(vm,
                                         (nap_string_t)var->instantiation->value + start_index * CC_MUL,
@@ -631,6 +610,7 @@ static int mov_into_int_register(struct nap_vm* vm)
 
                     ASSERT_VARIABLE_INDEX_ALLOWED(var, start_index);
                     ASSERT_VARIABLE_INDEX_ALLOWED(var, end_index);
+                    ASSERT_INDEX_RELATIONS(var, start_index, end_index);
 
                     nap_set_regi(vm, register_index,
                                  nap_int_string_to_number(vm,
@@ -789,7 +769,7 @@ static int mov_into_real_register(struct nap_vm* vm)
         }
     }
     else
-    if(move_source == OPCODE_CCIDX) /* moving an indexed in an int reg */
+    if(move_source == OPCODE_CCIDX) /* moving an indexed in a real reg */
     {
         uint8_t ccidx_target = vm->content[nap_step_ip(vm)];  /* should be a variable */
         if(ccidx_target == OPCODE_VAR)
@@ -873,6 +853,7 @@ static int mov_into_real_register(struct nap_vm* vm)
 
                     ASSERT_VARIABLE_INDEX_ALLOWED(var, start_index);
                     ASSERT_VARIABLE_INDEX_ALLOWED(var, end_index);
+                    ASSERT_INDEX_RELATIONS(var, start_index, end_index)
 
                     nap_set_regr(vm, register_index,
                                  (nap_real_t)nap_int_string_to_number(vm, /* TODO: This should be nap_real_string_to_number*/
@@ -1031,6 +1012,7 @@ static int mov_into_string_register(struct nap_vm* vm)
 
                     ASSERT_VARIABLE_INDEX_ALLOWED(var, start_index);
                     ASSERT_VARIABLE_INDEX_ALLOWED(var, end_index);
+                    ASSERT_INDEX_RELATIONS(var, start_index, end_index);
 
                     nap_set_regs(vm, register_index,
                                     (char*)var->instantiation->value + start_index * CC_MUL,
@@ -1185,7 +1167,7 @@ static int mov_into_index_register(struct nap_vm* vm)
         }
     }
     else
-    if(move_source == OPCODE_CCIDX) /* moving an indexed in an int reg */
+    if(move_source == OPCODE_CCIDX) /* moving an indexed in an indexed reg */
     {
         uint8_t ccidx_target = vm->content[nap_step_ip(vm)];  /* should be a variable */
         if(ccidx_target == OPCODE_VAR)
@@ -1269,6 +1251,7 @@ static int mov_into_index_register(struct nap_vm* vm)
 
                     ASSERT_VARIABLE_INDEX_ALLOWED(var, start_index);
                     ASSERT_VARIABLE_INDEX_ALLOWED(var, end_index);
+                    ASSERT_INDEX_RELATIONS(var, start_index, end_index);
 
                     nap_set_regidx(vm, register_index,
                                  nap_int_string_to_number(vm,

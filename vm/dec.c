@@ -10,12 +10,14 @@
 
 int nap_dec(struct nap_vm* vm)
 {
-    uint8_t dec_what = vm->content[nap_step_ip(vm)]; /* variable, register*/
+    uint8_t dec_what = vm->content[nap_step_ip(vm)]; /* variable, register, indexed*/
     if(dec_what == OPCODE_VAR)
     {
         nap_index_t var_index = nap_fetch_index(vm);
         struct variable_entry* ve = nap_fetch_variable(vm, var_index);
+
         ASSERT_NOT_NULL_VAR(ve)
+        CHECK_VARIABLE_INSTANTIATON(ve)
 
         if(ve->instantiation->type == OPCODE_INT)
         {
@@ -42,7 +44,7 @@ int nap_dec(struct nap_vm* vm)
         uint8_t register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
 
         /* we are dealing with an INT type register */
-        if(register_type == OPCODE_INT)  /* to handle mov reg int x, <something> */
+        if(register_type == OPCODE_INT)  /* to handle dec reg int x */
         {
             uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
             vm->cec->regi[register_index] --;

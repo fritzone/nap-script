@@ -83,6 +83,7 @@ struct nap_string_register;
 /* to make less use of the CC_MUL in the code */
 #define NAP_STRING_COPY(dest,src,count) memcpy(dest,src,NAP_STRING_LEN(count));
 
+/* Check if the required index is allowed for the given variable */
 #define ASSERT_VARIABLE_INDEX_ALLOWED(var, idx)                                \
     if((signed)idx < 0 || var->instantiation->len <= idx)                      \
     {                                                                          \
@@ -92,6 +93,17 @@ struct nap_string_register;
         vm->error_description = s;                                             \
         return NAP_FAILURE;                                                    \
     }
+
+#define ASSERT_INDEX_RELATIONS(var, start_idx, end_idx)                        \
+    if(start_idx > end_idx)                                                    \
+    {                                                                          \
+        char s[512];                                                           \
+        SNPRINTF(s, 512, "Invalid: start index > end index for variable [%s]. "\
+               "Start:[%"PRINT_d"] End:[%"PRINT_d"]", var->name, start_idx, end_idx);\
+        vm->error_description = s;                                             \
+        return NAP_FAILURE;                                                    \
+    }
+
 
 /* Macro for leaving the application in case of an unimplemented opcode */
 #define NAP_NOT_IMPLEMENTED                                                    \
@@ -397,6 +409,27 @@ char* nap_int_to_string(nap_int_t value, size_t* len);
 int64_t deliver_flat_index(struct nap_vm* vm,
                            const struct variable_entry* ve,
                            uint8_t used_indexes, char** error);
+
+/**
+ * @brief nap_int_string_to_number returns a number from the given string
+ *
+ * @param to_conv this is the string that will be converted into a number.
+ *        It is encoded with UTF-32BE
+ * @param len the length of the string, not the length of the memory area
+ * @param error [out] will be populated with NAP_SUCCESS in case of success
+ *        or NAP_FAILURE in case of failure
+ *
+ * @return NAP_NO_VALUE in case of memory allocation error (in this case *error
+ *        is populated to NAP_FAILURE) or the number as converted by strtoll and
+ *        *error populated to NAP_FAILURE in case of strtoll failed, or the
+ *        number as converted by strtoll and the *error set to NAP_SUCCESS in
+ *        case of a succesfull conversion
+ */
+nap_int_t nap_int_string_to_number(struct nap_vm* vm,
+                                          const char* to_conv,
+                                          size_t len,
+                                          int* error);
+
 
 #ifdef __cplusplus
 }
