@@ -41,7 +41,7 @@ int level_0_char_operator(const nap_compiler* _compiler, const std::string &expr
             level--;
             if(level == -1)
             {
-                _compiler->throw_error(E0012_SYNTAXERR, expr, NULL);
+                _compiler->throw_error(E0012_SYNTAXERR, expr);
                 psuccess = false;
                 return -1;
 
@@ -179,7 +179,7 @@ int last_idx = -1, level = 0;
             level--;
             if(level == -1)
             {
-                _compiler->throw_error(E0009_PARAMISM, expr, NULL);
+                _compiler->throw_error(E0009_PARAMISM, expr);
                 psuccess = false;
                 return -1;
             }
@@ -213,7 +213,7 @@ int last_idx = -1, level = 0;
 
             if(i == len)
             {
-                _compiler->throw_error(E0009_PARAMISM, expr, NULL);
+                _compiler->throw_error(E0009_PARAMISM, expr);
                 psuccess = false;
                 return -1;
             }
