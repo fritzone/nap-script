@@ -691,7 +691,7 @@ static int mov_into_real_register(struct nap_vm* vm)
         else
         if(var->instantiation->type == STACK_ENTRY_BYTE)
         {
-            nap_set_regi(vm, register_index, (nap_real_t)(*(nap_byte_t*)var->instantiation->value));
+            nap_set_regi(vm, register_index, (nap_int_t)(*(nap_byte_t*)var->instantiation->value));
         }
         else
         {
@@ -1317,8 +1317,6 @@ int mov_into_register(struct nap_vm* vm)
     {
         NAP_NOT_IMPLEMENTED
     }
-
-    return NAP_SUCCESS;
 }
 
 int mov_into_variable(struct nap_vm* vm)

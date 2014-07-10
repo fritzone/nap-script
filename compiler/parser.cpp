@@ -415,7 +415,7 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
     }
 
     strim(phrase);
-    if (phrase[phrase.length() - 1] == C_SEMC)
+	if (!phrase.empty() && phrase[phrase.length() - 1] == C_SEMC)
     {
         phrase = phrase.substr(0, phrase.length() - 1);
     }

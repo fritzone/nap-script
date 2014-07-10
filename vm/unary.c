@@ -65,7 +65,7 @@ int nap_unary(struct nap_vm* vm)
             else
             if(vm->cec->current_opcode == OPCODE_POS) /* TODO: does this make sense? A byte is always positive. */
             {
-                (*(nap_byte_t*)var->instantiation->value) = abs((*(nap_byte_t*)var->instantiation->value));
+                (*(nap_byte_t*)var->instantiation->value) = (int)abs((int)(*(nap_byte_t*)var->instantiation->value));
             }
             else /* No other type of unary operation */
             {
@@ -129,7 +129,7 @@ int nap_unary(struct nap_vm* vm)
             else
             if(vm->cec->current_opcode == OPCODE_POS) /* TODO: does this make sense? */
             {
-                nap_set_regb(vm, register_index, abs(nap_regb(vm, register_index)));
+                nap_set_regb(vm, register_index, (nap_byte_t)abs(nap_regb(vm, register_index)));
             }
             else
             {
