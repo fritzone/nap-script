@@ -242,19 +242,20 @@ void method::feed_parameter_list(const char* par_list, expression_with_location*
             {
                 i++;
             }
-            if(i == q->length() && def_loc != DEF_EXTERN)
+			int ql = q->length();
+            if(i >= ql && def_loc != DEF_EXTERN)
             {
                 mcompiler->throw_error(E0009_PARAMISM, par_list);
                 psuccess = false;
                 return;
             }
 
-			modifiable = (C_AND == (*q)[i]);
-            if(modifiable)
-            {
-                i++;
+			//modifiable = (C_AND == (*q)[i]);
+            //if(modifiable)
+            //{
+            //    i++;
                 // TODO: There is no support for this in the bytecode yet.
-            }
+            //}
 
             while(i < q->length())
             {

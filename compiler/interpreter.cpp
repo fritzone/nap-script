@@ -387,7 +387,7 @@ int interpreter::looks_like_function_def(const std::string& expr, int expr_len, 
     std::string tmp;    /* will hold the parameters in the first run*/
     int can_stop = 0;
     int level = 1;
-    while(i && !can_stop)            /* this is reading backwards */
+    while(i >= 0 && !can_stop)            /* this is reading backwards */
     {
         if(expr[i] == C_PAR_CL) level ++;
         if(expr[i] == C_PAR_OP) level --;
@@ -403,15 +403,15 @@ int interpreter::looks_like_function_def(const std::string& expr, int expr_len, 
 
     i--;        /* skip the parantheses*/
 
-    while(i && is_whitespace(expr[i])) i --;    /* skip the whitespaces */
+    while(i >= 0 && is_whitespace(expr[i])) i --;    /* skip the whitespaces */
 
-    if(!i) return 0;                    /* this was something in paranthese starting with spaces */
+    if(i <= 0) return 0;                    /* this was something in paranthese starting with spaces */
 
     if(!is_identifier_char(expr[i])) return 0;    /* cannot be anything else but an identifier */
 
     while(i>-1 && is_identifier_char(expr[i]))    i--;    /* fetch the name */
 
-    if(i == -1) /* meaning, either we have defined a function with no return type or this is a function call */
+    if(i <= -1) /* meaning, either we have defined a function with no return type or this is a function call */
     {   /* we need to analyze the parameters, if they look like definition, then it's fine, give back 1 */
         std::vector<std::string> pars = string_list_create_bsep(tmp, ',', mcompiler, psuccess);
         SUCCES_OR_RETURN -1;
@@ -905,18 +905,20 @@ call_frame_entry* interpreter::handle_function_call(const std::string& expr_trim
         strim(params_body);
     }
 
-    int pb_end = params_body.length();
+    int pb_end = params_body.length() - 1;
     while(is_whitespace(params_body[pb_end]))
     {
         pb_end --;
     }
 
-    if(params_body[pb_end - 1] == C_PAR_CL)
-    {
-        params_body = params_body.substr(0, pb_end - 1);
-        strim(params_body);
-    }    /* this removed the closing paranthesis */
-
+	if(pb_end >= 0)
+	{
+		if(params_body[pb_end] == C_PAR_CL) // here was pb_end - 1 ... why?
+		{
+			params_body = params_body.substr(0, pb_end);
+			strim(params_body);
+		}    /* this removed the closing paranthesis */
+	}
 
     //printf("Checking function call:[%s]\n", params_body);
     /* Now: To build the parameter list, and create a call_frame_entry element to insert into the tree */
