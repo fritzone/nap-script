@@ -966,9 +966,10 @@ int nap_copy_return_values(const struct nap_vm *src, struct nap_vm *dst)
 {
     if(src->cec->rvl)
     {
+		char* tmp = NULL;
         dst->cec->rvl = src->cec->rvl;
+        tmp = calloc(src->cec->rvl * CC_MUL, sizeof(char));
 
-        char *tmp = (char*)calloc(src->cec->rvl * CC_MUL, sizeof(char)); /* UTF32 */
         if(tmp != NULL)
         {
             memcpy(tmp, src->cec->rvs, src->cec->rvl  * CC_MUL);

@@ -34,8 +34,8 @@ TEST(Floats, BasicRealOperations)
         real b = a * 10;                 \
     "
     SCRIPT_END
-
-    ASSERT_DOUBLE_EQ((double)56.0, (double)VAR_REAL(b));
+	double _b = (double)VAR_REAL(b);
+    ASSERT_DOUBLE_EQ((double)56.0, _b);
 
     SCRIPT_SHUTDOWN
 }

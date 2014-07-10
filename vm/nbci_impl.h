@@ -49,7 +49,6 @@ struct nap_string_register;
     else                                                                       \
     {                                                                          \
         nap_vm_set_error_description(vm, error);                               \
-        return NAP_FAILURE;                                                    \
     }                                                                          \
     } while(0);
 
@@ -66,6 +65,7 @@ struct nap_string_register;
             SNPRINTF(t, 256, "MEM: out of memory file:[%s] line [%d] var:[%s]",\
                      __FILE__, __LINE__, #var);                                \
             NAP_REPORT_ERROR(vm, t);                                           \
+			return NAP_FAILURE;                                                \
         }                                                                      \
     } while(0);
 

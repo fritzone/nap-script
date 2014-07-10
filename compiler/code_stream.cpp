@@ -217,7 +217,11 @@ void code_stream::output_bytecode(const char* s)
             }
             else
             {
+#ifndef _MSC_VER
                 uint64_t nr = (uint64_t)atoll(expr.c_str());
+#else
+				uint64_t nr = (uint64_t)_strtoi64(expr.c_str(), NULL, 10); //TODO: is this really base 10?
+#endif
 
                 // the size of the number
                 uint8_t type = OPCODE_BYTE;
@@ -245,7 +249,11 @@ void code_stream::output_bytecode(const char* s)
                 }
                 if(type == OPCODE_HUGE)
                 {
-                    int64_t nrf = atoll(expr.c_str());
+#ifndef _MSC_VER
+                uint64_t nrf = (uint64_t)atoll(expr.c_str());
+#else
+				uint64_t nrf = (uint64_t)_strtoi64(expr.c_str(), NULL, 10); //TODO: is this really base 10?
+#endif
                     f.write_stuff_to_file_64((int64_t)nrf);
                 }
             }
@@ -254,7 +262,13 @@ void code_stream::output_bytecode(const char* s)
         else
         if(opcode == OPCODE_IMMEDIATE_REAL)
         {
+#ifndef _MSC_VER
             long double v = strtold(expr.c_str(), 0);
+#else
+			_LDOUBLE v1;
+			long double v = (long double) atof(expr.c_str()); /* Till the day MSVS will have strtold */
+#endif
+
             f.write_stuff_to_file_64(pack754_64(v));
         }
     }
