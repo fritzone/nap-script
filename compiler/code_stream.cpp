@@ -265,7 +265,6 @@ void code_stream::output_bytecode(const char* s)
 #ifndef _MSC_VER
             long double v = strtold(expr.c_str(), 0);
 #else
-			_LDOUBLE v1;
 			long double v = (long double) atof(expr.c_str()); /* Till the day MSVS will have strtold */
 #endif
 
