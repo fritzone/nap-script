@@ -91,7 +91,7 @@ char *nap_vm_get_string(struct nap_vm* vm, char* name, int* found)
 {
     uint64_t i;
     char* finame = name;
-    char error[256];
+	char error[256] = {0};
     if(name == NULL)
     {
         *found = 0;
@@ -136,7 +136,7 @@ char *nap_vm_get_string(struct nap_vm* vm, char* name, int* found)
         }
     }
 
-    SNPRINTF(error, 256, "Not found the variable: [%s]", name);
+    SNPRINTF(error, MAX_BUF_SIZE(255), "Not found the variable: [%s]", name);
     nap_vm_set_error_description(vm, error);
     *found = 0;
     return NULL;

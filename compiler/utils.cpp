@@ -386,6 +386,11 @@ std::vector<std::string> string_list_create_bsep(const std::string& instr, char 
         if(*p == sep)
         {
             cur_elem = (char*)calloc(p - frst + 1, 1);
+			if(cur_elem == NULL)
+			{
+				return head;
+			}
+
             strncpy(cur_elem, frst, p - frst);
             std::string t = cur_elem;
             strim(t);
@@ -403,6 +408,11 @@ std::vector<std::string> string_list_create_bsep(const std::string& instr, char 
     }
     /* and now the last element */
     cur_elem = (char*)calloc(p - frst + 1, 1);
+	if(cur_elem == NULL)
+	{
+		return head;
+	}
+
     strncpy(cur_elem, frst, p - frst);
     std::string t = cur_elem;
     strim(t);

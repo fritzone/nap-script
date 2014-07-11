@@ -968,6 +968,10 @@ std::string interpreter::is_indexed(const std::string& expr_trim, int expr_len, 
 {
     const char* p = expr_trim.c_str();
     char* the_indexed_part = (char*)calloc(expr_len, 1);
+	if(the_indexed_part == NULL)
+	{
+		return "";
+	}
     char* q = the_indexed_part;
     int level = 0;
     while(*p)
@@ -1022,7 +1026,6 @@ std::string interpreter::is_indexed(const std::string& expr_trim, int expr_len, 
                     int level2 = 1;
                     p++;                            /* skip the second opening square bracket*/
                     index = "";
-
 
                     while(!canstop2)
                     {

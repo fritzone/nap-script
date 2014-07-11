@@ -525,8 +525,8 @@ nap_int_t nap_read_immediate_int(struct nap_vm* vm, int* success)
     }
     else
     {
-        char s[256];
-        SNPRINTF(s, 256, "invalid immediate size  0x%x at %"PRINT_u" (%"PRINT_x")", 
+		char s[256] = {0};
+        SNPRINTF(s, MAX_BUF_SIZE(255), "invalid immediate size  0x%x at %"PRINT_u" (%"PRINT_x")", 
                  (unsigned)imm_size, nap_ip(vm), nap_ip(vm));
         nap_vm_set_error_description(vm, s);
         *success = NAP_FAILURE;
@@ -623,7 +623,7 @@ int nap_handle_interrupt(struct nap_vm* vm)
     /* CC points to the interrupt number */
     uint8_t intr = *(uint8_t*)(vm->content + nap_ip(vm));
     uint16_t int_res = 0;
-    char s[64];
+	char s[64] = {0};
 
     if(vm->interrupts[intr])
     {
@@ -632,7 +632,7 @@ int nap_handle_interrupt(struct nap_vm* vm)
     else
     {
         /* unimplemented interrupt, reporting an error */
-        SNPRINTF(s, 64, "unimplemented interrupt: %d", intr);
+        SNPRINTF(s, MAX_BUF_SIZE(63), "unimplemented interrupt: %d", intr);
         return nap_vm_set_error_description(vm, s);
     }
 
@@ -644,7 +644,7 @@ int nap_handle_interrupt(struct nap_vm* vm)
         return NAP_SUCCESS;
     }
 
-    SNPRINTF(s, 64, "interrupt [%d] failure code [%d]", intr, int_res);
+    SNPRINTF(s, MAX_BUF_SIZE(63), "interrupt [%d] failure code [%d]", intr, int_res);
     return nap_vm_set_error_description(vm, s);
 }
 
@@ -814,8 +814,8 @@ char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size
 #endif
         if (errno == EINVAL)
         {
-            char s[256];
-            SNPRINTF(s, 256, "[iconv] Conversion to %s is not supported\n", enc);
+			char s[256] = {0};
+            SNPRINTF(s, MAX_BUF_SIZE(255), "[iconv] Conversion to %s is not supported\n", enc);
             nap_vm_set_error_description(vm, s);
         }
         else
@@ -845,18 +845,18 @@ char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size
 
     if(ret == -1)
     {
-        char s[256];
+		char s[256] = {0};
 
         switch(errno)
         {
         case EILSEQ:
-            SNPRINTF(s, 256, "[iconv] %s EILSEQ", strerror(errno));
+            SNPRINTF(s, MAX_BUF_SIZE(255), "[iconv] %s EILSEQ", strerror(errno));
             break;
         case EINVAL:
-            SNPRINTF(s, 256, "[iconv] %s EINVAL\n", strerror(errno));
+            SNPRINTF(s, MAX_BUF_SIZE(255), "[iconv] %s EINVAL\n", strerror(errno));
             break;
         case E2BIG:
-            SNPRINTF(s, 256, "[iconv] %s E2BIG\n", strerror(errno));
+            SNPRINTF(s, MAX_BUF_SIZE(255), "[iconv] %s E2BIG\n", strerror(errno));
             break;
         }
 
@@ -990,10 +990,10 @@ int nap_copy_return_values(const struct nap_vm *src, struct nap_vm *dst)
 
 char* nap_int_to_string(nap_int_t value, size_t* len)
 {
-    char s[1024]; /* temporary value */
+	char s[1024] = {0}; /* temporary value */
     char* t = NULL; /* the return value */
-    SNPRINTF(s, 1024, "%" PRINT_d "", value);
-    t = to_nap_format(s, strlen(t), len);
+    SNPRINTF(s, MAX_BUF_SIZE(1023), "%" PRINT_d "", value);
+    t = to_nap_format(s, strlen(s), len);
     return t;
 }
 
@@ -1102,7 +1102,7 @@ int64_t deliver_flat_index(struct nap_vm* vm,
         char* s = NAP_MEM_ALLOC(256, char);
         NAP_NN_ASSERT(vm, s);
 
-        SNPRINTF(s, 256,
+        SNPRINTF(s, MAX_BUF_SIZE(255),
                 "Invalid index count used for [%s]. "
                  "Requested: %d available: %d",
                  ve->name, used_indexes, ve->dimension_count);
@@ -1123,7 +1123,7 @@ int64_t deliver_flat_index(struct nap_vm* vm,
             char* s = NAP_MEM_ALLOC(256, char);
             NAP_NN_ASSERT(vm, s);
 
-            SNPRINTF(s, 256,
+            SNPRINTF(s, MAX_BUF_SIZE(255),
                     "Multi dim index out of range for [%s]. "
                      "Dim Index: %d, requested: %" PRINT_d " available: %" PRINT_d,
                      ve->name, i, nap_regidx(vm, i), ve->dimensions[i]);

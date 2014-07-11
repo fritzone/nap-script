@@ -107,8 +107,8 @@ int nap_push(struct nap_vm *vm)
             }
             else
             {
-                char s[64];
-                SNPRINTF(s, 64, "unknown push [0x%x] at %"PRINT_u" (%"PRINT_x")", 
+				char s[64] = {0};
+                SNPRINTF(s, MAX_BUF_SIZE(63), "unknown push [0x%x] at %"PRINT_u" (%"PRINT_x")", 
                          push_what, nap_ip(vm), nap_ip(vm));
                 return nap_vm_set_error_description(vm, s);
             }

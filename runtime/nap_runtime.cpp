@@ -237,15 +237,21 @@ NAP_LIB_API void nap_runtime_shutdown(nap_runtime **runtime)
 		{
 			if((*runtime)->chunks.at(i)->code != NULL)
 			{
-				free( (*runtime)->chunks.at(i)->code );
+#ifdef _MSC_VER
+#pragma warning(suppress: 6001)
+#endif				free( (*runtime)->chunks.at(i)->code );
 			}
 
 			if((*runtime)->chunks.at(i)->name)
 			{
-				free((*runtime)->chunks.at(i)->name);
+#ifdef _MSC_VER
+#pragma warning(suppress: 6001)
+#endif				free((*runtime)->chunks.at(i)->name);
 			}
-
-        free( (*runtime)->chunks.at(i));
+#ifdef _MSC_VER
+#pragma warning(suppress: 6001)
+#endif
+			free( (*runtime)->chunks.at(i));
 		}
     }
     delete (*runtime);

@@ -16,8 +16,8 @@ int nap_call(struct nap_vm *vm)
     /* is this a valid jump index? */
     if(jmpt_index >= vm->jumptable_size)
     {
-        char s[256];
-        SNPRINTF(s, 256, "Invalid jump index [%d]."
+		char s[256] = {0};
+        SNPRINTF(s, MAX_BUF_SIZE(255), "Invalid jump index [%d]."
                  " Max is ["JL_SIZE_T_SPECIFIER"]",
                  jmpt_index, vm->jumptable_size);
         nap_vm_set_error_description(vm, s);
