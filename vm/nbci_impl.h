@@ -85,13 +85,21 @@ struct nap_string_register;
 /* to make less use of the CC_MUL in the code */
 #define NAP_STRING_COPY(dest,src,count) memcpy(dest,src,NAP_STRING_LEN(count));
 
+#ifdef _MSC_VER
+#define SIZE_T_PRINT (unsigned long long)
+#else
+#define SIZE_T_PRINT
+#endif
+
 /* Check if the required index is allowed for the given variable */
 #define ASSERT_VARIABLE_INDEX_ALLOWED(var, idx)                                \
     if((signed)idx < 0 || var->instantiation->len <= idx)                      \
     {                                                                          \
 	    char s[512] = {0};                                                     \
         SNPRINTF(s, MAX_BUF_SIZE(511), "Invalid index for variable [%s]. "     \
-               "Req:[%"PRINT_d"] Avail:[%"PRINT_d"]", var->name, (unsigned long long)idx, (unsigned long long)var->instantiation->len);\
+               "Req:[%"PRINT_d"] Avail:[%"PRINT_d"]", var->name,               \
+               SIZE_T_PRINT idx,                                               \
+               SIZE_T_PRINT var->instantiation->len);                          \
         vm->error_description = s;                                             \
         return NAP_FAILURE;                                                    \
     }
@@ -101,7 +109,7 @@ struct nap_string_register;
     {                                                                          \
 		char s[512] = {0};                                                     \
         SNPRINTF(s, MAX_BUF_SIZE(511), "Invalid: start index > end index for variable [%s]. "\
-               "Start:[%"PRINT_d"] End:[%"PRINT_d"]", var->name, (unsigned long long)start_idx, (unsigned long long)end_idx);\
+               "Start:[%"PRINT_d"] End:[%"PRINT_d"]", var->name, SIZE_T_PRINT start_idx, SIZE_T_PRINT end_idx);\
         vm->error_description = s;                                             \
         return NAP_FAILURE;                                                    \
     }

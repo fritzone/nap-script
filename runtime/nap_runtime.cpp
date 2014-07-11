@@ -239,14 +239,16 @@ NAP_LIB_API void nap_runtime_shutdown(nap_runtime **runtime)
 			{
 #ifdef _MSC_VER
 #pragma warning(suppress: 6001)
-#endif				free( (*runtime)->chunks.at(i)->code );
+#endif
+                free( (*runtime)->chunks.at(i)->code );
 			}
 
 			if((*runtime)->chunks.at(i)->name)
 			{
 #ifdef _MSC_VER
 #pragma warning(suppress: 6001)
-#endif				free((*runtime)->chunks.at(i)->name);
+#endif
+                free((*runtime)->chunks.at(i)->name);
 			}
 #ifdef _MSC_VER
 #pragma warning(suppress: 6001)
