@@ -131,6 +131,11 @@ parsed_file *parsed_file::open_file(const std::string& name,  const nap_compiler
     }
     fseek(fp, 0, SEEK_SET);
     char* s = (char*)calloc(size + 1, 1);
+	if(s == NULL)
+	{
+		delete f;
+		return NULL;
+	}
     f->content_size = size;
 
     size_t r = fread(s, size, sizeof(char), fp);

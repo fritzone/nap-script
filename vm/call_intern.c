@@ -40,8 +40,8 @@ int nap_call_intern(struct nap_vm* vm)
 
                     if(grow_value == 0)
                     {
-                        char s[256];
-                        SNPRINTF(s, 256,
+						char s[256] = {0};
+                        SNPRINTF(s, MAX_BUF_SIZE(255),
                                 "[ERR-INT] Cannot grow with 0 index [%s].",
                                  ve->name);
                         return nap_vm_set_error_description(vm, s);
@@ -88,8 +88,8 @@ int nap_call_intern(struct nap_vm* vm)
                                           new_size * data_size);
                         if(!t)
                         {
-                            char s[256];
-                            SNPRINTF(s, 256,
+							char s[256] = {0};
+                            SNPRINTF(s, MAX_BUF_SIZE(255),
                                     "[ERR-INT] Cannot grow [%s]. Not enough memory.",
                                      ve->name);
                             return nap_vm_set_error_description(vm, s);
@@ -101,8 +101,8 @@ int nap_call_intern(struct nap_vm* vm)
                     }
                     else
                     {
-                        char s[256];
-                        SNPRINTF(s, 256,
+						char s[256] = {0};
+                        SNPRINTF(s, MAX_BUF_SIZE(255),
                                 "[ERR-INT-2] Cannot grow [%s]. Not pushed yet.",
                                  ve->name);
                         return nap_vm_set_error_description(vm, s);

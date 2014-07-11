@@ -24,10 +24,12 @@ struct nap_string_register;
 #define FORWARD   1
 
 #if defined(_MSC_VER)
-#define SNPRINTF _snprintf
+#define SNPRINTF _snprintf_s
 #define strtoll _strtoi64
+#define MAX_BUF_SIZE(x) (x), _TRUNCATE
 #else
 #define SNPRINTF snprintf
+#define MAX_BUF_SIZE(x) (x)
 #endif
 
 /* Macro for freeing a piece of memory */
@@ -61,8 +63,8 @@ struct nap_string_register;
     {                                                                          \
         if(var == NULL)                                                        \
         {                                                                      \
-            char t[256];                                                       \
-            SNPRINTF(t, 256, "MEM: out of memory file:[%s] line [%d] var:[%s]",\
+		char t[256] = {0};                                                       \
+            SNPRINTF(t, MAX_BUF_SIZE(255), "MEM: out of memory file:[%s] line [%d] var:[%s]",\
                      __FILE__, __LINE__, #var);                                \
             NAP_REPORT_ERROR(vm, t);                                           \
 			return NAP_FAILURE;                                                \
@@ -87,9 +89,9 @@ struct nap_string_register;
 #define ASSERT_VARIABLE_INDEX_ALLOWED(var, idx)                                \
     if((signed)idx < 0 || var->instantiation->len <= idx)                      \
     {                                                                          \
-        char s[512];                                                           \
-        SNPRINTF(s, 512, "Invalid index for variable [%s]. "                   \
-               "Req:[%"PRINT_d"] Avail:[%"PRINT_d"]", var->name, idx, var->instantiation->len);\
+	    char s[512] = {0};                                                     \
+        SNPRINTF(s, MAX_BUF_SIZE(511), "Invalid index for variable [%s]. "     \
+               "Req:[%"PRINT_d"] Avail:[%"PRINT_d"]", var->name, (unsigned long long)idx, (unsigned long long)var->instantiation->len);\
         vm->error_description = s;                                             \
         return NAP_FAILURE;                                                    \
     }
@@ -97,9 +99,9 @@ struct nap_string_register;
 #define ASSERT_INDEX_RELATIONS(var, start_idx, end_idx)                        \
     if(start_idx > end_idx)                                                    \
     {                                                                          \
-        char s[512];                                                           \
-        SNPRINTF(s, 512, "Invalid: start index > end index for variable [%s]. "\
-               "Start:[%"PRINT_d"] End:[%"PRINT_d"]", var->name, start_idx, end_idx);\
+		char s[512] = {0};                                                     \
+        SNPRINTF(s, MAX_BUF_SIZE(511), "Invalid: start index > end index for variable [%s]. "\
+               "Start:[%"PRINT_d"] End:[%"PRINT_d"]", var->name, (unsigned long long)start_idx, (unsigned long long)end_idx);\
         vm->error_description = s;                                             \
         return NAP_FAILURE;                                                    \
     }
@@ -108,13 +110,13 @@ struct nap_string_register;
 /* Macro for leaving the application in case of an unimplemented opcode */
 #define NAP_NOT_IMPLEMENTED                                                    \
     do {                                                                       \
-    char t[256], offending_command[256] = {0}, tmp[10];                        \
+	char t[256] = {0}, offending_command[256] = {0}, tmp[32] = {0};            \
     uint64_t bc = 0;                                                           \
     for(bc = vm->cec->lia; bc != nap_ip(vm); bc++) {                           \
-        SNPRINTF(tmp, 10, "%x ", vm->content[bc]);                             \
+        SNPRINTF(tmp, MAX_BUF_SIZE(31), "%x ", vm->content[bc]);                             \
         strcat(offending_command, tmp);                                        \
     }                                                                          \
-    SNPRINTF(t, 256, "NI: file [%s] line [%d] instr [%x] "                     \
+    SNPRINTF(t, MAX_BUF_SIZE(255), "NI: file [%s] line [%d] instr [%x] "                     \
                     "opcode [%x] at %" PRINT_u " (%" PRINT_x ") cmd: %s\n\n",  \
             __FILE__, __LINE__, vm->content[nap_ip(vm) - 1],                   \
             vm->cec->current_opcode, nap_ip(vm) - 1, nap_ip(vm) - 1,           \
@@ -158,8 +160,8 @@ struct nap_string_register;
 #define CHECK_VARIABLE_INSTANTIATON(var)                                       \
     if(var->instantiation == 0)                                                \
     {                                                                          \
-        char s[512];                                                           \
-        SNPRINTF(s, 512, "Variable [%s] not initialised correctly. "           \
+	    char s[512] = {0};                                                           \
+        SNPRINTF(s, MAX_BUF_SIZE(512), "Variable [%s] not initialised correctly. "           \
                    "It has no instantiation.", var->name);                     \
         vm->error_description = s;                                             \
         return NAP_FAILURE;                                                    \
@@ -168,8 +170,8 @@ struct nap_string_register;
 #define CHECK_VARIABLE_TYPE(var, REQ_TYPE_CODE)                                \
     if(var->instantiation->type != REQ_TYPE_CODE)                              \
     {                                                                          \
-        char s[512];                                                           \
-        SNPRINTF(s, 512, "Variable [%s] has wrong type."                       \
+	    char s[512] = {0};                                                           \
+        SNPRINTF(s, MAX_BUF_SIZE(512), "Variable [%s] has wrong type."                       \
                    "Expected [%s] got[%s].", var->name,                        \
                     nap_get_type_description(REQ_TYPE_CODE),                   \
                     nap_get_type_description(var->instantiation->type));       \

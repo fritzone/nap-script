@@ -283,7 +283,15 @@ tcvn_wctomb (conv_t conv, unsigned char *r, ucs4_t wc, int n)
       if (n < 2)
         return RET_TOOSMALL;
       r[0] = c;
-      r[1] = tcvn_comb_table[viet_decomp_table[i].comb1];
+	  if(viet_decomp_table[i].comb1 >= 0 && viet_decomp_table[i].comb1 <= 4)
+	  {
+		  r[1] = tcvn_comb_table[viet_decomp_table[i].comb1];
+	  }
+	  else
+	  {
+		  r[1] = tcvn_comb_table[0];
+	  }
+
       return 2;
     }
   }

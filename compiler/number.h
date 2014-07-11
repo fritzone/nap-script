@@ -48,6 +48,10 @@ private:
     void number_from_long(long src)
     {
         long *new_long = (long*)calloc(1, sizeof(long));
+		if(new_long == NULL)
+		{
+			return;
+		}
         *new_long = src;
         m_type = BASIC_TYPE_INT;
         m_location = new_long;
@@ -56,6 +60,10 @@ private:
     void number_from_double(double src)
     {
         double *new_double = (double*)calloc(1, sizeof(double));
+		if(new_double == NULL)
+		{
+			return;
+		}
         *new_double = src;
         m_type = BASIC_TYPE_REAL;
         m_location = new_double;

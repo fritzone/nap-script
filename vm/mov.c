@@ -15,8 +15,8 @@ static int nap_int_set_index_overflow(struct nap_vm* vm,
 				      const char* var_name, 
 				      nap_int_t requested, size_t available)
 {
-    char s[256];
-    SNPRINTF(s, 256,
+	char s[256] = {0};
+    SNPRINTF(s, MAX_BUF_SIZE(255),
              "Index out of range for [%s]."
              "Requested index: [%" PRINT_u "] "
              "Available length: [%" PRINT_st "] ",
@@ -1516,8 +1516,8 @@ int mov_into_indexed(struct nap_vm* vm)
                         /* do we fit in? */
                         if(real_index + nap_regs(vm, register_index)->l > var->instantiation->len)
                         {
-                            char s[256];
-                            SNPRINTF(s, 256,
+							char s[256] = {0};
+                            SNPRINTF(s, MAX_BUF_SIZE(255),
                                      "Index overflow error for [%s]."
                                      "Requested index: [%" PRINT_st "] "
                                      "Available length: [%" PRINT_st "] "

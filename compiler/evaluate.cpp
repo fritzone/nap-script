@@ -1119,6 +1119,11 @@ static void resolve_break_keyword(nap_compiler* _compiler, call_context* cc, boo
 {
     /* find the first while or for call context. Also consider switch statements*/
     call_context* qcc = cc;
+	if(cc == 0)
+	{
+		return;
+	}
+
     /* hold the number of stack rollbacks we need to put in here*/
     while(qcc && qcc->type != call_context::CC_WHILE && qcc->type != call_context::CC_FOR)
     {
@@ -1142,6 +1147,11 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
              int level, int& reqd_type, int forced_mov, bool& psuccess)
 {
     populate_maximal_type(node, reqd_type);
+
+	if(node == 0)
+	{
+		return;
+	}
 
     if(node && node->right && node->right->op_type == FUNCTION_STRING_LEN) // this length operation can go only in an integer register
     {

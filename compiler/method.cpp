@@ -184,7 +184,7 @@ parameter* method::add_parameter(std::string pname,
                                                      func_par->initial_value,
                                                      this, tmp, main_cc,
                                                      &res, pexpwloc, psuccess);
-        delete tmp;
+        delete[] tmp;
         SUCCES_OR_RETURN 0;
         pname = pname.substr(0, indexOfEq);
         strim(pname);
@@ -226,7 +226,6 @@ void method::feed_parameter_list(const char* par_list, expression_with_location*
         if(!q->empty())
         {
             std::string par_type, par_name;
-            int modifiable = 0;
             while(i < q->length()
                   && (
                       is_identifier_char((*q)[i])
@@ -242,7 +241,7 @@ void method::feed_parameter_list(const char* par_list, expression_with_location*
             {
                 i++;
             }
-			int ql = q->length();
+			size_t ql = q->length();
             if(i >= ql && def_loc != DEF_EXTERN)
             {
                 mcompiler->throw_error(E0009_PARAMISM, par_list);

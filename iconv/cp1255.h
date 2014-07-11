@@ -364,7 +364,14 @@ cp1255_wctomb (conv_t conv, unsigned char *r, ucs4_t wc, int n)
         if (n < 2)
           return RET_TOOSMALL;
         r[0] = c;
-        r[1] = cp1255_comb_table[cp1255_decomp_table[i].comb1];
+		if(cp1255_decomp_table[i].comb1 >= 0 && cp1255_decomp_table[i].comb1 <= 7)
+		{
+			r[1] = cp1255_comb_table[cp1255_decomp_table[i].comb1];
+		}
+		else
+		{
+			r[1] = cp1255_comb_table[0]; /* FLD FIX. Might not be correct*/
+		}
         return 2;
       } else {
         if (n < 3)

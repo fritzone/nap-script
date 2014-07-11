@@ -267,7 +267,6 @@ void code_stream::output_bytecode(const char* s)
 #else
 			long double v = (long double) atof(expr.c_str()); /* Till the day MSVS will have strtold */
 #endif
-
             f.write_stuff_to_file_64(pack754_64(v));
         }
     }
