@@ -26,7 +26,7 @@ int nap_peek(struct nap_vm *vm)
             return NAP_FAILURE;
         }
     }
-    else
+    else /* nothing else can be peeked from the stack */
     {
         NAP_NOT_IMPLEMENTED
     }
@@ -63,6 +63,22 @@ int nap_peek(struct nap_vm *vm)
             ve->instantiation->value = temp;
         }
         else
+        if(peek_type == OPCODE_BYTE) /* we are dealing with a BYTE type peek */
+        {   /* peek byte: assumes that on the stack there is a nap_byte_t in the value of the stack_entry at the given index*/
+            nap_byte_t* temp = NAP_MEM_ALLOC(1, nap_byte_t);
+            NAP_NN_ASSERT(vm, temp);
+            *temp = *(nap_byte_t*)vm->cec->stack[nap_sp(vm) - peek_index]->value; /* STACK VALUE FROM peek_index */
+            ve->instantiation->value = temp;
+        }
+        else
+        if(peek_type == OPCODE_REAL) /* we are dealing with a real type peek */
+        {   /* peek real: assumes that on the stack there is a nap_real_t in the value of the stack_entry at the given index*/
+            nap_real_t* temp = NAP_MEM_ALLOC(1, nap_real_t);
+            NAP_NN_ASSERT(vm, temp);
+            *temp = *(nap_real_t*)vm->cec->stack[nap_sp(vm) - peek_index]->value; /* STACK VALUE FROM peek_index */
+            ve->instantiation->value = temp;
+        }
+        else
         if(peek_type == OPCODE_STRING)
         {   /* assumes there is a string on the stack, at the given index'd stack_entry */
             char* temp = NULL;
@@ -76,12 +92,12 @@ int nap_peek(struct nap_vm *vm)
         }
         else
         {
-            NAP_NOT_IMPLEMENTED
+            NAP_NOT_IMPLEMENTED /* no more types */
         }
     }
     else
     {
-        NAP_NOT_IMPLEMENTED
+        NAP_NOT_IMPLEMENTED /* can only peek in a variable */
     }
 
     return NAP_SUCCESS;

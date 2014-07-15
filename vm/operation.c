@@ -181,6 +181,11 @@ static int do_string_operation(struct nap_vm *vm, nap_string_t *target,
     return nap_vm_set_error_description(vm, "Invalid string operation");
 }
 
+/**
+ * @brief nap_operation Executes an operation on the virtual machine
+ * @param vm
+ * @return
+ */
 int nap_operation(struct nap_vm* vm)
 {
     uint8_t operation_target = vm->content[nap_step_ip(vm)];   /* where we add (reg, var)*/
