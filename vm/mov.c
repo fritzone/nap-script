@@ -76,63 +76,6 @@ static int move_string_into_substring(struct nap_vm* vm, nap_int_t start_index, 
     return NAP_SUCCESS;
 }
 
-/* Returns a number from the given string */
-nap_int_t nap_int_string_to_number(struct nap_vm* vm, const char* to_conv,
-                                          size_t len, int* error)
-{
-    int base = 10;
-    char* endptr = NULL;
-    size_t dest_len = len * CC_MUL, real_len = 0;
-    char* t = convert_string_from_bytecode_file(vm, (char*)to_conv, len * CC_MUL,
-                                                dest_len, &real_len);
-    char *save_t = t;
-	nap_int_t v = 0;
-    if(!t)
-    {
-        *error = NAP_FAILURE; /* the VM has already its error set */
-        return NAP_NO_VALUE;
-    }
-
-    if(strlen(t) > 1)
-    {
-        if(t[0] == '0') /* octal? */
-        {
-            t ++;
-            base = 8;
-        }
-        if(strlen(t) > 1)
-        {
-            if(t[0] == 'x') /* hex */
-            {
-                t ++;
-                base = 16;
-            }
-            else
-            if(t[0] == 'b') /* binary */
-            {
-                t ++;
-                base = 2;
-            }
-        }
-        else /* this was a simple "0" */
-        {
-            t --; /* stepping back one */
-        }
-    }
-    v = strtoll(t, &endptr, base);
-    free(save_t);
-
-    if(errno == ERANGE || errno == EINVAL)
-    {
-        *error = NAP_FAILURE;
-    }
-    else
-    {
-        *error = NAP_SUCCESS;
-    }
-    return v;
-}
-
 static int mov_into_byte_register(struct nap_vm* vm)
 {
     uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
@@ -172,7 +115,7 @@ static int mov_into_byte_register(struct nap_vm* vm)
             int error = NAP_SUCCESS; /* might lose some numbers */
             nap_set_regb(vm,
                          register_index,
-                         (nap_byte_t)nap_int_string_to_number(
+                         (nap_byte_t)nap_string_to_number_int(
                              vm, (nap_string_t)var->instantiation->value,
                              var->instantiation->len, &error)
                          );
@@ -202,7 +145,7 @@ static int mov_into_byte_register(struct nap_vm* vm)
             int error = NAP_SUCCESS; /* might lose some numbers */
             nap_set_regb(vm,
                          register_index,
-                         (nap_byte_t)nap_int_string_to_number(
+                         (nap_byte_t)nap_string_to_number_int(
                              vm, vm->cec->rvs, vm->cec->rvl, &error)
                          );
             return error;
@@ -239,7 +182,7 @@ static int mov_into_byte_register(struct nap_vm* vm)
             int error = NAP_SUCCESS;
             nap_set_regb(vm,
                          register_index,
-                         (nap_byte_t)nap_int_string_to_number(vm,
+                         (nap_byte_t)nap_string_to_number_int(vm,
                                     nap_regs(vm, second_register_index)->s,
                                     nap_regs(vm, second_register_index)->l, &error)
                          );
@@ -333,7 +276,7 @@ static int mov_into_byte_register(struct nap_vm* vm)
 
                     /* and finally put the "character" in the register */
                     nap_set_regb(vm, register_index,
-                                 (nap_byte_t)nap_int_string_to_number(vm,
+                                 (nap_byte_t)nap_string_to_number_int(vm,
                                                 (char*)var->instantiation->value + real_index * CC_MUL,
                                                 1, &success)
                                  ); /* taking only one character */
@@ -352,7 +295,7 @@ static int mov_into_byte_register(struct nap_vm* vm)
                     ASSERT_INDEX_RELATIONS(var, start_index, end_index);
 
                     nap_set_regb(vm, register_index,
-                                 (nap_byte_t)nap_int_string_to_number(vm,
+                                 (nap_byte_t)nap_string_to_number_int(vm,
                                         (nap_string_t)var->instantiation->value + start_index * CC_MUL,
                                         temp_len, &success));
                     return success;
@@ -438,7 +381,7 @@ static int mov_into_int_register(struct nap_vm* vm)
             int error = NAP_SUCCESS; /* might lose some numbers */
             nap_set_regi(vm,
                          register_index,
-                         nap_int_string_to_number(
+                         nap_string_to_number_int(
                              vm, (nap_string_t)var->instantiation->value,
                              var->instantiation->len, &error)
                          );
@@ -466,7 +409,7 @@ static int mov_into_int_register(struct nap_vm* vm)
         if(return_type == OPCODE_STRING)              /* handles: mov reg int 0, rv string*/
         {
             int error = NAP_SUCCESS;
-            nap_set_regi(vm, register_index, nap_int_string_to_number(vm, vm->cec->rvs,
+            nap_set_regi(vm, register_index, nap_string_to_number_int(vm, vm->cec->rvs,
                                                                 vm->cec->rvl, &error) );
             return error;
         }
@@ -500,7 +443,7 @@ static int mov_into_int_register(struct nap_vm* vm)
             uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
             int error = NAP_SUCCESS;
             nap_set_regi(vm, register_index,
-                         nap_int_string_to_number(vm,
+                         nap_string_to_number_int(vm,
                                 nap_regs(vm, second_register_index)->s,
                                 nap_regs(vm, second_register_index)->l,
                                 &error)
@@ -594,7 +537,7 @@ static int mov_into_int_register(struct nap_vm* vm)
 
                     /* and finally put the "character" in the register */
                     nap_set_regi(vm, register_index,
-                                 nap_int_string_to_number(vm,
+                                 nap_string_to_number_int(vm,
                                                           (char*)var->instantiation->value + real_index * CC_MUL,
                                                           1, &success)
                                  ); /* taking only one character */
@@ -613,7 +556,7 @@ static int mov_into_int_register(struct nap_vm* vm)
                     ASSERT_INDEX_RELATIONS(var, start_index, end_index);
 
                     nap_set_regi(vm, register_index,
-                                 nap_int_string_to_number(vm,
+                                 nap_string_to_number_int(vm,
                                     (char*)var->instantiation->value + start_index * CC_MUL,
                                     temp_len, &success));
                     return success;
@@ -679,10 +622,10 @@ static int mov_into_real_register(struct nap_vm* vm)
         else
         if(var->instantiation->type == STACK_ENTRY_STRING)
         {
-            int error = NAP_SUCCESS; /* might lose some numbers */ /* TODO: This works only on ints */
+            int error = NAP_SUCCESS; /* might lose some numbers */
             nap_set_regr(vm,
                          register_index,
-                         (nap_real_t)nap_int_string_to_number(
+                         nap_string_to_number_real(
                              vm, (nap_string_t)var->instantiation->value,
                              var->instantiation->len, &error)
                          );
@@ -710,7 +653,7 @@ static int mov_into_real_register(struct nap_vm* vm)
         if(return_type == OPCODE_STRING)              /* handles: mov reg int 0, rv string*/
         {
             int error = NAP_SUCCESS;
-            nap_set_regr(vm, register_index, (nap_real_t)nap_int_string_to_number(vm, vm->cec->rvs, /* TODO: This should be nap_real_string_to_number*/
+            nap_set_regr(vm, register_index, nap_string_to_number_real(vm, vm->cec->rvs,
                                                                 vm->cec->rvl, &error) );
             return error;
         }
@@ -744,7 +687,7 @@ static int mov_into_real_register(struct nap_vm* vm)
             uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
             int error = NAP_SUCCESS;
             nap_set_regr(vm, register_index,
-                         (nap_real_t)nap_int_string_to_number(vm,
+                         (nap_real_t)nap_string_to_number_int(vm,
                                 nap_regs(vm, second_register_index)->s,
                                 nap_regs(vm, second_register_index)->l,
                                 &error)
@@ -837,7 +780,7 @@ static int mov_into_real_register(struct nap_vm* vm)
 
                     /* and finally put the "character" in the register */
                     nap_set_regr(vm, register_index,
-                                 (nap_real_t)nap_int_string_to_number(vm, /* TODO: This should be nap_real_string_to_number*/
+                                 nap_string_to_number_real(vm,
                                                           (char*)var->instantiation->value + real_index * CC_MUL,
                                                           1, &success)
                                  ); /* taking only one character */
@@ -856,7 +799,7 @@ static int mov_into_real_register(struct nap_vm* vm)
                     ASSERT_INDEX_RELATIONS(var, start_index, end_index)
 
                     nap_set_regr(vm, register_index,
-                                 (nap_real_t)nap_int_string_to_number(vm, /* TODO: This should be nap_real_string_to_number*/
+                                 nap_string_to_number_real(vm,
                                     (char*)var->instantiation->value + start_index * CC_MUL,
                                     temp_len, &success));
                     return success;
@@ -1079,7 +1022,7 @@ static int mov_into_index_register(struct nap_vm* vm)
             int error = NAP_SUCCESS; /* might lose some numbers */
             nap_set_regidx(vm,
                          register_index,
-                         nap_int_string_to_number(
+                         nap_string_to_number_int(
                              vm, (nap_string_t)var->instantiation->value,
                              var->instantiation->len, &error)
                          );
@@ -1107,7 +1050,7 @@ static int mov_into_index_register(struct nap_vm* vm)
         if(return_type == OPCODE_STRING)              /* handles: mov reg int 0, rv string*/
         {
             int error = NAP_SUCCESS;
-            nap_set_regidx(vm, register_index, nap_int_string_to_number(vm, vm->cec->rvs,
+            nap_set_regidx(vm, register_index, nap_string_to_number_int(vm, vm->cec->rvs,
                                                                 vm->cec->rvl, &error) );
             return error;
         }
@@ -1141,7 +1084,7 @@ static int mov_into_index_register(struct nap_vm* vm)
             uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
             int error = NAP_SUCCESS;
             nap_set_regidx(vm, register_index,
-                         nap_int_string_to_number(vm,
+                         nap_string_to_number_int(vm,
                                 nap_regs(vm, second_register_index)->s,
                                 nap_regs(vm, second_register_index)->l,
                                 &error)
@@ -1235,7 +1178,7 @@ static int mov_into_index_register(struct nap_vm* vm)
 
                     /* and finally put the "character" in the register */
                     nap_set_regidx(vm, register_index,
-                                 nap_int_string_to_number(vm,
+                                 nap_string_to_number_int(vm,
                                                           (char*)var->instantiation->value + real_index * CC_MUL,
                                                           1, &success)
                                  ); /* taking only one character */
@@ -1254,7 +1197,7 @@ static int mov_into_index_register(struct nap_vm* vm)
                     ASSERT_INDEX_RELATIONS(var, start_index, end_index);
 
                     nap_set_regidx(vm, register_index,
-                                 nap_int_string_to_number(vm,
+                                 nap_string_to_number_int(vm,
                                     (char*)var->instantiation->value + start_index * CC_MUL,
                                     temp_len, &success));
                     return success;
@@ -1433,7 +1376,7 @@ int mov_into_variable(struct nap_vm* vm)
                 nap_int_t value;
                 int error = NAP_SUCCESS; /* might lose some numbers */
 
-                value = nap_int_string_to_number(vm,
+                value = nap_string_to_number_int(vm,
                            nap_regs(vm, register_index)->s,
                            nap_regs(vm, register_index)->l, &error);
 

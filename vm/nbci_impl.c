@@ -1146,3 +1146,73 @@ int64_t deliver_flat_index(struct nap_vm* vm,
 
     return to_ret;
 }
+
+nap_real_t nap_string_to_number_real(struct nap_vm* vm,
+                                     const char* to_conv,
+                                     size_t len,
+                                     int* error)
+{
+    return 0;
+    vm = vm;
+    to_conv = to_conv;
+    len = len;
+    *error = NAP_SUCCESS;
+}
+
+/* Returns a number from the given string */
+nap_int_t nap_string_to_number_int(struct nap_vm* vm, const char* to_conv,
+                                          size_t len, int* error)
+{
+    int base = 10;
+    char* endptr = NULL;
+    size_t dest_len = len * CC_MUL, real_len = 0;
+    char* t = convert_string_from_bytecode_file(vm, (char*)to_conv, len * CC_MUL,
+                                                dest_len, &real_len);
+    char *save_t = t;
+    nap_int_t v = 0;
+    if(!t)
+    {
+        *error = NAP_FAILURE; /* the VM has already its error set */
+        return NAP_NO_VALUE;
+    }
+
+    if(strlen(t) > 1)
+    {
+        if(t[0] == '0') /* octal? */
+        {
+            t ++;
+            base = 8;
+        }
+        if(strlen(t) > 1)
+        {
+            if(t[0] == 'x') /* hex */
+            {
+                t ++;
+                base = 16;
+            }
+            else
+            if(t[0] == 'b') /* binary */
+            {
+                t ++;
+                base = 2;
+            }
+        }
+        else /* this was a simple "0" */
+        {
+            t --; /* stepping back one */
+        }
+    }
+    v = strtoll(t, &endptr, base);
+    free(save_t);
+
+    if(errno == ERANGE || errno == EINVAL)
+    {
+        *error = NAP_FAILURE;
+    }
+    else
+    {
+        *error = NAP_SUCCESS;
+    }
+    return v;
+}
+
