@@ -23,6 +23,8 @@ struct nap_string_register;
 #define BACKWARD -1
 #define FORWARD   1
 
+#define REAL_COMPARISON_DELTA 0.00000001
+
 #if defined(_MSC_VER)
 #define SNPRINTF _snprintf_s
 #define strtoll _strtoi64
@@ -421,7 +423,7 @@ int64_t deliver_flat_index(struct nap_vm* vm,
                            uint8_t used_indexes, char** error);
 
 /**
- * @brief nap_int_string_to_number returns a number from the given string
+ * @brief nap_string_to_number_int returns an int number from the given string
  *
  * @param to_conv this is the string that will be converted into a number.
  *        It is encoded with UTF-32BE
@@ -435,10 +437,30 @@ int64_t deliver_flat_index(struct nap_vm* vm,
  *        number as converted by strtoll and the *error set to NAP_SUCCESS in
  *        case of a succesfull conversion
  */
-nap_int_t nap_int_string_to_number(struct nap_vm* vm,
-                                          const char* to_conv,
-                                          size_t len,
-                                          int* error);
+nap_int_t nap_string_to_number_int(struct nap_vm* vm,
+                                   const char* to_conv,
+                                   size_t len,
+                                   int* error);
+
+/**
+ * @brief nap_string_to_number_real returns a real number from the given string
+ *
+ * @param to_conv this is the string that will be converted into a number.
+ *        It is encoded with UTF-32BE
+ * @param len the length of the string, not the length of the memory area
+ * @param error [out] will be populated with NAP_SUCCESS in case of success
+ *        or NAP_FAILURE in case of failure
+ *
+ * @return NAP_NO_VALUE in case of memory allocation error (in this case *error
+ *        is populated to NAP_FAILURE) or the number as converted by strtof and
+ *        *error populated to NAP_FAILURE in case of strtoll failed, or the
+ *        number as converted by strtoll and the *error set to NAP_SUCCESS in
+ *        case of a succesfull conversion
+ */
+nap_real_t nap_string_to_number_real(struct nap_vm* vm,
+                                     const char* to_conv,
+                                     size_t len,
+                                     int* error);
 
 
 #ifdef __cplusplus
