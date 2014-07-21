@@ -10,17 +10,17 @@
 int nap_return(struct nap_vm *vm)
 {
     uint8_t return_what = vm->content[nap_step_ip(vm)];   /* return what? */
-    if(return_what == OPCODE_REG) /* do we check a register? */
+    if(return_what == OPCODE_REG)
     {
-        uint8_t register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
-        uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+        uint8_t register_type = vm->content[nap_step_ip(vm)];
+        uint8_t register_index = vm->content[nap_step_ip(vm)];
 
-        if(register_type == OPCODE_INT) /* we are dealing with an INT register */
+        if(register_type == OPCODE_INT)
         {
             vm->cec->rvi = nap_regi(vm, register_index);
         }
         else
-        if(register_type == OPCODE_REAL) /* we are dealing with an REAL register */
+        if(register_type == OPCODE_REAL)
         {
             vm->cec->rvr = nap_regr(vm, register_index);
         }
@@ -38,7 +38,6 @@ int nap_return(struct nap_vm *vm)
             vm->cec->rvl = nap_regs(vm, register_index)->l;
             NAP_STRING_ALLOC(vm, vm->cec->rvs, vm->cec->rvl);
             NAP_STRING_COPY(vm->cec->rvs, nap_regs(vm, register_index)->s, vm->cec->rvl);
-
         }
         else
         {
