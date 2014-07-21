@@ -7,11 +7,12 @@
 #include "nap_consts.h"
 
 #include <stdlib.h>
+#include <math.h>
 
 int nap_unary(struct nap_vm* vm)
 {
     /* vm-> current_opcode has the opcode */
-    uint8_t op_what = vm->content[nap_step_ip(vm)]; /* variable, register*/
+    uint8_t op_what = vm->content[nap_step_ip(vm)]; /* allow: variable, register, indexed*/
     if(op_what == OPCODE_VAR)
     {
         nap_index_t var_index = nap_fetch_index(vm);
@@ -72,7 +73,24 @@ int nap_unary(struct nap_vm* vm)
                 NAP_NOT_IMPLEMENTED
             }
         }
-        else /* Unary operations on other data types are not allowed */
+        else
+        if(var->instantiation->type == OPCODE_REAL)
+        {
+            if(vm->cec->current_opcode == OPCODE_NEG)
+            {
+                (*(nap_real_t*)var->instantiation->value) = (*(nap_real_t*)var->instantiation->value);
+            }
+            else
+            if(vm->cec->current_opcode == OPCODE_POS)
+            {
+                (*(nap_real_t*)var->instantiation->value) = fabsl((*(nap_real_t*)var->instantiation->value));
+            }
+            else
+            {
+                NAP_NOT_IMPLEMENTED  /* No other type of unary operation */
+            }
+        }
+        else /* Unary operations on other types are not allowed */
         {
             NAP_NOT_IMPLEMENTED
         }
@@ -130,6 +148,24 @@ int nap_unary(struct nap_vm* vm)
             if(vm->cec->current_opcode == OPCODE_POS) /* TODO: does this make sense? */
             {
                 nap_set_regb(vm, register_index, (nap_byte_t)abs(nap_regb(vm, register_index)));
+            }
+            else
+            {
+                NAP_NOT_IMPLEMENTED
+            }
+        }
+        else
+        if(register_type == OPCODE_REAL) /* unary operation on a real register */
+        {
+            uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+            if(vm->cec->current_opcode == OPCODE_NEG)
+            {
+                nap_set_regr(vm, register_index, - nap_regr(vm, register_index));
+            }
+            else
+            if(vm->cec->current_opcode == OPCODE_POS) /* TODO: does this make sense? */
+            {
+                nap_set_regr(vm, register_index, fabsl(nap_regr(vm, register_index)));
             }
             else
             {
