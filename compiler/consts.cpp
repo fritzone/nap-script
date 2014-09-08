@@ -139,6 +139,12 @@ const char* STR_NULL                = "null";
 
 const char* STR_UNKNOWN             = "unknown";
 
+/* nap builtin commands */
+const char* STR_NAP_EXECUTE = "nap_execute";
+const char* STR_NAP_PRINT  = "print";
+const char* STR_NAP_EXTERN = "extern";
+
+
 m_optype NO_OPERATOR = -1;
 
 const char* keywords[] =

@@ -94,7 +94,7 @@ int nap_push(struct nap_vm *vm)
                 {
                     return NAP_FAILURE;
                 }
-                
+
                 len = vm->stringtable[str_index]->len * CC_MUL; /* UTF32 */
                 temp = NAP_MEM_ALLOC(len,  char);
                 NAP_NN_ASSERT(vm, temp) ;
@@ -107,8 +107,8 @@ int nap_push(struct nap_vm *vm)
             }
             else
             {
-				char s[64] = {0};
-                SNPRINTF(s, MAX_BUF_SIZE(63), "unknown push [0x%x] at %"PRINT_u" (%"PRINT_x")", 
+                char s[64] = {0};
+                SNPRINTF(s, MAX_BUF_SIZE(63), "unknown push [0x%x] at %"PRINT_u" (%"PRINT_x")",
                          push_what, nap_ip(vm), nap_ip(vm));
                 return nap_vm_set_error_description(vm, s);
             }
@@ -178,12 +178,12 @@ int nap_push(struct nap_vm *vm)
         int success = 0;
         nap_int_t* temp = NULL;
         nap_int_t nr = nap_read_immediate_int(vm, &success);
-        
+
         if(!success)
         {
             return NAP_FAILURE;
         }
-        
+
         temp = NAP_MEM_ALLOC(1, nap_int_t);
         NAP_NN_ASSERT(vm, temp);
         *temp = nr;
@@ -230,9 +230,9 @@ int nap_push(struct nap_vm *vm)
         {
             nap_byte_t* temp = NAP_MEM_ALLOC(1, nap_byte_t);
             NAP_NN_ASSERT(vm, temp);
-            
+
             *temp = *(nap_byte_t*)ve->instantiation->value;
-            
+
             /* setting the value of the stack entry */
             se->value = temp;
         }
@@ -242,12 +242,12 @@ int nap_push(struct nap_vm *vm)
             size_t len = ve->instantiation->len * CC_MUL; /* UTF32*/
             char* temp = NAP_MEM_ALLOC(len, char);
             NAP_NN_ASSERT(vm, temp);
-            
+
             memcpy(temp, ve->instantiation->value, len);
             se->value = temp; /* the stack_entry->value will be the string itself */
             se->len = ve->instantiation->len; /* the stack_entry->len will be the
                                                   real length of the string, not
-                                                  the length of the UTF32 thing */        
+                                                  the length of the UTF32 thing */
         }
         else
         {

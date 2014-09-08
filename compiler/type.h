@@ -39,6 +39,7 @@ static const int FUNCTION_CALL_STATIC       = 133;
 static const int MEMBER_ACCESS_OF_OBJECT    = 134;
 static const int FUNCTION_STRING_LEN        = 135;
 static const int FUNCTION_CALL_NAP_EXEC     = 136;
+static const int FUNCTION_CALL_NAP_PRINT    = 137;
 static const int STATEMENT_IF               = 140;
 static const int STATEMENT_IF_1L            = 150;
 static const int STATEMENT_CLOSE_CC         = 160;
@@ -118,7 +119,7 @@ enum op_typeids
     OPERATOR_XOR_EQUAL,
     OPERATOR_SHL_EQUAL,
     OPERATOR_SHR_EQUAL,
-    
+
     OPERATOR_DOT,
 
     /* the last operator is not used */
