@@ -4,8 +4,7 @@ set_source_files_properties(
     ${CMAKE_CURRENT_SOURCE_DIR}/*.c
     PROPERTIES COMPILE_FLAGS "-std=c90")
 
-set(include_interrupt_dirs "interrupts/intr_4")
-
+set(include_interrupt_dirs "interrupts/intr_1")
 
 if(build-compiler)
     option(enable-runtime-compilation "Build in the runtime code compilation feature (link in intr_2 & intr_3)" ON)
@@ -18,6 +17,8 @@ if(build-compiler)
 else()
     unset(enable-runtime-compilation)
 endif()
+
+list(APPEND include_interrupt_dirs "interrupts/intr_4")
 
 include_directories( ${include_interrupt_dirs} ${NAP_ROOT}/compiler )
 

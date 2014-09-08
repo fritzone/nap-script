@@ -23,6 +23,28 @@
 /**
  * Creates a new method
  */
+method* method::builtin_method(nap_compiler* compiler, int id)
+{
+    method* result = new method(compiler);
+
+    switch(id)
+    {
+    case METHOD_CALL_SPECIAL_PRINT:
+        result->method_name = STR_NAP_PRINT;
+        result->return_type = STR_VOID;
+        break;
+    }
+
+    return result;
+}
+
+method::method(nap_compiler* compiler) : method_name (""), library_name("-"), return_type(""), def_loc(DEF_INTERN),
+    ret_type(0), mcompiler(compiler), owns_cc(false)
+{
+
+}
+
+
 method::method(nap_compiler* _compiler, const std::string &name, const std::string &preturn_type, call_context* cc) :
     method_name (name), library_name("-"), return_type(preturn_type), def_loc(DEF_INTERN),
     ret_type(0), mcompiler(_compiler), owns_cc(false)
@@ -31,7 +53,7 @@ method::method(nap_compiler* _compiler, const std::string &name, const std::stri
     std::stringstream ss;
     ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << name;
 
-    if(!preturn_type.empty() && starts_with(preturn_type, "extern"))
+    if(!preturn_type.empty() && starts_with(preturn_type, STR_NAP_EXTERN))
     {
         /* if this method is a method defined somewhere else ... such as your C++ application */
         const char* after_ext = preturn_type.c_str() + 6;
@@ -249,7 +271,7 @@ void method::feed_parameter_list(const char* par_list, expression_with_location*
                 return;
             }
 
-			//modifiable = (C_AND == (*q)[i]);
+            //modifiable = (C_AND == (*q)[i]);
             //if(modifiable)
             //{
             //    i++;

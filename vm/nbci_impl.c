@@ -899,7 +899,7 @@ char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size
 }
 
 
-uint64_t nap_step_ip(struct nap_vm *vm)
+inline uint64_t nap_step_ip(struct nap_vm *vm)
 {
     return vm->cec->cc ++;
 }

@@ -144,6 +144,7 @@ const int METHOD_CALL_CONSTRUCTOR       = 1;
 const int METHOD_CALL_OF_OBJECT         = 2;
 const int METHOD_CALL_STATIC_OF_CLASS   = 3; // do not use 4,5
 const int METHOD_CALL_SPECIAL_EXECUTE   = 6;
+const int METHOD_CALL_SPECIAL_PRINT     = 7;
 
 /*
  * Error message strings
@@ -214,5 +215,10 @@ extern const char *STR_UNKNOWN;
 
 extern const char *keywords[15];
 extern char *EMPTY;
+
+/* strings for reserved commands */
+extern const char* STR_NAP_EXECUTE;
+extern const char* STR_NAP_PRINT;
+extern const char* STR_NAP_EXTERN;
 
 #endif

@@ -166,7 +166,7 @@ int interpreter::get_operator(const std::string& expr, const char** foundOperato
 
     int zlop = -1;
 
-    /* this is not even an operator, it is an expression, but let's treat 
+    /* this is not even an operator, it is an expression, but let's treat
      * it as an operator, and all the other found operators will simply
      * override it */
     if(zlev_dot != -1)
@@ -353,7 +353,9 @@ method* interpreter::is_function_call(const std::string& s,  call_context* cc, i
         return 0;
     }
 
-    if(method_name == "nap_execute")
+
+    // is this an internal command?
+    if(method_name == STR_NAP_EXECUTE)
     {
 #if RUNTIME_COMPILATION
         *special = METHOD_CALL_SPECIAL_EXECUTE;
@@ -362,6 +364,13 @@ method* interpreter::is_function_call(const std::string& s,  call_context* cc, i
 #endif
         return 0;
     }
+
+    if(method_name == STR_NAP_PRINT)
+    {
+        *special = METHOD_CALL_SPECIAL_PRINT;
+        return 0;
+    }
+
     return cc->get_method(method_name);
 }
 
@@ -885,7 +894,7 @@ std::vector<variable_definition*>* interpreter::define_variables(const std::stri
  * @param orig_expr - this is the expression in which method call was found
  * @param cc - the call cotnext we are in
  * @param result - will hold the result value. Used in subsequent calls to build_expr_tree
- * @param type_of_call - whether this is a normal function call (0) a constructor call (1) or 
+ * @param type_of_call - whether this is a normal function call (0) a constructor call (1) or
  *                       a method call from an object (2) or a static methid of a class (3)
  */
 call_frame_entry* interpreter::handle_function_call(const std::string& expr_trim, expression_tree* node,
@@ -911,14 +920,14 @@ call_frame_entry* interpreter::handle_function_call(const std::string& expr_trim
         pb_end --;
     }
 
-	if(pb_end >= 0)
-	{
-		if(params_body[pb_end] == C_PAR_CL) // here was pb_end - 1 ... why?
-		{
-			params_body = params_body.substr(0, pb_end);
-			strim(params_body);
-		}    /* this removed the closing paranthesis */
-	}
+    if(pb_end >= 0)
+    {
+        if(params_body[pb_end] == C_PAR_CL) // here was pb_end - 1 ... why?
+        {
+            params_body = params_body.substr(0, pb_end);
+            strim(params_body);
+        }    /* this removed the closing paranthesis */
+    }
 
     //printf("Checking function call:[%s]\n", params_body);
     /* Now: To build the parameter list, and create a call_frame_entry element to insert into the tree */
@@ -968,10 +977,10 @@ std::string interpreter::is_indexed(const std::string& expr_trim, int expr_len, 
 {
     const char* p = expr_trim.c_str();
     char* the_indexed_part = (char*)calloc(expr_len, 1);
-	if(the_indexed_part == NULL)
-	{
-		return "";
-	}
+    if(the_indexed_part == NULL)
+    {
+        return "";
+    }
     char* q = the_indexed_part;
     int level = 0;
     while(*p)
@@ -1633,14 +1642,13 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
         {
             if(special == METHOD_CALL_SPECIAL_EXECUTE)
             {
-                //#if RUNTIME_COMPILATION
-#if 1
+#if RUNTIME_COMPILATION
                 *result = FUNCTION_CALL_NAP_EXEC;
 
                 node->op_type = FUNCTION_CALL_NAP_EXEC;
 
                 // now parse out the string
-                std::string temp =expr_trim.substr( strlen("nap_execute") );
+                std::string temp =expr_trim.substr( strlen(STR_NAP_EXECUTE) );
                 strim(temp);
                 std::string temp2 = extract_next_enclosed_phrase(temp.c_str(), C_PAR_OP, C_PAR_CL);
                 // and now remove the parentheses
@@ -1661,6 +1669,24 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
                 cc->compiler->throw_error("Cannot compile this code since runtime compilation was disabled");
 #endif
                 return 0;
+            }
+
+            if(special == METHOD_CALL_SPECIAL_PRINT)
+            {
+                call_frame_entry* cfe = handle_function_call(expr_trim,
+                                                             node,
+                                                             method::builtin_method(cc->compiler, METHOD_CALL_SPECIAL_PRINT),
+                                                             the_method,
+                                                             orig_expr,
+                                                             cc, result,
+                                                             expwloc,
+                                                             METHOD_CALL_NORMAL,
+                                                             psuccess);
+                SUCCES_OR_RETURN 0;
+
+                *result = FUNCTION_CALL_NAP_PRINT;
+                node->op_type = FUNCTION_CALL_NAP_PRINT;
+                return cfe;
             }
         }
     }

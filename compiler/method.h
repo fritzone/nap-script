@@ -21,6 +21,13 @@ struct method : public variable_holder
 {
 
     /**
+     * @brief builtin_method will provide a builtin method for the given ID
+     * @param method
+     * @return
+     */
+    static method* builtin_method(nap_compiler *compiler, int);
+
+    /**
      * @brief method Constructor
      * @param name
      * @param return_type
@@ -103,6 +110,10 @@ struct method : public variable_holder
        this method and not inherited from above. This is the case of external
        methods that are inherited from virtual machines above us*/
     bool owns_cc;
+
+private:
+
+    method(nap_compiler* compiler);
 };
 
 /**

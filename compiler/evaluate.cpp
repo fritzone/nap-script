@@ -425,7 +425,7 @@ static void do_list_assignment(nap_compiler* _compiler,
                       << C_COMMA
                       << indxctr
                       << NEWLINE;
-        
+
         if(((expression_tree*)(*lst)->to_interpret)->op_type <= var->i_type)
         {
             code_stream(_compiler) << mov()
@@ -440,7 +440,7 @@ static void do_list_assignment(nap_compiler* _compiler,
         {
             code_stream(_compiler) << NEWLINE;
         }
-        
+
         code_stream(_compiler) << mov()
                       << SPACE
                       << ccidx() << C_PAR_OP << (std::string(cc->name) + STR_DOT + var->name) << C_COMMA << '1' << C_PAR_CL
@@ -1119,10 +1119,10 @@ static void resolve_break_keyword(nap_compiler* _compiler, call_context* cc, boo
 {
     /* find the first while or for call context. Also consider switch statements*/
     call_context* qcc = cc;
-	if(cc == 0)
-	{
-		return;
-	}
+    if(cc == 0)
+    {
+        return;
+    }
 
     /* hold the number of stack rollbacks we need to put in here*/
     while(qcc && qcc->type != call_context::CC_WHILE && qcc->type != call_context::CC_FOR)
@@ -1148,10 +1148,10 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
 {
     populate_maximal_type(node, reqd_type);
 
-	if(node == 0)
-	{
-		return;
-	}
+    if(node == 0)
+    {
+        return;
+    }
 
     if(node && node->right && node->right->op_type == FUNCTION_STRING_LEN) // this length operation can go only in an integer register
     {
@@ -1416,7 +1416,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                 }
                 break;
             }
-            
+
         case OPERATOR_DOT:
             /* do something like the constructor call but with the specific thing that is on the left side and the other specific thing on the right side */
             if(node->right->op_type == FUNCTION_CALL_OF_OBJECT)
@@ -1424,7 +1424,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                 if(node->left->op_type == BASIC_TYPE_VARIABLE)
                 {
                     variable* vd = (variable* )node->left->reference->to_interpret;
-                    
+
                     call_frame_entry* cfe = (call_frame_entry*)node->right->reference->to_interpret;
                     method* m = cfe->the_method;
                     std::vector<parameter*>::iterator ingoing_parameters = cfe->parameters.begin();
@@ -1543,47 +1543,58 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
             break;
         }
 
-        case FUNCTION_CALL:
+        case FUNCTION_CALL:                       /* Fall through */
+        case FUNCTION_CALL_NAP_PRINT:
         {
-			int pc = 0;
+            int pc = 0;
             call_frame_entry* cfe = (call_frame_entry*)node->reference->to_interpret;
-			std::string func_call_hash = generate_unique_hash();
+            std::string func_call_hash = generate_unique_hash();
             method* m = cfe->the_method;
             std::vector<parameter*>::const_iterator ingoing_parameters = cfe->parameters.begin();
-			std::vector<parameter*>::const_iterator last = cfe->parameters.end();
+            std::vector<parameter*>::const_iterator last = cfe->parameters.end();
             push_cc_start_marker(_compiler, func_call_hash.c_str());
             while(ingoing_parameters != last)
             {
                 parameter* p = *ingoing_parameters;
                 parameter* fp = m->get_parameter(pc);
-                if(!fp)
+                if(!fp && node->op_type != FUNCTION_CALL_NAP_PRINT)
                 {
                     cc->compiler->throw_error("parameter not found");
                     psuccess = false;
                     return;
                 }
+
                 expression_tree* t = p->expr;
                 if(t->op_type <= BASIC_TYPE_CLASS_VAR)
                 {
                     code_stream(_compiler) << mov()
                                            << SPACE
-                                           << reg() << get_reg_type(fp->type)
+                                           << reg() << get_reg_type(p->expr->op_type) // this was fp->type before introducing the PRINT function
                                            << C_PAR_OP << level << C_PAR_CL
                                            << C_COMMA;
                 }
-                compile(_compiler,t, the_method, cc, level, fp->type, forced_mov, psuccess);
+                compile(_compiler,t, the_method, cc, level, p->expr->op_type, forced_mov, psuccess);
                 SUCCES_OR_RETURN;
 
                 code_stream(_compiler) << NEWLINE << push()
-                                       << SPACE << reg() << get_reg_type(fp->type)
+                                       << SPACE << reg() << get_reg_type(p->expr->op_type)
                                        << C_PAR_OP << level << C_PAR_CL
                                        << NEWLINE;
 
                 ingoing_parameters ++;
                 pc ++;
             }
-            code_stream(_compiler) << call() << SPACE
+            if(node->op_type != FUNCTION_CALL_NAP_PRINT)
+            {
+                code_stream(_compiler) << call() << SPACE
                           << '@' << std::string(m->main_cc->father->name) +'.' + m->method_name << NEWLINE;
+            }
+            else
+            {
+                code_stream(_compiler) << push() << SPACE << pc << NEWLINE
+                          << "intr" << SPACE << 1 << NEWLINE;
+            }
+
             if(m->ret_type) // pop something only if the method was defined to return something
             {
                 code_stream(_compiler) << mov()
@@ -1618,11 +1629,11 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
             }
             break;
             }
-            
+
         case KEYWORD_TRUE:
             code_stream(_compiler) << "true";
             break;
-            
+
         case KEYWORD_FALSE:
             code_stream(_compiler) << "false";
             break;
