@@ -83,6 +83,8 @@ int nap_push(struct nap_vm *vm)
             /* is this push "abcde"? <- the compiler generates: push string index */
             if(se->type == OPCODE_STRING) /* pushing an immediate string on the stack! */
             {
+
+
                 nap_index_t str_index = 0; /* the index of the string */
                 size_t len = 0;            /* the length of the string */
                 char* temp = 0;            /* a temporary variable */
@@ -99,11 +101,17 @@ int nap_push(struct nap_vm *vm)
                 temp = NAP_MEM_ALLOC(len,  char);
                 NAP_NN_ASSERT(vm, temp) ;
 
-                memcpy(temp, vm->stringtable[str_index] , len);
+                memcpy(temp, vm->stringtable[str_index]->string , len);
                 se->value = temp; /* the stack_entry->value will be the string itself */
                 se->len = vm->stringtable[str_index]->len; /* the stack_entry->len will be the
                                                     real length of the string, not
                                                     the length of the UTF32 thing */
+
+                size_t dest_len = se->len, real_len = 0; // DEBUG
+                char* t = convert_string_from_bytecode_file(vm, temp, // DEBUG
+                        se->len, dest_len, &real_len);
+                printf("****************** PUSH LEN:%d --> [%s]\n", se->len, t);              // DEBUG
+
             }
             else
             {
@@ -165,6 +173,13 @@ int nap_push(struct nap_vm *vm)
             se->len = nap_regs(vm, register_index)->l; /* the stack_entry->len will be the
                                                 real length of the string, not
                                                 the length of the UTF32 thing */
+
+            size_t dest_len = vm->cec->stack[nap_sp(vm) - 0]->len, real_len = 0;
+            //printf("LEN:%d\n", vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->len);
+            char* t = convert_string_from_bytecode_file(vm, vm->cec->stack[nap_sp(vm) - 0]->value,
+                    vm->cec->stack[nap_sp(vm) - 0]->len * CC_MUL, dest_len, &real_len);
+
+            printf("--------------- PUSH REG LEN:%d --> [%s]\n", se->len, t);              // DEBUG
         }
         else
         {

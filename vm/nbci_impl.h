@@ -65,11 +65,11 @@ struct nap_string_register;
     {                                                                          \
         if(var == NULL)                                                        \
         {                                                                      \
-		char t[256] = {0};                                                       \
+            char t[256] = {0};                                                 \
             SNPRINTF(t, MAX_BUF_SIZE(255), "MEM: out of memory file:[%s] line [%d] var:[%s]",\
                      __FILE__, __LINE__, #var);                                \
             NAP_REPORT_ERROR(vm, t);                                           \
-			return NAP_FAILURE;                                                \
+            return NAP_FAILURE;                                                \
         }                                                                      \
     } while(0);
 
@@ -97,7 +97,7 @@ struct nap_string_register;
 #define ASSERT_VARIABLE_INDEX_ALLOWED(var, idx)                                \
     if((signed)idx < 0 || var->instantiation->len <= idx)                      \
     {                                                                          \
-	    char s[512] = {0};                                                     \
+        char s[512] = {0};                                                     \
         SNPRINTF(s, MAX_BUF_SIZE(511), "Invalid index for variable [%s]. "     \
                "Req:[%"PRINT_d"] Avail:[%"PRINT_d"]", var->name,               \
                SIZE_T_PRINT idx,                                               \
@@ -109,7 +109,7 @@ struct nap_string_register;
 #define ASSERT_INDEX_RELATIONS(var, start_idx, end_idx)                        \
     if(start_idx > end_idx)                                                    \
     {                                                                          \
-		char s[512] = {0};                                                     \
+        char s[512] = {0};                                                     \
         SNPRINTF(s, MAX_BUF_SIZE(511), "Invalid: start index > end index for variable [%s]. "\
                "Start:[%"PRINT_d"] End:[%"PRINT_d"]", var->name, SIZE_T_PRINT start_idx, SIZE_T_PRINT end_idx);\
         vm->error_description = s;                                             \

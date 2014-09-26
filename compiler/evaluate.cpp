@@ -1576,10 +1576,28 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                 compile(_compiler,t, the_method, cc, level, p->expr->op_type, forced_mov, psuccess);
                 SUCCES_OR_RETURN;
 
-                code_stream(_compiler) << NEWLINE << push()
+                if(node->op_type == FUNCTION_CALL_NAP_PRINT)
+                {
+                    // if this is actually a character push a %c format specifier
+                    if(p->expr->op_type == BASIC_TYPE_INT && p->expr->info[0] == '\'')
+                    {
+                        code_stream(_compiler) << NEWLINE << push()
+                                       << SPACE << "\"%c\""
+                                       << NEWLINE;
+                        pc ++;
+                    }
+                    code_stream(_compiler) << NEWLINE << push()
+                                   << SPACE << reg() << get_reg_type(p->expr->op_type)
+                                   << C_PAR_OP << level << C_PAR_CL
+                                   << NEWLINE;
+                }
+                else
+                {
+                    code_stream(_compiler) << NEWLINE << push()
                                        << SPACE << reg() << get_reg_type(p->expr->op_type)
                                        << C_PAR_OP << level << C_PAR_CL
                                        << NEWLINE;
+                }
 
                 ingoing_parameters ++;
                 pc ++;
