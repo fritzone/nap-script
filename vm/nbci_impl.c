@@ -17,6 +17,8 @@
 
 /* interrupts */
 
+#include "intr_1.h"
+
 #if RUNTIME_COMPILATION
     #include "intr_2.h"
     #include "intr_3.h"
@@ -369,6 +371,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     vm->allocated_chunks = 255;
 
     /* and setting the interrupts */
+    vm->interrupts[1] = intr_1;
 #if RUNTIME_COMPILATION
     vm->interrupts[2] = intr_2;
     vm->interrupts[3] = intr_3;
@@ -770,6 +773,15 @@ char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size
         return NULL;
     }
 
+    // DEBUG
+    int dbg;
+    printf("->DEBUG %d\n", len);
+    for(dbg = 0; dbg < len; dbg ++)
+    {
+        printf("%c ", src[dbg]);
+    }
+    printf("<-DEBUG\n");
+
     /*copy the src*/
     memcpy(src_copy, src, len);
 
@@ -869,6 +881,8 @@ char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size
         free(final_encoding);
 #endif
 
+        // DEBUG
+        printf("%s\n", s);
         return NULL;
     }
 
