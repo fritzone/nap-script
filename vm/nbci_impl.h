@@ -320,7 +320,12 @@ int nap_copy_return_values(const struct nap_vm* src, struct nap_vm* dst);
 /*
  * Returns the current IP and will step the IP of the given virtual machine.
  */
-extern inline uint64_t nap_step_ip(struct nap_vm* vm);
+
+extern 
+#if !defined(_MSC_VER)
+	inline 
+#endif
+	uint64_t nap_step_ip(struct nap_vm* vm);
 
 /*
  * Returns the current IP of the VM. Does not step the IP.
