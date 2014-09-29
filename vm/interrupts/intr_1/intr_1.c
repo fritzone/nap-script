@@ -10,7 +10,7 @@ uint16_t intr_1(struct nap_vm *vm)
 {
     /* peek the last value from stack. It contains the number of parameters that
      * were passed in. Should be an int */
-    int cur_stack_peeker = 0;
+    nap_int_t cur_stack_peeker = 0;
     nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
     NAP_NN_ASSERT(vm, temp);
     *temp = *(nap_int_t*)vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->value;

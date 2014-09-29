@@ -752,8 +752,8 @@ static int nap_compare_reg_real(struct nap_vm* vm)
         if(return_type == OPCODE_REAL)                 /* handles: cmp reg real 0, rv real*/
         {
             return nap_vm_set_lbf_to_op_result_int(vm,
-                                                   nap_regr(vm, register_index),
-                                                   vm->cec->rvr,
+                                                   (nap_int_t)nap_regr(vm, register_index),
+                                                   (nap_int_t)vm->cec->rvr,
                                                    vm->cec->current_opcode);
         }
         else

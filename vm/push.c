@@ -107,11 +107,12 @@ int nap_push(struct nap_vm *vm)
                                                     real length of the string, not
                                                     the length of the UTF32 thing */
 
+				{
                 size_t dest_len = se->len, real_len = 0; // DEBUG
                 char* t = convert_string_from_bytecode_file(vm, temp, // DEBUG
                         se->len, dest_len, &real_len);
                 printf("****************** PUSH LEN:%d --> [%s]\n", se->len, t);              // DEBUG
-
+				}
             }
             else
             {
@@ -174,12 +175,14 @@ int nap_push(struct nap_vm *vm)
                                                 real length of the string, not
                                                 the length of the UTF32 thing */
 
+			{
             size_t dest_len = vm->cec->stack[nap_sp(vm) - 0]->len, real_len = 0;
             //printf("LEN:%d\n", vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->len);
             char* t = convert_string_from_bytecode_file(vm, vm->cec->stack[nap_sp(vm) - 0]->value,
                     vm->cec->stack[nap_sp(vm) - 0]->len * CC_MUL, dest_len, &real_len);
 
             printf("--------------- PUSH REG LEN:%d --> [%s]\n", se->len, t);              // DEBUG
+			}
         }
         else
         {

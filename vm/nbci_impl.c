@@ -773,15 +773,16 @@ char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size
         return NULL;
     }
 
-    // DEBUG
-    int dbg;
+	{
+    /* DEBUG */    
+	int dbg;
     printf("->DEBUG %d\n", len);
     for(dbg = 0; dbg < len; dbg ++)
     {
         printf("%c ", src[dbg]);
     }
     printf("<-DEBUG\n");
-
+	}
     /*copy the src*/
     memcpy(src_copy, src, len);
 
@@ -912,8 +913,10 @@ char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size
     return to_return;
 }
 
-
-inline uint64_t nap_step_ip(struct nap_vm *vm)
+#if !defined(_MSC_VER)
+inline 
+#endif
+uint64_t nap_step_ip(struct nap_vm *vm)
 {
     return vm->cec->cc ++;
 }
@@ -1166,11 +1169,11 @@ nap_real_t nap_string_to_number_real(struct nap_vm* vm,
                                      size_t len,
                                      int* error)
 {
-    return 0;
     vm = vm;
     to_conv = to_conv;
     len = len;
     *error = NAP_SUCCESS;
+    return 0;
 }
 
 /* Returns a number from the given string */
