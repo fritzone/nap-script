@@ -142,7 +142,7 @@ static void resolve_op_equal(nap_compiler* _compiler,
     {
         if(node->left->op_type == BASIC_TYPE_VARIABLE || node->left->op_type == BASIC_TYPE_CLASS_VAR)
         {
-        variable* var = (variable*)node->left->reference->to_interpret;
+            variable* var = (variable*)node->left->reference->to_interpret;
             if(is_atomic_type(node->right->op_type))
             {
                 mov_start_register(_compiler, var->i_type, level);
@@ -1557,6 +1557,8 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
             {
                 parameter* p = *ingoing_parameters;
                 parameter* fp = m->get_parameter(pc);
+                int required_compilation_type = -1;
+
                 if(!fp && node->op_type != FUNCTION_CALL_NAP_PRINT)
                 {
                     cc->compiler->throw_error("parameter not found");
@@ -1564,16 +1566,46 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                     return;
                 }
 
-                expression_tree* t = p->expr;
-                if(t->op_type <= BASIC_TYPE_CLASS_VAR)
+                if(fp)
                 {
-                    code_stream(_compiler) << mov()
-                                           << SPACE
-                                           << reg() << get_reg_type(p->expr->op_type) // this was fp->type before introducing the PRINT function
-                                           << C_PAR_OP << level << C_PAR_CL
-                                           << C_COMMA;
+                    required_compilation_type = fp->type;
                 }
-                compile(_compiler,t, the_method, cc, level, p->expr->op_type, forced_mov, psuccess);
+
+                expression_tree* t = p->expr;
+                if(t->op_type <= BASIC_TYPE_CLASS_VAR && fp)
+                {
+                        code_stream(_compiler) << mov()
+                           << SPACE
+                           << reg() << get_reg_type(fp->type) 
+                           << C_PAR_OP << level << C_PAR_CL
+                       << C_COMMA;
+                }
+                else
+                {
+                    if(p->expr->op_type == BASIC_TYPE_VARIABLE)
+                    {
+                        variable* v = (variable*)t->reference->to_interpret;
+                        code_stream(_compiler) << mov()
+                               << SPACE
+                               << reg() << get_reg_type(v->i_type) // this was fp->type before introducing the PRINT function
+                               << C_PAR_OP << level << C_PAR_CL
+                               << C_COMMA;
+                        required_compilation_type = v->i_type;
+                    }
+                    else
+                    {
+                        if(p->expr->op_type < BASIC_TYPE_VARIABLE && p->expr->op_type > 0)
+                        {
+                            // a plain constant
+                            code_stream(_compiler) << mov()
+                                   << SPACE
+                                   << reg() << get_reg_type(p->expr->op_type) // this was fp->type before introducing the PRINT function
+                                   << C_PAR_OP << level << C_PAR_CL
+                                   << C_COMMA;
+                        }
+                    }
+                }
+                compile(_compiler,t, the_method, cc, level, required_compilation_type, forced_mov, psuccess);
                 SUCCES_OR_RETURN;
 
                 if(node->op_type == FUNCTION_CALL_NAP_PRINT)
@@ -1587,14 +1619,14 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                         pc ++;
                     }
                     code_stream(_compiler) << NEWLINE << push()
-                                   << SPACE << reg() << get_reg_type(p->expr->op_type)
+                                   << SPACE << reg() << get_reg_type(required_compilation_type)
                                    << C_PAR_OP << level << C_PAR_CL
                                    << NEWLINE;
                 }
                 else
                 {
                     code_stream(_compiler) << NEWLINE << push()
-                                       << SPACE << reg() << get_reg_type(p->expr->op_type)
+                                       << SPACE << reg() << get_reg_type(required_compilation_type)
                                        << C_PAR_OP << level << C_PAR_CL
                                        << NEWLINE;
                 }

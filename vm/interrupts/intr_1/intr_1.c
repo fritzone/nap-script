@@ -12,6 +12,8 @@ uint16_t intr_1(struct nap_vm *vm)
      * were passed in. Should be an int */
     nap_int_t cur_stack_peeker = 0;
     nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
+    char* last_format_specifier = NULL;
+
     NAP_NN_ASSERT(vm, temp);
     *temp = *(nap_int_t*)vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->value;
 
@@ -19,39 +21,78 @@ uint16_t intr_1(struct nap_vm *vm)
     cur_stack_peeker = *temp;
     while(cur_stack_peeker > 0)
     {
-
         switch(vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->type)
         {
-            case STACK_ENTRY_INT:
-                fprintf(stdout, "%"PRINT_d"",  *(nap_int_t*)vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->value);
+            case STACK_ENTRY_INT: /* This uses the last format specifier. Bytes also come in here */
+                if(last_format_specifier == NULL)
+                {
+                    fprintf(stdout, "%"PRINT_d"",  *(nap_int_t*)vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->value);
+                }
+                else
+                {
+                    fprintf(stdout, last_format_specifier, *(nap_int_t*)vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->value);
+                    free(last_format_specifier);
+                    last_format_specifier = NULL;
+                }
                 break;
-            case STACK_ENTRY_REAL:
+            case STACK_ENTRY_REAL: /* This uses the last format specifier */
+                if(last_format_specifier == NULL)
+                {
+                    fprintf(stdout, "%Lf",  *(nap_real_t*)vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->value);
+                }
+                else
+                {
+                    fprintf(stdout, last_format_specifier, *(nap_real_t*)vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->value);
+                    free(last_format_specifier);
+                    last_format_specifier = NULL;
+                }
+                break;
                 break;
             case STACK_ENTRY_STRING:
                 {
                 /* the string is a Unicode string, convert it to system representation*/
                 size_t dest_len = vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->len, real_len = 0;
-                //printf("LEN:%d\n", vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->len);
-                char* t = convert_string_from_bytecode_file(vm, vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->value,
-                        vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->len * CC_MUL, dest_len, &real_len);
+                char* t = convert_string_from_bytecode_file(vm,
+                                                            vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->value,
+                                                            vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->len * CC_MUL, 
+                                                            dest_len, &real_len);
                 /* Now see if this is a format specifier or not */
-                if( t && t[0] =='%')
+                if( t && t[0] == '%' )
                 {
-fprintf(stdout,"%s",t);
+                    if(last_format_specifier != NULL)
+                    {
+                        fprintf(stdout, "%s", last_format_specifier);
+                        free(last_format_specifier);
+                    }
+                    last_format_specifier = strdup(t);
                 }
                 else
                 {
-                    if(t)
-                    fprintf(stdout,"%s",t);
-                }
-                if(t) free(t);
+                    if(last_format_specifier != NULL)
+                    {
+                        fprintf(stdout, "%s", last_format_specifier);
+                        free(last_format_specifier);
+                        last_format_specifier = NULL;
+                    }
 
-                else
-                puts("NULL t");
+                    if(t)
+                    {
+                        fprintf(stdout,"%s",t);
+                    }
+                    else
+                    {
+                        fprintf(stdout, "(null)");
+                    }
+                }
+
+                if(t)
+                {
+                    free(t);
+                }
                 break;
                 }
             default:
-                
+
                 return NAP_FAILURE;
         };
         cur_stack_peeker --;
