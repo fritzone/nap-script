@@ -773,16 +773,6 @@ char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size
         return NULL;
     }
 
-	{
-    /* DEBUG */    
-	int dbg;
-    printf("->DEBUG %d\n", len);
-    for(dbg = 0; dbg < len; dbg ++)
-    {
-        printf("%c ", src[dbg]);
-    }
-    printf("<-DEBUG\n");
-	}
     /*copy the src*/
     memcpy(src_copy, src, len);
 
