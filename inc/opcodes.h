@@ -6,6 +6,7 @@ static const unsigned char OPCODE_REAL          = (unsigned char)0x02;
 static const unsigned char OPCODE_STRING        = (unsigned char)0x03;
 static const unsigned char OPCODE_BYTE          = (unsigned char)0x04; /**/
 static const unsigned char OPCODE_IDX           = (unsigned char)0x05;
+static const unsigned char OPCODE_GENERIC       = (unsigned char)0x06; /**/
 static const unsigned char OPCODE_IMMEDIATE_INT = (unsigned char)0x11; /**/
 static const unsigned char OPCODE_IMMEDIATE_REAL= (unsigned char)0x12; /**/
 static const unsigned char OPCODE_SHORT         = (unsigned char)0x16; /**/

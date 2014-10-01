@@ -481,10 +481,27 @@ int interpreter::looks_like_function_def(const std::string& expr, int expr_len, 
 
     while(i && is_whitespace(expr[i])) i --;    /* skip the whitespaces between name and type */
 
-    if(!is_identifier_char(expr[i]) && expr[i] != C_PAR_CL) return 0;    /* cannot be anything else but an identifier  */
-
-    if(is_identifier_char(expr[i]))
+    if(!is_identifier_char(expr[i]) && expr[i] != C_PAR_CL && expr[i] != ']')
     {
+        return 0;    /* cannot be anything else but an identifier, closing parantheses or ] in case the function returns an array  */
+    }
+
+    if(is_identifier_char(expr[i]) || expr[i] == ']' )
+    {
+        std::string array_part = "";
+        if(expr[i] == ']')
+        {
+            // parse out the array part
+            i--; // Do not add the ]
+            while(i > -1 && is_whitespace(expr[i])) i--; /* skip the whitespace */
+            while(i>-1 && expr[i] != '[')
+            {
+                array_part += expr[i];
+                i--;
+            }
+            i--; // do not mess the parts after this with the array stuff
+            std::reverse(array_part.begin(), array_part.end());
+        }
         std::string ret_type = "";
         /* fetching the return type of the function */
         while(i>-1 && is_identifier_char(expr[i]))
@@ -663,6 +680,7 @@ method* interpreter::define_method(const std::string& expr, int expr_len,
     created_method->feed_parameter_list(parameters.c_str(), expwloc, psuccess);
     SUCCES_OR_RETURN 0;
 
+    // TODO: And now determine if it is an array return type or not
     created_method->ret_type = (uint8_t)get_typeid(created_method->return_type);
     cc->add_method(created_method);
 
