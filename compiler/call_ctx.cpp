@@ -79,7 +79,7 @@ variable* call_context::add_variable(const std::string& name, const std::string&
     if(has_variable(name) != variables.end())
     {
         psuccess = false;
-        compiler->throw_error(E0034_SYMBOLDEFD, NULL);
+        compiler->throw_error(E0034_SYMBOLDEFD, name);
         return 0;
     }
 

@@ -78,6 +78,12 @@ private:
                                method* the_method, char delim,
                                int current_level, expression_with_location* expwloc, bool &psuccess);
 
+    void deal_with_codeblock_loading(call_context* cc, expression_tree* new_node,
+                               method* the_method, char delim,
+                               int current_level, expression_with_location* expwloc, bool &psuccess);
+
+
+
     void deal_with_ifs_loading(call_context* cc, expression_tree* new_node,
                                method* the_method, char delim, int current_level,
                                expression_with_location* expwloc, bool &psuccess);

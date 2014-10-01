@@ -112,7 +112,7 @@ uint16_t intr_4(struct nap_vm* vm)
     nec(function_to_call, pd, 0);
 
     int t = dlclose(lib_handle);
-    fprintf(stderr, "DC:%d\n", t);
+    (void)t;
 #else
 	{
 		FARPROC function_to_call = NULL;

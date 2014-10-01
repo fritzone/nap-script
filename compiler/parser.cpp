@@ -386,6 +386,10 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
     phrase = content.substr(position, size);
 
     position = cur_save + skipper; /* to skip the delimiter */
+    if(size == 1 && phrase == "{")
+    {
+        position --; // go back one if this just opened a block
+    }
 
     /* now patch the phrase, so that \n or \r or \t will be replaced with a space */
     int lineIncd = 0;
@@ -636,6 +640,20 @@ void parsed_file::deal_with_for_loading(call_context* cc,
     }
     resw_for* rsfor = (resw_for*)new_node->reference->to_interpret;
     rsfor->operations = for_cc;
+}
+
+void parsed_file::deal_with_codeblock_loading(call_context *cc, expression_tree *new_node,
+                                              method *the_method, char /*delim*/, int current_level, expression_with_location */*expwloc*/,
+                                              bool &psuccess)
+{
+    std::stringstream ss;
+    ss << cc->name << STR_CALL_CONTEXT_SEPARATOR << generate_unique_hash();
+    call_context* new_cc = new call_context(cc->compiler, call_context::CC_UNNAMED, ss.str(), the_method, cc);
+
+    load_next_block(the_method, new_cc, current_level + 1, current_level, psuccess);    /* loading the block*/
+    new_node->reference =  new_envelope(new_cc, STATEMENT_NEW_CC, mcompiler);
+    new_node->op_type = STATEMENT_NEW_CC;
+    SUCCES_OR_RETURN;
 }
 
 /**
@@ -923,13 +941,22 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
             SUCCES_OR_RETURN;
             break;
         }
+
+        case STATEMENT_NEW_CC:
+            cc->expressions.push_back(cnode);
+            deal_with_codeblock_loading(cc, cnode, 0, *delim, level, expwloc, psuccess);
+            break;
+
         case FUNCTION_CALL:
         case FUNCTION_CALL_CONSTRUCTOR:
         case FUNCTION_CALL_OF_OBJECT:
         case FUNCTION_CALL_STATIC:
+
         default:
             cc->expressions.push_back(cnode);
             break;
+
+
         }
     }
 }

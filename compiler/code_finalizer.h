@@ -1,25 +1,31 @@
 #ifndef CODE_FINALIZER_H
 #define CODE_FINALIZER_H
 
-#include "file_abstraction.h"
+#include <vector>
+#include <string>
+#include <stdint.h>
 
 class nap_compiler;
+class file_abstraction;
 
 class code_finalizer
 {
 public:
-    code_finalizer(nap_compiler* _compiler) : mcompiler(_compiler), f(mcompiler)
-    {}
 
-    void finalize();
+    static code_finalizer* instance();
+    static void destroy();
+    void finalize(nap_compiler* _compiler);
+    void add_assembly_command(const std::string& cmd);
 
 private:
+    code_finalizer() {}
 
     void finalize_metatable();
     void finalize_strtable();
     void finalize_jumptable();
     void finalize_funtable();
     void finalize_locations();
+    bool is_asm_command_word(const std::string& expr);
 
     nap_compiler* mcompiler;
 
@@ -27,9 +33,12 @@ private:
     uint32_t strtable_location ;
     uint32_t jumptable_location ;
     uint32_t funtable_location ;
-    file_abstraction f;
+    file_abstraction* f;
 
     uint32_t jumptable_count;
+
+    std::vector<std::string> assembly_commands;
+    static code_finalizer* minstance;
 };
 
 

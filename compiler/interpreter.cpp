@@ -424,6 +424,7 @@ int interpreter::looks_like_function_def(const std::string& expr, int expr_len, 
     {   /* we need to analyze the parameters, if they look like definition, then it's fine, give back 1 */
         std::vector<std::string> pars = string_list_create_bsep(tmp, ',', mcompiler, psuccess);
         SUCCES_OR_RETURN -1;
+        std::vector<bool> all_parameters_checked;
 
         std::vector<std::string>::iterator q = pars.begin();
         while(q != pars.end())
@@ -441,10 +442,11 @@ int interpreter::looks_like_function_def(const std::string& expr, int expr_len, 
                 if(strstr(expr.c_str(), STR_IF) == expr.c_str()) return 0;
                 if(strstr(expr.c_str(), STR_WHILE) == expr.c_str()) return 0;
                 if(strstr(expr.c_str(), STR_FOR) == expr.c_str()) return 0;
-                return 1;    /* function with no return type */
+                all_parameters_checked.push_back(true);
             }
             else
             {
+
                 /* TODO: check if this is a constructor definition */
                 if(strstr(expr.c_str(), cc->name.c_str()) == expr.c_str())
                 {
@@ -457,16 +459,22 @@ int interpreter::looks_like_function_def(const std::string& expr, int expr_len, 
                         while(*pfinder && *pfinder != ')') pfinder ++;
                         if(*pfinder)
                         {
-                            return 1;
+                            all_parameters_checked.push_back(true);
                         }
                     }
                     else
                     {
-                        return 0;
+                        all_parameters_checked.push_back(false);
                     }
                 }
-                return 0;    /* function call*/
+                all_parameters_checked.push_back(false); /* this is a function call */
             }
+            q ++;
+        }
+
+        for(size_t g=0; g<all_parameters_checked.size(); g++)
+        {
+            if(!all_parameters_checked[g]) return 0;
         }
 
     }
@@ -1275,6 +1283,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
     if(expr == STR_OPEN_BLOCK)
     {
         node->op_type = STATEMENT_NEW_CC;
+        *result = STATEMENT_NEW_CC;
         return NULL;
     }
 
