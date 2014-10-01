@@ -1666,7 +1666,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                           << "intr" << SPACE << 1 << NEWLINE;
             }
 
-            if(m->ret_type) // pop something only if the method was defined to return something
+            if(m->ret_type && m->ret_type != BASIC_TYPE_VOID) // pop something only if the method was defined to return something
             {
                 code_stream(_compiler) << mov()
                               << SPACE

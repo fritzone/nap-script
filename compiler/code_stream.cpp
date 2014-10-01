@@ -91,6 +91,7 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "push") opcode = OPCODE_PUSH;
     if(expr == "ref")  opcode = OPCODE_REF;
     if(expr == "int")  opcode = OPCODE_INT;
+    if(expr == "generic")  opcode = OPCODE_GENERIC;
     if(expr == "byte")  opcode = OPCODE_BYTE;
     if(expr == "bool")  opcode = OPCODE_INT; /*bool treated as int in the bytecode*/
     if(expr == "char")  opcode = OPCODE_STRING;
