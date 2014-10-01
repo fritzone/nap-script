@@ -148,18 +148,19 @@ bool nap_compiler::compile()
 
 void nap_compiler::write_bytecode(const char* file_name)
 {
-    code_finalizer(this).finalize();
+    code_finalizer::instance()->finalize(this);
 
     FILE* fp = fopen(file_name, "wb+");
     void* t = bytecode.data();
     fwrite(t, 1, bytecode.size(), fp);
     fclose(fp);
+    code_finalizer::destroy();
 }
 
 
 void nap_compiler::deliver_bytecode(uint8_t *&location, size_t &len)
 {
-    code_finalizer(this).finalize();
+    code_finalizer::instance()->finalize(this);
     len = bytecode.size();
     location = (uint8_t*)calloc(len, sizeof(char));
 	if(location == NULL)
@@ -168,6 +169,7 @@ void nap_compiler::deliver_bytecode(uint8_t *&location, size_t &len)
 		return;
 	}
     memcpy(const_cast<uint8_t*>(location), bytecode.data(), len);
+    code_finalizer::destroy();
 }
 
 unsigned char nap_compiler::getLastOpcode() const

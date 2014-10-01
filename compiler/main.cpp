@@ -46,7 +46,10 @@ int main(int argc, char* argv[])
     }
 
     c->compile();
-    c->write_bytecode(bc_file_name);
+    if(c->get_error() == "OK")
+    {
+        c->write_bytecode(bc_file_name);
+    }
     nap_compiler::release_compiler(c);
 
     garbage_bin_bin::shutdown();

@@ -1610,7 +1610,7 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
 
                 if(node->op_type == FUNCTION_CALL_NAP_PRINT)
                 {
-                    // if this is actually a character push a %c format specifier
+                    // if this is actually a hardcoded character push a %c format specifier
                     if(p->expr->op_type == BASIC_TYPE_INT && p->expr->info[0] == '\'')
                     {
                         code_stream(_compiler) << NEWLINE << push()
@@ -1618,6 +1618,27 @@ void compile(nap_compiler* _compiler, const expression_tree* node,
                                        << NEWLINE;
                         pc ++;
                     }
+
+                    if(required_compilation_type == -1)
+                    {
+                        // see if this is a function call or not?
+                        if(t->op_type == FUNCTION_CALL)
+                        {
+                            call_frame_entry* cfe2 = (call_frame_entry*)t->reference->to_interpret;
+                            if(cfe2->the_method->ret_type)
+                            {
+                                required_compilation_type = cfe2->the_method->ret_type;
+                            }
+                        }
+                        else
+                        {
+                            _compiler->throw_error("Syntax error: ", t->expwloc->expression);
+                            psuccess = false;
+                            return;
+                        }
+                    }
+
+                    // hopefully here the required_compilation_type is not -1
                     code_stream(_compiler) << NEWLINE << push()
                                    << SPACE << reg() << get_reg_type(required_compilation_type)
                                    << C_PAR_OP << level << C_PAR_CL

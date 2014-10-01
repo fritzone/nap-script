@@ -197,7 +197,7 @@ public:
 
     void throw_error(const char* error) const;
 
-    void throw_error(const char* error, const std::string& par) const ;
+    void throw_error(const char* error, const std::string &par) const ;
 
     void throw_error(const char* error, int id, const char* par) const ;
 
@@ -232,6 +232,11 @@ public:
     void print_assemblies()
     {
         print_assembly = true;
+    }
+
+    bool get_print_assembly()
+    {
+        return print_assembly;
     }
 
     call_context *getGlobalCc() const;

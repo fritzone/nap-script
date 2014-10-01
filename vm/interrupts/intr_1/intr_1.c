@@ -13,6 +13,7 @@ uint16_t intr_1(struct nap_vm *vm)
     nap_int_t cur_stack_peeker = 0;
     nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
     char* last_format_specifier = NULL;
+    StackEntryType last_type = STACK_ENTRY_INVALID;
 
     NAP_NN_ASSERT(vm, temp);
     *temp = *(nap_int_t*)vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->value;
@@ -21,12 +22,25 @@ uint16_t intr_1(struct nap_vm *vm)
     cur_stack_peeker = *temp;
     while(cur_stack_peeker > 0)
     {
-        switch(vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->type)
+        last_type = vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->type;
+        switch(last_type)
         {
-            case STACK_ENTRY_INT: /* This uses the last format specifier. Bytes also come in here */
+            case STACK_ENTRY_INT: /* This uses the last format specifier.*/
                 if(last_format_specifier == NULL)
                 {
                     fprintf(stdout, "%"PRINT_d"",  *(nap_int_t*)vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->value);
+                }
+                else
+                {
+                    fprintf(stdout, last_format_specifier, *(nap_int_t*)vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->value);
+                    free(last_format_specifier);
+                    last_format_specifier = NULL;
+                }
+                break;
+            case STACK_ENTRY_BYTE: /* This uses the last format specifier.*/
+                if(last_format_specifier == NULL)
+                {
+                    fprintf(stdout, "%i",  *(nap_byte_t*)vm->cec->stack[nap_sp(vm) - cur_stack_peeker]->value);
                 }
                 else
                 {

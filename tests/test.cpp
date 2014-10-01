@@ -26,6 +26,21 @@ TEST(Assembly, PushPop)
   SCRIPT_SHUTDOWN
 }
 
+TEST(Definitions, CodeBlocksWithScope)
+{
+    SCRIPT_START
+    "                                    \
+            int a = 1;                   \
+            {  int c = 3;int a = 2;}     \
+            int b = 2;                   \
+    "
+    SCRIPT_END
+    ASSERT_TRUE( 1 == VAR_INT(a));
+    ASSERT_TRUE( 2 == VAR_INT(b));
+
+    SCRIPT_SHUTDOWN
+}
+
 TEST(Floats, BasicRealOperations)
 {
     SCRIPT_START

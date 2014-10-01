@@ -1,6 +1,7 @@
 #include "code_stream.h"
 #include "utils.h"
 #include "type.h"
+#include "code_finalizer.h"
 #include "opcodes.h"
 #include "compiler.h"
 #include "charconverter.h"
@@ -28,32 +29,22 @@ void code_stream::output_bytecode(const char* s)
 {
 
     std::string expr = s;
-    if(expr == " " || expr == "(" || expr == ")" || expr == ",")
+
+    if(expr == "," || expr == " " || expr == "(" || expr == ")" ||expr == NEWLINE)
     {
-        if(mcompiler->print_assembly)
-        {
-            fprintf(stderr, "%s ", s);
-        }
         return;
     }
 
-    if(expr == "\n" )
-    {
-        if(mcompiler->print_assembly)
-        {
-            fprintf(stderr, "%s", s);
-        }
-        return;
-    }
+    code_finalizer::instance()->add_assembly_command(expr);
 
     if(mcompiler->mlast_cmd_for_bytecode.empty())
     {
         if(mcompiler->print_assembly && mcompiler->exp_w_location)
         {
-            fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->exp_w_location->expression.c_str(),
-                    mcompiler->filename(mcompiler->exp_w_location->location.mfile_index).c_str(),
-                    mcompiler->exp_w_location->location.start_line_number,
-                    mcompiler->exp_w_location->location.end_line_number);
+//            fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->exp_w_location->expression.c_str(),
+//                    mcompiler->filename(mcompiler->exp_w_location->location.mfile_index).c_str(),
+//                    mcompiler->exp_w_location->location.start_line_number,
+//                    mcompiler->exp_w_location->location.end_line_number);
         }
         if(mcompiler->exp_w_location)
 		{
@@ -67,19 +58,15 @@ void code_stream::output_bytecode(const char* s)
         {
             if(mcompiler->print_assembly)
             {
-                fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->exp_w_location->expression.c_str(),
-                    mcompiler->filename(mcompiler->exp_w_location->location.mfile_index).c_str(),
-                    mcompiler->exp_w_location->location.start_line_number,
-                    mcompiler->exp_w_location->location.end_line_number);
+//                fprintf(stderr, "\n--XX %s @ (%s:%d->%d)\n", mcompiler->exp_w_location->expression.c_str(),
+//                    mcompiler->filename(mcompiler->exp_w_location->location.mfile_index).c_str(),
+//                    mcompiler->exp_w_location->location.start_line_number,
+//                    mcompiler->exp_w_location->location.end_line_number);
             }
             mcompiler->mlast_cmd_for_bytecode = mcompiler->exp_w_location->expression;
 		}
     }
 
-    if(mcompiler->print_assembly)
-    {
-        fprintf(stderr, "%s ", s);
-    }
 
     file_abstraction f(mcompiler);
     
