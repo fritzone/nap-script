@@ -68,6 +68,7 @@ static const int ERR_VM_0020 = 0x14; /* invalid jump index */
 static const int ERR_VM_0021 = 0x15; /* cannot leave when there are no more call frame */
 static const int ERR_VM_0022 = 0x16; /* invalid internal call */
 static const int ERR_VM_0023 = 0x17; /* division by zero */
+static const int ERR_VM_0024 = 0x18; /* cannot store/restore this value */
 
 /* the character conversion multiplier when converting to UTF-32BE*/
 static const int CC_MUL = 4;

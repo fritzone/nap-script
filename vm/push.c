@@ -262,6 +262,7 @@ int nap_push(struct nap_vm *vm)
     }
 
     /* TODO: reallocate if required */
+    /* TODO: see if there are any stored values above stack_pointer and move the upwards if required */
     vm->cec->stack[++ vm->cec->stack_pointer ] = se;
     return NAP_SUCCESS;
 }

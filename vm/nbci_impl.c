@@ -37,6 +37,8 @@
 #include "peek.h"
 #include "pop.h"
 #include "return.h"
+#include "store.h"
+#include "restore.h"
 #include "inc.h"
 #include "dec.h"
 #include "clidx.h"
@@ -58,7 +60,7 @@
 #include <iconv.h>
 #include <stddef.h>
 
-#define ERROR_COUNT 23
+#define ERROR_COUNT 24
 
 /* section for defining the constants */
 static char* error_table[ERROR_COUNT + 1] =
@@ -86,6 +88,7 @@ static char* error_table[ERROR_COUNT + 1] =
     "[VM-0021] Cannot leave from the bottom of the call frame pit",
     "[VM-0022] Invalid internal call",
     "[VM-0023] Division by zero",
+    "[VM-0024] Cannot store/restore a value",
 
     "LAST_ENTRY_FOR_FUNNY_COMPILERS_WHO_DONT_LIKE_COMMAS_AT_LAST_POSITON"
 };
@@ -376,7 +379,6 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     vm->interrupts[2] = intr_2;
     vm->interrupts[3] = intr_3;
 #endif
-
     vm->interrupts[4] = intr_4;
 
     /* setting the opcode handlers */
@@ -418,6 +420,8 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     vm->opcode_handlers[OPCODE_INTR] = nap_handle_interrupt; vm->opcode_error_codes[OPCODE_INTR] = ERR_VM_0017;
     vm->opcode_handlers[OPCODE_CLIDX] = nap_clidx; vm->opcode_error_codes[OPCODE_CLIDX] = 0;
     vm->opcode_handlers[OPCODE_LEAVE] = nap_leave; vm->opcode_error_codes[OPCODE_LEAVE] = ERR_VM_0021;
+    vm->opcode_handlers[OPCODE_STORE] = nap_store; vm->opcode_error_codes[OPCODE_STORE] = ERR_VM_0024;
+    vm->opcode_handlers[OPCODE_RESTORE] = nap_restore; vm->opcode_error_codes[OPCODE_STORE] = ERR_VM_0024;
 
     /* setting the mov handlers */
     vm->mov_handlers[OPCODE_REG] = mov_into_register;

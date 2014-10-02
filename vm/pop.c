@@ -11,6 +11,9 @@
 
 int nap_pop(struct nap_vm* vm)
 {
+    /* TODO: in case of pop see if there are any stored values after the current stack pointer
+     * and move them downwards accordingly */
+
     uint8_t pop_what = 0;
 
     if(nap_sp(vm) == 0) /* no more entries on the stack. Return error */
