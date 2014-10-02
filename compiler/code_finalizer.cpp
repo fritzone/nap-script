@@ -192,6 +192,8 @@ bool code_finalizer::is_asm_command_word(const std::string &expr)
     if(expr == "sub") return true;
     if(expr == "mul") return true;
     if(expr == "div") return true;
+    if(expr == "restore") return true;
+    if(expr == "store") return true;
     if(expr == "mod") return true;
     if(expr == "shl") return true;
     if(expr == "shr") return true;
@@ -269,6 +271,12 @@ void code_finalizer::finalize(nap_compiler *_compiler)
 
 void code_finalizer::add_assembly_command(const std::string &cmd)
 {
+//    if(is_asm_command_word(cmd) || cmd[0] == ':')
+//    {
+//        std::cout << std::endl;
+//    }
+//    std::cout << cmd << " " << std::flush;
+
     assembly_commands.push_back(cmd);
 }
 

@@ -39,15 +39,14 @@ method* method::builtin_method(nap_compiler* compiler, int id)
 }
 
 method::method(nap_compiler* compiler) : method_name (""), library_name("-"), return_type(""), def_loc(DEF_INTERN),
-    ret_type(0), mcompiler(compiler), owns_cc(false)
+    ret_type(0), mcompiler(compiler), ret_type_array_dim(), dynamic_ret_type_array(false), owns_cc(false)
 {
 
 }
 
-
 method::method(nap_compiler* _compiler, const std::string &name, const std::string &preturn_type, call_context* cc) :
     method_name (name), library_name("-"), return_type(preturn_type), def_loc(DEF_INTERN),
-    ret_type(0), mcompiler(_compiler), owns_cc(false)
+    ret_type(0), mcompiler(_compiler), ret_type_array_dim(), dynamic_ret_type_array(false), owns_cc(false)
 {
     call_context* method_main_cc = NULL;
     std::stringstream ss;
@@ -88,7 +87,6 @@ call_frame_entry::~call_frame_entry()
         delete parameters[i];
     }
 }
-
 
 constructor_call::constructor_call(char* name, call_context* cc) : method(cc->compiler, name, 0, cc)
 {
@@ -205,7 +203,7 @@ parameter* method::add_parameter(std::string pname,
         mcompiler->get_interpreter().build_expr_tree(tmp,
                                                      func_par->initial_value,
                                                      this, tmp, main_cc,
-                                                     &res, pexpwloc, psuccess);
+                                                     &res, pexpwloc, psuccess, 0);
         delete[] tmp;
         SUCCES_OR_RETURN 0;
         pname = pname.substr(0, indexOfEq);

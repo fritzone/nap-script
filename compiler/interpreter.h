@@ -24,7 +24,7 @@ public:
     void* build_expr_tree(const std::string &expr, expression_tree* node,
                           method* the_method, const char* orig_expr,
                           call_context* cc, int* result,
-                          expression_with_location *location, bool &psuccess);
+                          expression_with_location *location, bool &psuccess, variable *target_var);
 
 private:
 
@@ -52,7 +52,7 @@ private:
                                             call_context* cc,
                                             int* result,
                                             expression_with_location *expwloc,
-                                            int type_of_call, bool &psuccess);
+                                            int type_of_call, bool &psuccess, variable *target_var);
 
      void* deal_with_conditional_keywords(const std::string &keyword_if,
                                           const std::string &keyword_while,

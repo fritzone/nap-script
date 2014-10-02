@@ -105,6 +105,8 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "dec") opcode = OPCODE_DEC;
     if(expr == "reg") opcode = OPCODE_REG;
     if(expr == "exit") opcode = OPCODE_EXIT;
+    if(expr == "store") opcode = OPCODE_STORE;
+    if(expr == "restore") opcode = OPCODE_RESTORE;
     if(expr == "add") opcode = OPCODE_ADD;
     if(expr == "sub") opcode = OPCODE_SUB;
     if(expr == "mul") opcode = OPCODE_MUL;

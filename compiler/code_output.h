@@ -19,7 +19,7 @@ void op_reg_reg(nap_compiler *_compiler, int op_type, char reg1_ty, int reg1_lev
 void operation_start_register(nap_compiler *_compiler, const expression_tree* node, int reqd_type, int level );
 void operation_register_level_register_next_level(nap_compiler *_compiler, const expression_tree* node, int reqd_type, int level );
 void move_register_level_register_next_level( int reqd_type, int level );
-void mov_target_index_register_source_atomic(nap_compiler *_compiler, int& idxc, expression_tree *indxs, const method* the_method, call_context* cc, int level, int forced_mov , bool &psuccess);
+void mov_target_index_register_source_atomic(variable **target_var, nap_compiler *_compiler, int& idxc, expression_tree *indxs, const method* the_method, call_context* cc, int level, int forced_mov , bool &psuccess);
 void mov_target_index_register_source_int_register(nap_compiler *_compiler, int& idxc, int level );
 void move_start_register_atomic(nap_compiler* _compiler,variable* dest, int level );
 void mov_target_variable_source_register(nap_compiler *_compiler, call_context* cc, variable* dest, int level );
@@ -31,12 +31,12 @@ void move_register_level_register_next_level(nap_compiler* _compiler, int reqd_t
 void cmp_register_with_zero(nap_compiler *_compiler, int reqd_type, int level );
 void push_variable(nap_compiler *_compiler, call_context* cc, variable* var);
 void push_usertype_variable(nap_compiler *_compiler, call_context* cc, variable* var);
-void mov_target_register_source_var(nap_compiler *_compiler, expression_tree* var_node, int reqd_type, int level, const method* the_method, call_context* cc, int forced_mov, bool &psuccess);
+void mov_target_register_source_var(variable** target_var, nap_compiler *_compiler, expression_tree* var_node, int reqd_type, int level, const method* the_method, call_context* cc, int forced_mov, bool &psuccess);
 void unary_operation_variable(nap_compiler* _compiler,call_context* cc, int opr, variable* var );
 void operation_on_indexed(nap_compiler *_compiler, call_context* cc, int opr, const variable* var, int idxc );
 void operation_target_var_source_reg(nap_compiler *_compiler, call_context* cc, int opr, variable* var, int level );
 void operation_target_indexed_source_reg(nap_compiler *_compiler, call_context* cc, int opr, variable* var, int index, int level );
-void mov_target_register_source_var(nap_compiler *_compiler, call_context* cc, variable* var, int level);
+void mov_target_register_source_var(variable** target_var, nap_compiler *_compiler, call_context* cc, variable* var, int level);
 void mov_target_register_source_indexed(nap_compiler *_compiler, call_context* cc, variable* var, int level, int idxc );
 void mov_start_register(nap_compiler *_compiler, int reqd_type, int level);
 void operation_target_register_source_register(nap_compiler *_compiler, int req_type_1, int level_1, int req_type_2, int level_2 );

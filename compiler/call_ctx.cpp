@@ -163,7 +163,9 @@ expression_tree* call_context::add_new_expression(const std::string& expr, expre
     expression_tree* new_expression = expwloc->new_expression();
 
     int res;
-    compiler->get_interpreter().build_expr_tree(expr, new_expression, ccs_method, expwloc->expression.c_str(), this, &res, expwloc, psuccess);
+    compiler->get_interpreter().build_expr_tree(expr, new_expression,
+                                                ccs_method, expwloc->expression.c_str(), this,
+                                                &res, expwloc, psuccess, 0);
     if(!psuccess)
     {
         return 0;
@@ -180,7 +182,8 @@ void call_context::compile_standalone(nap_compiler* _compiler, int level, int re
     std::vector<expression_tree*>::iterator q = expressions.begin();
     while(q != expressions.end())
     {
-        ::compile(_compiler, *q, ccs_method, this, level, reqd_type, forced_mov, psuccess);
+        variable* target_var = 0;
+        ::compile(&target_var, _compiler, *q, ccs_method, this, level, reqd_type, forced_mov, psuccess);
         if(!psuccess)
         {
            return;
@@ -232,7 +235,8 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
         while(q != expressions.end())
         {
             int unknown_type = -1;
-            ::compile(_compiler, *q, NULL, this, 0, unknown_type, 0, psuccess);
+            variable* target_var = 0;
+            ::compile(&target_var, _compiler, *q, NULL, this, 0, unknown_type, 0, psuccess);
             if(!psuccess)
             {
                 return;
@@ -251,10 +255,10 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
     {
         method* m = *ccs_methods;
 
-        code_stream(_compiler) << NEWLINE << fully_qualified_label(std::string(std::string((*ccs_methods)->main_cc->father->name) +
+        code_stream(_compiler) << fully_qualified_label(std::string(std::string((*ccs_methods)->main_cc->father->name) +
                                                                       '.' +
-                                                                      (*ccs_methods)->method_name).c_str()) << NEWLINE;
-        code_stream(_compiler) << pushall() << NEWLINE;
+                                                                      (*ccs_methods)->method_name).c_str()) ;
+        code_stream(_compiler) << pushall() ;
 
         if(m->def_loc == DEF_INTERN)
         {
@@ -276,7 +280,8 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
             while(q1 != (*ccs_methods)->main_cc->expressions.end())
             {
                 int unknown_type = -1;
-                ::compile(_compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0, psuccess);
+                variable* target_var = 0;
+                ::compile(&target_var, _compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0, psuccess);
                 if(!psuccess)
                 {
                     return;
@@ -305,23 +310,23 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
             // now create the deciaml number from the string below (that being bsae 4)
             code_stream(_compiler) << mov() <<
                                       reg() << "string" << '(' << 0 << ')' <<
-                                      ',' << "\"" + type_encoding + "\"" << NEWLINE;
+                                      ',' << "\"" + type_encoding + "\"" ;
 
             code_stream(_compiler) << mov() <<
                                       reg() << "string" << '(' << 1 << ')' <<
-                                      ',' << "\"" + m->method_name + "\"" << NEWLINE;
+                                      ',' << "\"" + m->method_name + "\"" ;
 
             code_stream(_compiler) << mov() <<
                                       reg() << "string" << '(' << 2 << ')' <<
-                                      ',' << "\"" + m->library_name + "\"" << NEWLINE;
+                                      ',' << "\"" + m->library_name + "\"" ;
 
             code_stream(_compiler) << mov () << reg() << "int" << '(' << 0 << ')' <<
-                                      ',' << signature_to_number(type_encoding) << NEWLINE;
+                                      ',' << signature_to_number(type_encoding) ;
 
-            code_stream(_compiler) << "intr" << 4 << NEWLINE;
+            code_stream(_compiler) << "intr" << 4 ;
         }
-        code_stream(_compiler) << popall() << NEWLINE;
-        code_stream(_compiler) << leave() << NEWLINE;
+        code_stream(_compiler) << popall() ;
+        code_stream(_compiler) << leave() ;
 
         // nest method
         ccs_methods ++;
@@ -334,12 +339,12 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
     {
         class_declaration* cd = classes.at(i);
         std::vector<method*>::iterator ccs_methods = cd->methods.begin();
-        code_stream(_compiler) << '@' << cd->name << NEWLINE;
+        code_stream(_compiler) << '@' << cd->name ;
         while(ccs_methods != cd->methods.end())
         {
-            code_stream(_compiler) <<  fully_qualified_label( (std::string(cd->name) + STR_DOT + (*ccs_methods)->method_name).c_str() ) << NEWLINE;
+            code_stream(_compiler) <<  fully_qualified_label( (std::string(cd->name) + STR_DOT + (*ccs_methods)->method_name).c_str() ) ;
             // now pop off the variables from the stack
-            code_stream(_compiler) << "pushall" << NEWLINE;
+            code_stream(_compiler) << "pushall" ;
 
             std::vector<variable*>::const_reverse_iterator vlist = (*ccs_methods)->variables.rbegin();
             int pctr = 0;
@@ -355,7 +360,8 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
             while(q1 != (*ccs_methods)->main_cc->expressions.end())
             {
                 int unknown_type = -1;
-                ::compile(_compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0, psuccess);
+                variable* target_var = 0;
+                ::compile(&target_var, _compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0, psuccess);
                 if(!psuccess)
                 {
                     return;
@@ -366,8 +372,8 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
 
             ccs_methods ++;
             push_cc_end_marker(_compiler, class_fun_hash.c_str());
-            code_stream(_compiler) << popall() << NEWLINE;
-            code_stream(_compiler) << leave() << NEWLINE;
+            code_stream(_compiler) << popall() ;
+            code_stream(_compiler) << leave() ;
         }
     }
     }
