@@ -106,6 +106,9 @@ struct method : public variable_holder
 
     nap_compiler* mcompiler;
 
+    std::string ret_type_array_dim;
+    bool dynamic_ret_type_array;
+
     /* Tells us if this method owns his CC, ie: the cc was created specially for
        this method and not inherited from above. This is the case of external
        methods that are inherited from virtual machines above us*/
@@ -138,12 +141,17 @@ struct constructor_call : public method
  */
 struct call_frame_entry
 {
-    call_frame_entry() : the_method(0), parameters() {}
+    call_frame_entry() : the_method(0), target(0), parameters() {}
 
     ~call_frame_entry();
 
     /* this is the method that was called */
     method *the_method;
+
+    // the target variable in which the result will go. In the return stage there will be a simply move in this
+    // if it represents a real variable. Otherwise the rv registers are used for simple data types, and
+    // well, I have no idea what for complex data types. Maybe we create an entry somewhere...
+    variable* target;
 
     /* these are the parameters passed to the method */
     std::vector<parameter*> parameters;

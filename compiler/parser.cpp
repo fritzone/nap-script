@@ -873,7 +873,7 @@ void parsed_file::load_next_single_phrase(expression_with_location* expwloc, met
 
 
         void* gen_res = cc->compiler->get_interpreter().build_expr_tree(expwloc->expression,
-                                                                        cnode, cur_method, expwloc->expression.c_str(), cc, &op_res, expwloc, psuccess);
+                                                                        cnode, cur_method, expwloc->expression.c_str(), cc, &op_res, expwloc, psuccess, 0);
         SUCCES_OR_RETURN;
 
         switch(op_res)

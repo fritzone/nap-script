@@ -19,6 +19,7 @@ struct expression_tree
         father = pfather;
         left = 0;
         right = 0;
+        target_var = 0;
     }
 
     /* the left branch of the expression */
@@ -41,6 +42,9 @@ struct expression_tree
 
     /* the father of this node */
     struct expression_tree *father;
+
+    // if by any chance this expression tree is the target of a variable assignment with the return value of a function ...
+    variable* target_var;
 
     /* this is the physical location of the expression (file, line, etc)*/
     expression_with_location *expwloc;
