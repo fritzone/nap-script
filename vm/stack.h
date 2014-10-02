@@ -75,6 +75,12 @@ struct stack_entry
      * know the destructor that must be called in order to delete the object.
      */
     struct variable_entry* var_def;
+
+    /* This tells us if this stack entry was stored or not. If it was stored it
+     * will stay on the stack in case of a stack rollback (clrsn) till the moment
+     * a "restore" call will be executed, which will take over the instantiation
+     * of it and erase the actual stack entry */
+    char stored;
 };
 
 #endif

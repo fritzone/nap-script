@@ -48,6 +48,8 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/inc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/leave.c
     ${CMAKE_CURRENT_SOURCE_DIR}/dec.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/store.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/restore.c
     ${CMAKE_CURRENT_SOURCE_DIR}/clidx.c
     ${CMAKE_CURRENT_SOURCE_DIR}/operation.c
     ${CMAKE_CURRENT_SOURCE_DIR}/unary.c

@@ -271,11 +271,11 @@ void code_finalizer::finalize(nap_compiler *_compiler)
 
 void code_finalizer::add_assembly_command(const std::string &cmd)
 {
-//    if(is_asm_command_word(cmd) || cmd[0] == ':')
-//    {
-//        std::cout << std::endl;
-//    }
-//    std::cout << cmd << " " << std::flush;
+    if(is_asm_command_word(cmd) || cmd[0] == ':')
+    {
+        std::cout << std::endl;
+    }
+    std::cout << cmd << " " << std::flush;
 
     assembly_commands.push_back(cmd);
 }
