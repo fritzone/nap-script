@@ -98,11 +98,8 @@ int nap_clrs(struct nap_vm* vm)
             {
                 /* and let's see if we have stored values above this */
                 /* TODO: loop this */
-                if(vm->cec->stack[nap_sp(vm) + 1]->stored)
-                {
-                    vm->cec->stack[nap_sp(vm)] = vm->cec->stack[nap_sp(vm) + 1];
-                    vm->cec->stack[nap_sp(vm) + 1] = NULL;
-                }
+                relocate_stored_elements(vm);
+
             }
             vm->cec->stack_pointer --;
         }
@@ -126,6 +123,7 @@ int nap_clrs(struct nap_vm* vm)
         vm->cec->stack[nap_sp(vm)]->value = NULL;
         NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]);
         vm->cec->stack[nap_sp(vm)] = NULL;
+        relocate_stored_elements(vm);
         vm->cec->stack_pointer --;
     }
 

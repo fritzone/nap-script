@@ -118,7 +118,6 @@ void nap_vm_cleanup(struct nap_vm* vm)
             {
                 if(vm->metatable[i]->instantiation->value)
                 {
-                    /* fprintf(stderr, "%s=%d\n", vm->metatable[i]->name, *(int*)vm->metatable[i]->instantiation->value); */
                     NAP_MEM_FREE(vm->metatable[i]->instantiation->value);
                 }
 
@@ -748,10 +747,10 @@ const char *nap_get_type_description(StackEntryType t)
         case STACK_ENTRY_BYTE : return "byte";
         case STACK_ENTRY_REAL : return "real";
         case STACK_ENTRY_STRING : return "string";
+        case STACK_ENTRY_IDX : return "idx";
         case STACK_ENTRY_CHAR : return "char";
-        case STACK_ENTRY_MARKER : return "mark";
         case STACK_ENTRY_IMMEDIATE_INT : return "imm_int";
-        case STACK_ENTRY_MARKER_NAME : return "mark_name";
+        case STACK_ENTRY_MARKER_NAME : return "mark";
         default: return "unk";
     }
 }

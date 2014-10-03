@@ -8,7 +8,7 @@
 
 int nap_store(struct nap_vm *vm)
 {
-    uint8_t store_what = vm->content[nap_step_ip(vm)]; /* variable, register, indexed*/
+    uint8_t store_what = vm->content[nap_step_ip(vm)]; /* variable only */
     if(store_what == OPCODE_VAR)
     {
         nap_index_t var_index = nap_fetch_index(vm);

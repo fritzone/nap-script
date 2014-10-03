@@ -53,6 +53,7 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/clidx.c
     ${CMAKE_CURRENT_SOURCE_DIR}/operation.c
     ${CMAKE_CURRENT_SOURCE_DIR}/unary.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stack.c
 
     ${NAP_ROOT}/compiler/charconverter.cpp
 )
