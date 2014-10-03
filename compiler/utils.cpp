@@ -343,7 +343,7 @@ std::vector<std::string> string_list_create_bsep(const std::string& instr, char 
             }
             if(!*p)
             {
-                _compiler->throw_error(E0009_PARAMISM, instr, NULL);
+                _compiler->throw_error(E0009_PARAMISM, instr);
                 psuccess = false;
                 return std::vector<std::string>();
             }

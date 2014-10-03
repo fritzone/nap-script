@@ -20,6 +20,7 @@ struct expression_tree
         left = 0;
         right = 0;
         target_var = 0;
+        reference = 0;
     }
 
     /* the left branch of the expression */

@@ -190,7 +190,6 @@ void mov_start_register(nap_compiler* _compiler, int reqd_type, int level)
 {
     code_stream(_compiler)
             << mov()
-
             << reg() << get_reg_type(reqd_type)  << level
             ;
 }
@@ -205,7 +204,6 @@ void mov_start(nap_compiler* _compiler)
 void second_part_target_unknown_source_register(nap_compiler* _compiler, variable* dest, int level)
 {
     code_stream(_compiler)
-
             << reg() << get_reg_type(dest->i_type)  << level
             ;
 }
@@ -221,9 +219,7 @@ void op_reg_reg(nap_compiler* _compiler, int op_type, char reg1_ty, int reg1_lev
 {
     code_stream(_compiler)
             << get_opcode(op_type)
-
             << reg() << get_reg_type(reg1_ty)  << reg1_level
-
             << reg() << get_reg_type(reg2_ty)  << reg2_level
             ;
 }
@@ -232,9 +228,7 @@ void move_register_level_register_next_level(nap_compiler* _compiler,  int reqd_
 {
     code_stream(_compiler)
             << mov()
-
             << reg() << get_reg_type(reqd_type)  << level
-
             << reg() << get_reg_type(reqd_type)  << level + 1
             ;
 }
@@ -243,9 +237,7 @@ void operation_register_level_register_next_level(nap_compiler* _compiler, const
 {
     code_stream(_compiler)
             << get_opcode(node->op_type)
-
             << reg() << get_reg_type(reqd_type)  << level
-
             << reg() << get_reg_type(reqd_type)  << level + 1
             ;
 }
@@ -261,7 +253,6 @@ void unary_operation_variable(nap_compiler* _compiler, call_context* cc, int opr
 {
     code_stream(_compiler)
             << get_opcode(opr)
-
             << fully_qualified_varname(cc, var)
             ;
 }
@@ -270,24 +261,17 @@ void operation_on_indexed(nap_compiler* _compiler, call_context* cc, int opr, co
 {
     code_stream(_compiler)
             << get_opcode(opr)
-
             << ccidx()
-
                 << fully_qualified_varname(cc, var)
-
                 << idxc
-
             ;
 }
 
 void operation_target_var_source_reg(nap_compiler* _compiler, call_context* cc, int opr, variable* var, int level )
 {
     code_stream(_compiler)
-            
             << get_opcode(opr)
-
             << fully_qualified_varname(cc, var)
-
             << reg() << get_reg_type(var->i_type)  << level
             ;
 }
@@ -295,16 +279,10 @@ void operation_target_var_source_reg(nap_compiler* _compiler, call_context* cc, 
 void operation_target_indexed_source_reg(nap_compiler* _compiler,call_context* cc, int opr, variable* var, int index, int level )
 {
     code_stream(_compiler)
-            
             << get_opcode(opr)
-
             << ccidx()
-
                 << fully_qualified_varname(cc, var)
-
                 << index
-
-
             << reg() << get_reg_type(var->i_type)  << level
             ;
 }
@@ -312,22 +290,17 @@ void operation_target_indexed_source_reg(nap_compiler* _compiler,call_context* c
 void cmp_register_with_zero(nap_compiler* _compiler, int reqd_type, int level )
 {
     code_stream(_compiler)
-            
             << get_opcode(COMP_NEQ)
-
             << reg() << get_reg_type(reqd_type) << level
-
             << '0'
             ;
 }
 
-void mov_target_register_source_var(variable** target_var, nap_compiler* _compiler, call_context* cc, variable* var, int level)
+void mov_target_register_source_var(variable** /*target_var*/, nap_compiler* _compiler, call_context* cc, variable* var, int level)
 {
     code_stream(_compiler)
             << mov()
-
             << reg() << get_reg_type(var->i_type)  << level
-
             << fully_qualified_varname(cc, var) ;
 }
 
@@ -335,15 +308,10 @@ void mov_target_register_source_indexed(nap_compiler* _compiler,call_context* cc
 {
     code_stream(_compiler)
             << mov()
-
             << reg() << get_reg_type(var->i_type)  << level
-
             << ccidx()
-
                 << fully_qualified_varname(cc, var)
-
                 << idxc
-
             ;
 }
 
@@ -351,7 +319,6 @@ void operation_target_register_source_register(nap_compiler* _compiler, int req_
 {
     code_stream(_compiler)
             << mov()
-
             << reg() << get_reg_type(req_type_1)  << level_1
             << reg() << get_reg_type(req_type_2)  << level_2
             ;
@@ -361,13 +328,9 @@ void call_internal_grow_with_immediate(nap_compiler* _compiler,call_context* cc,
 {
     code_stream(_compiler)
             << call()
-
             << grow()
-
                 << fully_qualified_varname(cc, var)
-
                 << dimension
-
             ;
 }
 
@@ -375,13 +338,9 @@ void call_internal_grow_with_register(nap_compiler* _compiler, call_context* cc,
 {
     code_stream(_compiler)
             << call()
-
             << grow()
-
                 << fully_qualified_varname(cc, var)
-
                 << reg() << int_()  << level
-
             ;
 }
 
@@ -391,7 +350,6 @@ void push_cc_start_marker(nap_compiler* _compiler, const char* marker_name)
     {
         code_stream(_compiler)
                 << "marksn"
-
                 << marker_name ;
     }
     else
@@ -407,7 +365,6 @@ void push_cc_end_marker(nap_compiler* _compiler, const char* marker_name)
     {
         code_stream(_compiler)
                 << "clrsn"
-
                 << marker_name;
     }
     else
@@ -423,9 +380,7 @@ void mov_target_index_register_source_atomic(variable** target_var, nap_compiler
                                      call_context* cc, int level, int forced_mov, bool& psuccess )
 {
     code_stream(_compiler)
-            
             << mov()
-
             << reg() << idx()  << idxc
             ;
 
@@ -437,9 +392,7 @@ void mov_target_index_register_source_int_register(nap_compiler* _compiler, int&
 {
     code_stream(_compiler)
             << mov()
-
             << reg() << idx()  << idxc
-
             << reg() << get_reg_type(BASIC_TYPE_INT)  << level
             ;
 }
@@ -448,9 +401,7 @@ void mov_target_variable_source_register(nap_compiler* _compiler,call_context* c
 {
     code_stream(_compiler)
             << mov()
-
             << fully_qualified_varname(dest->cc ? dest->cc : cc, dest)
-
             << reg() << get_reg_type(dest->i_type)  << level
             ;
 }
@@ -459,14 +410,9 @@ void mov_target_indexed_variable_source_register(nap_compiler* _compiler, variab
 {
     code_stream(_compiler)
             << mov()
-
             << ccidx()
-
                 << fully_qualified_varname(0, dest)
-
                 << idxc
-
-
             << reg() << get_reg_type(dest->i_type) <<C_PAR_OP << level
             ;
 }
@@ -475,9 +421,7 @@ void push_variable(nap_compiler* _compiler,call_context* cc, variable* var)
 {
     code_stream(_compiler)
             << push()
-
             << var->c_type
-
             << fully_qualified_varname(cc, var)
             ;
 }
@@ -497,7 +441,6 @@ void peek(nap_compiler* _compiler,call_context* cc, const std::string& type, int
 {
     code_stream(_compiler) << "peek" << type
                   << idx
-
                  << fully_qualified_varname(cc, dest) ;
 }
 
@@ -521,12 +464,8 @@ void resolve_variable_add_dynamic_dimension(nap_compiler *_compiler, call_contex
 {
     code_stream(_compiler)
             << call()
-
             << grow()
-
                 << fully_qualified_varname(cc, var)
-
                 << -1
-
             ;
 }

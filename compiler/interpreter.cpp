@@ -902,6 +902,8 @@ std::vector<variable_definition*>* interpreter::define_variables(const std::stri
         var_def->the_variable = added_var;
         var_def->md_def = mdd;
 
+        added_var->vd = var_def;
+
         if(!deflist.empty())    /* whether we have a definition for this variable. if yes, we need to populate a definition_list */
         {
             expression_tree* var_def_node = expwloc->new_expression();
@@ -1751,7 +1753,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
                 if(!cd)
                 {
                     // see if this is a string or not
-                    if(v->i_type == BASIC_TYPE_STRING)
+                    if(v->i_type == BASIC_TYPE_STRING || ( v->vd && v->vd->md_def) )
                     {
                         if(expr_trim == "len") // the length of the string
                         {
@@ -1999,7 +2001,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
 
             if(node->info == expr)
             {
-                mcompiler->throw_error(E0012_SYNTAXERR, expr, "");
+                mcompiler->throw_error(E0012_SYNTAXERR, expr);
                 psuccess = false;
                 return 0;
             }

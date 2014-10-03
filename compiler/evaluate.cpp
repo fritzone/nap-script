@@ -1101,7 +1101,14 @@ void resolve_variable_definition(variable** target_var, nap_compiler* _compiler,
                                 psuccess = false;
                                 return;
                             }
-                            code_stream(_compiler) << mov() << reg() << int_() << level  + 1;
+
+                            if(q->expr_def->op_type != BASIC_TYPE_INT)
+                            {
+                                code_stream(_compiler) << mov() << reg() << int_() << level  + 1;
+                            }
+
+                            // well.... the line above was not commented out and it shuld be like that for simple values
+                            // however for complex ones array[t] needs to be there.
                             compile(target_var, _compiler,q->expr_def, the_method, cc, level + 1, reqd_type, 1, psuccess);
                             SUCCES_OR_RETURN;
 

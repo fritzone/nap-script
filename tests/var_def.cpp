@@ -59,6 +59,27 @@ TEST(VariableDefinitions, SimpleIndexedOperationByte)
     SCRIPT_SHUTDOWN;
 }
 
+TEST(VariableDefinitions, ComplicatedIndexedOperationInt)
+{
+    SCRIPT_START
+    "                               \
+    int[] fun()                     \
+    {                               \
+        int t = 12;                 \
+        int result[t];              \
+        result[0] = 9;              \
+        return result;              \
+    }                               \
+    int b[] =fun();                 \
+    int a = b[0];                   \
+    "
+    SCRIPT_END
+
+    ASSERT_EQ(9, VAR_INT(a));
+
+    SCRIPT_SHUTDOWN;
+}
+
 /* Define a simple integer type variable, assign a value to it. */
 TEST(VariableDefinitions, SimpleInt)
 {
