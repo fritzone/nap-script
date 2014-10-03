@@ -4,6 +4,8 @@
 #include "parser.h"
 #include "common_structs.h"
 
+struct variable_definition;
+
 /**
  * This structure defines a variable. The following things are characterizing a struct variable:
  * . their name
@@ -51,6 +53,9 @@ struct variable
 
     /* the call context in which this variable is to be found */
     call_context *cc;
+
+    /* How this variable was defined. Used for checking the dynamic dimensions of it */
+    variable_definition* vd;
 };
 
 #endif
