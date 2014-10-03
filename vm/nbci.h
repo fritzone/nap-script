@@ -259,10 +259,20 @@ struct nap_vm
 void nap_vm_cleanup(struct nap_vm* vm);
 
 /**
- * Dumps the stage of the VM into the given descriptor
- * @param vm
+ * Dumps the variables of the VM into the given file descriptor
+ *
+ * @param vm the virtual machine to dump
+ * @param fp the file in which to dump the textual data
  */
 void nap_vm_dump(struct nap_vm* vm, FILE *fp);
+
+/**
+ * Dumps the stack of the VM into the given descriptor
+ *
+ * @param vm the virtual machine to dump
+ * @param fp the file in which to dump the textual data
+ */
+void dump_stack(struct nap_vm* vm, FILE *fp);
 
 /**
  * Loads the given bytecode file and creates a new virtual machine

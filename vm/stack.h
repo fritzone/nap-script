@@ -18,12 +18,12 @@ typedef enum TStackEntryType
     STACK_ENTRY_CHAR          = 6,                /* same as OPCODE_CHAR */
     STACK_ENTRY_IMMEDIATE_INT = 7,
     STACK_ENTRY_MARKER_NAME   = 8,
-    STACK_ENTRY_MARKER        = 9,
 
     STACK_ENTRY_LAST
 } StackEntryType;
 
 struct variable_entry;
+struct nap_vm;
 
 /**
  * Structure representing a stack entry. The same structure is used in the
@@ -82,5 +82,13 @@ struct stack_entry
      * of it and erase the actual stack entry */
     char stored;
 };
+
+/**
+ * @brief relocate_stored_element moves the "store"d elements from the stack of
+ * the given VM one down.
+ *
+ * @param vm the VM for which the stack needs adjustment
+ */
+void relocate_stored_elements(struct nap_vm* vm);
 
 #endif

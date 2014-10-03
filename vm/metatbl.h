@@ -51,7 +51,8 @@ struct variable_entry
     /* just stores the number of dimensions for easier access */
     uint8_t dimension_count;
 
-    /* the size of the data for which we have allocated memory in the instantiation */
+    /* the size of the data for which we have allocated memory in the
+     * instantiation, ie: the size of an uint8_t, uint16_t, etc... */
     uint8_t data_size;
 };
 

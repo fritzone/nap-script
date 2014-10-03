@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 /******************************************************************************/
 /*                             Debugging section                              */
@@ -78,6 +79,86 @@ void nap_vm_dump(struct nap_vm* vm, FILE *fp)
         {
             fprintf(fp, "?:[%s=??](%" PRINT_u "/%" PRINT_st ")\n", vm->metatable[i]->name,
                    i, vm->meta_size);
+        }
+    }
+}
+
+/* dumps the stack */
+void dump_stack(struct nap_vm* vm, FILE *fp)
+{
+    int64_t tempst;
+    uint8_t dim_ctr;
+    nap_int_t value_ctr;
+    fprintf(fp, "*** STACK DUMP ***\n");
+    for(tempst = STACK_INIT; tempst > -1; tempst --)
+    {
+        if(vm->cec->stack[tempst])
+        {
+            if(vm->cec->stack_pointer == tempst)
+            {
+                fprintf(fp, ">");
+            }
+            else
+            {
+                fprintf(fp, " ");
+            }
+
+
+            fprintf(fp, "[%.5"PRINT_d"]", tempst);
+            if(vm->cec->stack[tempst]->stored)
+            {
+                fprintf(fp, "*");
+            }
+            else
+            {
+                fprintf(fp, " ");
+            }
+            fprintf(fp, "%8s", nap_get_type_description(vm->cec->stack[tempst]->type));
+            if(vm->cec->stack[tempst]->var_def)
+            {
+                fprintf(fp, "(%s", vm->cec->stack[tempst]->var_def->name);
+                if(vm->cec->stack[tempst]->var_def->dimension_count >= 1)
+                {
+                    fprintf(fp, "[");
+                    for(dim_ctr = 0; dim_ctr<vm->cec->stack[tempst]->var_def->dimension_count; dim_ctr ++)
+                    {
+                        if(dim_ctr == 0) /* will print oly the first few value */
+                        {
+                            fprintf(fp, "%"PRINT_d":{", vm->cec->stack[tempst]->var_def->dimensions[dim_ctr]);
+                            for(value_ctr = 0; value_ctr < MIN(10, vm->cec->stack[tempst]->var_def->dimensions[dim_ctr]); value_ctr ++)
+                            {
+                                fprintf(fp, "%"PRINT_d, ((nap_int_t*)vm->cec->stack[tempst]->value)[value_ctr]);
+                                if(value_ctr < vm->cec->stack[tempst]->var_def->dimensions[dim_ctr] - 1)
+                                {
+                                    fprintf(fp, ",");
+                                }
+                            }
+                            fprintf(fp, "}");
+                        }
+                        if(dim_ctr < vm->cec->stack[tempst]->var_def->dimension_count - 1)
+                        {
+                            fprintf(fp, ",");
+                        }
+                    }
+                    fprintf(fp, "]");
+                }
+                else
+                {
+                    fprintf(fp, "=%"PRINT_d, ((nap_int_t*)vm->cec->stack[tempst]->value)[0]);
+                }
+                fprintf(fp, ")");
+            }
+
+            switch(vm->cec->stack[tempst]->type)
+            {
+            case STACK_ENTRY_MARKER_NAME:
+                fprintf(fp, ":[%.10d]",*(nap_mark_t*)(vm->cec->stack[tempst]->value));
+                break;
+            default:
+                break;
+            }
+            fprintf(fp, "\n");
+
         }
     }
 }
