@@ -371,7 +371,7 @@ method* interpreter::is_function_call(const std::string& s,  call_context* cc, i
         return 0;
     }
 
-    return cc->get_method(method_name);
+    return cc->get_method(method_name, this);
 }
 
 /**
@@ -677,7 +677,7 @@ method* interpreter::define_method(const std::string& expr, int expr_len,
         return 0;
     }
     created_method = new method(mcompiler, func_name, ret_type, cc);
-    created_method->feed_parameter_list(parameters.c_str(), expwloc, psuccess);
+    created_method->feed_parameter_list(parameters.c_str(), this, expwloc, psuccess);
     SUCCES_OR_RETURN 0;
 
     // TODO: And now determine if it is an array return type or not
@@ -750,6 +750,149 @@ int interpreter::accepted_variable_name(const std::string& name)
     return is_valid_variable_name(name.c_str());
 }
 
+multi_dimension_def* interpreter::define_indexes(const std::string& name, const char* idx_def_start,
+                                                 method* the_method,
+                                                 call_context* cc,
+                                                 const char* orig_expr,
+                                                 const std::string& expr_trim,
+                                                 int* result,
+                                                 expression_with_location* expwloc, bool& psuccess)
+{
+    int can_stop = 0;
+    std::string index;
+
+    if(!strchr(name.c_str(), C_SQPAR_CL)) /* definitely an error */
+    {
+        mcompiler->throw_error(E0011_IDDEFERR, name.c_str(), NULL);
+        psuccess = false;
+        return 0;
+    }
+    /* now read the index definition */
+    idx_def_start ++;
+    int level = 0;
+    while(*idx_def_start && !can_stop)
+    {
+        if(*idx_def_start == C_SQPAR_OP) level ++;
+        if(*idx_def_start == C_SQPAR_CL && --level == -1) can_stop = 1;
+        if(!can_stop) index += *idx_def_start ++;
+    }
+    std::vector<std::string> dimensions = string_list_create_bsep(index, C_COMMA, mcompiler, psuccess);
+    SUCCES_OR_RETURN 0;
+
+    std::vector<std::string>::iterator qDimensionStrings = dimensions.begin();    /* to walk through the dimensions */
+    int countedDimensions = 0;
+    multi_dimension_def* mdd = alloc_mem(multi_dimension_def,1, cc->compiler);
+    multi_dimension_def* qm = mdd;
+    while(qDimensionStrings != dimensions.end())
+    {
+        expression_tree* dim_def_node = expwloc->new_expression();
+
+        if(qDimensionStrings->length() > 0)
+        {
+            build_expr_tree((*qDimensionStrings).c_str(), dim_def_node, the_method, orig_expr, cc, result, expwloc, psuccess, 0);
+            SUCCES_OR_RETURN 0;
+        }
+        else
+        {
+            /* check if there are multiple dimensions for this variable. If yes disallow the dynamic dimensions for now */
+            if(countedDimensions > 0)    /* awkward but correct */
+            {
+                mcompiler->throw_error(E0038_DYNDIMNALL, expr_trim);
+                psuccess = false;
+                return 0;
+            }
+            qm->dynamic = true;
+        }
+        qm->dimension = -1;
+        qm->expr_def = dim_def_node;
+        qm->next = alloc_mem(multi_dimension_def,1, cc->compiler);
+        qm = qm->next;
+        countedDimensions ++;
+        qDimensionStrings ++;
+    }
+    return mdd;
+}
+
+
+variable* interpreter::create_variable(multi_dimension_def*& mdd, const std::string& var_def_type, std::string& name, method* the_method,
+                                       call_context* cc,
+                                       const char* orig_expr,
+                                       const std::string& expr_trim,
+                                       int* result,
+                                       expression_with_location* expwloc, bool& psuccess)
+{
+    variable* added_var = 0;
+    mdd = NULL;    /* will contain the dimension definitions if any */
+    const char* idx_def_start = strchr(name.c_str(), C_SQPAR_OP);
+    const char* const pos_eq = strchr(name.c_str(), C_EQ);
+    if(pos_eq && idx_def_start > pos_eq)
+    {
+        idx_def_start = NULL; /* no index definition if the first index is after an equation sign*/
+    }
+    if(idx_def_start) /* index defined? */
+    {
+        mdd = define_indexes(name, idx_def_start, the_method, cc, orig_expr, expr_trim, result, expwloc, psuccess);
+    }
+
+    /* check whether we have direct initialization */
+    int eqp = var_declaration_followed_by_initialization(name);
+    std::string deflist = "";                /* the definition list for this variable */
+    if(eqp)
+    {
+        deflist = name.substr(eqp + 1);
+        name = name.substr(0, eqp);
+        strim(name);
+        strim(deflist);
+    }
+
+    if(idx_def_start)
+    {
+        std::string tmpname = strrchr(name.c_str(), C_SQPAR_CL) + 1;
+        /* TODO: ez meghal: int x=a[1]; re */
+        strim(tmpname);
+        if(tmpname.empty())    /* in this case the index definition was after the name: int name[12];*/
+        {
+            std::string temp;
+            size_t tc = 0;
+            while(tc < name.length() && (name[tc] != C_SQPAR_OP && name[tc] != C_SPACE))
+            {
+                temp += name[tc];
+                tc ++;
+            }
+
+            name = temp;
+        }
+        else    /* if the index definition was before the name: int[12] name*/
+        {
+            name = tmpname;
+        }
+    }
+
+    if(!accepted_variable_name(name))
+    {
+        mcompiler->throw_error(E0037_INV_IDENTF, name);
+        psuccess = false;
+        return 0;
+    }
+
+    if(cc)
+    {
+        added_var = cc->add_variable(name, var_def_type, 1, psuccess);
+        SUCCES_OR_RETURN 0;
+    }
+
+    if(!added_var)
+    {
+        mcompiler->throw_error("Internal: a variable cannot be defined", NULL);
+        psuccess = false;
+        return 0;
+    }
+
+    added_var->deflist = deflist;
+    added_var->mult_dim_def = mdd;
+    return added_var;
+}
+
 /**
  * Defines the variables that can be found below ...
  */
@@ -774,128 +917,16 @@ std::vector<variable_definition*>* interpreter::define_variables(const std::stri
 
     while(q != var_names.end())
     {
-        multi_dimension_def* mdd = NULL, *qm;    /* will contain the dimension definitions if any */
         std::string name = *q;
-        variable* added_var = NULL;    /* will be used if we'll need to implement the definition */
-        const char* idx_def_start = strchr(name.c_str(), C_SQPAR_OP);
-        const char* const pos_eq = strchr(name.c_str(), C_EQ);
-        if(pos_eq && idx_def_start > pos_eq)
-        {
-            idx_def_start = NULL; /* no index definition if the first index is after an equation sign*/
-        }
 
         variable_definition* var_def = NULL; /* the variable definition for this variable. might contain
                                                 multi-dimension index defintion and/or value initialization
                                                 or neither of these two */
-        if(idx_def_start) /* index defined? */
-        {
-            int can_stop = 0;
-            std::string index;
-
-            if(!strchr(name.c_str(), C_SQPAR_CL)) /* definitely an error */
-            {
-                mcompiler->throw_error(E0011_IDDEFERR, name.c_str(), NULL);
-                psuccess = false;
-                return 0;
-            }
-            /* now read the index definition */
-            idx_def_start ++;
-            int level = 0;
-            while(*idx_def_start && !can_stop)
-            {
-                if(*idx_def_start == C_SQPAR_OP) level ++;
-                if(*idx_def_start == C_SQPAR_CL && --level == -1) can_stop = 1;
-                if(!can_stop) index += *idx_def_start ++;
-            }
-            std::vector<std::string> dimensions = string_list_create_bsep(index, C_COMMA, mcompiler, psuccess);
-            SUCCES_OR_RETURN 0;
-
-            std::vector<std::string>::iterator qDimensionStrings = dimensions.begin();    /* to walk through the dimensions */
-            int countedDimensions = 0;
-            mdd = alloc_mem(multi_dimension_def,1, cc->compiler);
-            qm = mdd;
-            while(qDimensionStrings != dimensions.end())
-            {
-                expression_tree* dim_def_node = expwloc->new_expression();
-
-                if(qDimensionStrings->length() > 0)
-                {
-                    build_expr_tree((*qDimensionStrings).c_str(), dim_def_node, the_method, orig_expr, cc, result, expwloc, psuccess, 0);
-                    SUCCES_OR_RETURN 0;
-                }
-                else
-                {
-                    /* check if there are multiple dimensions for this variable. If yes disallow the dynamic dimensions for now */
-                    if(countedDimensions > 0)    /* awkward but correct */
-                    {
-                        mcompiler->throw_error(E0038_DYNDIMNALL, expr_trim);
-                        psuccess = false;
-                        return 0;
-                    }
-                    qm->dynamic = true;
-                }
-                qm->dimension = -1;
-                qm->expr_def = dim_def_node;
-                qm->next = alloc_mem(multi_dimension_def,1, cc->compiler);
-                qm = qm->next;
-                countedDimensions ++;
-                qDimensionStrings ++;
-            }
-        }
-
-        /* check whether we have direct initialization */
-        int eqp = var_declaration_followed_by_initialization(name);
-        std::string deflist = "";                /* the definition list for this variable */
-        if(eqp)
-        {
-            deflist = name.substr(eqp + 1);
-            name = name.substr(0, eqp);
-            strim(name);
-            strim(deflist);
-        }
-
-        if(idx_def_start)
-        {
-            std::string tmpname = strrchr(name.c_str(), C_SQPAR_CL) + 1;
-            /* TODO: ez meghal: int x=a[1]; re */
-            strim(tmpname);
-            if(tmpname.empty())    /* in this case the index definition was after the name: int name[12];*/
-            {
-                std::string temp;
-                size_t tc = 0;
-                while(tc < name.length() && (name[tc] != C_SQPAR_OP && name[tc] != C_SPACE))
-                {
-                    temp += name[tc];
-                    tc ++;
-                }
-
-                name = temp;
-            }
-            else    /* if the index definition was before the name: int[12] name*/
-            {
-                name = tmpname;
-            }
-        }
-
-        if(!accepted_variable_name(name))
-        {
-            mcompiler->throw_error(E0037_INV_IDENTF, name);
-            psuccess = false;
-            return 0;
-        }
-
-        if(cc)
-        {
-            added_var = cc->add_variable(name, var_def_type, 1, psuccess);
-            SUCCES_OR_RETURN 0;
-        }
-
-        if(!added_var)
-        {
-            mcompiler->throw_error("Internal: a variable cannot be defined", NULL);
-            psuccess = false;
-            return 0;
-        }
+        multi_dimension_def* mdd_base = NULL;
+        multi_dimension_def*& mdd = mdd_base;
+        variable* added_var = create_variable(mdd, var_def_type, name,
+                                              the_method, cc, orig_expr, expr_trim, result, expwloc, psuccess);
+        SUCCES_OR_RETURN 0;
 
         /* create the variable definition/declaration structure for both of them */
         var_def = alloc_mem(variable_definition,1, cc->compiler);
@@ -904,10 +935,10 @@ std::vector<variable_definition*>* interpreter::define_variables(const std::stri
 
         added_var->vd = var_def;
 
-        if(!deflist.empty())    /* whether we have a definition for this variable. if yes, we need to populate a definition_list */
+        if(!added_var->deflist.empty())    /* whether we have a definition for this variable. if yes, we need to populate a definition_list */
         {
             expression_tree* var_def_node = expwloc->new_expression();
-            build_expr_tree(deflist.c_str(), var_def_node, the_method, orig_expr, cc, result, expwloc, psuccess, added_var);
+            build_expr_tree(added_var->deflist.c_str(), var_def_node, the_method, orig_expr, cc, result, expwloc, psuccess, added_var);
             SUCCES_OR_RETURN 0;
 
             if(var_def_node->reference && var_def_node->reference->type == FUNCTION_CALL)
@@ -915,6 +946,8 @@ std::vector<variable_definition*>* interpreter::define_variables(const std::stri
                 // now try to tell the function call the name of the variable
                 var_def_node->target_var = added_var;
             }
+
+            // the definition will contain the initial value of the variable
             var_def->the_value = var_def_node;
         }
 
@@ -1404,7 +1437,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
             psuccess = false;
             return 0;
         }
-        method* called_constructor = cd->get_method(constructor_name);
+        method* called_constructor = cd->get_method(constructor_name, this);
         constructor_call* tmp = (constructor_call*)realloc(called_constructor, sizeof(constructor_call));
         if(tmp == NULL)
         {

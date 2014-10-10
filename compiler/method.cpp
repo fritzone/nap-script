@@ -184,6 +184,8 @@ variable* method::add_new_variable(const std::string& pname,
 parameter* method::add_parameter(std::string pname,
                                  const std::string& ptype,
                                  int pdimension,
+                                 interpreter* interp,
+                                 const char* orig_expr,
                                  expression_with_location* pexpwloc,
                                  bool& psuccess)
 {
@@ -192,6 +194,7 @@ parameter* method::add_parameter(std::string pname,
     size_t indexOfEq = pname.find(C_EQ);
     variable* nvar = NULL;
 
+    // Is there a default value for the parameter?
     if(indexOfEq != std::string::npos)
     {
         std::string afterEq = pname.substr(indexOfEq + 1);
@@ -210,7 +213,45 @@ parameter* method::add_parameter(std::string pname,
         strim(pname);
     }
 
+    // is there an index definition?
+    const char* idx_def_start = strchr(pname.c_str(), C_SQPAR_OP);
+    if(indexOfEq!=std::string::npos && idx_def_start > pname.c_str() + indexOfEq)
+    {
+        idx_def_start = NULL; /* no index definition if the first index is after an equation sign*/
+    }
+
+    multi_dimension_def* mdd = NULL;
+    if(idx_def_start) /* index defined? */
+    {
+        int result = 0;
+        mdd = interp->define_indexes(pname, idx_def_start, this, main_cc, orig_expr, orig_expr, &result, pexpwloc, psuccess);
+    }
+
+    if(idx_def_start)
+    {
+        std::string tmpname = strrchr(pname.c_str(), C_SQPAR_CL) + 1;
+        strim(tmpname);
+        if(tmpname.empty())    /* in this case the index definition was after the name: int name[12];*/
+        {
+            std::string temp;
+            size_t tc = 0;
+            while(tc < pname.length() && (pname[tc] != C_SQPAR_OP && pname[tc] != C_SPACE))
+            {
+                temp += pname[tc];
+                tc ++;
+            }
+
+            pname = temp;
+        }
+        else    /* if the index definition was before the name: int[12] name*/
+        {
+            pname = tmpname;
+        }
+    }
+
     nvar = add_new_variable(pname, ptype, pdimension, psuccess);
+    nvar->mult_dim_def = mdd;
+
     SUCCES_OR_RETURN 0;
     nvar->func_par = func_par;
 
@@ -234,7 +275,7 @@ parameter* method::get_parameter(size_t i)
 /**
  * Populates the parameters of this method with the definitions from the string
  */
-void method::feed_parameter_list(const char* par_list, expression_with_location* expwloc, bool& psuccess)
+void method::feed_parameter_list(const char* par_list, interpreter* interp, expression_with_location* expwloc, bool& psuccess)
 {
     std::vector<std::string> entries = string_list_create_bsep(par_list, C_COMMA, mcompiler, psuccess);
     SUCCES_OR_RETURN;
@@ -284,7 +325,7 @@ void method::feed_parameter_list(const char* par_list, expression_with_location*
             strim(par_type);
             if(def_loc == DEF_INTERN)
             {
-                parameter* new_par_decl = add_parameter(par_name, par_type, 1, expwloc, psuccess);
+                parameter* new_par_decl = add_parameter(par_name, par_type, 1, interp, expwloc->expression.c_str(), expwloc, psuccess);
                 SUCCES_OR_RETURN;
 
                 /* here we should identify the dimension of the parameter */
@@ -296,7 +337,7 @@ void method::feed_parameter_list(const char* par_list, expression_with_location*
             }
             else
             {
-                add_parameter("", par_type, 1, expwloc, psuccess);
+                add_parameter("", par_type, 1, interp,  expwloc->expression.c_str(), expwloc, psuccess);
                 SUCCES_OR_RETURN;
             }
         }

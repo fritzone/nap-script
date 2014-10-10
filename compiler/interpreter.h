@@ -25,8 +25,11 @@ public:
                           method* the_method, const char* orig_expr,
                           call_context* cc, int* result,
                           expression_with_location *location, bool &psuccess, variable *target_var);
+    multi_dimension_def* define_indexes(const std::string& name, const char* idx_def_start, method *the_method, call_context* cc, const char *orig_expr, const std::string& expr_trim, int *result, expression_with_location *expwloc, bool& psuccess);
 
 private:
+
+    variable* create_variable(multi_dimension_def*& mdd, const std::string& var_def_type, std::string &name, method *the_method, call_context *cc, const char *orig_expr, const std::string &expr_trim, int *result, expression_with_location *expwloc, bool &psuccess);
 
     std::vector<envelope*>* listv_prepare_list(const std::string &src,
                                                method* the_method,

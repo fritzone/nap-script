@@ -488,6 +488,15 @@ int get_typeid(const std::string &type)
     if(type == STR_STRING) return BASIC_TYPE_STRING;
     if(type == STR_VOID) return BASIC_TYPE_VOID;
 
+    // TODO: this ain't the safest for now ...
+    if(begins_with(type, std::string(STR_INT))) return BASIC_TYPE_INT;
+    if(begins_with(type, std::string(STR_BYTE))) return BASIC_TYPE_BYTE;
+    if(begins_with(type, std::string(STR_REAL))) return BASIC_TYPE_REAL;
+    if(begins_with(type, std::string(STR_CHAR))) return BASIC_TYPE_CHAR;
+    if(begins_with(type, std::string(STR_BOOL))) return BASIC_TYPE_BOOL;
+    if(begins_with(type, std::string(STR_STRING))) return BASIC_TYPE_STRING;
+    if(begins_with(type, std::string(STR_VOID))) return BASIC_TYPE_VOID;
+
     return BASIC_TYPE_DONTCARE;
 }
 

@@ -54,8 +54,8 @@ struct stack_entry
      * 3. for pushing a full indexed value (array)
      *     - a structure with a member being a contiguos memory area
      *       allocated for an indexed variable and another member being the
-     *       index itself. In this case the type member of this tells us the
-     *       type of the data being pushed. (TODO)
+     *       index definition itself. In this case the type member of this tells
+     *       us the type of the data being pushed. (TODO)
      *
      * 2. for variable declarations (they are pushed on the stack):
      *     - there is always 0 pushed onto the stack as the initial value of the
@@ -71,7 +71,7 @@ struct stack_entry
     size_t len;
 
     /* This member has the variable entry in this case this object was created
-     * dute to a variable creation. It is useful only for class like objects to
+     * due to a variable creation. It is useful only for class like objects to
      * know the destructor that must be called in order to delete the object.
      */
     struct variable_entry* var_def;

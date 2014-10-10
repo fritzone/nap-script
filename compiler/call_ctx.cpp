@@ -97,7 +97,7 @@ variable* call_context::add_variable(const std::string& name, const std::string&
 /**
  * Retrieves the method object for the given name from the cc
  */
-method* call_context::get_method(const string &pname)
+method* call_context::get_method(const string &pname, interpreter* interp)
 {
     // first check, see if this is a method from the current VM
     std::vector<method*>::const_iterator q = methods.begin();
@@ -111,7 +111,7 @@ method* call_context::get_method(const string &pname)
     }
     if(father)
     {
-        return father->get_method(pname);
+        return father->get_method(pname, interp);
     }
 
     // then try to get it from the vm chain of the compiler ... if any
@@ -129,7 +129,9 @@ method* call_context::get_method(const string &pname)
             for(int i=0; i<fe->parameter_count; i++)
             {
                 bool success = true;
-                m->add_parameter(std::string("par_") +  get_reg_type(fe->parameter_types[i]), get_reg_type(fe->parameter_types[i]), 1, 0, success);
+                m->add_parameter(std::string("par_") +  get_reg_type(fe->parameter_types[i]),
+                                 get_reg_type(fe->parameter_types[i]), 1,
+                                 interp, pname.c_str(),0, success);
                 if(!success) return 0;
             }
 
@@ -267,7 +269,13 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
             int pctr = 0;
             while(vlist != (*ccs_methods)->variables.rend())
             {
-                peek(_compiler, (*ccs_methods)->main_cc, (*vlist)->c_type, pctr++, (*vlist)->name.c_str());
+                variable* v = *vlist;
+                peek(_compiler, (*ccs_methods)->main_cc, v->c_type, pctr++, v->name.c_str());
+                // now let's see if this variable is a multi dimensional one or not
+                if(v->mult_dim_def)
+                {
+                    // if yes create a proper array out from it
+                }
                 vlist ++;
             }
 

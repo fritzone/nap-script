@@ -210,6 +210,7 @@ bool code_finalizer::is_asm_command_word(const std::string &expr)
     if(expr == "lte") return true;
     if(expr == "gte") return true;
     if(expr == "neq") return true;
+    if(expr == "serve") return true;
     if(expr == "jlbf") return true;
     if(expr == "jmp") return true;
     if(expr == "marksn") return true;

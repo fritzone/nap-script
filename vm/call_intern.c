@@ -35,7 +35,7 @@ int nap_call_intern(struct nap_vm* vm)
                 if(register_type == OPCODE_INT)
                 {
                     size_t grow_value = (size_t)(nap_regi(vm, register_index));
-                    size_t new_size = 1;
+                    size_t new_size = grow_value;
                     uint8_t dim_counter = 0;
 
                     if(grow_value == 0)
@@ -47,11 +47,10 @@ int nap_call_intern(struct nap_vm* vm)
                         return nap_vm_set_error_description(vm, s);
                     }
                     /* recalculate how much memory we need*/
-                    while(dim_counter < 254 && ve->dimensions[dim_counter])
+                    while(dim_counter < 254 && ve->dimensions[dim_counter] > 0)
                     {
                         new_size *= (size_t)ve->dimensions[dim_counter ++];
                     }
-                    new_size *= grow_value;
 
                     /* now allocate the memory for this*/
                     if(ve->instantiation)

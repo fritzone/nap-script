@@ -35,7 +35,7 @@ struct variable_entry
 
     /* the actual value of the variable
      * The "value" of the stack_entry will contain the value of this variable
-     * and the type of the instantioation will hold the type of the variable.
+     * and the type of the instantiation will hold the type of the variable.
      * The \c var_def member of the stack_entry is pointig to this object.
      */
     struct stack_entry* instantiation;
