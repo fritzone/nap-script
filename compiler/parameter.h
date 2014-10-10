@@ -17,7 +17,7 @@ struct method;
  */
 struct parameter
 {
-    parameter(method* pthe_method, const std::string& pname, int ptype) : name(pname),
+    parameter(method* pthe_method, const std::string& pname, int ptype) : name(pname), expr(0),
          initial_value(0), simple_value(1), the_method(pthe_method), type(ptype)
     {}
 

@@ -58,8 +58,9 @@ int nap_peek(struct nap_vm *vm)
         if(peek_type == OPCODE_INT) /* we are dealing with an INT type peek */
         {   /* peek int: assumes that on the stack there is a nap_int_t in the value of the stack_entry at the given index*/
             nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
+            struct stack_entry* se = vm->cec->stack[nap_sp(vm) - peek_index];
             NAP_NN_ASSERT(vm, temp);
-            *temp = *(nap_int_t*)vm->cec->stack[nap_sp(vm) - peek_index]->value; /* STACK VALUE FROM peek_index */
+            *temp = *(nap_int_t*)se->value; /* STACK VALUE FROM peek_index */
             ve->instantiation->value = temp;
         }
         else

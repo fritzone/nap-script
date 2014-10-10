@@ -1571,6 +1571,7 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                 parameter* p = *ingoing_parameters;
                 parameter* fp = m->get_parameter(pc);
                 int required_compilation_type = -1;
+                bool served = false;
 
                 if(!fp && node->op_type != FUNCTION_CALL_NAP_PRINT)
                 {
@@ -1587,11 +1588,24 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                 expression_tree* t = p->expr;
                 if(t->op_type <= BASIC_TYPE_CLASS_VAR && fp)
                 {
-                        code_stream(_compiler) << mov()
-
-                           << reg() << get_reg_type(fp->type) 
-                            << level
-                       ;
+                    if(t->op_type == BASIC_TYPE_VARIABLE)
+                    {
+                        variable* v = (variable*)t->reference->to_interpret;
+                        // is this a multi dim def variable?
+                        if(v->mult_dim_def)
+                        {
+                            code_stream(_compiler) << "serve";
+                            served = true;
+                        }
+                        else
+                        {
+                            code_stream(_compiler) << mov() << reg() << get_reg_type(fp->type) << level;
+                        }
+                    }
+                    else
+                    {
+                        code_stream(_compiler) << mov() << reg() << get_reg_type(fp->type) << level;
+                    }
                 }
                 else
                 {
@@ -1609,11 +1623,9 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                         if(p->expr->op_type < BASIC_TYPE_VARIABLE && p->expr->op_type > 0)
                         {
                             // a plain constant
-                            code_stream(_compiler) << mov()
-
-                                   << reg() << get_reg_type(p->expr->op_type) // this was fp->type before introducing the PRINT function
-                                    << level
-                                   ;
+                            code_stream(_compiler) << mov() << reg()
+                                                   << get_reg_type(p->expr->op_type) // this was fp->type before introducing the PRINT function
+                                                   << level;
                         }
                     }
                 }
@@ -1628,9 +1640,7 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                     // if this is actually a hardcoded character push a %c format specifier
                     if(p->expr->op_type == BASIC_TYPE_INT && p->expr->info[0] == '\'')
                     {
-                        code_stream(_compiler) << push()
-                                       << "\"%c\""
-                                       ;
+                        code_stream(_compiler) << push() << "\"%c\"" ;
                         pc ++;
                     }
 
@@ -1654,14 +1664,14 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                     }
 
                     // hopefully here the required_compilation_type is not -1
-                    code_stream(_compiler) << push()
+                    if(!served) code_stream(_compiler) << push()
                                    << reg() << get_reg_type(required_compilation_type)
                                     << level
                                    ;
                 }
                 else
                 {
-                    code_stream(_compiler) << push()
+                    if(!served) code_stream(_compiler) << push()
                                        << reg() << get_reg_type(required_compilation_type)
                                         << level
                                        ;

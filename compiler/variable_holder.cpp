@@ -44,12 +44,17 @@ variable* variable_holder::add_variable(const std::string& var_name,
                                      call_context* cc,
                                      bool& psuccess)
 {
+    //
+
     if(!valid_variable_name(var_name) && the_method && the_method->def_loc == DEF_INTERN)
     {
         //compiler->throw_error("Invalid variable name", var_name, var_type);
         psuccess = false;
+        std::string var_name_err = "Invalid variable name:" + var_name;
+        cc->compiler->throw_error("Syntax Error", var_name_err, var_name);
         return 0;
     }
+
     int itype = get_typeid(var_type);
 
     if(itype == BASIC_TYPE_DONTCARE)

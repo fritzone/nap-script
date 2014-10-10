@@ -135,6 +135,7 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "rv") opcode = OPCODE_RV;
     if(expr == "pop") opcode = OPCODE_POP;
     if(expr == "peek") opcode = OPCODE_PEEK;
+    if(expr == "serve") opcode = OPCODE_SERVE;
     if(expr == "clidx") opcode = OPCODE_CLIDX;
     if(expr == "leave") opcode = OPCODE_LEAVE;
     if(expr == "pushall") opcode = OPCODE_PUSHALL;

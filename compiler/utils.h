@@ -98,6 +98,13 @@ void skip_whitespace(const std::string &expr, int expr_len, int* i);
  */
 std::string extract_next_enclosed_phrase(const char *input, char c_starter, char c_ender);
 
+template<class TContainer>
+bool begins_with(const TContainer& input, const TContainer& match)
+{
+    return input.size() >= match.size()
+        && equal(match.begin(), match.end(), input.begin());
+}
+
 extern long mem_alloc_count;
 extern void** mem_allocation;
 

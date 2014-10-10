@@ -56,6 +56,9 @@ struct variable
 
     /* How this variable was defined. Used for checking the dynamic dimensions of it */
     variable_definition* vd;
+
+    /* definition list for the variable */
+    std::string deflist;
 };
 
 #endif

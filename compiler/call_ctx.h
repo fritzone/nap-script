@@ -108,7 +108,7 @@ public: /* Public methods */
      * @param name - the name of the method
      * @return the method of found, null if not found
      */
-    method *get_method(const std::string&pname);
+    method *get_method(const std::string&pname, interpreter *interp);
 
 
     /**

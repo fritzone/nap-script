@@ -13,6 +13,7 @@ struct variable;
 struct class_declaration;
 
 class nap_compiler;
+class interpreter;
 
 /**
  * Contains the definition of a method
@@ -43,7 +44,7 @@ struct method : public variable_holder
      * @param type - the type of the parameter (as string)
      * @param modifiable - if the parameter is a reference or not (C++ rulez :) )
      */
-    parameter* add_parameter(std::string pname,  const std::string &ptype, int pdimension, expression_with_location *pexpwloc, bool &psuccess);
+    parameter* add_parameter(std::string pname,  const std::string &ptype, int pdimension, interpreter *interp, const char *orig_expr, expression_with_location *pexpwloc, bool &psuccess);
 
     void add_parameter(parameter* p)
     {
@@ -81,7 +82,7 @@ struct method : public variable_holder
      * @param par_list
      * @param expwloc
      */
-    void feed_parameter_list(const char *par_list, expression_with_location *expwloc, bool &psuccess);
+    void feed_parameter_list(const char *par_list, interpreter* interp, expression_with_location *expwloc, bool &psuccess);
 
     /* the name of the method */
     std::string method_name;
