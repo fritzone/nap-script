@@ -112,18 +112,23 @@ void nap_vm_cleanup(struct nap_vm* vm)
             if(vm->metatable[i]->name)
             {
                 NAP_MEM_FREE(vm->metatable[i]->name);
+                vm->metatable[i]->name = NULL;
             }
+
 
             if(vm->metatable[i]->instantiation)
             {
                 if(vm->metatable[i]->instantiation->value)
                 {
                     NAP_MEM_FREE(vm->metatable[i]->instantiation->value);
+                    vm->metatable[i]->instantiation->value = NULL;
                 }
 
                 NAP_MEM_FREE(vm->metatable[i]->instantiation);
+                vm->metatable[i]->instantiation = NULL;
             }
             NAP_MEM_FREE(vm->metatable[i]);
+            vm->metatable[i] = NULL;
         }
     }
     NAP_MEM_FREE(vm->metatable);
@@ -136,9 +141,11 @@ void nap_vm_cleanup(struct nap_vm* vm)
         if(vm->cec->stack[tempst] && vm->cec->stack[tempst]->var_def == NULL)
         {
             NAP_MEM_FREE(vm->cec->stack[tempst]->value);
+            vm->cec->stack[tempst]->value = NULL;
         }
 
         NAP_MEM_FREE(vm->cec->stack[tempst]);
+        vm->cec->stack[tempst] = NULL;
     }
     NAP_MEM_FREE(vm->cec->stack);
 
@@ -148,8 +155,10 @@ void nap_vm_cleanup(struct nap_vm* vm)
 	    if(vm->jumptable[tempjmi - 1]->label_name)
 		{
             NAP_MEM_FREE(vm->jumptable[tempjmi - 1]->label_name);
+            vm->jumptable[tempjmi - 1]->label_name = NULL;
 		}
         NAP_MEM_FREE(vm->jumptable[tempjmi - 1]);
+        vm->jumptable[tempjmi - 1] = NULL;
 	}
 
     NAP_MEM_FREE(vm->jumptable);

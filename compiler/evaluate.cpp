@@ -1594,7 +1594,7 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                         // is this a multi dim def variable?
                         if(v->mult_dim_def)
                         {
-                            code_stream(_compiler) << "serve";
+                            code_stream(_compiler) << "push";
                             served = true;
                         }
                         else
