@@ -1,6 +1,9 @@
 #ifndef _NBCI_IMPL_H_
 #define _NBCI_IMPL_H_
 
+#define NAP_MEM_DEBUG
+#undef NAP_MEM_DEBUG
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,7 +41,7 @@ struct nap_string_register;
 #ifdef NAP_MEM_DEBUG
 #define NAP_MEM_FREE(x) if((x)) { fprintf(stderr, "free:%p (%s:%d)\n", (x), __FILE__, __LINE__);  free((x)); }
 #else
-#define NAP_MEM_FREE(x) if(x){ free((x)); }
+#define NAP_MEM_FREE(x) do { if(x){ free((x)); } } while(0);
 #endif
 
 #define NAP_REPORT_ERROR(vm, error)                                            \

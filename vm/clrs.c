@@ -82,7 +82,7 @@ int nap_clrs(struct nap_vm* vm)
             else
             {
                 /* this frees the stack stuff allocated at push or marks (such as
-                * the int value allocated when pushed a number) */
+-                * the int value allocated when pushed a number) */
                 NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->value);
                 vm->cec->stack[nap_sp(vm)]->value = NULL;
             }

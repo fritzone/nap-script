@@ -81,6 +81,11 @@ struct stack_entry
      * a "restore" call will be executed, which will take over the instantiation
      * of it and erase the actual stack entry */
     char stored;
+
+    /* This is true if the value pushed holds an array. In this case the value
+     * holds a variable_entry structure, which is simply taken from the
+     * variable and it's not suppsoed to be freed by clrs*/
+    char holds_array;
 };
 
 /**

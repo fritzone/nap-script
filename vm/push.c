@@ -206,54 +206,63 @@ int nap_push(struct nap_vm *vm)
 
         se->type = ve->instantiation->type; /* force to match the stack entry */
 
-        if(se->type == STACK_ENTRY_INT) /* pushing an int variable */
-        {                               /* STACK_ENTRY_INT = OPCODE_INT */
-            nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
-            NAP_NN_ASSERT(vm, temp);
-
-            *temp = *(nap_int_t*)ve->instantiation->value;
-
-            /* setting the value of the stack entry */
-            se->value = temp;
-        }
-        else
-        if(se->type == STACK_ENTRY_REAL) /* pushing a real variable */
-        {                               /* STACK_ENTRY_REAL = OPCODE_REAL */
-            nap_real_t* temp = NAP_MEM_ALLOC(1, nap_real_t);
-            NAP_NN_ASSERT(vm, temp);
-
-            *temp = *(nap_real_t*)ve->instantiation->value;
-
-            /* setting the value of the stack entry */
-            se->value = temp;
-        }
-        else
-        if(se->type == STACK_ENTRY_BYTE) /* pushing a byte variable */
+        if(ve->dimension_count > 0)
         {
-            nap_byte_t* temp = NAP_MEM_ALLOC(1, nap_byte_t);
-            NAP_NN_ASSERT(vm, temp);
-
-            *temp = *(nap_byte_t*)ve->instantiation->value;
-
-            /* setting the value of the stack entry */
-            se->value = temp;
-        }
-        else
-        if(se->type == STACK_ENTRY_STRING)
-        {
-            size_t len = ve->instantiation->len * CC_MUL; /* UTF32*/
-            char* temp = NAP_MEM_ALLOC(len, char);
-            NAP_NN_ASSERT(vm, temp);
-
-            memcpy(temp, ve->instantiation->value, len);
-            se->value = temp; /* the stack_entry->value will be the string itself */
-            se->len = ve->instantiation->len; /* the stack_entry->len will be the
-                                                  real length of the string, not
-                                                  the length of the UTF32 thing */
+            se->holds_array = 1;
+            se->value = ve;
+            se->type = se->type;
         }
         else
         {
-            NAP_NOT_IMPLEMENTED
+            if(se->type == STACK_ENTRY_INT) /* pushing an int variable */
+            {                               /* STACK_ENTRY_INT = OPCODE_INT */
+                    nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
+                    NAP_NN_ASSERT(vm, temp);
+
+                    *temp = *(nap_int_t*)ve->instantiation->value;
+
+                    /* setting the value of the stack entry */
+                    se->value = temp;
+            }
+            else
+            if(se->type == STACK_ENTRY_REAL) /* pushing a real variable */
+            {                               /* STACK_ENTRY_REAL = OPCODE_REAL */
+                nap_real_t* temp = NAP_MEM_ALLOC(1, nap_real_t);
+                NAP_NN_ASSERT(vm, temp);
+
+                *temp = *(nap_real_t*)ve->instantiation->value;
+
+                /* setting the value of the stack entry */
+                se->value = temp;
+            }
+            else
+            if(se->type == STACK_ENTRY_BYTE) /* pushing a byte variable */
+            {
+                nap_byte_t* temp = NAP_MEM_ALLOC(1, nap_byte_t);
+                NAP_NN_ASSERT(vm, temp);
+
+                *temp = *(nap_byte_t*)ve->instantiation->value;
+
+                /* setting the value of the stack entry */
+                se->value = temp;
+            }
+            else
+            if(se->type == STACK_ENTRY_STRING)
+            {
+                size_t len = ve->instantiation->len * CC_MUL; /* UTF32*/
+                char* temp = NAP_MEM_ALLOC(len, char);
+                NAP_NN_ASSERT(vm, temp);
+
+                memcpy(temp, ve->instantiation->value, len);
+                se->value = temp; /* the stack_entry->value will be the string itself */
+                se->len = ve->instantiation->len; /* the stack_entry->len will be the
+                                                      real length of the string, not
+                                                      the length of the UTF32 thing */
+            }
+            else
+            {
+                NAP_NOT_IMPLEMENTED
+            }
         }
     }
     else
