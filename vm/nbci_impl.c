@@ -38,6 +38,7 @@
 #include "pop.h"
 #include "return.h"
 #include "store.h"
+#include "serve.h"
 #include "restore.h"
 #include "inc.h"
 #include "dec.h"
@@ -60,7 +61,7 @@
 #include <iconv.h>
 #include <stddef.h>
 
-#define ERROR_COUNT 24
+#define ERROR_COUNT 25
 
 /* section for defining the constants */
 static char* error_table[ERROR_COUNT + 1] =
@@ -89,6 +90,7 @@ static char* error_table[ERROR_COUNT + 1] =
     "[VM-0022] Invalid internal call",
     "[VM-0023] Division by zero",
     "[VM-0024] Cannot store/restore a value",
+    "[VM-0025] Only indexed variables can be served",
 
     "LAST_ENTRY_FOR_FUNNY_COMPILERS_WHO_DONT_LIKE_COMMAS_AT_LAST_POSITON"
 };
@@ -101,7 +103,7 @@ void nap_vm_cleanup(struct nap_vm* vm)
     uint64_t i;
     int64_t tempst;
     int64_t tempjmi;
-    /* dump(vm, stdout); */
+    nap_vm_dump(vm, stdout);
 
     /* free the metatable */
     for(i=0; i<vm->meta_size; i++)
@@ -430,6 +432,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     vm->opcode_handlers[OPCODE_LEAVE] = nap_leave; vm->opcode_error_codes[OPCODE_LEAVE] = ERR_VM_0021;
     vm->opcode_handlers[OPCODE_STORE] = nap_store; vm->opcode_error_codes[OPCODE_STORE] = ERR_VM_0024;
     vm->opcode_handlers[OPCODE_RESTORE] = nap_restore; vm->opcode_error_codes[OPCODE_STORE] = ERR_VM_0024;
+    vm->opcode_handlers[OPCODE_SERVE] = nap_serve; vm->opcode_error_codes[OPCODE_SERVE] = ERR_VM_0025;
 
     /* setting the mov handlers */
     vm->mov_handlers[OPCODE_REG] = mov_into_register;

@@ -91,7 +91,55 @@ uint16_t intr_1(struct nap_vm *vm)
 
                     if(t)
                     {
-                        fprintf(stdout,"%s",t);
+                        size_t sctr = 0;
+                        size_t slen = strlen(t);
+                        for(; sctr<slen; sctr++ )
+                        {
+                            if(t[sctr] == '\\')
+                            {
+                                if(sctr+1 < slen)
+                                {
+                                    switch(t[sctr + 1])
+                                    {
+                                    case 'n':
+                                        fprintf(stdout, "\n");
+                                        break;
+                                    case 't':
+                                        fprintf(stdout, "\t");
+                                        break;
+                                    case 'r':
+                                        fprintf(stdout, "\r");
+                                        break;
+                                    case 'f':
+                                        fprintf(stdout, "\f");
+                                        break;
+                                    case 'b':
+                                        fprintf(stdout, "\b");
+                                        break;
+                                    case 'v':
+                                        fprintf(stdout, "\v");
+                                        break;
+                                    case '\'':
+                                        fprintf(stdout, "'");
+                                        break;
+                                    case '"':
+                                        fprintf(stdout, "\"");
+                                        break;
+                                    case '\\':
+                                        fprintf(stdout, "\\");
+                                        break;
+                                    default:
+                                        fprintf(stdout, "\\%c", t[sctr+1]);
+                                    }
+                                    sctr ++;
+                                }
+                            }
+                            else
+                            {
+                                fprintf(stdout,"%c",t[sctr]);
+                            }
+                        }
+
                     }
                     else
                     {

@@ -15,7 +15,7 @@ struct bt_string
     bt_string(const char* src);
     ~bt_string();
 
-    char *m_the_string;
+    std::string m_the_string;
 };
 
 #endif

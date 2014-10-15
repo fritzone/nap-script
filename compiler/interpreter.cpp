@@ -750,7 +750,7 @@ int interpreter::accepted_variable_name(const std::string& name)
     return is_valid_variable_name(name.c_str());
 }
 
-multi_dimension_def* interpreter::define_indexes(const std::string& name, const char* idx_def_start,
+multi_dimension_def* interpreter::define_indexes(bool allows_array_size, const std::string& name, const char* idx_def_start,
                                                  method* the_method,
                                                  call_context* cc,
                                                  const char* orig_expr,
@@ -789,8 +789,17 @@ multi_dimension_def* interpreter::define_indexes(const std::string& name, const 
 
         if(qDimensionStrings->length() > 0)
         {
-            build_expr_tree((*qDimensionStrings).c_str(), dim_def_node, the_method, orig_expr, cc, result, expwloc, psuccess, 0);
-            SUCCES_OR_RETURN 0;
+            if(!allows_array_size)
+            {
+                mcompiler->throw_error(E0011_IDDEFERR, name.c_str(), "Array with specific size is not permitted at this location");
+                psuccess = false;
+                return 0;
+            }
+            else
+            {
+                build_expr_tree((*qDimensionStrings).c_str(), dim_def_node, the_method, orig_expr, cc, result, expwloc, psuccess, 0);
+                SUCCES_OR_RETURN 0;
+            }
         }
         else
         {
@@ -831,7 +840,7 @@ variable* interpreter::create_variable(multi_dimension_def*& mdd, const std::str
     }
     if(idx_def_start) /* index defined? */
     {
-        mdd = define_indexes(name, idx_def_start, the_method, cc, orig_expr, expr_trim, result, expwloc, psuccess);
+        mdd = define_indexes(true, name, idx_def_start, the_method, cc, orig_expr, expr_trim, result, expwloc, psuccess);
     }
 
     /* check whether we have direct initialization */
@@ -1382,7 +1391,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
         node->info = the_str->m_the_string;
         *result = RESULT_STRING;
         node->op_type = BASIC_TYPE_STRING;
-        return the_str->m_the_string;
+        return (void*)the_str->m_the_string.c_str();
     }
 
     /* this is a 'statement' string, a string which is executed and the result is interpreted by the interpreter backticks: `` */
@@ -1394,7 +1403,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
         node->reference = new_envelope(the_str, BASIC_TYPE_STRING, cc->compiler);
         node->info = expr_trim;
         *result = BACKQUOTE_STRING;
-        return the_str->m_the_string;
+        return (void*)the_str->m_the_string.c_str();
     }
 
     /* check if this is a function definition */
@@ -1786,9 +1795,9 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
                 if(!cd)
                 {
                     // see if this is a string or not
-                    if(v->i_type == BASIC_TYPE_STRING || ( v->vd && v->vd->md_def) )
+                    if(v->i_type == BASIC_TYPE_STRING || ( v->vd && v->vd->md_def)  || v->mult_dim_def)
                     {
-                        if(expr_trim == "len") // the length of the string
+                        if(expr_trim == "len" || expr_trim == "len()") // the length of the string
                         {
                             *result = FUNCTION_STRING_LEN;
                             node->op_type = *result;

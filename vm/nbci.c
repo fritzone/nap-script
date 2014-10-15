@@ -104,7 +104,7 @@ void dump_stack(struct nap_vm* vm, FILE *fp)
             }
 
 
-            fprintf(fp, "[%.5"PRINT_d"]", tempst);
+            fprintf(fp, "[%.5"PRINT_d"]%p", tempst, (vm->cec->stack[tempst]->value?vm->cec->stack[tempst]->value:NULL));
             if(vm->cec->stack[tempst]->stored)
             {
                 fprintf(fp, "*");
@@ -345,8 +345,43 @@ void nap_vm_run(struct nap_vm* vm)
 
         if(vm->opcode_handlers[vm->cec->current_opcode] != 0)
         {
-            TRY_CALL(vm->opcode_handlers[vm->cec->current_opcode],
-                    vm->opcode_error_codes[vm->cec->current_opcode]);
+            if(vm->opcode_handlers[vm->cec->current_opcode](vm) == NAP_FAILURE)
+            {
+                if(vm->error_code == 0)
+                {
+                    nap_set_error(vm, vm->opcode_error_codes[vm->cec->current_opcode]);
+                }
+                else
+                {
+                    vm->error_code = (vm->error_code << 16) + vm->opcode_error_codes[vm->cec->current_opcode];
+                }
+                if(vm->environment == STANDALONE)
+                {
+                    fprintf(stderr, "%s\n", vm->error_message);
+                    if(vm->error_description)
+                    {
+                        fprintf(stderr, "%s\n", vm->error_description);
+                    }
+                    char t[256] = {0}, offending_command[256] = {0}, tmp[32] = {0};
+                    uint64_t bc = 0;
+                    for(bc = vm->cec->lia; bc != nap_ip(vm); bc++) {
+                        SNPRINTF(tmp, MAX_BUF_SIZE(31), "%x ", vm->content[bc]);
+                        strcat(offending_command, tmp);
+                    }
+                    SNPRINTF(t, MAX_BUF_SIZE(255), "DMP: instr [%x] opcode [%x] at %" PRINT_u " (%" PRINT_x ") cmd: %s\n\n",
+                            vm->content[nap_ip(vm) - 1],
+                            vm->cec->current_opcode, nap_ip(vm) - 1, nap_ip(vm) - 1,
+                            offending_command);
+                    fprintf(stderr, "%s", t);
+                    nap_vm_dump(vm, stderr);
+                    nap_vm_cleanup(vm);
+                    exit(0);
+                }
+                else
+                {
+                    return;
+                }
+            }
         }
         else
         if(vm->cec->current_opcode == OPCODE_EXIT) /* quit the application ... */

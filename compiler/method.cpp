@@ -181,7 +181,7 @@ variable* method::add_new_variable(const std::string& pname,
 /**
  * Adds a new parameter to the method. These will go in the
  */
-parameter* method::add_parameter(std::string pname,
+parameter* method::add_parameter(bool reference, std::string pname,
                                  const std::string& ptype,
                                  int pdimension,
                                  interpreter* interp,
@@ -190,6 +190,7 @@ parameter* method::add_parameter(std::string pname,
                                  bool& psuccess)
 {
     parameter* func_par = new parameter(this, pname, get_typeid(ptype));
+    func_par->reference = reference;
 
     size_t indexOfEq = pname.find(C_EQ);
     variable* nvar = NULL;
@@ -224,7 +225,7 @@ parameter* method::add_parameter(std::string pname,
     if(idx_def_start) /* index defined? */
     {
         int result = 0;
-        mdd = interp->define_indexes(pname, idx_def_start, this, main_cc, orig_expr, orig_expr, &result, pexpwloc, psuccess);
+        mdd = interp->define_indexes(false, pname, idx_def_start, this, main_cc, orig_expr, orig_expr, &result, pexpwloc, psuccess);
     }
 
     if(idx_def_start)
@@ -249,6 +250,7 @@ parameter* method::add_parameter(std::string pname,
         }
     }
 
+    func_par->name = pname; // just in case it was changed
     nvar = add_new_variable(pname, ptype, pdimension, psuccess);
     nvar->mult_dim_def = mdd;
 
@@ -310,12 +312,16 @@ void method::feed_parameter_list(const char* par_list, interpreter* interp, expr
                 return;
             }
 
-            //modifiable = (C_AND == (*q)[i]);
-            //if(modifiable)
-            //{
-            //    i++;
-                // TODO: There is no support for this in the bytecode yet.
-            //}
+            bool modifiable = (C_AND == (*q)[i]);
+            if(modifiable)
+            {
+                i ++;
+                while(i < q->length() && is_whitespace((*q)[i]))
+                {
+                    i++;
+                }
+              // TODO: There is no support for this in the bytecode yet.
+            }
 
             while(i < q->length())
             {
@@ -325,7 +331,7 @@ void method::feed_parameter_list(const char* par_list, interpreter* interp, expr
             strim(par_type);
             if(def_loc == DEF_INTERN)
             {
-                parameter* new_par_decl = add_parameter(par_name, par_type, 1, interp, expwloc->expression.c_str(), expwloc, psuccess);
+                parameter* new_par_decl = add_parameter(modifiable, par_name, par_type, 1, interp, expwloc->expression.c_str(), expwloc, psuccess);
                 SUCCES_OR_RETURN;
 
                 /* here we should identify the dimension of the parameter */
@@ -337,7 +343,7 @@ void method::feed_parameter_list(const char* par_list, interpreter* interp, expr
             }
             else
             {
-                add_parameter("", par_type, 1, interp,  expwloc->expression.c_str(), expwloc, psuccess);
+                add_parameter(false, "", par_type, 1, interp,  expwloc->expression.c_str(), expwloc, psuccess);
                 SUCCES_OR_RETURN;
             }
         }

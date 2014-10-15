@@ -44,7 +44,7 @@ struct method : public variable_holder
      * @param type - the type of the parameter (as string)
      * @param modifiable - if the parameter is a reference or not (C++ rulez :) )
      */
-    parameter* add_parameter(std::string pname,  const std::string &ptype, int pdimension, interpreter *interp, const char *orig_expr, expression_with_location *pexpwloc, bool &psuccess);
+    parameter* add_parameter(bool reference, std::string pname,  const std::string &ptype, int pdimension, interpreter *interp, const char *orig_expr, expression_with_location *pexpwloc, bool &psuccess);
 
     void add_parameter(parameter* p)
     {

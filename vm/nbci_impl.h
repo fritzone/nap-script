@@ -51,7 +51,6 @@ struct nap_string_register;
     {                                                                          \
         fprintf(stderr, "%s\n", error);                                        \
         nap_vm_cleanup(vm);                                                    \
-        exit(EXIT_FAILURE);                                                    \
     }                                                                          \
     else                                                                       \
     {                                                                          \
@@ -134,32 +133,10 @@ struct nap_string_register;
             __FILE__, __LINE__, vm->content[nap_ip(vm) - 1],                   \
             vm->cec->current_opcode, nap_ip(vm) - 1, nap_ip(vm) - 1,           \
             offending_command);                                                \
+    dump_stack(vm, stderr);                                                    \
     NAP_REPORT_ERROR(vm, t);                                                   \
+    exit(EXIT_FAILURE);                                                        \
     return NAP_FAILURE;                                                        \
-    } while(0);
-
-/* macro to try to call a function and leave the app in case of error with the
- * given error code */
-#define TRY_CALL(func, err)                                                    \
-    do                                                                         \
-    {                                                                          \
-        if(func(vm) == NAP_FAILURE)                                            \
-        {                                                                      \
-            if(vm->error_code == 0) nap_set_error(vm, err);                    \
-            else vm->error_code = (vm->error_code << 16) + err;                \
-            if(vm->environment == STANDALONE)                                  \
-            {                                                                  \
-                fprintf(stderr, "%s\n", vm->error_message);                    \
-                if(vm->error_description)                                      \
-                    fprintf(stderr, "%s\n", vm->error_description);            \
-                nap_vm_cleanup(vm);                                            \
-                exit(0);                                                       \
-            }                                                                  \
-            else                                                               \
-            {                                                                  \
-                return;                                                        \
-            }                                                                  \
-        }                                                                      \
     } while(0);
 
 /* macro for checking that a variable is not null */

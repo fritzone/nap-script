@@ -7,6 +7,7 @@ struct call_context;
 struct method;
 
 #include "expression_tree.h"
+#include "consts.h"
 
 #include <string>
 
@@ -29,6 +30,11 @@ struct parameter
         }
     }
 
+    std::string fully_qualified_name()
+    {
+        return the_method->main_cc->name + STR_DOT + name;
+    }
+
     /* the name of the parameter (as used on te function's side). This is not used on the client side*/
     std::string name;
 
@@ -44,6 +50,10 @@ struct parameter
     /* the method in which this parameter belongs */
     method *the_method;
 
+    /* the type of the parameter */
     int type;
+
+    /* if this is a reference type parameter */
+    bool reference;
 };
 #endif

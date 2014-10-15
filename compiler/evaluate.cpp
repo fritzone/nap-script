@@ -1559,6 +1559,8 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
         case FUNCTION_CALL:                       /* Fall through */
         case FUNCTION_CALL_NAP_PRINT:
         {
+
+            std::map<parameter*, variable*> reference_par_target_var;
             int pc = 0;
             call_frame_entry* cfe = (call_frame_entry*)node->reference->to_interpret;
             std::string func_call_hash = generate_unique_hash();
@@ -1631,6 +1633,14 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                 }
                 variable *backup_target_var = *target_var;
                 compile(const_cast<variable**>(&node->target_var), _compiler,t, the_method, cc, level, required_compilation_type, forced_mov, psuccess);
+                if(node->op_type != FUNCTION_CALL_NAP_PRINT && const_cast<variable**>(&node->target_var))
+                {
+                    variable* v = * (const_cast<variable**>(&node->target_var));
+                    if(fp && fp->reference)
+                    {
+                        reference_par_target_var.insert(std::make_pair<parameter*, variable*>(fp,v));
+                    }
+                }
                 *target_var = backup_target_var;
 
                 SUCCES_OR_RETURN;
@@ -1706,6 +1716,22 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                 }
             }
             push_cc_end_marker(_compiler,func_call_hash.c_str());
+
+            /* Now do some steps in order to fetch the reference type parameters from the function
+             * and put them in the correct variables */
+            for(std::map<parameter*, variable*>::const_iterator it = reference_par_target_var.begin(); it != reference_par_target_var.end(); ++it)
+            {
+                //std::cout << it->first->fully_qualified_name() << " goes into " << fully_qualified_varname(cc, it->second);
+                if(it->second->mult_dim_def)
+                {
+                    code_stream(_compiler) << "serve" << fully_qualified_varname(cc, it->second) << it->first->fully_qualified_name();
+                }
+                else
+                {
+                    code_stream(_compiler) << mov() << reg() << get_reg_type(it->first->type) << level << it->first->fully_qualified_name();
+                    code_stream(_compiler) << mov() << fully_qualified_varname(cc, it->second) << reg() << get_reg_type(it->first->type) << level;
+                }
+            }
             break;
         }
 

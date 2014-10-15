@@ -210,7 +210,8 @@ int nap_push(struct nap_vm *vm)
         {
             se->holds_array = 1;
             se->value = ve;
-            se->type = se->type;
+
+            se->type = STACKT_MODIFIER_ARRAY + se->type;
         }
         else
         {
