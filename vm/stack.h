@@ -7,6 +7,11 @@
 /*                             Stack section                                  */
 /******************************************************************************/
 
+/* Used to indicate that there is something special on the stack, such as an
+ * array or a reference */
+#define STACKT_MODIFIER_ARRAY  20
+#define STACKT_MODIFIER_REF    30
+
 typedef enum TStackEntryType
 {
     STACK_ENTRY_INVALID       = 0,

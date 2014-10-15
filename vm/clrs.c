@@ -44,7 +44,9 @@ int nap_clrs(struct nap_vm* vm)
         if(   vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_INT
            || vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_BYTE
            || vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_STRING
-           || vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_MARKER_NAME)
+           || vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_MARKER_NAME
+           || vm->cec->stack[nap_sp(vm)]->type == STACKT_MODIFIER_ARRAY + STACK_ENTRY_INT
+              )
         {
             /* was this a variable declaration? */
             if(vm->cec->stack[nap_sp(vm)]->var_def)
@@ -82,8 +84,12 @@ int nap_clrs(struct nap_vm* vm)
             else
             {
                 /* this frees the stack stuff allocated at push or marks (such as
--                * the int value allocated when pushed a number) */
-                NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->value);
+-                * the int value allocated when pushed a number) but only if the
+                 * pushed value < 10 (nomal stuff)*/
+                if(vm->cec->stack[nap_sp(vm)]->type < 10)
+                {
+                    NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->value);
+                }
                 vm->cec->stack[nap_sp(vm)]->value = NULL;
             }
         }

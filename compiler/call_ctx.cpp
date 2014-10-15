@@ -129,7 +129,7 @@ method* call_context::get_method(const string &pname, interpreter* interp)
             for(int i=0; i<fe->parameter_count; i++)
             {
                 bool success = true;
-                m->add_parameter(std::string("par_") +  get_reg_type(fe->parameter_types[i]),
+                m->add_parameter(false, std::string("par_") +  get_reg_type(fe->parameter_types[i]),
                                  get_reg_type(fe->parameter_types[i]), 1,
                                  interp, pname.c_str(),0, success);
                 if(!success) return 0;
@@ -265,12 +265,12 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
         if(m->def_loc == DEF_INTERN)
         {
             // now pop off the variables from the stack
-            std::vector<variable*>::const_reverse_iterator vlist = (*ccs_methods)->variables.rbegin();
+            std::vector<variable*>::const_reverse_iterator vlist = m->variables.rbegin();
             int pctr = 0;
-            while(vlist != (*ccs_methods)->variables.rend())
+            while(vlist != m->variables.rend())
             {
                 variable* v = *vlist;
-                peek(_compiler, (*ccs_methods)->main_cc, v->c_type, pctr++, v->name.c_str());
+                peek(_compiler, m->main_cc, v->c_type, pctr++, v->name.c_str());
                 // now let's see if this variable is a multi dimensional one or not
                 if(v->mult_dim_def)
                 {

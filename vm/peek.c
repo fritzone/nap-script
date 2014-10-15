@@ -45,7 +45,6 @@ int nap_peek(struct nap_vm *vm)
             {
                 NAP_MEM_FREE(ve->instantiation->value);
             }
-            NAP_MEM_FREE(ve->instantiation);
         }
 
         /* create a new instantiation */
@@ -57,19 +56,14 @@ int nap_peek(struct nap_vm *vm)
         struct stack_entry* se = vm->cec->stack[nap_sp(vm) - peek_index];
         if(se->holds_array)
         {
-            size_t size_to_copy = ((struct variable_entry*)se->value)->data_size
-                    * ((struct variable_entry*)se->value)->instantiation->len;
+            size_t size_to_copy = ((struct variable_entry*)se->value)->data_size * ((struct variable_entry*)se->value)->instantiation->len;
             char* tmp = NAP_MEM_ALLOC(size_to_copy, char);
-            int c = 0;
             memcpy(tmp, ((struct variable_entry*)se->value)->instantiation->value, size_to_copy);
             ve->instantiation->value = tmp;
-            ve->data_size = ((struct variable_entry*)se->value)->data_size;
             ve->instantiation->len = ((struct variable_entry*)se->value)->instantiation->len;
+            ve->data_size = ((struct variable_entry*)se->value)->data_size;
             ve->dimension_count = ((struct variable_entry*)se->value)->dimension_count;
-            for(;c<255;c++)
-            {
-                ve->dimensions[c] = ((struct variable_entry*)se->value)->dimensions[c];
-            }
+            memcpy(ve->dimensions, ((struct variable_entry*)se->value)->dimensions, sizeof(ve->dimensions));
         }
         else
         {

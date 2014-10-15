@@ -1,5 +1,5 @@
-#ifndef _PEEK_H_
-#define _PEEK_H_
+#ifndef PEEK_H
+#define PEEK_H
 
 struct nap_vm;
 
