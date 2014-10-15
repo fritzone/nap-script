@@ -103,7 +103,6 @@ void nap_vm_cleanup(struct nap_vm* vm)
     uint64_t i;
     int64_t tempst;
     int64_t tempjmi;
-    nap_vm_dump(vm, stdout);
 
     /* free the metatable */
     for(i=0; i<vm->meta_size; i++)

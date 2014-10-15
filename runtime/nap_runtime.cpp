@@ -181,7 +181,6 @@ NAP_LIB_API nap_real_t nap_runtime_get_real(nap_runtime * runtime,
 {
     if(runtime != NULL)
     {
-        nap_vm_dump(runtime->vm, stdout);
         char* t = (char*)calloc(strlen(variable_name) + 1, 1);
         strcpy(t, variable_name);
         nap_real_t temp = nap_vm_get_real(runtime->vm, t, found);
