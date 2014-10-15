@@ -134,6 +134,7 @@ struct nap_string_register;
             vm->cec->current_opcode, nap_ip(vm) - 1, nap_ip(vm) - 1,           \
             offending_command);                                                \
     dump_stack(vm, stderr);                                                    \
+    nap_vm_dump(vm, stderr);                                                   \
     NAP_REPORT_ERROR(vm, t);                                                   \
     exit(EXIT_FAILURE);                                                        \
     return NAP_FAILURE;                                                        \

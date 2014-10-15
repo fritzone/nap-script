@@ -2049,7 +2049,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
             }
             node->info = expr_trim;
             while(tlen > 0 && !isalnum( t[tlen - 1]) && t[tlen -1] != '\"'
-                  && t[tlen -1] != '\'' && t[tlen - 1] != '(' && t[tlen - 1] != ')' )
+                  && t[tlen -1] != '\'' && t[tlen - 1] != '(' && t[tlen - 1] != ')' && t[tlen - 1] != ':')
             {
                 t = t.substr(0, tlen - 1);
                 strim(t);

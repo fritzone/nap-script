@@ -455,7 +455,7 @@ TEST(Functions, DefaultReturnValue)
  */
 TEST(Functions, ExternalCalling)
 {
-    nap_runtime* runtime = nap_runtime_create("$");
+    nap_runtime* runtime = nap_runtime_create("a");
     ASSERT_FALSE(runtime == NULL);
 
     int found_indicator;
@@ -468,6 +468,186 @@ TEST(Functions, ExternalCalling)
     SCRIPT_SHUTDOWN
 
     UNUSED(found_indicator);
+}
+
+/* Define a function with an int reference as parameter. Assign a value to
+ * the parameter in the function body and see that the caller gets modified */
+TEST(Functions, IntReference)
+{
+    SCRIPT_START
+    "                             \
+    void func(int& a)             \
+    {                             \
+        a = 6;                    \
+    }                             \
+    int z = 7; func(z);           \
+    "
+    SCRIPT_END
+    ASSERT_EQ(6, VAR_INT(z));
+
+    SCRIPT_SHUTDOWN
+}
+
+/* Define a function with an byte reference as parameter. Assign a value to
+ * the parameter in the function body and see that the caller gets modified */
+TEST(Functions, ByteReference)
+{
+    SCRIPT_START
+    "                             \
+    void func(byte& a)            \
+    {                             \
+        a = 6;                    \
+    }                             \
+    byte z = 7; func(z);          \
+    "
+    SCRIPT_END
+    ASSERT_EQ(6, VAR_BYTE(z));
+
+    SCRIPT_SHUTDOWN
+}
+
+/* Define a function with an real reference as parameter. Assign a value to
+ * the parameter in the function body and see that the caller gets modified */
+TEST(Functions, RealReference)
+{
+    SCRIPT_START
+    "                             \
+    void func(real& a)            \
+    {                             \
+        a = 6.7;                  \
+    }                             \
+    real z = 7.8; func(z);        \
+    "
+    SCRIPT_END
+    double _z = (double)VAR_REAL(z);
+    ASSERT_DOUBLE_EQ((double)6.7, _z);
+    SCRIPT_SHUTDOWN
+}
+
+/* Define a function with a real array as parameter. Assign a value to
+ * the parameter in the function body and see that the caller does not get
+ * modified */
+TEST(Functions, RealArray)
+{
+    SCRIPT_START
+    "                           \
+    void func(real a[])         \
+    {                           \
+        a[0] = 6.7;             \
+    }                           \
+    real z[10];                 \
+    z[0] = 7.8; func(z);        \
+    real b = z[0];              \
+    "
+    SCRIPT_END
+    double _b = (double)VAR_REAL(b);
+    ASSERT_DOUBLE_EQ((double)7.8, _b);
+    SCRIPT_SHUTDOWN
+}
+
+/* Define a function with an int array as parameter. Assign a value to
+ * the parameter in the function body and see that the caller does not get
+ * modified */
+TEST(Functions, IntArray)
+{
+    SCRIPT_START
+    "                           \
+    void func(int a[])          \
+    {                           \
+        a[0] = 6;               \
+    }                           \
+    int z[10];                  \
+    z[0] = 8; func(z);          \
+    int b = z[0];               \
+    "
+    SCRIPT_END
+    ASSERT_EQ(8, VAR_INT(b));
+
+    SCRIPT_SHUTDOWN
+}
+
+/* Define a function with a byte array as parameter. Assign a value to
+ * the parameter in the function body and see that the caller does not get
+ * modified */
+TEST(Functions, ByteArray)
+{
+    SCRIPT_START
+    "                           \
+    void func(byte a[])         \
+    {                           \
+        a[0] = 6;               \
+    }                           \
+    byte z[10];                 \
+    z[0] = 8; func(z);          \
+    byte b = z[0];              \
+    "
+    SCRIPT_END
+    ASSERT_EQ(8, VAR_BYTE(b));
+
+    SCRIPT_SHUTDOWN
+}
+
+/* Define a function with a byte array reference parameter. Assign a value to
+ * the parameter in the function body and see that the caller does get
+ * modified */
+TEST(Functions, ByteArrayReference)
+{
+    SCRIPT_START
+    "                           \
+    void func(byte& a[])        \
+    {                           \
+        a[0] = 6;               \
+    }                           \
+    byte z[10];                 \
+    z[0] = 8; func(z);          \
+    byte b = z[0];              \
+    "
+    SCRIPT_END
+    ASSERT_EQ(6, VAR_BYTE(b));
+
+    SCRIPT_SHUTDOWN
+}
+
+/* Define a function with an int array reference parameter. Assign a value to
+ * the parameter in the function body and see that the caller does get
+ * modified */
+TEST(Functions, IntArrayReference)
+{
+    SCRIPT_START
+    "                           \
+    void func(int& a[])         \
+    {                           \
+        a[0] = 6;               \
+    }                           \
+    int z[10];                  \
+    z[0] = 8; func(z);          \
+    int b = z[0];               \
+    "
+    SCRIPT_END
+    ASSERT_EQ(6, VAR_INT(b));
+
+    SCRIPT_SHUTDOWN
+}
+
+/* Define a function with a real array as parameter. Assign a value to
+ * the parameter in the function body and see that the caller does not get
+ * modified */
+TEST(Functions, RealArrayReference)
+{
+    SCRIPT_START
+    "                           \
+    void func(real& a[])        \
+    {                           \
+        a[0] = 6.7;             \
+    }                           \
+    real z[10];                 \
+    z[0] = 7.8; func(z);        \
+    real b = z[0];              \
+    "
+    SCRIPT_END
+    double _b = (double)VAR_REAL(b);
+    ASSERT_DOUBLE_EQ((double)6.7, _b);
+    SCRIPT_SHUTDOWN
 }
 
 NAP_EXPORTS

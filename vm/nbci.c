@@ -127,7 +127,14 @@ void dump_stack(struct nap_vm* vm, FILE *fp)
                             fprintf(fp, "%"PRINT_d":{", vm->cec->stack[tempst]->var_def->dimensions[dim_ctr]);
                             for(value_ctr = 0; value_ctr < MIN(10, vm->cec->stack[tempst]->var_def->dimensions[dim_ctr]); value_ctr ++)
                             {
-                                fprintf(fp, "%"PRINT_d, ((nap_int_t*)vm->cec->stack[tempst]->value)[value_ctr]);
+                                if(vm->cec->stack[tempst]->type == OPCODE_INT)
+                                {
+                                    fprintf(fp, "%"PRINT_d, ((nap_int_t*)vm->cec->stack[tempst]->value)[value_ctr]);
+                                }
+                                if(vm->cec->stack[tempst]->type == OPCODE_REAL)
+                                {
+                                    fprintf(fp, "%Lf", ((nap_real_t*)vm->cec->stack[tempst]->value)[value_ctr]);
+                                }
                                 if(value_ctr < vm->cec->stack[tempst]->var_def->dimensions[dim_ctr] - 1)
                                 {
                                     fprintf(fp, ",");
@@ -374,6 +381,7 @@ void nap_vm_run(struct nap_vm* vm)
                             offending_command);
                     fprintf(stderr, "%s", t);
                     nap_vm_dump(vm, stderr);
+                    dump_stack(vm, stderr);
                     nap_vm_cleanup(vm);
                     exit(0);
                 }

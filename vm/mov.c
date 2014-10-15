@@ -1558,6 +1558,32 @@ int mov_into_indexed(struct nap_vm* vm)
                 }
             }
             else
+            if(register_type == OPCODE_REAL)
+            {
+                /* moving only if this real register goes to a real var*/
+                if(var->instantiation->type == OPCODE_REAL) /* mov real var [x,y,z], reg real (register_index) */
+                {
+                    char* error = NULL;
+                    int64_t idx = deliver_flat_index(vm, var,
+                                                     ctr_used_index_regs,
+                                                     &error);
+                    if(idx < 0) /* error? */
+                    {
+                        /* do not use the set_error here, the string was allocated
+                           copying it would be a memory leak*/
+                        vm->error_description = error;
+                        return NAP_FAILURE;
+                    }
+                    else
+                    {
+                        /* casting it to nap_int_t is ok, since
+                         * var->instantiation->type == OPCODE_INT so we have
+                         * allocated nap_int_t variable in the grow */
+                        ((nap_real_t*)var->instantiation->value)[idx] = nap_regr(vm, register_index);
+                    }
+                }
+            }
+            else
             {
                 NAP_NOT_IMPLEMENTED
             }
