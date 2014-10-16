@@ -141,6 +141,7 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "pushall") opcode = OPCODE_PUSHALL;
     if(expr == "popall") opcode = OPCODE_POPALL;
     if(expr == "clbf") opcode = OPCODE_CLBF;
+    if(expr == "poke") opcode = OPCODE_POKE;
 
     if(isnumber((expr.c_str())))
     {

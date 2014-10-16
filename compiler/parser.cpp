@@ -202,6 +202,18 @@ expression_with_location* parsed_file::parser_next_phrase(char *delim)
     int skipper = 1; // the scope of this variable is to skip one character forward if we reached a ";" separator, but nothing if we reached "{" or "}"
     while (cur_save < content_size && !phrase_read)
     {
+        // and again skip the "leading" spaces and newlines
+        while (cur_save < content_size && is_whitespace(content[cur_save]))
+        {
+            if(content[cur_save] == '\r' || content[cur_save] == '\n')
+            {
+                expwloc->location.start_line_number ++;
+                expwloc->location.end_line_number ++;
+                current_line ++;
+            }
+            cur_save ++;
+        }
+
         i++;
         /* trying to bypass a string and ignore the special characters inside it */
         if (is_string_delimiter(content[cur_save]))

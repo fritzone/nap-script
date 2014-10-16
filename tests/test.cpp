@@ -650,6 +650,40 @@ TEST(Functions, RealArrayReference)
     SCRIPT_SHUTDOWN
 }
 
+TEST(General, Fibonacci)
+{
+    SCRIPT_START
+    "                                                \
+    void fibo1(int& res[], int n)                    \
+    {                                                \
+       int first = 0, second = 1, next, c;           \
+       int i = 0;                                    \
+       for ( c = 0 ; c < n ; c++ )                   \
+       {                                             \
+          if ( c <= 1 )                              \
+             next = c;                               \
+          else                                       \
+          {                                          \
+             next = first + second;                  \
+             first = second;                         \
+             second = next;                          \
+          }                                          \
+          res[i++] = next;                           \
+       }                                             \
+    }                                                \
+                                                     \
+    int cnt = 20, i;                                 \
+                                                     \
+    int fib_it[cnt];                                 \
+    fibo1(fib_it, fib_it.len());                     \
+    int a = fib_it[9];                               \
+    "
+    SCRIPT_END
+    ASSERT_EQ(34, VAR_INT(a));
+
+    SCRIPT_SHUTDOWN
+}
+
 NAP_EXPORTS
 void external_callee(nap_int_t a, nap_int_t b)
 {

@@ -9,6 +9,7 @@
 int nap_marks(struct nap_vm *vm)
 {
     nap_mark_t marker_code = nap_fetch_mark(vm);
+
     struct stack_entry* marker = NULL;
 
     nap_mark_t* temp = NAP_MEM_ALLOC(1, nap_mark_t);

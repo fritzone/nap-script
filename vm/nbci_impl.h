@@ -449,6 +449,14 @@ nap_real_t nap_string_to_number_real(struct nap_vm* vm,
                                      int* error);
 
 
+/**
+ * @brief opcode_name returns the name ofthe given opcode
+ * @param opcode
+ * @return
+ */
+const char* opcode_name(int opcode);
+
+
 #ifdef __cplusplus
 }
 #endif

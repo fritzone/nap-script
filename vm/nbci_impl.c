@@ -43,6 +43,7 @@
 #include "inc.h"
 #include "dec.h"
 #include "clidx.h"
+#include "poke.h"
 #include "operation.h"
 #include "leave.h"
 #include "call_intern.h"
@@ -61,7 +62,7 @@
 #include <iconv.h>
 #include <stddef.h>
 
-#define ERROR_COUNT 25
+#define ERROR_COUNT 26
 
 /* section for defining the constants */
 static char* error_table[ERROR_COUNT + 1] =
@@ -91,6 +92,7 @@ static char* error_table[ERROR_COUNT + 1] =
     "[VM-0023] Division by zero",
     "[VM-0024] Cannot store/restore a value",
     "[VM-0025] Only indexed variables can be served",
+    "[VM-0026] Cannot poke a non variable",
 
     "LAST_ENTRY_FOR_FUNNY_COMPILERS_WHO_DONT_LIKE_COMMAS_AT_LAST_POSITON"
 };
@@ -107,7 +109,6 @@ void nap_vm_cleanup(struct nap_vm* vm)
     /* free the metatable */
     for(i=0; i<vm->meta_size; i++)
     {
-
         if(vm->metatable[i])
         {
             if(vm->metatable[i]->name)
@@ -115,8 +116,6 @@ void nap_vm_cleanup(struct nap_vm* vm)
                 NAP_MEM_FREE(vm->metatable[i]->name);
                 vm->metatable[i]->name = NULL;
             }
-
-
             if(vm->metatable[i]->instantiation)
             {
                 if(vm->metatable[i]->instantiation->value)
@@ -128,6 +127,7 @@ void nap_vm_cleanup(struct nap_vm* vm)
                 NAP_MEM_FREE(vm->metatable[i]->instantiation);
                 vm->metatable[i]->instantiation = NULL;
             }
+
             NAP_MEM_FREE(vm->metatable[i]);
             vm->metatable[i] = NULL;
         }
@@ -432,6 +432,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     vm->opcode_handlers[OPCODE_STORE] = nap_store; vm->opcode_error_codes[OPCODE_STORE] = ERR_VM_0024;
     vm->opcode_handlers[OPCODE_RESTORE] = nap_restore; vm->opcode_error_codes[OPCODE_STORE] = ERR_VM_0024;
     vm->opcode_handlers[OPCODE_SERVE] = nap_serve; vm->opcode_error_codes[OPCODE_SERVE] = ERR_VM_0025;
+    vm->opcode_handlers[OPCODE_POKE] = nap_poke; vm->opcode_error_codes[OPCODE_POKE] = ERR_VM_0026;
 
     /* setting the mov handlers */
     vm->mov_handlers[OPCODE_REG] = mov_into_register;
@@ -543,7 +544,7 @@ nap_int_t nap_read_immediate_int(struct nap_vm* vm, int* success)
     else
     {
 		char s[256] = {0};
-        SNPRINTF(s, MAX_BUF_SIZE(255), "invalid immediate size  0x%x at %"PRINT_u" (%"PRINT_x")", 
+        SNPRINTF(s, MAX_BUF_SIZE(255), "invalid immediate size  0x%x at %"PRINT_u" (%"PRINT_x";",
                  (unsigned)imm_size, nap_ip(vm), nap_ip(vm));
         nap_vm_set_error_description(vm, s);
         *success = NAP_FAILURE;
@@ -814,14 +815,14 @@ char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size
         free(src_copy);
         return NULL;
     }
-	strcpy(final_encoding, "WINDOWS-");
+    strcpy(final_encoding, "WINDOWS-";;
 	strcat(final_encoding, enc);
 #else
 	final_encoding = enc;
 #endif
 
     /* creating an iconv converter */
-	converter = iconv_open(final_encoding, "UTF-32BE");
+    converter = iconv_open(final_encoding, "UTF-32BE");
     if((size_t)converter == (size_t)-1)
     {
         free(loc_cp);
@@ -1237,3 +1238,63 @@ nap_int_t nap_string_to_number_int(struct nap_vm* vm, const char* to_conv,
     return v;
 }
 
+const char* opcode_name(int opcode)
+{
+    const char* expr = NULL;
+
+    if (opcode == OPCODE_PUSH) expr = "push";
+    if (opcode == OPCODE_REF) expr = "ref";
+    if (opcode == OPCODE_INT) expr = "int";
+    if (opcode == OPCODE_GENERIC) expr = "generic";
+    if (opcode == OPCODE_BYTE) expr = "byte";
+    if (opcode == OPCODE_STRING) expr = "char";
+    if (opcode == OPCODE_REAL) expr = "real";
+    if (opcode == OPCODE_STRING) expr = "string";
+    if (opcode == OPCODE_IDX) expr = "idx";
+    if (opcode == OPCODE_INTR) expr = "intr";
+    if (opcode == OPCODE_CALL) expr = "call";
+    if (opcode == OPCODE_MOV) expr = "mov";
+    if (opcode == OPCODE_INC) expr = "inc";
+    if (opcode == OPCODE_DEC) expr = "dec";
+    if (opcode == OPCODE_REG) expr = "reg";
+    if (opcode == OPCODE_EXIT) expr = "exit";
+    if (opcode == OPCODE_STORE) expr = "store";
+    if (opcode == OPCODE_RESTORE) expr = "restore";
+    if (opcode == OPCODE_ADD) expr = "add";
+    if (opcode == OPCODE_SUB) expr = "sub";
+    if (opcode == OPCODE_MUL) expr = "mul";
+    if (opcode == OPCODE_DIV) expr = "div";
+    if (opcode == OPCODE_MOD) expr = "mod";
+    if (opcode == OPCODE_SHL) expr = "shl";
+    if (opcode == OPCODE_POKE) expr = "poke";
+    if (opcode == OPCODE_SHR) expr = "shr";
+    if (opcode == OPCODE_AND) expr = "and";
+    if (opcode == OPCODE_OR) expr = "or";
+    if (opcode == OPCODE_XOR) expr = "xor";
+    if (opcode == OPCODE_NOT) expr = "not";
+    if (opcode == OPCODE_BCOM) expr = "bcom";
+    if (opcode == OPCODE_NEG) expr = "neg";
+    if (opcode == OPCODE_POS) expr = "pos";
+    if (opcode == OPCODE_EQ) expr = "eq";
+    if (opcode == OPCODE_LT) expr = "lt";
+    if (opcode == OPCODE_GT) expr = "gt";
+    if (opcode == OPCODE_LTE) expr = "lte";
+    if (opcode == OPCODE_GTE) expr = "gte";
+    if (opcode == OPCODE_NEQ) expr = "neq";
+    if (opcode == OPCODE_JLBF) expr = "jlbf";
+    if (opcode == OPCODE_JMP) expr = "jmp";
+    if (opcode == OPCODE_MARKS_NAME) expr = "marksn";
+    if (opcode == OPCODE_CLRS_NAME) expr = "clrsn";
+    if (opcode == OPCODE_RETURN) expr = "return";
+    if (opcode == OPCODE_RV) expr = "rv";
+    if (opcode == OPCODE_POP) expr = "pop";
+    if (opcode == OPCODE_PEEK) expr = "peek";
+    if (opcode == OPCODE_SERVE) expr = "serve";
+    if (opcode == OPCODE_CLIDX) expr = "clidx";
+    if (opcode == OPCODE_LEAVE) expr = "leave";
+    if (opcode == OPCODE_PUSHALL) expr = "pushall";
+    if (opcode == OPCODE_POPALL) expr = "popall";
+    if (opcode == OPCODE_CLBF) expr = "clbf";
+
+    return expr;
+}
