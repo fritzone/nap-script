@@ -55,6 +55,7 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/unary.c
     ${CMAKE_CURRENT_SOURCE_DIR}/stack.c
     ${CMAKE_CURRENT_SOURCE_DIR}/serve.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/poke.c
 
     ${NAP_ROOT}/compiler/charconverter.cpp
 )

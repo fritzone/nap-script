@@ -249,6 +249,8 @@ public:
 
     void add_external_method(method*);
 
+    bool already_exited;
+
 private:
 
     call_context* cur_cc;

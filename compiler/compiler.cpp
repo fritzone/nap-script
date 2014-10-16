@@ -21,6 +21,7 @@ nap_compiler::nap_compiler() : opcode_counter(0),
     cur_cc = new call_context(this, call_context::CC_GLOBAL, "global", NULL, NULL) ;
     global_cc = cur_cc;
     cur_method = 0;
+    already_exited = false;
 }
 
 nap_compiler::~nap_compiler()

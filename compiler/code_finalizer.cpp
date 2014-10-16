@@ -223,6 +223,7 @@ bool code_finalizer::is_asm_command_word(const std::string &expr)
     if(expr == "pushall") return true;
     if(expr == "popall") return true;
     if(expr == "clbf") return true;
+    if(expr == "poke") return true;
 
     return false;
 }

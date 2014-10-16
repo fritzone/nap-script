@@ -33,6 +33,11 @@ int nap_push(struct nap_vm *vm)
             struct variable_entry* ve = nap_fetch_variable(vm, var_index);
             ASSERT_NOT_NULL_VAR(ve);
 
+            if(ve->instantiation)
+            {
+                push_variable_instantiation(ve);
+            }
+
             ve->instantiation = NAP_MEM_ALLOC(1, struct stack_entry);
             NAP_NN_ASSERT(vm, ve->instantiation);
 

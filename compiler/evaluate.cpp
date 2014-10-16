@@ -259,7 +259,7 @@ void deliver_ccidx_dest(variable** target_var, nap_compiler* _compiler, const ex
                 SUCCES_OR_RETURN;
 
                 /* and here updating the current index register to hold the value from the reg(level) */
-                mov_target_index_register_source_int_register(_compiler, idxc, level);
+                mov_target_index_register_source_int_register(_compiler, idxc, level + 1);
 
             }
             else    /* compile everything in the next level and finally assign the next reg to current reg*/
@@ -1206,11 +1206,8 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                 else
                 {
                     code_stream(_compiler) << mov()
-
                                   << reg() << STR_INT  << level
-
-                                  << *(NUMBER_INTEGER_TYPE*)(nr->location())
-                                  ;
+                                  << *(NUMBER_INTEGER_TYPE*)(nr->location());
                 }
             }
             break;
@@ -1234,9 +1231,7 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                     /* this is a conversion operation */
                     code_stream(_compiler) << "@c"
                                   << get_reg_type(var->i_type) << get_reg_type(reqd_type)
-
-                                  << fully_qualified_varname(cc, var)
-                                  ;
+                                  << fully_qualified_varname(cc, var);
                 }
                 else
                 {
@@ -1255,16 +1250,10 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                 SUCCES_OR_RETURN;
 
                 code_stream(_compiler) << mov()
-
                               << reg() << get_reg_type(reqd_type)  << level
-
                               << ccidx()
-
                                 << fully_qualified_varname(cc, var)
-
-                                << idxc
-
-                              ;
+                                << idxc;
                 clidx(_compiler);
             }
             break;
@@ -1325,9 +1314,7 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                 {
                     /* start a mov operation into the given register type*/
                     code_stream(_compiler) << mov()
-
-                                  << reg() << get_reg_type(reqd_type)  << level
-                                  ;
+                                  << reg() << get_reg_type(reqd_type)  << level;
 
                     /* compile what is after the unary operation */
                     compile(target_var, _compiler,node->left, the_method, cc, level, reqd_type, forced_mov, psuccess);
@@ -1337,8 +1324,7 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                     /* move from the given register */
                     code_stream(_compiler)
                                   << get_opcode(node->op_type)
-
-                                  << reg() << get_reg_type(reqd_type)  << level ;
+                                  << reg() << get_reg_type(reqd_type)  << level;
                 }
                 else    /* this automatically deals with the post/pre inc/dec too */
                 {
@@ -1346,14 +1332,12 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                     SUCCES_OR_RETURN;
 
                     code_stream(_compiler) << mov()
-
                                   << reg() << get_reg_type(reqd_type)  << level
-
-                                  << reg() << get_reg_type(reqd_type)  << level + 1 ;
+                                  << reg() << get_reg_type(reqd_type)  << level + 1;
 
                     code_stream(_compiler)
                                   << get_opcode(node->op_type)
-                                  << reg() << get_reg_type(reqd_type)  << level ;
+                                  << reg() << get_reg_type(reqd_type)  << level;
                 }
             }
             break;
@@ -1732,6 +1716,12 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                     code_stream(_compiler) << mov() << fully_qualified_varname(cc, it->second) << reg() << get_reg_type(it->first->type) << level;
                 }
             }
+
+            // and now do some stuff to pop the parameters of the function
+            for(size_t i=0; i<m->parameters.size(); i++)
+            {
+                code_stream(_compiler) << "poke" << fully_qualified_varname(m->main_cc, m->parameters[i]->name.c_str());
+            }
             break;
         }
 
@@ -1740,30 +1730,43 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
             if(node->reference)
             {
                 expression_tree* t = (expression_tree*)node->reference->to_interpret;
-                int ret_type = the_method->ret_type;
-                if(t->op_type <= BASIC_TYPE_INDEXED)
+                if(the_method)
                 {
-                    // does this return an array?
-                    if(!the_method->ret_type_array_dim.empty() || the_method->dynamic_ret_type_array)
+                    int ret_type = the_method->ret_type;
+                    if(t->op_type <= BASIC_TYPE_INDEXED)
                     {
-                        code_stream(_compiler) << "store";
+                        // does this return an array?
+                        if(!the_method->ret_type_array_dim.empty() || the_method->dynamic_ret_type_array)
+                        {
+                            code_stream(_compiler) << "store";
+                        }
+                        else // just a plain variable
+                        {
+                            code_stream(_compiler) << mov() << reg() << get_reg_type(ret_type) << level;
+                        }
                     }
-                    else // just a plain variable
+
+                    // now if the method returns an array expect target_var to be the variable
+                    compile(target_var, _compiler,t, the_method, cc, level, ret_type, forced_mov, psuccess);
+                    SUCCES_OR_RETURN;
+                    *target_var = 0;
+
+                    if(!(!the_method->ret_type_array_dim.empty() || the_method->dynamic_ret_type_array))
                     {
-                        code_stream(_compiler) << mov() << reg() << get_reg_type(ret_type)  << level  ;
+                        code_stream(_compiler) << "return" << reg() << get_reg_type(ret_type)  << level;
                     }
                 }
-
-                // now if the method returns an array expect target_var to be the variable
-                compile(target_var, _compiler,t, the_method, cc, level, ret_type, forced_mov, psuccess);
-                SUCCES_OR_RETURN;
-                *target_var = 0;
-
-                if(!(!the_method->ret_type_array_dim.empty() || the_method->dynamic_ret_type_array))
+                else
                 {
-                    code_stream(_compiler) << "return" << reg() << get_reg_type(ret_type)  << level  ;
-                }
+                    // returning from the main call context
+                    code_stream(_compiler) << mov() << reg() << int_()  << level;
+                    int rt = BASIC_TYPE_INT;
+                    compile(target_var, _compiler,t, the_method, cc, level, rt, forced_mov, psuccess);
+                    SUCCES_OR_RETURN;
 
+                    code_stream(_compiler) << "exit" << reg() << int_()  << level;
+                    _compiler->already_exited = true;
+                }
             }
             break;
             }

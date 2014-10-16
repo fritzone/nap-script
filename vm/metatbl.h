@@ -40,6 +40,11 @@ struct variable_entry
      */
     struct stack_entry* instantiation;
 
+    /* The previous instantiation of the variable in case of recursive calls.*/
+    struct stack_entry* instantiation_stack[DEEPEST_RECURSION];
+    /* The instantiation stack pointer */
+    int16_t is_p;
+
     /* the dimensions of this variable. The scanning for dimensions begins at
      * the first element ([0]) and as long as there is a positive value (>0) we
      * increment a dimension counter. If any of the elements is -1 the variable
@@ -63,5 +68,21 @@ int interpret_metatable(struct nap_vm* vm,
                          uint8_t* start_location,
                          uint32_t len);
 
+
+/**
+ * @brief push_variable_instantiation pushes a new instantiation for the given
+ * variable_entry on its internal stack. This is done because of recursive
+ * functions might overwrite variables and parameters. This must be done for
+ * all variables when a function is called.
+ * @param ve
+ */
+void push_variable_instantiation(struct variable_entry* ve);
+
+/**
+ * @brief pop_variable_instantiation pops the variable's instantiation from the
+ * variable's internal stack.
+ * @param ve
+ */
+void pop_variable_instantiation(struct variable_entry* ve);
 
 #endif

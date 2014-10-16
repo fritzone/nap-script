@@ -76,6 +76,10 @@ int nap_clrs(struct nap_vm* vm)
                     /* the stack entry of the instantiation */
                     NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->var_def->instantiation);
                     vm->cec->stack[nap_sp(vm)]->var_def->instantiation = NULL;
+
+                    /* and now restore the variable's instantiation */
+                    pop_variable_instantiation(vm->cec->stack[nap_sp(vm)]->var_def);
+
                 }
                 else
                 {
