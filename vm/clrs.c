@@ -27,15 +27,9 @@ int nap_clrs(struct nap_vm* vm)
             break;
         }
 
-        /* the stack entru has no value, this is error */
-        if( vm->cec->stack[nap_sp(vm)]->value == NULL )
-        {
-            break;
-        }
-
         /* we have found the marker we need to delete */
         if(   (vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_MARKER_NAME)
-           && (*(nap_mark_t*)(vm->cec->stack[nap_sp(vm)]->value) == marker) )
+           && (vm->cec->stack[nap_sp(vm)]->len == marker) )
         {
             break;
         }
@@ -133,8 +127,6 @@ int nap_clrs(struct nap_vm* vm)
       && vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_MARKER_NAME)
     {
 
-        NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->value);
-        vm->cec->stack[nap_sp(vm)]->value = NULL;
         NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]);
         vm->cec->stack[nap_sp(vm)] = NULL;
         relocate_stored_elements(vm);

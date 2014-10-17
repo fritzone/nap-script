@@ -282,7 +282,7 @@ int is_string_delimiter(char c)
     return c == C_QUOTE || c == C_BACKQUOTE;
 }
 
-inline int is_whitespace(char c)
+int is_whitespace(char c)
 {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }

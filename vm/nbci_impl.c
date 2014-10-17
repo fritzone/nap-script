@@ -246,6 +246,10 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     struct nap_vm* vm = NULL;
     uint8_t* cloc = bytecode;
 
+#ifdef PREFER_DYNAMIC_ALLOCATION
+    int i = 0; /* for walking through the register stack */
+#endif
+
     vm = NAP_MEM_ALLOC(1, struct nap_vm);
     if(vm == NULL)
     {
@@ -442,7 +446,60 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     /* setting the container type of the VM*/
     vm->environment = target;
 
+    /* Fixing the register "stack" used to save and restore the registers */
+    vm->reg_stack_idx = 0;
+
+#ifdef PREFER_DYNAMIC_ALLOCATION
+    vm->regi_stack = NAP_MEM_ALLOC(DEEPEST_RECURSION, nap_int_t*);
+    vm->regb_stack = NAP_MEM_ALLOC(DEEPEST_RECURSION, nap_byte_t*);
+    for(i=0; i<DEEPEST_RECURSION; i++)
+    {
+        vm->regi_stack[i] = NAP_MEM_ALLOC(REGISTER_COUNT, nap_int_t);
+        vm->regb_stack[i] = NAP_MEM_ALLOC(REGISTER_COUNT, nap_byte_t);
+    }
+#endif
+
     return vm;
+}
+
+
+int nap_save_registers(struct nap_vm* vm)
+{
+
+    if(vm->reg_stack_idx + 1 == DEEPEST_RECURSION)
+    {
+        nap_vm_set_error_description(vm, "Too deep recursion. Execution halted");
+        return NAP_FAILURE;
+    }
+
+    /* save the int registers */
+    memcpy(vm->regi_stack[vm->reg_stack_idx], vm->cec->regi, vm->mrc * sizeof(nap_int_t));
+
+    /* save the byte registers */
+    memcpy(vm->regb_stack[vm->reg_stack_idx], vm->cec->regb, vm->mrc * sizeof(nap_byte_t));
+
+    vm->reg_stack_idx ++;
+
+    return NAP_SUCCESS;
+}
+
+int nap_restore_registers(struct nap_vm* vm)
+{
+    if(vm->reg_stack_idx == 0)
+    {
+        nap_vm_set_error_description(vm, "Cannot restore registers: None saved");
+        return NAP_FAILURE;
+    }
+
+    vm->reg_stack_idx --;
+
+    /* restore the int registers */
+    memcpy(vm->cec->regi, vm->regi_stack[vm->reg_stack_idx], vm->mrc * sizeof(nap_int_t));
+
+    /* restore the byte registers */
+    memcpy(vm->cec->regb, vm->regb_stack[vm->reg_stack_idx], vm->mrc * sizeof(nap_byte_t));
+
+    return NAP_SUCCESS;
 }
 
 struct nap_vm *nap_vm_load(const char *filename)
@@ -451,6 +508,7 @@ struct nap_vm *nap_vm_load(const char *filename)
     uint8_t* file_content;
     struct nap_vm* vm = NULL;
     FILE* fp = fopen(filename, "rb");
+    size_t loaded_bytes = 0;
     if(!fp)
     {
         fprintf(stderr, "cannot open file [%s]", filename);
@@ -468,7 +526,12 @@ struct nap_vm *nap_vm_load(const char *filename)
     }
 
     fseek(fp, 0, SEEK_SET);
-    fread(file_content, sizeof(uint8_t ), fsize, fp);
+    loaded_bytes = fread(file_content, sizeof(uint8_t ), fsize, fp);
+    if(loaded_bytes != fsize * sizeof(uint8_t) || loaded_bytes == 0)
+    {
+        fprintf(stderr, "cannot load file [%s]. File reading error", filename);
+        return NULL;
+    }
 
     fclose(fp);
 
@@ -495,7 +558,10 @@ nap_mark_t nap_fetch_mark(struct nap_vm* vm)
 {
     nap_mark_t* p_marker_code = (nap_mark_t*)(vm->content + nap_ip(vm));
     nap_move_ip(vm, sizeof(nap_mark_t), FORWARD);
-    return htovm_32(*p_marker_code);
+    /* return htovm_32(*p_marker_code); */
+
+    /* XXX  Trying out an optimization. This is just a number which is used only in comparison */
+    return (*p_marker_code);
 }
 
 nap_index_t nap_fetch_index(struct nap_vm* vm)
@@ -550,68 +616,6 @@ nap_int_t nap_read_immediate_int(struct nap_vm* vm, int* success)
         *success = NAP_FAILURE;
     }
     return nr;
-}
-
-/* the register "stack" used to save and restore the registers */
-static nap_int_t* regi_stack[DEEPEST_RECURSION] = {0};
-static nap_byte_t* regb_stack[DEEPEST_RECURSION] = {0};
-static nap_index_t regi_stack_idx = 0;
-static nap_index_t regb_stack_idx = 0;
-
-int nap_save_registers(struct nap_vm* vm)
-{
-    nap_int_t* tmp_ints = NULL;
-    nap_byte_t* tmp_bytes = NULL;
-
-    if(   regi_stack_idx + 1 == DEEPEST_RECURSION
-       || regb_stack_idx + 1 == DEEPEST_RECURSION)
-    {
-        nap_vm_set_error_description(vm, "Too deep recursion. Execution halted");
-        return NAP_FAILURE;
-    }
-
-    /* save the int registers */
-    tmp_ints = NAP_MEM_ALLOC(REGISTER_COUNT, nap_int_t);
-    NAP_NN_ASSERT(vm, tmp_ints);
-
-    memcpy(tmp_ints, vm->cec->regi, vm->mrc * sizeof(nap_int_t));
-    regi_stack[regi_stack_idx] = tmp_ints;
-    regi_stack_idx ++;
-
-    /* save the byte registers */
-    tmp_bytes = NAP_MEM_ALLOC(REGISTER_COUNT, nap_byte_t);
-    if(tmp_bytes == NULL)
-    {
-        free(tmp_ints);
-        NAP_NN_ASSERT(vm, tmp_bytes);
-    }
-
-    memcpy(tmp_bytes, vm->cec->regb, vm->mrc * sizeof(nap_byte_t));
-    regb_stack[regb_stack_idx] = tmp_bytes;
-    regb_stack_idx ++;
-
-    return NAP_SUCCESS;
-}
-
-int nap_restore_registers(struct nap_vm* vm)
-{
-    if(regi_stack_idx == 0 || regb_stack_idx == 0)
-    {
-        nap_vm_set_error_description(vm, "Cannot restore registers: None saved");
-        return NAP_FAILURE;
-    }
-
-    /* restore the int registers */
-    regi_stack_idx --;
-    memcpy(vm->cec->regi, regi_stack[regi_stack_idx], vm->mrc * sizeof(nap_int_t));
-    NAP_MEM_FREE(regi_stack[regi_stack_idx]);
-
-    /* restore the byte registers */
-    regb_stack_idx --;
-    memcpy(vm->cec->regb, regb_stack[regb_stack_idx], vm->mrc * sizeof(nap_byte_t));
-    NAP_MEM_FREE(regb_stack[regb_stack_idx]);
-
-    return NAP_SUCCESS;
 }
 
 int nap_vmi_has_variable(const struct nap_vm* vm, const char* name, int* type)
@@ -696,7 +700,6 @@ struct variable_entry *nap_fetch_variable(struct nap_vm* vm, nap_index_t var_ind
     }
 }
 
-
 struct variable_entry *nap_vmi_get_variable(const struct nap_vm *vm, const char *name)
 {
     size_t i;
@@ -749,7 +752,6 @@ void nap_set_error(struct nap_vm *vm, int error_code)
     vm->error_code = error_code;
     vm->error_message = error_table[error_code - 1];
 }
-
 
 const char *nap_get_type_description(StackEntryType t)
 {
@@ -961,6 +963,14 @@ int64_t nap_sp(struct nap_vm *vm)
     return vm->cec->stack_pointer;
 }
 
+#if !defined(_MSC_VER)
+inline
+#endif
+void nap_set_regi(struct nap_vm *vm, uint8_t register_index, nap_int_t v)
+{
+    vm->cec->regi[register_index] = v;
+}
+
 #endif
 
 void nap_set_regb(struct nap_vm *vm, uint8_t register_index, nap_byte_t v)
@@ -983,10 +993,6 @@ nap_real_t nap_regr(struct nap_vm *vm, uint8_t register_index)
     return vm->cec->regr[register_index];
 }
 
-void nap_set_regi(struct nap_vm *vm, uint8_t register_index, nap_int_t v)
-{
-    vm->cec->regi[register_index] = v;
-}
 
 void nap_set_regidx(struct nap_vm *vm, uint8_t register_index, nap_int_t v)
 {

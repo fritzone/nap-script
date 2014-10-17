@@ -12,20 +12,12 @@ int nap_marks(struct nap_vm *vm)
 
     struct stack_entry* marker = NULL;
 
-    nap_mark_t* temp = NAP_MEM_ALLOC(1, nap_mark_t);
-    NAP_NN_ASSERT(vm, temp);
-
     marker = NAP_MEM_ALLOC(1, struct stack_entry);
-    if(!marker)
-    {
-        free(temp);
-        NAP_NN_ASSERT(vm, marker); /* sort of ugly but will do what we want */
-    }
-
-    *temp = marker_code;
+    NAP_NN_ASSERT(vm, marker); /* sort of ugly but will do what we want */
 
     marker->type = STACK_ENTRY_MARKER_NAME;
-    marker->value = temp;
+    marker->value = 0;
+    marker->len = marker_code;
 
     /* TODO: Reallocate if required */
     vm->cec->stack[++ vm->cec->stack_pointer] = marker;

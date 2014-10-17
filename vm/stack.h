@@ -72,7 +72,10 @@ struct stack_entry
     /* if this contains a
      *  1. string
      *  2. an element with indexes
-     * this is the length of the allocated memory */
+     * this is the length of the allocated memory.
+     *
+     * If this stack entry contains a marker, this is the marker code
+     * */
     size_t len;
 
     /* This member has the variable entry in this case this object was created
