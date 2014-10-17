@@ -382,7 +382,7 @@ int level_0_dot_operator(const nap_compiler* _compiler, const std::string &expr,
     int t = level_0_longer_operator(_compiler, expr, STR_DOT, 0, psuccess);
     SUCCES_OR_RETURN -1;
 
-    if(t < (int)expr.length() - 1)
+    if(t < (int)expr.length() - 1 && t > 0)
     {
         /* normal real number? */
         if(isdigit(expr[t-1]) && isdigit(expr[t+1]))
