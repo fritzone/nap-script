@@ -250,6 +250,18 @@ struct nap_vm
      * A Word is 16 bits.
      * Error codes in nap_consts.h or use nap_get_error_description(int) */
     uint32_t error_code;
+
+    /* The internal register stacks' index */
+    size_t reg_stack_idx;
+#ifndef PREFER_DYNAMIC_ALLOCATION
+    /* the register "stack" used to save and restore the registers */
+    nap_int_t regi_stack[DEEPEST_RECURSION][REGISTER_COUNT];
+    nap_byte_t regb_stack[DEEPEST_RECURSION][REGISTER_COUNT];
+#else
+    nap_int_t** regi_stack;
+    nap_byte_t** regb_stack;
+#endif
+
 };
 
 /**

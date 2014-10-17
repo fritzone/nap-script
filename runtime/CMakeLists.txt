@@ -18,6 +18,10 @@ include_directories(${CMAKE_SOURCE_DIR}/vm
 					${CMAKE_BINARY_DIR}/compiler
 )
 
+if(vm-ip-sp-as-macros)
+    add_definitions( -DVM_IPSP_AS_MACRO )
+endif()
+
 target_link_libraries(nap_rt nap_cpl_s nap_bci_s)
 
 GENERATE_EXPORT_HEADER(nap_rt

@@ -334,6 +334,13 @@ inline
 #endif
 int64_t nap_sp(struct nap_vm* vm);
 
+/* Sets the given int register in the VM to the specified value */
+extern
+#if !defined(_MSC_VER)
+inline
+#endif
+void nap_set_regi(struct nap_vm* vm, uint8_t register_index, nap_int_t v);
+
 #else
 
 #define nap_step_ip(vm) vm->cec->cc ++
@@ -346,6 +353,8 @@ int64_t nap_sp(struct nap_vm* vm);
 
 #define nap_sp(vm) vm->cec->stack_pointer
 
+#define nap_set_regi(vm, register_index, v) vm->cec->regi[register_index] = v
+
 #endif
 
 
@@ -355,8 +364,6 @@ void nap_set_regb(struct nap_vm* vm, uint8_t register_index, nap_byte_t v);
 /* Returns the given byte register from the given VM */
 nap_byte_t nap_regb(struct nap_vm* vm, uint8_t register_index);
 
-/* Sets the given int register in the VM to the specified value */
-void nap_set_regi(struct nap_vm* vm, uint8_t register_index, nap_int_t v);
 
 /* Returns the given int register from the given VM */
 nap_int_t nap_regi(struct nap_vm* vm, uint8_t register_index);

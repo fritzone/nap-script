@@ -7,7 +7,7 @@ set_source_files_properties(
 set(include_interrupt_dirs "interrupts/intr_1")
 
 if(build-compiler)
-    option(enable-runtime-compilation "Build in the runtime code compilation feature (link in intr_2 & intr_3)" ON)
+    option(enable-runtime-compilation "Build in the runtime code compilation feature (link in intr_2 & intr_3) and enable the nap_execute() function." ON)
     if(enable-runtime-compilation)
         list(APPEND include_interrupt_dirs  "interrupts/intr_2" "interrupts/intr_3" )
 
@@ -18,9 +18,14 @@ else()
     unset(enable-runtime-compilation)
 endif()
 
-option(vm-ip-sp-as-macros "Generate code for defining the VM IP and SP operations to be macros instead of functions" ON)
+option(vm-ip-sp-as-macros "Generate code for defining the VM IP and SP operations to be macros instead of functions. You usually want this, unless yo debug the code." ON)
 if(vm-ip-sp-as-macros)
     add_definitions( -DVM_IPSP_AS_MACRO )
+endif()
+
+option(vm-prefer-dynamic-allocation "Generate code which allocates memory on the heap instead of the stack for VM internals. This will lead to a smaller stack usage for the application but a somewhat slower startup." OFF)
+if(vm-prefer-dynamic-allocation)
+    add_definitions( -DPREFER_DYNAMIC_ALLOCATION )
 endif()
 
 list(APPEND include_interrupt_dirs "interrupts/intr_4")

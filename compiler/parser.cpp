@@ -734,8 +734,28 @@ void parsed_file::deal_with_ifs_loading(call_context* cc,
             std::string s = expwloc2->expression.substr(strlen(STR_ELSE));
             if(s.length() > 1)
             {
-                else_cc->add_new_expression(s, expwloc2, psuccess);
-                SUCCES_OR_RETURN;
+                /* if after a one line if there is an else */
+                if( !expwloc->expression.empty() )
+                {
+                    expression_tree* new_node2 = else_cc->add_new_expression(s, expwloc, psuccess);
+                    SUCCES_OR_RETURN;
+                    /* now check whether this node was an If, a for, a while, a do or anything else that might need loading more rows and creating more contexts */
+                    if(new_node2->op_type == STATEMENT_IF || new_node2->op_type == STATEMENT_IF_1L)
+                    {
+                        deal_with_ifs_loading(else_cc, new_node2, the_method, delim, current_level, expwloc, psuccess);
+                        SUCCES_OR_RETURN;
+                    }
+                    else if(new_node2->op_type == STATEMENT_WHILE || new_node2->op_type == STATEMENT_WHILE_1L)
+                    {
+                        deal_with_while_loading(else_cc, new_node2, the_method, delim, current_level, expwloc, psuccess);
+                        SUCCES_OR_RETURN;
+                    }
+                    else if(new_node2->op_type == STATEMENT_FOR || new_node2->op_type == STATEMENT_FOR_1L)
+                    {
+                        deal_with_for_loading(else_cc, new_node2, the_method, delim, current_level, expwloc, psuccess);
+                        SUCCES_OR_RETURN;
+                    }
+                }
             }
         }
         else if(C_OPEN_BLOCK == delim2)
