@@ -258,7 +258,6 @@ nap_real_t nap_read_immediate_real(struct nap_vm* vm);
  */
 nap_byte_t nap_read_byte(struct nap_vm* vm);
 
-
 /**
  * Saves the registers. Happens automatically on a "call"
  */
@@ -298,34 +297,57 @@ char* convert_string_from_bytecode_file(struct nap_vm* vm,
 /** Copies the return values from source to dest */
 int nap_copy_return_values(const struct nap_vm* src, struct nap_vm* dst);
 
-/*
- * Returns the current IP and will step the IP of the given virtual machine.
- */
+#ifndef VM_IPSP_AS_MACRO
 
+/** Returns the current IP and will step the IP of the given virtual machine. */
 extern 
 #if !defined(_MSC_VER)
-	inline 
+inline
 #endif
-	uint64_t nap_step_ip(struct nap_vm* vm);
+uint64_t nap_step_ip(struct nap_vm* vm);
 
-/*
- * Returns the current IP of the VM. Does not step the IP.
- */
+/* Returns the current IP of the VM. Does not step the IP. */
+extern
+#if !defined(_MSC_VER)
+inline
+#endif
 uint64_t nap_ip(const struct nap_vm* vm);
 
-/*
- * Sets the IP of  the VM to be the new value. The old IP is discarded,
- * thrown away.
- */
+/** Sets the IP of  the VM to be the new value. The old IP is discarded. */
+extern
+#if !defined(_MSC_VER)
+inline
+#endif
 void nap_set_ip(struct nap_vm* vm, uint64_t new_ip);
 
-/**
- * @brief nap_move_ip Moves the IP of th virtual machine
- * @param vm The virtual machine
- * @param delta The difference between the current and the new IP
- * @param direction 1 forward, -1 backward
- */
+/** Moves the IP of th virtual machine in the specified direction (1 forward, -1 backward) */
+extern
+#if !defined(_MSC_VER)
+inline
+#endif
 void nap_move_ip(struct nap_vm* vm, uint64_t delta, signed char direction);
+
+/* Returns the stack pointer of the virtual machine current execution context */
+extern
+#if !defined(_MSC_VER)
+inline
+#endif
+int64_t nap_sp(struct nap_vm* vm);
+
+#else
+
+#define nap_step_ip(vm) vm->cec->cc ++
+
+#define nap_ip(vm) vm->cec->cc
+
+#define nap_set_ip(vm, new_ip) vm->cec->cc = new_ip
+
+#define nap_move_ip(vm, delta, direction) vm->cec->cc = vm->cec->cc + direction * delta
+
+#define nap_sp(vm) vm->cec->stack_pointer
+
+#endif
+
 
 /* Sets the given byte register in the VM to the specified value */
 void nap_set_regb(struct nap_vm* vm, uint8_t register_index, nap_byte_t v);
@@ -350,9 +372,6 @@ void nap_set_regidx(struct nap_vm* vm, uint8_t register_index, nap_int_t v);
 
 /* Return the nap register index from the given position */
 nap_int_t nap_regidx(struct nap_vm* vm, uint8_t register_index);
-
-/* Returns the stack pointer */
-int64_t nap_sp(struct nap_vm* vm);
 
 /**
  * @brief init_string_register initializes the string register to a given value.

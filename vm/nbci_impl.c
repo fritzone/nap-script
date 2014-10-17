@@ -918,6 +918,9 @@ char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size
     return to_return;
 }
 
+/* Only if the IP and SP handling is not done via macros */
+#ifndef VM_IPSP_AS_MACRO
+
 #if !defined(_MSC_VER)
 inline 
 #endif
@@ -926,22 +929,39 @@ uint64_t nap_step_ip(struct nap_vm *vm)
     return vm->cec->cc ++;
 }
 
-
+#if !defined(_MSC_VER)
+inline
+#endif
 uint64_t nap_ip(const struct nap_vm *vm)
 {
     return vm->cec->cc;
 }
 
-
+#if !defined(_MSC_VER)
+inline
+#endif
 void nap_set_ip(struct nap_vm *vm, uint64_t new_ip)
 {
     vm->cec->cc = new_ip;
 }
 
+#if !defined(_MSC_VER)
+inline
+#endif
 void nap_move_ip(struct nap_vm *vm, uint64_t delta, signed char direction)
 {
     vm->cec->cc = vm->cec->cc + direction * delta;
 }
+
+#if !defined(_MSC_VER)
+inline
+#endif
+int64_t nap_sp(struct nap_vm *vm)
+{
+    return vm->cec->stack_pointer;
+}
+
+#endif
 
 void nap_set_regb(struct nap_vm *vm, uint8_t register_index, nap_byte_t v)
 {
@@ -1044,12 +1064,6 @@ int nap_set_regs(struct nap_vm* vm, uint8_t register_index,
 struct nap_string_register* nap_regs(struct nap_vm *vm, uint8_t register_index)
 {
     return &(vm->cec->regs[register_index]);
-}
-
-
-int64_t nap_sp(struct nap_vm *vm)
-{
-    return vm->cec->stack_pointer;
 }
 
 nap_real_t unpack754(uint64_t i, unsigned bits, unsigned expbits)

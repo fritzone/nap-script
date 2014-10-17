@@ -18,6 +18,11 @@ else()
     unset(enable-runtime-compilation)
 endif()
 
+option(vm-ip-sp-as-macros "Generate code for defining the VM IP and SP operations to be macros instead of functions" ON)
+if(vm-ip-sp-as-macros)
+    add_definitions( -DVM_IPSP_AS_MACRO )
+endif()
+
 list(APPEND include_interrupt_dirs "interrupts/intr_4")
 
 include_directories( ${include_interrupt_dirs} ${NAP_ROOT}/compiler )

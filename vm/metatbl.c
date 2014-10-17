@@ -91,27 +91,23 @@ int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
 
 void push_variable_instantiation(struct variable_entry *ve)
 {
-    /* will this overwrite something? */
-    if(ve->instantiation_stack[ve->is_p] != NULL)
+    if(ve->is_p < DEEPEST_RECURSION - 1)
     {
-        /* if yes, just free it */
-        ve->instantiation_stack[ve->is_p] = NULL;
+        ve->instantiation_stack[ve->is_p++] = ve->instantiation;
     }
-    ve->instantiation_stack[ve->is_p++] = ve->instantiation;
 }
 
 
 void pop_variable_instantiation(struct variable_entry *ve)
 {
-    if(ve->is_p >= 0)
+    if(ve->is_p > 0)
     {
-        NAP_MEM_FREE(ve->instantiation->value);
-        NAP_MEM_FREE(ve->instantiation);
+        if(ve->instantiation)
+        {
+            NAP_MEM_FREE(ve->instantiation->value);
+            NAP_MEM_FREE(ve->instantiation);
+        }
         ve->instantiation = NULL;
         ve->instantiation = ve->instantiation_stack[--ve->is_p];
-        if(ve->is_p == -1)
-        {
-            ve->is_p = 0;
-        }
     }
 }
