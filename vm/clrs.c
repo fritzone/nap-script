@@ -93,6 +93,13 @@ int nap_clrs(struct nap_vm* vm)
                     NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->value);
                 }
                 vm->cec->stack[nap_sp(vm)]->value = NULL;
+
+
+                if(vm->cec->stack_pointer == save_sp - 1)
+                {
+                    /* It is impossible to get a stored element in this situation */
+                    save_sp --;
+                }
             }
         }
 
@@ -105,7 +112,6 @@ int nap_clrs(struct nap_vm* vm)
             if(vm->cec->stack_pointer < save_sp)
             {
                 /* and let's see if we have stored values above this */
-                /* TODO: loop this */
                 relocate_stored_elements(vm);
 
             }

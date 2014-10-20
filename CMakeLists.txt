@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 2.6)
 project (nap-script)
 
+include (TestBigEndian)
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) 
 
 option(coverage-build "gcov/lcov test coverage analysis (make coverage_test)" OFF)
@@ -8,6 +10,12 @@ option(build-vm "Build the Nap Virtual Machine" ON)
 option(build-compiler "Build the Nap Compiler" ON)
 option(make-tests "Enable Unit tests" ON)
 option(build-runtime "Build the runtime" ON)
+
+# Check for endianness of the system
+test_big_endian(TEST_ENDIAN)
+if(NOT ${TEST_ENDIAN} EQUAL 1)
+    add_definitions( -DCOMPILED_ON_LITTLE_ENDIAN )
+endif()
 
 if(NOT WIN32)
   add_definitions(-Wall -Wextra -Wcomment -Wformat -Winit-self -Wno-long-long -Wmissing-include-dirs)

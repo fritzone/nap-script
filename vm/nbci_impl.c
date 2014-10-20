@@ -564,12 +564,6 @@ nap_mark_t nap_fetch_mark(struct nap_vm* vm)
     return (*p_marker_code);
 }
 
-nap_index_t nap_fetch_index(struct nap_vm* vm)
-{
-    nap_index_t* p_var_index = (nap_index_t*)(vm->content + nap_ip(vm));
-    nap_move_ip(vm, sizeof(nap_index_t), FORWARD);
-    return htovm_32(*p_var_index);
-}
 
 nap_int_t nap_read_immediate_int(struct nap_vm* vm, int* success)
 {
@@ -969,6 +963,13 @@ inline
 void nap_set_regi(struct nap_vm *vm, uint8_t register_index, nap_int_t v)
 {
     vm->cec->regi[register_index] = v;
+}
+
+nap_index_t nap_fetch_index(struct nap_vm* vm)
+{
+    nap_index_t* p_var_index = (nap_index_t*)(vm->content + nap_ip(vm));
+    nap_move_ip(vm, sizeof(nap_index_t), FORWARD);
+    return htovm_32(*p_var_index);
 }
 
 #endif

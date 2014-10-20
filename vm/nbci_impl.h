@@ -9,6 +9,7 @@ extern "C" {
 #endif
 
 #include "nap_types.h"
+#include "byte_order.h"
 #include "stack.h"
 
 #include <stddef.h>
@@ -125,10 +126,10 @@ struct nap_string_register;
 	char t[256] = {0}, offending_command[256] = {0}, tmp[32] = {0};            \
     uint64_t bc = 0;                                                           \
     for(bc = vm->cec->lia; bc != nap_ip(vm); bc++) {                           \
-        SNPRINTF(tmp, MAX_BUF_SIZE(31), "%x ", vm->content[bc]);                             \
+        SNPRINTF(tmp, MAX_BUF_SIZE(31), "%x ", vm->content[bc]);               \
         strcat(offending_command, tmp);                                        \
     }                                                                          \
-    SNPRINTF(t, MAX_BUF_SIZE(255), "NI: file [%s] line [%d] instr [%x] "                     \
+    SNPRINTF(t, MAX_BUF_SIZE(255), "NI: file [%s] line [%d] instr [%x] "       \
                     "opcode [%x] at %" PRINT_u " (%" PRINT_x ") cmd: %s\n\n",  \
             __FILE__, __LINE__, vm->content[nap_ip(vm) - 1],                   \
             vm->cec->current_opcode, nap_ip(vm) - 1, nap_ip(vm) - 1,           \
@@ -151,8 +152,8 @@ struct nap_string_register;
 #define CHECK_VARIABLE_INSTANTIATON(var)                                       \
     if(var->instantiation == 0)                                                \
     {                                                                          \
-	    char s[512] = {0};                                                           \
-        SNPRINTF(s, MAX_BUF_SIZE(512), "Variable [%s] not initialised correctly. "           \
+        char s[512] = {0};                                                     \
+        SNPRINTF(s, MAX_BUF_SIZE(512), "Variable [%s] not initialised correctly. "\
                    "It has no instantiation.", var->name);                     \
         vm->error_description = s;                                             \
         return NAP_FAILURE;                                                    \
@@ -161,8 +162,8 @@ struct nap_string_register;
 #define CHECK_VARIABLE_TYPE(var, REQ_TYPE_CODE)                                \
     if(var->instantiation->type != REQ_TYPE_CODE)                              \
     {                                                                          \
-	    char s[512] = {0};                                                           \
-        SNPRINTF(s, MAX_BUF_SIZE(512), "Variable [%s] has wrong type."                       \
+        char s[512] = {0};                                                     \
+        SNPRINTF(s, MAX_BUF_SIZE(512), "Variable [%s] has wrong type."         \
                    "Expected [%s] got[%s].", var->name,                        \
                     nap_get_type_description(REQ_TYPE_CODE),                   \
                     nap_get_type_description(var->instantiation->type));       \
@@ -354,6 +355,8 @@ void nap_set_regi(struct nap_vm* vm, uint8_t register_index, nap_int_t v);
 #define nap_sp(vm) vm->cec->stack_pointer
 
 #define nap_set_regi(vm, register_index, v) vm->cec->regi[register_index] = v
+
+#define nap_fetch_index(vm) htovm_32( *(nap_index_t*)(vm->content + vm->cec->cc) ); vm->cec->cc = vm->cec->cc + sizeof(nap_index_t)
 
 #endif
 
