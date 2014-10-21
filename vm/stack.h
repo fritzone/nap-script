@@ -19,9 +19,6 @@ typedef enum TStackEntryType
     STACK_ENTRY_REAL          = 2,                /* same as OPCODE_FLOAT */
     STACK_ENTRY_STRING        = 3,                /* same as OPCODE_STRING */
     STACK_ENTRY_BYTE          = 4,                /* same as OPCODE_BYTE */
-    STACK_ENTRY_IDX           = 5,
-    STACK_ENTRY_CHAR          = 6,                /* same as OPCODE_CHAR */
-    STACK_ENTRY_IMMEDIATE_INT = 7,
     STACK_ENTRY_MARKER_NAME   = 8,
 
     STACK_ENTRY_LAST
@@ -66,6 +63,8 @@ struct stack_entry
      *     - there is always 0 pushed onto the stack as the initial value of the
      *       variable.
      *    resulted from: push int global.int_var
+     * 4. for a marker: the value of the stack pointer where the marker resides
+     *    used by clrs to faster move down the stack
      */
     void* value;
 

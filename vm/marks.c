@@ -10,16 +10,9 @@ int nap_marks(struct nap_vm *vm)
 {
     nap_mark_t marker_code = nap_fetch_mark(vm);
 
-    struct stack_entry* marker = NULL;
-
-    marker = NAP_MEM_ALLOC(1, struct stack_entry);
-    NAP_NN_ASSERT(vm, marker); /* sort of ugly but will do what we want */
-
-    marker->type = STACK_ENTRY_MARKER_NAME;
-    marker->value = 0;
-    marker->len = marker_code;
-
     /* TODO: Reallocate if required */
-    vm->cec->stack[++ vm->cec->stack_pointer] = marker;
+    vm->cec->stack[++ vm->cec->stack_pointer] = vm->marks_list[marker_code];
+    //*(int64_t*)vm->marks_list[marker_code]->value = vm->cec->stack_pointer;
+
     return NAP_SUCCESS;
 }

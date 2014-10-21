@@ -106,6 +106,14 @@ void nap_vm_cleanup(struct nap_vm* vm)
     int64_t tempst;
     int64_t tempjmi;
 
+    /* free the marks list */
+    for(i=0; i<=vm->max_marks; i++)
+    {
+        NAP_MEM_FREE(vm->marks_list[i]->value);
+        NAP_MEM_FREE(vm->marks_list[i]);
+    }
+    NAP_MEM_FREE(vm->marks_list);
+
     /* free the metatable */
     for(i=0; i<vm->meta_size; i++)
     {
@@ -246,9 +254,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     struct nap_vm* vm = NULL;
     uint8_t* cloc = bytecode;
 
-#ifdef PREFER_DYNAMIC_ALLOCATION
-    int i = 0; /* for walking through the register stack */
-#endif
+    uint16_t i = 0; /* for walking through various stuffs */
 
     vm = NAP_MEM_ALLOC(1, struct nap_vm);
     if(vm == NULL)
@@ -459,6 +465,16 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     }
 #endif
 
+    /* initialize the marks list */
+    vm->marks_list = NAP_MEM_ALLOC(vm->max_marks + 1, struct stack_entry*);
+    for(i=0; i<=vm->max_marks; i++)
+    {
+        vm->marks_list[i] = NAP_MEM_ALLOC(1, struct stack_entry);
+        vm->marks_list[i]->type = STACK_ENTRY_MARKER_NAME;
+        vm->marks_list[i]->value = NAP_MEM_ALLOC(1, int64_t);
+        vm->marks_list[i]->len = i;
+
+    }
     return vm;
 }
 
@@ -553,17 +569,6 @@ nap_addr_t nap_fetch_address(struct nap_vm *vm)
     nap_move_ip(vm, sizeof(nap_addr_t), FORWARD);
     return htovm_32(*p_addr);
 }
-
-nap_mark_t nap_fetch_mark(struct nap_vm* vm)
-{
-    nap_mark_t* p_marker_code = (nap_mark_t*)(vm->content + nap_ip(vm));
-    nap_move_ip(vm, sizeof(nap_mark_t), FORWARD);
-    /* return htovm_32(*p_marker_code); */
-
-    /* XXX  Trying out an optimization. This is just a number which is used only in comparison */
-    return (*p_marker_code);
-}
-
 
 nap_int_t nap_read_immediate_int(struct nap_vm* vm, int* success)
 {
@@ -755,9 +760,6 @@ const char *nap_get_type_description(StackEntryType t)
         case STACK_ENTRY_BYTE : return "byte";
         case STACK_ENTRY_REAL : return "real";
         case STACK_ENTRY_STRING : return "string";
-        case STACK_ENTRY_IDX : return "idx";
-        case STACK_ENTRY_CHAR : return "char";
-        case STACK_ENTRY_IMMEDIATE_INT : return "imm_int";
         case STACK_ENTRY_MARKER_NAME : return "mark";
         default: return "unk";
     }
@@ -972,6 +974,17 @@ nap_index_t nap_fetch_index(struct nap_vm* vm)
     return htovm_32(*p_var_index);
 }
 
+nap_mark_t nap_fetch_mark(struct nap_vm* vm)
+{
+    nap_mark_t* p_marker_code = (nap_mark_t*)(vm->content + nap_ip(vm));
+    nap_move_ip(vm, sizeof(nap_mark_t), FORWARD);
+    return (*p_marker_code);
+}
+
+nap_int_t nap_regi(struct nap_vm *vm, uint8_t register_index)
+{
+    return vm->cec->regi[register_index];
+}
 #endif
 
 void nap_set_regb(struct nap_vm *vm, uint8_t register_index, nap_byte_t v)
@@ -984,10 +997,6 @@ nap_byte_t nap_regb(struct nap_vm *vm, uint8_t register_index)
     return vm->cec->regb[register_index];
 }
 
-nap_int_t nap_regi(struct nap_vm *vm, uint8_t register_index)
-{
-    return vm->cec->regi[register_index];
-}
 
 nap_real_t nap_regr(struct nap_vm *vm, uint8_t register_index)
 {
@@ -1319,3 +1328,14 @@ const char* opcode_name(int opcode)
 
     return expr;
 }
+
+#ifdef NAP_MEM_DEBUG
+
+void* allocator(size_t count, const char *fn, long line)
+{
+    void* v = calloc(1, count);
+    fprintf(stderr, "crea:%p (%s:%ld)\n", v, fn, line);
+    return v;
+}
+
+#endif

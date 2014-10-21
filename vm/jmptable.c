@@ -23,13 +23,20 @@ int interpret_jumptable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
     }
     
     cloc = start_location + 4; /* skip the .jmp */
+
+    /* read the jumptable entries count */
     vm->jumptable_size = htovm_32(*(uint32_t*)(cloc));
+    cloc += 4;
+
+    /* read the maximum number of marks from the file */
+    vm->max_marks = htovm_32(*(uint32_t*)(cloc));
+    cloc += 4;
+
     if(vm->jumptable_size == 0)
     {
         return NAP_SUCCESS;
     }
 
-    cloc += 4;
     vm->jumptable = NAP_MEM_ALLOC(vm->jumptable_size + 1, struct jumptable_entry*);
     NAP_NN_ASSERT(vm, vm->jumptable);
 
