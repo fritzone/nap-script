@@ -47,6 +47,7 @@ struct nap_string_register;
 
 
 /* Macro for creating an object */
+
 #ifdef NAP_MEM_DEBUG
 #include <stdlib.h>
 void* allocator(size_t count, const char* fn, long line);

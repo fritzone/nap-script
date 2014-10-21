@@ -80,8 +80,8 @@ int nap_clrs(struct nap_vm* vm)
             if(vm->cec->stack[nap_sp(vm)]->type < STACK_ENTRY_MARKER_NAME)
             {
                 NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->value);
+                vm->cec->stack[nap_sp(vm)]->value = NULL; /* XXX Danger! */
             }
-            vm->cec->stack[nap_sp(vm)]->value = NULL; /* XXX Danger! */
 
             if(vm->cec->stack_pointer == save_sp - 1)
             {
@@ -97,8 +97,8 @@ int nap_clrs(struct nap_vm* vm)
             if(vm->cec->stack[nap_sp(vm)]->type != STACK_ENTRY_MARKER_NAME)
             {
                 NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]);
+                vm->cec->stack[nap_sp(vm)] = NULL; /* XXX Danger! */
             }
-            vm->cec->stack[nap_sp(vm)] = NULL; /* XXX Danger! */
 
             if(vm->cec->stack_pointer < save_sp)
             {
