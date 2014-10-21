@@ -45,6 +45,16 @@ struct nap_string_register;
 #define NAP_MEM_FREE(x) do { if(x){ free((x)); } } while(0);
 #endif
 
+
+/* Macro for creating an object */
+#ifdef NAP_MEM_DEBUG
+#include <stdlib.h>
+void* allocator(size_t count, const char* fn, long line);
+#define NAP_MEM_ALLOC(count, type) (type*)allocator( (count) * sizeof(type), __FILE__, __LINE__)
+#else
+#define NAP_MEM_ALLOC(count, type) (type*)calloc( (count), sizeof(type))
+#endif
+
 #define NAP_REPORT_ERROR(vm, error)                                            \
     do                                                                         \
     {                                                                          \
@@ -59,8 +69,6 @@ struct nap_string_register;
     }                                                                          \
     } while(0);
 
-/* Macro for creating an object */
-#define NAP_MEM_ALLOC(count, type) (type*)calloc( (count), sizeof(type))
 
 /* Macro for asserting a non-NULL variable and setting the VM's error in case*/
 #define NAP_NN_ASSERT(vm,var)                                                  \
@@ -216,20 +224,6 @@ struct variable_entry* nap_vmi_get_variable(const struct nap_vm *vm, const char*
 nap_addr_t nap_fetch_address(struct nap_vm *vm);
 
 /**
- * Fetch a marker from the bytecode stream
- * @param vm
- * @return
- */
-nap_mark_t nap_fetch_mark(struct nap_vm* vm);
-
-/**
- * Fetch an index from the bytecode stream
- * @param vm
- * @return
- */
-nap_index_t nap_fetch_index(struct nap_vm* vm);
-
-/**
  * @brief Fetch a variable of the VM, or from the parent VM
  * @param vm - the VM in whitch we are working
  * @param var_index - the index of teh variable
@@ -342,6 +336,15 @@ inline
 #endif
 void nap_set_regi(struct nap_vm* vm, uint8_t register_index, nap_int_t v);
 
+/** Fetch a marker from the bytecode stream */
+nap_mark_t nap_fetch_mark(struct nap_vm* vm);
+
+/** Fetch an index from the bytecode stream */
+nap_index_t nap_fetch_index(struct nap_vm* vm);
+
+/* Returns the given int register from the given VM */
+nap_int_t nap_regi(struct nap_vm* vm, uint8_t register_index);
+
 #else
 
 #define nap_step_ip(vm) vm->cec->cc ++
@@ -356,7 +359,11 @@ void nap_set_regi(struct nap_vm* vm, uint8_t register_index, nap_int_t v);
 
 #define nap_set_regi(vm, register_index, v) vm->cec->regi[register_index] = v
 
+#define nap_regi(vm, register_index) vm->cec->regi[register_index]
+
 #define nap_fetch_index(vm) htovm_32( *(nap_index_t*)(vm->content + vm->cec->cc) ); vm->cec->cc = vm->cec->cc + sizeof(nap_index_t)
+
+#define nap_fetch_mark(vm) *(nap_mark_t*)(vm->content + nap_ip(vm)); vm->cec->cc = vm->cec->cc + sizeof(nap_mark_t)
 
 #endif
 
@@ -368,8 +375,7 @@ void nap_set_regb(struct nap_vm* vm, uint8_t register_index, nap_byte_t v);
 nap_byte_t nap_regb(struct nap_vm* vm, uint8_t register_index);
 
 
-/* Returns the given int register from the given VM */
-nap_int_t nap_regi(struct nap_vm* vm, uint8_t register_index);
+
 
 /* Returns the given int register from the given VM */
 nap_real_t nap_regr(struct nap_vm* vm, uint8_t register_index);

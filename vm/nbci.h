@@ -192,6 +192,9 @@ struct nap_vm
     uint32_t  jumptable_location;           /* the location of the jumptable in the file */
     uint32_t  funtable_location;            /* the location of the fun table in the file */
     uint8_t   file_bitsize;                 /* the bit size: 0x32, 0x64*/
+    uint32_t  max_marks;                    /* the number of maximum marks in the bytecode */
+
+    struct stack_entry** marks_list;        /* the list of marks in the bytecode */
 
     /* variables for the meta table */
     struct variable_entry** metatable;      /* the variables */
@@ -218,7 +221,7 @@ struct nap_vm
     struct nap_bytecode_chunk** btyecode_chunks; /* holds all the compiled bytechunks */
     struct nap_vm* parent;                  /* the parent VM of this. NULL if main VM */
     size_t chunk_counter;                   /* counts the number of chunks */
-    size_t allocated_chunks ;               /* how many chunks have we allocated */
+    size_t allocated_chunks;                /* how many chunks have we allocated */
 
     /* the interrupt vectors of the implementation */
     interrupt interrupts[INTERRUPT_COUNT];

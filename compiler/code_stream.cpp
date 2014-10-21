@@ -21,6 +21,7 @@ extern "C"
 
 const char* NEWLINE = "\n";
 static uint8_t max_reg_count = 0;
+int code_stream::max_mark_index = 0;
 
 // the name of the bytecode file
 static const std::string fname = "test.ncb";
@@ -369,6 +370,7 @@ void code_stream::output_bytecode(const char* s)
 
                     mcompiler->add_mark(mark);
                     NUMBER_INTEGER_TYPE index = mcompiler->namedmarks().size() - 1; // the real idx
+                    max_mark_index = index;
                     f.write_stuff_to_file_32(index);
                 }
 

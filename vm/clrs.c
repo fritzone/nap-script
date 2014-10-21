@@ -12,7 +12,7 @@ int nap_clrs(struct nap_vm* vm)
 {
     nap_mark_t marker = nap_fetch_mark(vm);
     int64_t save_sp = nap_sp(vm);
-
+    int64_t sp_ctr = save_sp;
     for(;;)
     {
         /* the stack pointer is still pointing into the stack */
@@ -34,86 +34,76 @@ int nap_clrs(struct nap_vm* vm)
             break;
         }
 
-        /* if this was a normal */
-        if(   vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_INT
-           || vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_BYTE
-           || vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_REAL
-           || vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_STRING
-           || vm->cec->stack[nap_sp(vm)]->type == STACKT_MODIFIER_ARRAY + STACK_ENTRY_INT
-           || vm->cec->stack[nap_sp(vm)]->type == STACKT_MODIFIER_ARRAY + STACK_ENTRY_BYTE
-           || vm->cec->stack[nap_sp(vm)]->type == STACKT_MODIFIER_ARRAY + STACK_ENTRY_REAL
-           || vm->cec->stack[nap_sp(vm)]->type == STACKT_MODIFIER_ARRAY + STACK_ENTRY_STRING
-           || vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_MARKER_NAME
-              )
+        /* was this a variable declaration? */
+        if(vm->cec->stack[nap_sp(vm)]->var_def)
         {
-            /* was this a variable declaration? */
-            if(vm->cec->stack[nap_sp(vm)]->var_def)
+            /* free the variable instantiation since this variable just
+               went out of scope */
+
+            /* TODO: in case there is an object on the stack call their destructor */
+
+            /* the actual value, but also frees the stack stuff allocated at push
+               due to:
+                  se->value = ve->instantiation->value;
+                  se->var_def = ve;
+            in push.c (when creating a new variable) !!! */
+
+            /* And now see if this value was stored or not. If stored it will stay
+             * on the stack otherwise it will go away */
+            if(!vm->cec->stack[nap_sp(vm)]->var_def->instantiation->stored)
             {
-                /* free the variable instantiation since this variable just
-                   went out of scope */
+                NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->var_def->instantiation->value);
+                vm->cec->stack[nap_sp(vm)]->var_def->instantiation->value = NULL;
 
-                /* TODO: in case there is an object on the stack call their destructor */
+                /* the stack entry of the instantiation */
+                NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->var_def->instantiation);
+                vm->cec->stack[nap_sp(vm)]->var_def->instantiation = NULL;
 
-                /* the actual value, but also frees the stack stuff allocated at push
-                   due to:
-                      se->value = ve->instantiation->value;
-                      se->var_def = ve;
-                in push.c (when creating a new variable) !!! */
+                /* and now restore the variable's instantiation */
+                pop_variable_instantiation(vm->cec->stack[nap_sp(vm)]->var_def);
 
-                /* And now see if this value was stored or not. If stored it will stay
-                 * on the stack otherwise it will go away */
-                if(!vm->cec->stack[nap_sp(vm)]->var_def->instantiation->stored)
-                {
-                    NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->var_def->instantiation->value);
-                    vm->cec->stack[nap_sp(vm)]->var_def->instantiation->value = NULL;
-
-                    /* the stack entry of the instantiation */
-                    NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->var_def->instantiation);
-                    vm->cec->stack[nap_sp(vm)]->var_def->instantiation = NULL;
-
-                    /* and now restore the variable's instantiation */
-                    pop_variable_instantiation(vm->cec->stack[nap_sp(vm)]->var_def);
-
-                }
-                else
-                {
-                    vm->cec->stack[nap_sp(vm)]->stored = 1;
-                }
-
-                /* but do not free the vm->cec->stack[nap_sp(vm)]->var_def
-                   since it is freed on the cleanup */
             }
             else
             {
-                /* this frees the stack stuff allocated at push or marks (such as
+                vm->cec->stack[nap_sp(vm)]->stored = 1;
+            }
+
+            /* but do not free the vm->cec->stack[nap_sp(vm)]->var_def
+               since it is freed on the cleanup */
+        }
+        else
+        {
+            /* this frees the stack stuff allocated at push or marks (such as
 -                * the int value allocated when pushed a number) but only if the
-                 * pushed value < STACKT_MODIFIER_ARRAY (nomal stuff)*/
-                if(vm->cec->stack[nap_sp(vm)]->type < STACKT_MODIFIER_ARRAY)
-                {
-                    NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->value);
-                }
-                vm->cec->stack[nap_sp(vm)]->value = NULL;
+             * pushed value < STACK_ENTRY_MARKER_NAME (nomal stuff). Markers
+             * should not be freed here */
+            if(vm->cec->stack[nap_sp(vm)]->type < STACK_ENTRY_MARKER_NAME)
+            {
+                NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->value);
+            }
+            vm->cec->stack[nap_sp(vm)]->value = NULL; /* XXX Danger! */
 
-
-                if(vm->cec->stack_pointer == save_sp - 1)
-                {
-                    /* It is impossible to get a stored element in this situation */
-                    save_sp --;
-                }
+            if(vm->cec->stack_pointer == save_sp - 1)
+            {
+                /* It is impossible to get a stored element in this situation */
+                save_sp --;
             }
         }
 
         /* this actually frees the stack_entry but only if it is not "store"'d */
         if(!vm->cec->stack[nap_sp(vm)]->stored)
         {
-            NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]);
-            vm->cec->stack[nap_sp(vm)] = NULL;
+            /* but only if not marker */
+            if(vm->cec->stack[nap_sp(vm)]->type != STACK_ENTRY_MARKER_NAME)
+            {
+                NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]);
+            }
+            vm->cec->stack[nap_sp(vm)] = NULL; /* XXX Danger! */
 
             if(vm->cec->stack_pointer < save_sp)
             {
                 /* and let's see if we have stored values above this */
                 relocate_stored_elements(vm);
-
             }
             vm->cec->stack_pointer --;
         }
@@ -132,10 +122,11 @@ int nap_clrs(struct nap_vm* vm)
     if(vm->cec->stack[nap_sp(vm)] != NULL
       && vm->cec->stack[nap_sp(vm)]->type == STACK_ENTRY_MARKER_NAME)
     {
-
-        NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]);
         vm->cec->stack[nap_sp(vm)] = NULL;
-        relocate_stored_elements(vm);
+        if(vm->cec->stack_pointer < save_sp)
+        {
+            relocate_stored_elements(vm);
+        }
         vm->cec->stack_pointer --;
     }
 

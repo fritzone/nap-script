@@ -2,6 +2,7 @@
 #include "compiler.h"
 #include "charconverter.h"
 #include "parameter.h"
+#include "code_stream.h"
 #include "file_abstraction.h"
 extern "C" {
 #include "byte_order.h"
@@ -91,6 +92,8 @@ void code_finalizer::finalize_jumptable()
     f->write_string_to_file(JUMPTABLE, 4, 0);
     jumptable_count = mcompiler->jumptable().size();
     f->write_stuff_to_file_32(jumptable_count);
+    f->write_stuff_to_file_32(code_stream::max_mark_index);
+
     for(unsigned int i=0; i<jumptable_count; i++)
     {
         label_entry& je = mcompiler->jumptable()[i];

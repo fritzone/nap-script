@@ -67,12 +67,15 @@ public:
         output_bytecode(s);
         return *this;
     }
-    
+
+    static int max_mark_index;
+
 private:
     
     void output_bytecode(const char* s);
 
     nap_compiler* mcompiler;
+
 };
 
 #endif // CODE_STREAM_H
