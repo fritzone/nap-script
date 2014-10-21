@@ -109,6 +109,8 @@ void nap_vm_cleanup(struct nap_vm* vm)
     /* free the marks list */
     for(i=0; i<=vm->max_marks; i++)
     {
+        fprintf(stderr, "FREE value:%p\n", vm->marks_list[i]->value);
+
         NAP_MEM_FREE(vm->marks_list[i]->value);
         NAP_MEM_FREE(vm->marks_list[i]);
     }
@@ -471,7 +473,9 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     {
         vm->marks_list[i] = NAP_MEM_ALLOC(1, struct stack_entry);
         vm->marks_list[i]->type = STACK_ENTRY_MARKER_NAME;
+
         vm->marks_list[i]->value = NAP_MEM_ALLOC(1, int64_t);
+        fprintf(stderr, "INIT value:%p\n", vm->marks_list[i]->value);
         vm->marks_list[i]->len = i;
 
     }
