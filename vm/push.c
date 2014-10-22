@@ -35,7 +35,7 @@ int nap_push(struct nap_vm *vm)
 
             if(ve->instantiation)
             {
-                push_variable_instantiation(ve);
+                push_variable_instantiation(vm, ve);
             }
 
             ve->instantiation = NAP_MEM_ALLOC(1, struct stack_entry);

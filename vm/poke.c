@@ -19,7 +19,7 @@ int nap_poke(struct nap_vm* vm)
         /* there supposed to be no instantiation at this point for the var ...
          * but if there is an instantiation this means, a recursive (or a second)
          * call of the method has happened */
-        pop_variable_instantiation(ve);
+        pop_variable_instantiation(vm, ve);
         return NAP_SUCCESS;
     }
     return NAP_FAILURE;

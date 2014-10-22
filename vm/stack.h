@@ -68,6 +68,12 @@ struct stack_entry
      */
     void* value;
 
+    /* This member has the variable entry in this case this object was created
+     * due to a variable creation. It is useful only for class like objects to
+     * know the destructor that must be called in order to delete the object.
+     */
+    struct variable_entry* var_def;
+
     /* if this contains a
      *  1. string
      *  2. an element with indexes
@@ -77,22 +83,20 @@ struct stack_entry
      * */
     size_t len;
 
-    /* This member has the variable entry in this case this object was created
-     * due to a variable creation. It is useful only for class like objects to
-     * know the destructor that must be called in order to delete the object.
-     */
-    struct variable_entry* var_def;
-
     /* This tells us if this stack entry was stored or not. If it was stored it
      * will stay on the stack in case of a stack rollback (clrsn) till the moment
      * a "restore" call will be executed, which will take over the instantiation
      * of it and erase the actual stack entry */
-    char stored;
+    char stored : 1;
 
     /* This is true if the value pushed holds an array. In this case the value
      * holds a variable_entry structure, which is simply taken from the
      * variable and it's not suppsoed to be freed by clrs*/
-    char holds_array;
+    char holds_array : 1;
+
+    /* To tell us that this instantiation was already free. In this case it does not get
+     * pushed back on the variable stack*/
+    char already_freed : 1;
 };
 
 /**

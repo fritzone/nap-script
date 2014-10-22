@@ -43,7 +43,7 @@ int nap_peek(struct nap_vm *vm)
          * call of the method has happened */
         if(ve->instantiation)
         {
-            push_variable_instantiation(ve);
+            push_variable_instantiation(vm, ve);
         }
 
         /* create a new instantiation */

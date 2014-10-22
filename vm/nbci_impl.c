@@ -85,7 +85,7 @@ static char* error_table[ERROR_COUNT + 1] =
     "[VM-0016] cannot create a temporay marker",
     "[VM-0017] unimplemented interrupt",
     "[VM-0018] a variable was not initialized correctly",
-    "[VM-0019] too deep recursion. Max 4096 nested calls are allowed",
+    "[VM-0019] too deep recursion.",
     "[VM-0020] Invalid jump index",
     "[VM-0021] Cannot leave from the bottom of the call frame pit",
     "[VM-0022] Invalid internal call",
@@ -109,9 +109,6 @@ void nap_vm_cleanup(struct nap_vm* vm)
     /* free the marks list */
     for(i=0; i<=vm->max_marks; i++)
     {
-        fprintf(stderr, "FREE value:%p\n", vm->marks_list[i]->value);
-
-        NAP_MEM_FREE(vm->marks_list[i]->value);
         NAP_MEM_FREE(vm->marks_list[i]);
     }
     NAP_MEM_FREE(vm->marks_list);
@@ -158,7 +155,12 @@ void nap_vm_cleanup(struct nap_vm* vm)
         NAP_MEM_FREE(vm->cec->stack[tempst]);
         vm->cec->stack[tempst] = NULL;
     }
+
+#ifdef PREFER_DYNAMIC_ALLOCATION
     NAP_MEM_FREE(vm->cec->stack);
+
+    NAP_MEM_FREE(vm->cec->call_frames);
+#endif
 
     /* freeing the jumptable */
 	for(tempjmi = vm->jumptable_size; tempjmi > 0; tempjmi --)
@@ -209,7 +211,6 @@ void nap_vm_cleanup(struct nap_vm* vm)
     }
     NAP_MEM_FREE(vm->funtable);
 
-
     /* the error message will be freed only if it was not allocated */
     if(vm->error_message)
     {
@@ -247,16 +248,40 @@ void nap_vm_cleanup(struct nap_vm* vm)
     }
     NAP_MEM_FREE(vm->ecs);
 
+#ifdef PREFER_DYNAMIC_ALLOCATION
+    for(i=0; i<vm->config->deepest_recursion; i++)
+    {
+        NAP_MEM_FREE(vm->regi_stack[i]);
+        NAP_MEM_FREE(vm->regb_stack[i]);
+    }
+
+    NAP_MEM_FREE(vm->regi_stack);
+    NAP_MEM_FREE(vm->regb_stack);
+
+
+#endif
+
+
     /* and the VM itself */
     NAP_MEM_FREE(vm);
 }
 
-struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environments target)
+struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environments target, const struct startup_configuration *config)
 {
     struct nap_vm* vm = NULL;
     uint8_t* cloc = bytecode;
-
     uint16_t i = 0; /* for walking through various stuffs */
+
+#ifdef PREFER_DYNAMIC_ALLOCATION
+    size_t stack_size_to_alloc = STACK_INIT;
+    size_t register_recursion_stack_size = DEEPEST_RECURSION;
+
+    if(config)
+    {
+        stack_size_to_alloc = config->stack_size?config->stack_size:STACK_INIT;
+        register_recursion_stack_size = config->deepest_recursion?config->deepest_recursion:DEEPEST_RECURSION;
+    }
+#endif
 
     vm = NAP_MEM_ALLOC(1, struct nap_vm);
     if(vm == NULL)
@@ -298,7 +323,9 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
 
     /* create the stack */
     vm->cec->stack_pointer = -1; /* this is first ++'d then used */
-    vm->cec->stack = NAP_MEM_ALLOC(STACK_INIT, struct stack_entry*);
+#ifdef PREFER_DYNAMIC_ALLOCATION
+    vm->cec->stack = NAP_MEM_ALLOC(stack_size_to_alloc, struct stack_entry*);
+#endif
     if(vm->cec->stack == NULL)
     {
         /* TODO: provide a mechanism for error reporting */
@@ -458,13 +485,16 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     vm->reg_stack_idx = 0;
 
 #ifdef PREFER_DYNAMIC_ALLOCATION
-    vm->regi_stack = NAP_MEM_ALLOC(DEEPEST_RECURSION, nap_int_t*);
-    vm->regb_stack = NAP_MEM_ALLOC(DEEPEST_RECURSION, nap_byte_t*);
-    for(i=0; i<DEEPEST_RECURSION; i++)
+    vm->regi_stack = NAP_MEM_ALLOC(register_recursion_stack_size, nap_int_t*);
+    vm->regb_stack = NAP_MEM_ALLOC(register_recursion_stack_size, nap_byte_t*);
+    for(i=0; i<register_recursion_stack_size; i++)
     {
         vm->regi_stack[i] = NAP_MEM_ALLOC(REGISTER_COUNT, nap_int_t);
         vm->regb_stack[i] = NAP_MEM_ALLOC(REGISTER_COUNT, nap_byte_t);
     }
+
+    vm->cec->call_frames = NAP_MEM_ALLOC(register_recursion_stack_size, uint64_t);
+
 #endif
 
     /* initialize the marks list */
@@ -473,20 +503,18 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     {
         vm->marks_list[i] = NAP_MEM_ALLOC(1, struct stack_entry);
         vm->marks_list[i]->type = STACK_ENTRY_MARKER_NAME;
-
-        vm->marks_list[i]->value = NAP_MEM_ALLOC(1, int64_t);
-        fprintf(stderr, "INIT value:%p\n", vm->marks_list[i]->value);
         vm->marks_list[i]->len = i;
-
     }
+
+    vm->config = config;
+
     return vm;
 }
 
 
 int nap_save_registers(struct nap_vm* vm)
 {
-
-    if(vm->reg_stack_idx + 1 == DEEPEST_RECURSION)
+    if(vm->reg_stack_idx + 1 == vm->config->deepest_recursion)
     {
         nap_vm_set_error_description(vm, "Too deep recursion. Execution halted");
         return NAP_FAILURE;
@@ -522,7 +550,7 @@ int nap_restore_registers(struct nap_vm* vm)
     return NAP_SUCCESS;
 }
 
-struct nap_vm *nap_vm_load(const char *filename)
+struct nap_vm *nap_vm_load(const char *filename, const struct startup_configuration* config)
 {
     long fsize = 0;
     uint8_t* file_content;
@@ -555,7 +583,7 @@ struct nap_vm *nap_vm_load(const char *filename)
 
     fclose(fp);
 
-    vm = nap_vm_inject(file_content, fsize, STANDALONE);
+    vm = nap_vm_inject(file_content, fsize, STANDALONE, config);
     NAP_MEM_FREE(file_content);
 
     if(vm == NULL)

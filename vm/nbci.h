@@ -51,7 +51,7 @@ extern "C" {
 
 #define REGISTER_COUNT      255        /* number of registers in the VM*/
 #define STACK_INIT          4096       /* initially 4096 entries  */
-#define DEEPEST_RECURSION   4096       /* how deep we can dwelve into recursion */
+#define DEEPEST_RECURSION   1024       /* how deep we can dwelve into recursion */
 #define MAX_BYTECODE_CHUNKS 255        /* the number of bytecode chunks that can be allocated */
 #define OPCODE_COUNT        255        /* the number of possible opcodes */
 #define INTERRUPT_COUNT     255        /* the number of possible interrupts */
@@ -108,6 +108,21 @@ struct nap_string_register
 };
 
 /**
+ * The startup_configuration struct provides configuration options for the
+ * virtual machine that will be used when creating it.
+ */
+struct startup_configuration
+{
+    /* the size of  the stack.
+     * Command line parameter: -s NUMBER where NUMBER is the total
+     * number of items that can be placed in the stack */
+    size_t stack_size;
+
+    /* How deep can we go into recursion. Maximum 65,535. */
+    uint16_t deepest_recursion;
+};
+
+/**
  * The execution context of a virtual machine is the data structure holding the
  * information about the currently executed thread (of an application). In a nap
  * virtual machine each thread has its own instruction pointer, set of registers
@@ -154,11 +169,21 @@ struct nap_execution_context
 
     /* variables regarding the execution flow */
     uint8_t  current_opcode;                /* the current opcode */
+#ifndef PREFER_DYNAMIC_ALLOCATION
     uint64_t call_frames[DEEPEST_RECURSION];/* the jump back points, the first address after the calls' index */
+#else
+    uint64_t* call_frames;                  /* the jump back points, the first address after the calls' index */
+#endif
+
     uint32_t cfsize;                        /* the size of the call frames vector */
 
     /* variables for the stack */
-    struct stack_entry** stack;             /* in this stack */
+#ifndef PREFER_DYNAMIC_ALLOCATION
+    struct stack_entry* stack[STACK_INIT];  /* The stack of the VM */
+#else
+    struct stack_entry** stack;             /* The stack of the VM */
+#endif
+
     int64_t stack_pointer;                  /* the stack pointer, starts from 0, grows */
 
 };
@@ -265,6 +290,8 @@ struct nap_vm
     nap_byte_t** regb_stack;
 #endif
 
+    /* the startup configuration of the VM */
+    const struct startup_configuration* config;
 };
 
 /**
@@ -294,7 +321,7 @@ void dump_stack(struct nap_vm* vm, FILE *fp);
  * @param filename - the compiled bytecode
  * @return - the
  */
-struct nap_vm* nap_vm_load(const char* filename);
+struct nap_vm* nap_vm_load(const char* filename, const struct startup_configuration *config);
 
 /**
  * Starts the processing cycle of the virtual machine, executes the bytecode
@@ -308,7 +335,7 @@ void nap_vm_run(struct nap_vm* vm);
  * @param bytecode_len
  * @return
  */
-struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environments target);
+struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environments target, const struct startup_configuration *config);
 
 /**
  * @brief nap_vm_get_int returns the value of the int variable called "name"

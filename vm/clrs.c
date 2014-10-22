@@ -12,7 +12,6 @@ int nap_clrs(struct nap_vm* vm)
 {
     nap_mark_t marker = nap_fetch_mark(vm);
     int64_t save_sp = nap_sp(vm);
-    int64_t sp_ctr = save_sp;
     for(;;)
     {
         /* the stack pointer is still pointing into the stack */
@@ -38,20 +37,17 @@ int nap_clrs(struct nap_vm* vm)
         if(vm->cec->stack[nap_sp(vm)]->var_def)
         {
             /* free the variable instantiation since this variable just
-               went out of scope */
-
-            /* TODO: in case there is an object on the stack call their destructor */
-
-            /* the actual value, but also frees the stack stuff allocated at push
-               due to:
+             * went out of scope. If stored it will stay
+             * on the stack otherwise it will go away.
+             * Also frees the stack stuff allocated at push
+             * due to:
                   se->value = ve->instantiation->value;
                   se->var_def = ve;
-            in push.c (when creating a new variable) !!! */
-
-            /* And now see if this value was stored or not. If stored it will stay
-             * on the stack otherwise it will go away */
+             * in push.c (when creating a new variable) !!! */
             if(!vm->cec->stack[nap_sp(vm)]->var_def->instantiation->stored)
             {
+                /* TODO: in case there is an object on the stack call their destructor */
+
                 NAP_MEM_FREE(vm->cec->stack[nap_sp(vm)]->var_def->instantiation->value);
                 vm->cec->stack[nap_sp(vm)]->var_def->instantiation->value = NULL;
 
@@ -60,7 +56,7 @@ int nap_clrs(struct nap_vm* vm)
                 vm->cec->stack[nap_sp(vm)]->var_def->instantiation = NULL;
 
                 /* and now restore the variable's instantiation */
-                pop_variable_instantiation(vm->cec->stack[nap_sp(vm)]->var_def);
+                pop_variable_instantiation(vm, vm->cec->stack[nap_sp(vm)]->var_def);
 
             }
             else
