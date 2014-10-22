@@ -72,7 +72,6 @@ int main(int argc, char* argv[])
         nap_vm_dump(vm, stdout);
     }
     nap_vm_cleanup(vm);
-    free(config);
 
     return 0;
 }

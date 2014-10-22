@@ -3,14 +3,19 @@
 #include "nap_consts.h"
 #include "nbci_impl.h"
 
+#include <stdlib.h>
+
 uint16_t intr_3(struct nap_vm* vm)
 {
     struct nap_vm* child_vm = NULL;
+    struct startup_configuration* config = (struct startup_configuration*)calloc(1, sizeof(struct startup_configuration));
+    config->stack_size = STACK_INIT;
+    config->deepest_recursion = DEEPEST_RECURSION;
     nap_int_t regi0 = nap_regi(vm, 0);
     child_vm = nap_vm_inject(
                 vm->btyecode_chunks[regi0]->code,
                 vm->btyecode_chunks[regi0]->length,
-                INTERRUPT, NULL);
+                INTERRUPT, config);
 
     if(child_vm == NULL)
     {

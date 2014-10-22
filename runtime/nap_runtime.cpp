@@ -127,7 +127,11 @@ NAP_LIB_API int nap_runtime_execute(struct nap_runtime* runtime,
 {
     if(runtime != NULL)
     {
-        runtime->vm = nap_vm_inject(bytecode->code, bytecode->length, EMBEDDED, NULL);
+        struct startup_configuration* config = (struct startup_configuration*)calloc(1, sizeof(struct startup_configuration));
+        config->stack_size = STACK_INIT;
+        config->deepest_recursion = DEEPEST_RECURSION;
+
+        runtime->vm = nap_vm_inject(bytecode->code, bytecode->length, EMBEDDED, config);
         nap_vm_run(runtime->vm);
 
         return NAP_EXECUTE_SUCCESS;
@@ -439,8 +443,12 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
 
         // create a new VM to call the method
         struct nap_vm* child_vm = NULL;
+        struct startup_configuration* config = (struct startup_configuration*)calloc(1, sizeof(struct startup_configuration));
+        config->stack_size = STACK_INIT;
+        config->deepest_recursion = DEEPEST_RECURSION;
+
         child_vm = nap_vm_inject(runtime->vm->btyecode_chunks[nap_regi(runtime->vm, 0)]->code,
-                runtime->vm->btyecode_chunks[nap_regi(runtime->vm, 0)]->length, INTERRUPT, NULL);
+                runtime->vm->btyecode_chunks[nap_regi(runtime->vm, 0)]->length, INTERRUPT, config);
 
         if(child_vm == NULL)
         {

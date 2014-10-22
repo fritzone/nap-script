@@ -291,7 +291,7 @@ struct nap_vm
 #endif
 
     /* the startup configuration of the VM */
-    const struct startup_configuration* config;
+    struct startup_configuration* config;
 };
 
 /**
@@ -321,7 +321,7 @@ void dump_stack(struct nap_vm* vm, FILE *fp);
  * @param filename - the compiled bytecode
  * @return - the
  */
-struct nap_vm* nap_vm_load(const char* filename, const struct startup_configuration *config);
+struct nap_vm* nap_vm_load(const char* filename, struct startup_configuration *config);
 
 /**
  * Starts the processing cycle of the virtual machine, executes the bytecode
@@ -335,7 +335,7 @@ void nap_vm_run(struct nap_vm* vm);
  * @param bytecode_len
  * @return
  */
-struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environments target, const struct startup_configuration *config);
+struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environments target, struct startup_configuration *config);
 
 /**
  * @brief nap_vm_get_int returns the value of the int variable called "name"

@@ -261,12 +261,12 @@ void nap_vm_cleanup(struct nap_vm* vm)
 
 #endif
 
-
+    NAP_MEM_FREE(vm->config);
     /* and the VM itself */
     NAP_MEM_FREE(vm);
 }
 
-struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environments target, const struct startup_configuration *config)
+struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environments target, struct startup_configuration *config)
 {
     struct nap_vm* vm = NULL;
     uint8_t* cloc = bytecode;
@@ -550,7 +550,7 @@ int nap_restore_registers(struct nap_vm* vm)
     return NAP_SUCCESS;
 }
 
-struct nap_vm *nap_vm_load(const char *filename, const struct startup_configuration* config)
+struct nap_vm *nap_vm_load(const char *filename, struct startup_configuration* config)
 {
     long fsize = 0;
     uint8_t* file_content;
@@ -610,32 +610,25 @@ nap_int_t nap_read_immediate_int(struct nap_vm* vm, int* success)
     /* and now read the number according to the size */
     if(imm_size == OPCODE_BYTE)
     {
-        int8_t* immediate = (int8_t*)(vm->content + nap_ip(vm));
-        nr = *immediate;
+        nr = (nap_int_t)(*(int8_t*)(vm->content + nap_ip(vm)));
         nap_step_ip(vm);
     }
     else
     if(imm_size == OPCODE_SHORT)
     {
-        int16_t* immediate = (int16_t*)(vm->content + nap_ip(vm));
-        int16_t temp_16 = htovm_16(*immediate);
-        nr = temp_16;
+        nr = (nap_int_t)htovm_16(*(int16_t*)(vm->content + nap_ip(vm)));
         nap_move_ip(vm, 2, FORWARD);
     }
     else
     if(imm_size == OPCODE_LONG)
     {
-        int32_t* immediate = (int32_t*)(vm->content + nap_ip(vm));
-        int32_t temp_32 = htovm_32(*immediate);
-        nr = temp_32;
+        nr = htovm_32(*(int32_t*)(vm->content + nap_ip(vm)));
         nap_move_ip(vm, 4, FORWARD);
     }
     else
     if(imm_size == OPCODE_HUGE)
     {
-        int64_t* immediate = (int64_t*)(vm->content + nap_ip(vm));
-        int64_t temp_64 = htovm_64(*immediate);
-        nr = temp_64;
+        nr = htovm_64(*(int64_t*)(vm->content + nap_ip(vm)));
         nap_move_ip(vm, 8, FORWARD);
     }
     else
@@ -1236,9 +1229,9 @@ nap_real_t nap_string_to_number_real(struct nap_vm* vm,
                                      size_t len,
                                      int* error)
 {
-    vm = vm;
-    to_conv = to_conv;
-    len = len;
+    (void)vm;
+    (void)to_conv;
+    (void)len;
     *error = NAP_SUCCESS;
     return 0;
 }
