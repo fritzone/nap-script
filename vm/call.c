@@ -27,7 +27,7 @@ int nap_call(struct nap_vm *vm)
     if(vm->jumptable[jmpt_index]->type != JMPTABLE_ENTRY_TYPE_FROM_PARENT)
     {
         /* can we create a new location? */
-        if(vm->cec->cfsize == DEEPEST_RECURSION)
+        if(vm->cec->cfsize == vm->config->deepest_recursion)
         {
             return NAP_FAILURE;
         }

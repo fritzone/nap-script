@@ -76,13 +76,13 @@ int interpret_metatable(struct nap_vm* vm,
  * all variables when a function is called.
  * @param ve
  */
-void push_variable_instantiation(struct variable_entry* ve);
+void push_variable_instantiation(struct nap_vm* vm, struct variable_entry* ve);
 
 /**
  * @brief pop_variable_instantiation pops the variable's instantiation from the
  * variable's internal stack.
  * @param ve
  */
-void pop_variable_instantiation(struct variable_entry* ve);
+void pop_variable_instantiation(struct nap_vm* vm, struct variable_entry* ve);
 
 #endif

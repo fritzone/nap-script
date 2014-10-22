@@ -89,17 +89,18 @@ int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
     }
 }
 
-void push_variable_instantiation(struct variable_entry *ve)
+void push_variable_instantiation(struct nap_vm* vm, struct variable_entry *ve)
 {
-    if(ve->is_p < DEEPEST_RECURSION - 1)
+    if(ve->is_p < vm->config->deepest_recursion - 1)
     {
         ve->instantiation_stack[ve->is_p++] = ve->instantiation;
     }
 }
 
 
-void pop_variable_instantiation(struct variable_entry *ve)
+void pop_variable_instantiation(struct nap_vm* vm, struct variable_entry *ve)
 {
+    (void)(vm);
     if(ve->is_p > 0)
     {
         if(ve->instantiation)

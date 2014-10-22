@@ -23,7 +23,7 @@ if(vm-ip-sp-as-macros)
     add_definitions( -DVM_IPSP_AS_MACRO )
 endif()
 
-option(vm-prefer-dynamic-allocation "Generate code which allocates memory on the heap instead of the stack for VM internals. This will lead to a smaller stack usage for the application but a somewhat slower startup." OFF)
+option(vm-prefer-dynamic-allocation "Generate code which allocates memory on the heap instead of the stack for VM internals. This will lead to a smaller stack usage for the application but a somewhat slower startup." ON)
 if(vm-prefer-dynamic-allocation)
     add_definitions( -DPREFER_DYNAMIC_ALLOCATION )
 endif()

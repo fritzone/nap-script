@@ -10,7 +10,7 @@ uint16_t intr_3(struct nap_vm* vm)
     child_vm = nap_vm_inject(
                 vm->btyecode_chunks[regi0]->code,
                 vm->btyecode_chunks[regi0]->length,
-                INTERRUPT);
+                INTERRUPT, NULL);
 
     if(child_vm == NULL)
     {

@@ -127,7 +127,7 @@ NAP_LIB_API int nap_runtime_execute(struct nap_runtime* runtime,
 {
     if(runtime != NULL)
     {
-        runtime->vm = nap_vm_inject(bytecode->code, bytecode->length, EMBEDDED);
+        runtime->vm = nap_vm_inject(bytecode->code, bytecode->length, EMBEDDED, NULL);
         nap_vm_run(runtime->vm);
 
         return NAP_EXECUTE_SUCCESS;
@@ -440,7 +440,7 @@ int nap_execute_code(nap_runtime *runtime, const char *script)
         // create a new VM to call the method
         struct nap_vm* child_vm = NULL;
         child_vm = nap_vm_inject(runtime->vm->btyecode_chunks[nap_regi(runtime->vm, 0)]->code,
-                runtime->vm->btyecode_chunks[nap_regi(runtime->vm, 0)]->length, INTERRUPT);
+                runtime->vm->btyecode_chunks[nap_regi(runtime->vm, 0)]->length, INTERRUPT, NULL);
 
         if(child_vm == NULL)
         {
