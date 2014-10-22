@@ -838,7 +838,7 @@ char *convert_string_from_bytecode_file(struct nap_vm *vm, const char *src, size
         free(src_copy);
         return NULL;
     }
-    strcpy(final_encoding, "WINDOWS-";;
+    strcpy(final_encoding, "WINDOWS-");
 	strcat(final_encoding, enc);
 #else
 	final_encoding = enc;

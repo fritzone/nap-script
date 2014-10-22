@@ -1622,7 +1622,7 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                     variable* v = * (const_cast<variable**>(&node->target_var));
                     if(fp && fp->reference)
                     {
-                        reference_par_target_var.insert(std::make_pair<parameter*, variable*>(fp,v));
+                        reference_par_target_var.insert(std::make_pair(fp,v));
                     }
                 }
                 *target_var = backup_target_var;
