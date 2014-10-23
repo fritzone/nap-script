@@ -297,6 +297,14 @@ int nap_operation(struct nap_vm* vm)
                 {
                     uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
                     return do_real_operation(vm, &vm->cec->regr[register_index],
+                                            nap_regi(vm, second_register_index),
+                                            vm->cec->current_opcode);
+                }
+                else
+                if(second_register_type == OPCODE_REAL)
+                {
+                    uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+                    return do_real_operation(vm, &vm->cec->regr[register_index],
                                             nap_regr(vm, second_register_index),
                                             vm->cec->current_opcode);
                 }
