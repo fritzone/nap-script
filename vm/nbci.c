@@ -24,7 +24,7 @@ void nap_vm_dump(struct nap_vm* vm, FILE *fp)
     puts("");
     for(i=0; i<vm->meta_size; i++)
     {
-        if(vm->metatable[i]->instantiation)
+        if(vm->metatable[i] && vm->metatable[i]->instantiation)
         {
             if(vm->metatable[i]->instantiation->value)
             {
@@ -70,15 +70,19 @@ void nap_vm_dump(struct nap_vm* vm, FILE *fp)
             }
             else
             {
-                fprintf(fp, "N:[%s=??](%" PRINT_u "/%" PRINT_st ")\n", vm->metatable[i]->name,
+                if(vm->metatable[i])
+                    fprintf(fp, "N:[%s=??](%" PRINT_u "/%" PRINT_st ")\n", vm->metatable[i]->name,
                        i, vm->meta_size);
 
             }
         }
         else
         {
-            fprintf(fp, "?:[%s=??](%" PRINT_u "/%" PRINT_st ")\n", vm->metatable[i]->name,
+            if(vm->metatable[i])
+            {
+                fprintf(fp, "?:[%s=??](%" PRINT_u "/%" PRINT_st ")\n", vm->metatable[i]->name,
                    i, vm->meta_size);
+            }
         }
     }
 }
@@ -159,7 +163,7 @@ void dump_stack(struct nap_vm* vm, FILE *fp)
             switch(vm->cec->stack[tempst]->type)
             {
             case STACK_ENTRY_MARKER_NAME:
-                fprintf(fp, ":[%.10d]",*(nap_mark_t*)(vm->cec->stack[tempst]->value));
+                fprintf(fp, ":[%.10d]",vm->cec->stack[tempst]->value);
                 break;
             default:
                 break;
