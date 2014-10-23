@@ -1914,7 +1914,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
 
                 if(expr_trim.empty())
                 {
-                    mcompiler->throw_error(E0012_SYNTAXERR, expr, NULL);
+                    mcompiler->throw_error(E0012_SYNTAXERR, expr);
                     psuccess = false;
                     return 0;
                 }
@@ -1926,7 +1926,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
             }
             else
             {
-                mcompiler->throw_error(E0009_PARAMISM, expr_trim, NULL);
+                mcompiler->throw_error(E0009_PARAMISM, expr_trim);
                 psuccess = false;
                 return 0;
             }
