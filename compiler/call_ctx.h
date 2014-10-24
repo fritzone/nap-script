@@ -207,6 +207,12 @@ public: /* Public members */
     nap_compiler* compiler;
 
     std::vector<call_context*> children;
+
+    // The unique hash of the call context
+    std::string hash;
+
+    // true if this cc starts a method
+    bool stop_backward;
 };
 
 /**

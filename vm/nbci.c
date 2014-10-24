@@ -163,13 +163,12 @@ void dump_stack(struct nap_vm* vm, FILE *fp)
             switch(vm->cec->stack[tempst]->type)
             {
             case STACK_ENTRY_MARKER_NAME:
-                fprintf(fp, ":[%.10d]",vm->cec->stack[tempst]->value);
+                fprintf(fp, ":[%.10"PRINT_st"]", vm->cec->stack[tempst]->len);
                 break;
             default:
                 break;
             }
             fprintf(fp, "\n");
-
         }
     }
 }

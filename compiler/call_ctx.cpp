@@ -27,9 +27,11 @@ using namespace std;
  */
 call_context::call_context(nap_compiler *_compiler, CC_TYPE ptype, const string &pname,
                            method* the_method, call_context* pfather)
-    : compiler(_compiler), children()
+    : compiler(_compiler), children(), stop_backward(false)
 {
-    name = pname == "global"?pname : pname + "_" + generate_unique_hash();
+    hash = generate_unique_hash();
+
+    name = pname == "global"?pname : pname + "_" + hash;
     type = ptype;
     ccs_method = the_method;
     father = pfather;
@@ -38,6 +40,7 @@ call_context::call_context(nap_compiler *_compiler, CC_TYPE ptype, const string 
     {
         father->add_child_cc(this);
     }
+
 }
 
 call_context::~call_context()
@@ -273,7 +276,8 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
             while(vlist != m->variables.rend())
             {
                 variable* v = *vlist;
-                peek(_compiler, m->main_cc, v->c_type, pctr++, v->name.c_str());
+                v->peek_index = pctr++;
+                // peek(_compiler, m->main_cc, v->c_type, pctr++, v->name.c_str());
                 // now let's see if this variable is a multi dimensional one or not
                 if(v->mult_dim_def)
                 {
@@ -283,11 +287,12 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
             }
 
             // marker
-            std::string fun_hash = generate_unique_hash();
+            std::string fun_hash = (*ccs_methods)->main_cc->hash;
             push_cc_start_marker(_compiler, fun_hash.c_str());
 
             // and compile the isntructions
             std::vector<expression_tree*>::const_iterator q1 = (*ccs_methods)->main_cc->expressions.begin();
+            (*ccs_methods)->main_cc->stop_backward = true;
             while(q1 != (*ccs_methods)->main_cc->expressions.end())
             {
                 int unknown_type = -1;

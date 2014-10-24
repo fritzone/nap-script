@@ -190,7 +190,7 @@ parameter* method::add_parameter(bool reference, std::string pname,
                                  bool& psuccess)
 {
     parameter* func_par = new parameter(this, pname, get_typeid(ptype));
-    func_par->reference = reference;
+    func_par->is_reference = reference;
 
     size_t indexOfEq = pname.find(C_EQ);
     variable* nvar = NULL;

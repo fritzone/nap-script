@@ -328,6 +328,48 @@ static int mov_into_int_register(struct nap_vm* vm)
     uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
     uint8_t move_source = vm->content[nap_step_ip(vm)]; /* what are we moving in*/
 
+    if(move_source == OPCODE_PEEK)
+    {
+        uint8_t peek_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+
+        uint8_t peek_index_type = vm->content[nap_step_ip(vm)]; /* what type follows*/
+        nap_index_t peek_index = 0; /* the index that's peeked */
+
+        if(peek_index_type == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) */
+        {
+            int success = 0;
+            peek_index = (nap_index_t)nap_read_immediate_int(vm, &success);
+            if(success == NAP_FAILURE)
+            {
+                return NAP_FAILURE;
+            }
+        }
+        else /* nothing else can be peeked from the stack */
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+        struct stack_entry* se = vm->cec->stack[vm->cec->bp - peek_index];
+
+        if(peek_type == OPCODE_INT) /* we are dealing with an INT type peek */
+        {   /* peek int: assumes that on the stack there is a nap_int_t in the value of the stack_entry at the given index*/
+            nap_set_regi(vm, register_index, *(nap_int_t*)se->value); /* STACK VALUE FROM peek_index */
+        }
+        else
+        if(peek_type == OPCODE_BYTE) /* we are dealing with a BYTE type peek */
+        {   /* peek byte: assumes that on the stack there is a nap_byte_t in the value of the stack_entry at the given index*/
+            nap_set_regi(vm, register_index, (nap_int_t)*(nap_byte_t*)se->value); /* STACK VALUE FROM peek_index */
+        }
+        else
+        if(peek_type == OPCODE_REAL) /* we are dealing with a real type peek */
+        {   /* peek real: assumes that on the stack there is a nap_real_t in the value of the stack_entry at the given index*/
+            nap_set_regi(vm, register_index, (nap_int_t)*(nap_real_t*)se->value); /* STACK VALUE FROM peek_index */
+        }
+        else
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+    }
+    else
     if(move_source == OPCODE_LEN) /* the length of a variable */
     {
         uint8_t length_of = vm->content[nap_step_ip(vm)];

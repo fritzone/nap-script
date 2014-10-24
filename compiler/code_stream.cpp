@@ -361,6 +361,7 @@ void code_stream::output_bytecode(const char* s)
                 {
                     NUMBER_INTEGER_TYPE index = idx;
                     f.write_stuff_to_file_32(index);
+                    // std::cout << " ;" << index;
                 }
                 else // let's create a named mark
                 {
@@ -372,6 +373,7 @@ void code_stream::output_bytecode(const char* s)
                     NUMBER_INTEGER_TYPE index = mcompiler->namedmarks().size() - 1; // the real idx
                     max_mark_index = index;
                     f.write_stuff_to_file_32(index);
+                    // std::cout << " ;" << index; // To put the number of the mark to the screen
                 }
 
             }

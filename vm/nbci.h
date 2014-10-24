@@ -171,8 +171,10 @@ struct nap_execution_context
     uint8_t  current_opcode;                /* the current opcode */
 #ifndef PREFER_DYNAMIC_ALLOCATION
     uint64_t call_frames[DEEPEST_RECURSION];/* the jump back points, the first address after the calls' index */
+    int64_t ebp_stack[DEEPEST_RECURSION];
 #else
     uint64_t* call_frames;                  /* the jump back points, the first address after the calls' index */
+    int64_t* ebp_stack;                     /* the stack of the BP register */
 #endif
 
     uint32_t cfsize;                        /* the size of the call frames vector */
@@ -185,6 +187,7 @@ struct nap_execution_context
 #endif
 
     int64_t stack_pointer;                  /* the stack pointer, starts from 0, grows */
+    int64_t bp;                             /* the base pointer, initialized to SP on a function call */
 
 };
 
