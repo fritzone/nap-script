@@ -14,12 +14,16 @@ static const unsigned char OPCODE_INC           = (unsigned char)0x1C; /**/
 static const unsigned char OPCODE_DEC           = (unsigned char)0x1D; /**/
 static const unsigned char OPCODE_INTR          = (unsigned char)0x1E;
 
-/* internal functions also have their opcod. TODO: should these be interrupts? */
+/* internal functions also have their opcode. TODO: should these be interrupts? */
 static const unsigned char OPCODE_CCIDX         = (unsigned char)0x21;
 static const unsigned char OPCODE_GROW          = (unsigned char)0x22;
 static const unsigned char OPCODE_LEN           = (unsigned char)0x23;
-
 static const unsigned char OPCODE_LONG          = (unsigned char)0x32; /**/
+
+/* SP and BP for peek */
+static const unsigned char OPCODE_SP            = (unsigned char)0x50; /**/
+static const unsigned char OPCODE_BP            = (unsigned char)0x51; /**/
+
 static const unsigned char OPCODE_SHL           = (unsigned char)0x54; /**/
 static const unsigned char OPCODE_SHR           = (unsigned char)0x55; /**/
 static const unsigned char OPCODE_AND           = (unsigned char)0x56; /**/

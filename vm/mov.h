@@ -12,5 +12,6 @@ int nap_mov(struct nap_vm* vm);
 int mov_into_register(struct nap_vm* vm);
 int mov_into_variable(struct nap_vm* vm);
 int mov_into_indexed(struct nap_vm* vm);
+int mov_into_peek_target(struct nap_vm* vm);
 
 #endif

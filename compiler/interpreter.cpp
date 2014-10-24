@@ -1033,7 +1033,7 @@ call_frame_entry* interpreter::handle_function_call(const std::string& expr_trim
             SUCCES_OR_RETURN 0;
 
             // this parameter will be delete in the call_frame_entry's destructor
-            parameter* cur_par_obj = new parameter(the_method, "", -1);
+            parameter* cur_par_obj = new parameter(the_method, "", -1, 0);
 
             cur_par_obj->expr = cur_par_expr;
 

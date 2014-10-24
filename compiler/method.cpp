@@ -189,7 +189,7 @@ parameter* method::add_parameter(bool reference, std::string pname,
                                  expression_with_location* pexpwloc,
                                  bool& psuccess)
 {
-    parameter* func_par = new parameter(this, pname, get_typeid(ptype));
+    parameter* func_par = new parameter(this, pname, get_typeid(ptype), 0);
     func_par->is_reference = reference;
 
     size_t indexOfEq = pname.find(C_EQ);
@@ -253,7 +253,7 @@ parameter* method::add_parameter(bool reference, std::string pname,
     func_par->name = pname; // just in case it was changed
     nvar = add_new_variable(pname, ptype, pdimension, psuccess);
     nvar->mult_dim_def = mdd;
-
+    func_par->the_variable = nvar;
     SUCCES_OR_RETURN 0;
     nvar->func_par = func_par;
 
@@ -273,6 +273,20 @@ parameter* method::get_parameter(size_t i)
         return 0;
     }
 }
+
+int method::parameter_index(parameter *p)
+{
+    for(size_t i=0; i<parameters.size(); i++)
+    {
+        if(parameters[i] == p)
+        {
+            return parameters.size() - i - 1; // from the end, this is a stack
+        }
+    }
+    return -1;
+}
+
+
 
 /**
  * Populates the parameters of this method with the definitions from the string

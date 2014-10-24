@@ -143,6 +143,8 @@ void code_stream::output_bytecode(const char* s)
     if(expr == "popall") opcode = OPCODE_POPALL;
     if(expr == "clbf") opcode = OPCODE_CLBF;
     if(expr == "poke") opcode = OPCODE_POKE;
+    if(expr == "sp") opcode = OPCODE_SP;
+    if(expr == "bp") opcode = OPCODE_BP;
 
     if(isnumber((expr.c_str())))
     {

@@ -58,6 +58,8 @@ struct method : public variable_holder
      **/
     parameter* get_parameter(size_t i);
 
+    int parameter_index(parameter* p);
+
     /**
      * @brief add_new_variable Adds a new variable to the method ...
      * @param name

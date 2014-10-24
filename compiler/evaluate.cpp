@@ -1253,7 +1253,7 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                     }
                     else
                     {
-                        code_stream(_compiler) << "peek" << get_reg_type(var->i_type) << var->peek_index;
+                        code_stream(_compiler) << "peek" << "bp" << get_reg_type(var->i_type) << var->peek_index;
                     }
                 }
             }
@@ -1718,7 +1718,6 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                               << "rv" << get_reg_type(m->ret_type) ;
                 }
             }
-            push_cc_end_marker(_compiler,func_call_hash.c_str());
 
             /* Now do some steps in order to fetch the reference type parameters from the function
              * and put them in the correct variables */
@@ -1731,10 +1730,16 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                 }
                 else
                 {
-                    code_stream(_compiler) << mov() << reg() << get_reg_type(it->first->type) << level << it->first->fully_qualified_name();
+                    // from the peeks!
+                    code_stream(_compiler) << mov() << reg() << get_reg_type(it->first->type) << level << "peek" << "sp" << get_reg_type(it->first->type)
+                                           << m->parameter_index(it->first);
                     code_stream(_compiler) << mov() << fully_qualified_varname(cc, it->second) << reg() << get_reg_type(it->first->type) << level;
                 }
             }
+
+            /* close the CC after fetching the parameters */
+            push_cc_end_marker(_compiler,func_call_hash.c_str());
+
 
             // and now do some stuff to pop the parameters of the function
             for(size_t i=0; i<m->parameters.size(); i++)

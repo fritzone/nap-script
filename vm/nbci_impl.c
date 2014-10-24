@@ -474,6 +474,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
 
     /* setting the mov handlers */
     vm->mov_handlers[OPCODE_REG] = mov_into_register;
+    vm->mov_handlers[OPCODE_PEEK] = mov_into_peek_target;
     vm->mov_handlers[OPCODE_VAR] = mov_into_variable;
     vm->mov_handlers[OPCODE_CCIDX] = mov_into_indexed;
 
