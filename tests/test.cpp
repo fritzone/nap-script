@@ -650,7 +650,7 @@ TEST(Functions, RealArrayReference)
     SCRIPT_SHUTDOWN
 }
 
-TEST(General, Fibonacci)
+TEST(General, FibonacciAsIntArrayReference)
 {
     SCRIPT_START
     "                                                \

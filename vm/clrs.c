@@ -56,7 +56,7 @@ int nap_clrs(struct nap_vm* vm)
                 vm->cec->stack[nap_sp(vm)]->var_def->instantiation = NULL;
 
                 /* and now restore the variable's instantiation */
-                pop_variable_instantiation(vm, vm->cec->stack[nap_sp(vm)]->var_def);
+                //pop_variable_instantiation(vm, vm->cec->stack[nap_sp(vm)]->var_def);
 
             }
             else
@@ -125,6 +125,5 @@ int nap_clrs(struct nap_vm* vm)
         }
         vm->cec->stack_pointer --;
     }
-
     return NAP_SUCCESS;
 }

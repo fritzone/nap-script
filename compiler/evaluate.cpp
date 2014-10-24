@@ -664,7 +664,7 @@ void compile_a_block(variable** target_var, nap_compiler* _compiler, const std::
                      call_context* cc,
                      const method* the_method, int forced_mov, bool& psuccess)
 {
-    std::string if_hash = generate_unique_hash();
+    std::string if_hash = cc->hash;
     std::vector<expression_tree*>::const_iterator q = container.begin();
     push_cc_start_marker(_compiler, if_hash.c_str()); /* push a marker onto the stack so that the end of the if's CC will know till where to delete*/
     int last_opcode = -1;
@@ -683,6 +683,17 @@ void compile_a_block(variable** target_var, nap_compiler* _compiler, const std::
     push_cc_end_marker(_compiler, if_hash.c_str());
     if(last_opcode == RETURN_STATEMENT)
     {
+        call_context* parentccs = cc->father;
+        while(parentccs)
+        {
+            code_stream(_compiler) << "clrsn" << parentccs->hash;
+            if(parentccs && parentccs->stop_backward)
+            {
+                break;
+            }
+
+            parentccs = parentccs->father;
+        }
         code_stream(_compiler) << "popall" ;
         code_stream(_compiler) << "leave" ;
     }
@@ -747,13 +758,13 @@ static void resolve_if_keyword(variable** target_var, nap_compiler* _compiler,
     {
 
         std::stringstream ss;
-        ss << my_if->if_branch->name << C_UNDERLINE << cc->labels.size() << C_UNDERLINE << generate_unique_hash();
+        ss << my_if->if_branch->name << C_UNDERLINE << cc->labels.size() << C_UNDERLINE << my_if->if_branch->hash;
         std::string if_label_name = ss.str();
         ss.str(std::string());
 
         std::string else_label_name;
 
-        ss << cc->name << C_UNDERLINE << cc->labels.size() << C_UNDERLINE << generate_unique_hash();
+        ss << cc->name << C_UNDERLINE << cc->labels.size() << C_UNDERLINE << cc->hash;
         std::string end_label_name = ss.str();
         ss.str(std::string());
 
@@ -761,7 +772,7 @@ static void resolve_if_keyword(variable** target_var, nap_compiler* _compiler,
 
         if(my_if->else_branch) /* if there's an else branch */
         {
-            ss << my_if->else_branch->name << C_UNDERLINE << cc->labels.size() << C_UNDERLINE << generate_unique_hash();
+            ss << my_if->else_branch->name << C_UNDERLINE << cc->labels.size() << C_UNDERLINE << my_if->else_branch->hash;
             else_label_name = ss.str();
             ss.str(std::string());
             jmp(_compiler, else_label_name);    /* jump to the else branch if the logical operation did no evaluate to true*/
@@ -1235,8 +1246,15 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                 }
                 else
                 {
-                    std::string s = fully_qualified_varname(cc, var);
-                    code_stream(_compiler)  << s ;
+                    if(var->peek_index == -1)
+                    {
+                        std::string s = fully_qualified_varname(cc, var);
+                        code_stream(_compiler)  << s ;
+                    }
+                    else
+                    {
+                        code_stream(_compiler) << "peek" << get_reg_type(var->i_type) << var->peek_index;
+                    }
                 }
             }
             break;
@@ -1406,10 +1424,11 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
             {
                 if(node->reference)
                 {
-                    std::string cc_start_hash = generate_unique_hash();
+                    call_context* new_cc = (call_context*)node->reference->to_interpret;    // Here we don't get a reference ... :(
+
+                    std::string cc_start_hash = new_cc->hash;
 
                     push_cc_start_marker(_compiler,cc_start_hash.c_str());
-                    call_context* new_cc = (call_context*)node->reference->to_interpret;    // Here we don't get a reference ... :(
                     new_cc->compile_standalone(_compiler, level, reqd_type, forced_mov, psuccess);
                     SUCCES_OR_RETURN;
 
@@ -1430,7 +1449,7 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                     method* m = cfe->the_method;
                     std::vector<parameter*>::iterator ingoing_parameters = cfe->parameters.begin();
                     int pc = 0;
-                    std::string dot_determiner_hash = generate_unique_hash();
+                    std::string dot_determiner_hash = cfe->the_method->main_cc->hash;
 
                     push_cc_start_marker(_compiler,dot_determiner_hash.c_str());
                     while(ingoing_parameters != cfe->parameters.end())
@@ -1620,7 +1639,7 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                 if(node->op_type != FUNCTION_CALL_NAP_PRINT && const_cast<variable**>(&node->target_var))
                 {
                     variable* v = * (const_cast<variable**>(&node->target_var));
-                    if(fp && fp->reference)
+                    if(fp && fp->is_reference)
                     {
                         reference_par_target_var.insert(std::make_pair(fp,v));
                     }
@@ -1720,7 +1739,7 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
             // and now do some stuff to pop the parameters of the function
             for(size_t i=0; i<m->parameters.size(); i++)
             {
-                code_stream(_compiler) << "poke" << fully_qualified_varname(m->main_cc, m->parameters[i]->name.c_str());
+                // code_stream(_compiler) << "poke" << fully_qualified_varname(m->main_cc, m->parameters[i]->name.c_str());
             }
             break;
         }

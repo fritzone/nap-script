@@ -267,20 +267,26 @@ void code_finalizer::finalize(nap_compiler *_compiler)
         {
             if(is_asm_command_word(assembly_commands[i]) || assembly_commands[i][0] == ':')
             {
-                std::cout << std::endl;
+                if(assembly_commands[i] != "peek")
+                {
+//                    std::cout << std::endl;
+                }
             }
-            std::cout << assembly_commands[i] << " ";
+//            std::cout << assembly_commands[i] << " ";
         }
     }
 }
 
 void code_finalizer::add_assembly_command(const std::string &cmd)
 {
-//    if(is_asm_command_word(cmd) || cmd[0] == ':')
-//    {
-//        std::cout << std::endl;
-//    }
-//    std::cout << cmd << " " << std::flush;
+    if(is_asm_command_word(cmd) || cmd[0] == ':')
+    {
+        if(cmd != "peek")
+        {
+            std::cout << std::endl;
+        }
+    }
+    std::cout << cmd << " " << std::flush;
 
     assembly_commands.push_back(cmd);
 }

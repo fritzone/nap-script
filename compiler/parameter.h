@@ -54,6 +54,6 @@ struct parameter
     int type;
 
     /* if this is a reference type parameter */
-    bool reference;
+    bool is_reference;
 };
 #endif

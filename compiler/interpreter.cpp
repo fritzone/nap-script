@@ -1562,7 +1562,7 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
         resw_for* rswfor = new resw_for;
         garbage_bin<resw_for*>::instance(cc->compiler).place(rswfor, cc->compiler);
 
-        rswfor->unique_hash = generate_unique_hash();
+        rswfor->unique_hash = cc->hash;
         rswfor->tree_init_stmt = expwloc->new_expression();
 
         build_expr_tree(init_stmt, rswfor->tree_init_stmt, the_method, orig_expr, cc, result, expwloc, psuccess, 0);

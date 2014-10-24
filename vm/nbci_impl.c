@@ -158,7 +158,7 @@ void nap_vm_cleanup(struct nap_vm* vm)
 
 #ifdef PREFER_DYNAMIC_ALLOCATION
     NAP_MEM_FREE(vm->cec->stack);
-
+    NAP_MEM_FREE(vm->cec->ebp_stack);
     NAP_MEM_FREE(vm->cec->call_frames);
 #endif
 
@@ -257,7 +257,6 @@ void nap_vm_cleanup(struct nap_vm* vm)
 
     NAP_MEM_FREE(vm->regi_stack);
     NAP_MEM_FREE(vm->regb_stack);
-
 
 #endif
 
@@ -494,6 +493,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     }
 
     vm->cec->call_frames = NAP_MEM_ALLOC(register_recursion_stack_size, uint64_t);
+    vm->cec->ebp_stack = NAP_MEM_ALLOC(register_recursion_stack_size, int64_t);
 
 #endif
 
@@ -526,6 +526,7 @@ int nap_save_registers(struct nap_vm* vm)
     /* save the byte registers */
     memcpy(vm->regb_stack[vm->reg_stack_idx], vm->cec->regb, vm->mrc * sizeof(nap_byte_t));
 
+    vm->cec->ebp_stack[vm->reg_stack_idx] = vm->cec->bp;
     vm->reg_stack_idx ++;
 
     return NAP_SUCCESS;
@@ -547,6 +548,7 @@ int nap_restore_registers(struct nap_vm* vm)
     /* restore the byte registers */
     memcpy(vm->cec->regb, vm->regb_stack[vm->reg_stack_idx], vm->mrc * sizeof(nap_byte_t));
 
+    vm->cec->bp = vm->cec->ebp_stack[vm->reg_stack_idx - 1];
     return NAP_SUCCESS;
 }
 

@@ -31,7 +31,7 @@ struct variable
     variable(int pdimension, int type, const std::string& pname,
              const std::string& pctype, call_context* pcc) : name(pname),
         dimension(pdimension), c_type(pctype), i_type(type),
-        mult_dim_def(NULL), func_par(NULL), cc(pcc) {}
+        mult_dim_def(NULL), func_par(NULL), cc(pcc), peek_index(-1) {}
 
     /* the name of the variable */
     std::string name;
@@ -59,6 +59,9 @@ struct variable
 
     /* definition list for the variable */
     std::string deflist;
+
+    /* for variables which are in a function the peek index regarding to the saved SP (ie. BP)*/
+    int peek_index;
 };
 
 #endif

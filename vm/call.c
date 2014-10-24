@@ -34,6 +34,8 @@ int nap_call(struct nap_vm *vm)
         vm->cec->call_frames[vm->cec->cfsize ++] = nap_ip(vm);
 
         /* and simply set cc to be where we need to go */
+        vm->cec->bp = vm->cec->stack_pointer;
+
         nap_set_ip(vm, vm->jumptable[jmpt_index]->location);
     }
     else /* calling a method from the parent_vm */
