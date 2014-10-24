@@ -399,11 +399,19 @@ void mov_target_index_register_source_int_register(nap_compiler* _compiler, int&
 
 void mov_target_variable_source_register(nap_compiler* _compiler,call_context* cc,  variable* dest, int level )
 {
-    code_stream(_compiler)
-            << mov()
-            << fully_qualified_varname(dest->cc ? dest->cc : cc, dest)
-            << reg() << get_reg_type(dest->i_type)  << level
-            ;
+    code_stream(_compiler) << mov();
+
+    if(dest->peek_index == -1)
+    {
+        std::string s = fully_qualified_varname(dest->cc ? dest->cc : cc, dest);
+        code_stream(_compiler)  << s ;
+    }
+    else
+    {
+        code_stream(_compiler) << "peek" << "bp" << get_reg_type(dest->i_type) << dest->peek_index;
+    }
+
+     code_stream(_compiler) << reg() << get_reg_type(dest->i_type)  << level ;
 }
 
 void mov_target_indexed_variable_source_register(nap_compiler* _compiler, variable* dest, int idxc, int level )

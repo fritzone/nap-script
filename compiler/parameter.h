@@ -18,8 +18,8 @@ struct method;
  */
 struct parameter
 {
-    parameter(method* pthe_method, const std::string& pname, int ptype) : name(pname), expr(0),
-         initial_value(0), simple_value(1), the_method(pthe_method), type(ptype)
+    parameter(method* pthe_method, const std::string& pname, int ptype, variable* v) : name(pname), expr(0),
+         initial_value(0), simple_value(1), the_method(pthe_method), type(ptype), the_variable(v)
     {}
 
     ~parameter()
@@ -55,5 +55,7 @@ struct parameter
 
     /* if this is a reference type parameter */
     bool is_reference;
+
+    variable* the_variable;
 };
 #endif

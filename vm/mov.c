@@ -330,6 +330,11 @@ static int mov_into_int_register(struct nap_vm* vm)
 
     if(move_source == OPCODE_PEEK)
     {
+        uint8_t peek_base = vm->content[nap_step_ip(vm)]; /* SP or BP */
+        if(peek_base != OPCODE_SP && peek_base != OPCODE_BP)
+        {
+            NAP_FAILURE;
+        }
         uint8_t peek_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
 
         uint8_t peek_index_type = vm->content[nap_step_ip(vm)]; /* what type follows*/
@@ -348,7 +353,7 @@ static int mov_into_int_register(struct nap_vm* vm)
         {
             NAP_NOT_IMPLEMENTED
         }
-        struct stack_entry* se = vm->cec->stack[vm->cec->bp - peek_index];
+        struct stack_entry* se = vm->cec->stack[peek_base == OPCODE_BP?vm->cec->bp:vm->cec->stack_pointer - peek_index];
 
         if(peek_type == OPCODE_INT) /* we are dealing with an INT type peek */
         {   /* peek int: assumes that on the stack there is a nap_int_t in the value of the stack_entry at the given index*/
@@ -1267,6 +1272,11 @@ static int mov_into_index_register(struct nap_vm* vm)
     }
 
     return NAP_SUCCESS;
+}
+
+int mov_into_peek_target(struct nap_vm* vm)
+{
+    return NAP_FAILURE;
 }
 
 int mov_into_register(struct nap_vm* vm)
