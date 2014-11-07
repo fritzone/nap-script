@@ -1276,6 +1276,24 @@ static int mov_into_index_register(struct nap_vm* vm)
 
 int mov_into_peek_target(struct nap_vm* vm)
 {
+    uint8_t peek_base = vm->content[nap_step_ip(vm)]; /* SP/BP*/
+    uint8_t peek_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+    uint8_t peek_index_type = vm->content[nap_step_ip(vm)]; /* what are we moving in*/
+    nap_index_t peek_index = 0; /* the index that's peeked */
+
+    if(peek_index_type == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) */
+    {
+        int success = 0;
+        peek_index = (nap_index_t)nap_read_immediate_int(vm, &success);
+        if(success == NAP_FAILURE)
+        {
+            return NAP_FAILURE;
+        }
+    }
+    else /* nothing else can be peeked from the stack */
+    {
+        NAP_NOT_IMPLEMENTED
+    }
     return NAP_FAILURE;
 }
 
