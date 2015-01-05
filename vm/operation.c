@@ -243,6 +243,7 @@ int nap_operation(struct nap_vm* vm)
                     NAP_NOT_IMPLEMENTED
                 }
             }
+            // TODO: peek target operations
             else
             {
                 NAP_NOT_IMPLEMENTED

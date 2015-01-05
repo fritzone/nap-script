@@ -395,7 +395,62 @@ static int nap_compare_reg_int(struct nap_vm* vm)
             NAP_NOT_IMPLEMENTED /* UNKNOWN return type */
         }
     }
+    else
+    if(cmp_second == OPCODE_PEEK)
+    {
+        uint8_t peek_base = vm->content[nap_step_ip(vm)]; /* SP or BP */
+        if(peek_base != OPCODE_SP && peek_base != OPCODE_BP)
+        {
+            return NAP_FAILURE;
+        }
+        uint8_t peek_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
 
+        uint8_t peek_index_type = vm->content[nap_step_ip(vm)]; /* what type follows*/
+        nap_index_t peek_index = 0; /* the index that's peeked */
+
+        if(peek_index_type == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) */
+        {
+            int success = 0;
+            peek_index = (nap_index_t)nap_read_immediate_int(vm, &success);
+            if(success == NAP_FAILURE)
+            {
+                return NAP_FAILURE;
+            }
+        }
+        else /* nothing else can be peeked from the stack */
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+        struct stack_entry* se = vm->cec->stack[peek_base == OPCODE_BP?vm->cec->bp:vm->cec->stack_pointer - peek_index];
+
+        if(peek_type == OPCODE_INT) /* we are dealing with an INT type peek */
+        {   /* peek int: assumes that on the stack there is a nap_int_t in the value of the stack_entry at the given index*/
+
+            return nap_vm_set_lbf_to_op_result_int(vm,
+                                                   nap_regi(vm, register_index),
+                                                   *(nap_int_t*)se->value,
+                                                   vm->cec->current_opcode);
+        }
+        else
+        if(peek_type == OPCODE_BYTE) /* we are dealing with a BYTE type peek */
+        {   /* peek byte: assumes that on the stack there is a nap_byte_t in the value of the stack_entry at the given index*/
+            return nap_vm_set_lbf_to_op_result_int(vm,
+                                                   nap_regi(vm, register_index),
+                                                   (nap_int_t)*(nap_byte_t*)se->value,
+                                                   vm->cec->current_opcode);        }
+        else
+        if(peek_type == OPCODE_REAL) /* we are dealing with a real type peek */
+        {   /* peek real: assumes that on the stack there is a nap_real_t in the value of the stack_entry at the given index*/
+            return nap_vm_set_lbf_to_op_result_int(vm,
+                                                   nap_regi(vm, register_index),
+                                                   (nap_int_t)*(nap_real_t*)se->value,
+                                                   vm->cec->current_opcode);        }
+        else
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+
+    }
     else /* comparing an int register to something else. What might that be? */
     {
         NAP_NOT_IMPLEMENTED

@@ -277,11 +277,13 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
             {
                 variable* v = *vlist;
                 v->peek_index = pctr++;
-                // peek(_compiler, m->main_cc, v->c_type, pctr++, v->name.c_str());
+                //
                 // now let's see if this variable is a multi dimensional one or not
                 if(v->mult_dim_def)
                 {
                     // if yes create a proper array out from it
+                    peek(_compiler, m->main_cc, v->c_type, v->peek_index, v->name.c_str());
+                    std::cout << std::endl<<"MULTI stuff peeked"<< std::endl;
                 }
                 vlist ++;
             }

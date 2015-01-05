@@ -68,6 +68,9 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/poke.c
 
     ${NAP_ROOT}/compiler/charconverter.cpp
+
+    ${NAP_ROOT}/inc/opcodes.h
+
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/vm 

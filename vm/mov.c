@@ -81,6 +81,53 @@ static int mov_into_byte_register(struct nap_vm* vm)
     uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
     uint8_t move_source = vm->content[nap_step_ip(vm)]; /* what are we moving in the byte register */
 
+    if(move_source == OPCODE_PEEK) /* TODO: This is very similar to the same section for the "int" register */
+    {
+        uint8_t peek_base = vm->content[nap_step_ip(vm)]; /* SP or BP */
+        if(peek_base != OPCODE_SP && peek_base != OPCODE_BP)
+        {
+            return NAP_FAILURE;
+        }
+        uint8_t peek_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+
+        uint8_t peek_index_type = vm->content[nap_step_ip(vm)]; /* what type follows*/
+        nap_index_t peek_index = 0; /* the index that's peeked */
+
+        if(peek_index_type == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) */
+        {
+            int success = 0;
+            peek_index = (nap_index_t)nap_read_immediate_int(vm, &success);
+            if(success == NAP_FAILURE)
+            {
+                return NAP_FAILURE;
+            }
+        }
+        else /* nothing else can be peeked from the stack */
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+        struct stack_entry* se = vm->cec->stack[peek_base == OPCODE_BP?vm->cec->bp:vm->cec->stack_pointer - peek_index];
+
+        if(peek_type == OPCODE_INT) /* we are dealing with an INT type peek */
+        {   /* peek int: assumes that on the stack there is a nap_int_t in the value of the stack_entry at the given index*/
+            nap_set_regb(vm, register_index, (nap_byte_t)*(nap_byte_t*)se->value); /* STACK VALUE FROM peek_index */
+        }
+        else
+        if(peek_type == OPCODE_BYTE) /* we are dealing with a BYTE type peek */
+        {   /* peek byte: assumes that on the stack there is a nap_byte_t in the value of the stack_entry at the given index*/
+            nap_set_regb(vm, register_index, *(nap_byte_t*)se->value); /* STACK VALUE FROM peek_index */
+        }
+        else
+        if(peek_type == OPCODE_REAL) /* we are dealing with a real type peek */
+        {   /* peek real: assumes that on the stack there is a nap_real_t in the value of the stack_entry at the given index*/
+            nap_set_regb(vm, register_index, (nap_byte_t)*(nap_real_t*)se->value); /* STACK VALUE FROM peek_index */
+        }
+        else
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+    }
+    else
     if(move_source == OPCODE_IMMEDIATE_INT) /* immediate integer value */
     {
         int success = NAP_SUCCESS;
@@ -333,7 +380,7 @@ static int mov_into_int_register(struct nap_vm* vm)
         uint8_t peek_base = vm->content[nap_step_ip(vm)]; /* SP or BP */
         if(peek_base != OPCODE_SP && peek_base != OPCODE_BP)
         {
-            NAP_FAILURE;
+            return NAP_FAILURE;
         }
         uint8_t peek_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
 
@@ -637,6 +684,53 @@ static int mov_into_real_register(struct nap_vm* vm)
     uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
     uint8_t move_source = vm->content[nap_step_ip(vm)]; /* what are we moving in*/
 
+    if(move_source == OPCODE_PEEK)
+    {
+        uint8_t peek_base = vm->content[nap_step_ip(vm)]; /* SP or BP */
+        if(peek_base != OPCODE_SP && peek_base != OPCODE_BP)
+        {
+            return NAP_FAILURE;
+        }
+        uint8_t peek_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+
+        uint8_t peek_index_type = vm->content[nap_step_ip(vm)]; /* what type follows*/
+        nap_index_t peek_index = 0; /* the index that's peeked */
+
+        if(peek_index_type == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) */
+        {
+            int success = 0;
+            peek_index = (nap_index_t)nap_read_immediate_int(vm, &success);
+            if(success == NAP_FAILURE)
+            {
+                return NAP_FAILURE;
+            }
+        }
+        else /* nothing else can be peeked from the stack */
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+        struct stack_entry* se = vm->cec->stack[peek_base == OPCODE_BP?vm->cec->bp:vm->cec->stack_pointer - peek_index];
+
+        if(peek_type == OPCODE_INT) /* we are dealing with an INT type peek */
+        {   /* peek int: assumes that on the stack there is a nap_int_t in the value of the stack_entry at the given index*/
+            nap_set_regr(vm, register_index, (nap_real_t)*(nap_int_t*)se->value); /* STACK VALUE FROM peek_index */
+        }
+        else
+        if(peek_type == OPCODE_BYTE) /* we are dealing with a BYTE type peek */
+        {   /* peek byte: assumes that on the stack there is a nap_byte_t in the value of the stack_entry at the given index*/
+            nap_set_regr(vm, register_index, (nap_real_t)*(nap_byte_t*)se->value); /* STACK VALUE FROM peek_index */
+        }
+        else
+        if(peek_type == OPCODE_REAL) /* we are dealing with a real type peek */
+        {   /* peek real: assumes that on the stack there is a nap_real_t in the value of the stack_entry at the given index*/
+            nap_set_regr(vm, register_index, *(nap_real_t*)se->value); /* STACK VALUE FROM peek_index */
+        }
+        else
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+    }
+    else
     if(move_source == OPCODE_IMMEDIATE_INT) /* immediate integer value goes in real register */
     {
         int success = NAP_SUCCESS;
@@ -1259,7 +1353,6 @@ static int mov_into_index_register(struct nap_vm* vm)
             {
                 NAP_NOT_IMPLEMENTED /* No other type of indexables */
             }
-
         }
         else /* what else can be indexed? */
         {
@@ -1279,6 +1372,7 @@ int mov_into_peek_target(struct nap_vm* vm)
     uint8_t peek_base = vm->content[nap_step_ip(vm)]; /* SP/BP*/
     uint8_t peek_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
     uint8_t peek_index_type = vm->content[nap_step_ip(vm)]; /* what are we moving in*/
+    uint8_t source_type = 0;
     nap_index_t peek_index = 0; /* the index that's peeked */
 
     if(peek_index_type == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) */
@@ -1294,7 +1388,41 @@ int mov_into_peek_target(struct nap_vm* vm)
     {
         NAP_NOT_IMPLEMENTED
     }
-    return NAP_FAILURE;
+
+    /* now read the source, ie. what is moved in the peek target */
+    source_type = vm->content[nap_step_ip(vm)];
+    if(source_type == OPCODE_REG)
+    {
+        uint8_t register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+        uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+        struct stack_entry* se = vm->cec->stack[peek_base == OPCODE_BP ? vm->cec->bp:nap_sp(vm) - peek_index];
+
+        if(register_type != peek_type)
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+
+        if(register_type == OPCODE_INT)
+        {
+            *(nap_int_t*)se->value = nap_regi(vm, register_index);
+        }
+        else
+        if(register_type == OPCODE_REAL)
+        {
+            *(nap_real_t*)se->value = nap_regr(vm, register_index);
+        }
+        else
+        if(register_type == OPCODE_BYTE)
+        {
+            *(nap_byte_t*)se->value = nap_regb(vm, register_index);
+        }
+        else
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+    }
+
+    return NAP_SUCCESS;
 }
 
 int mov_into_register(struct nap_vm* vm)
