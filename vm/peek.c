@@ -38,12 +38,14 @@ int nap_peek(struct nap_vm *vm)
         nap_index_t var_index = nap_fetch_index(vm);
         struct variable_entry* ve = nap_fetch_variable(vm, var_index);
         ASSERT_NOT_NULL_VAR(ve);
-        /* there supposed to be no instantiation at this point for the var ...
-         * but if there is an instantiation this means, a recursive (or a second)
-         * call of the method has happened */
+
         if(ve->instantiation)
         {
-            push_variable_instantiation(vm, ve);
+            if(ve->instantiation->value)
+            {
+                NAP_MEM_FREE(ve->instantiation->value);
+            }
+            NAP_MEM_FREE(ve->instantiation);
         }
 
         /* create a new instantiation */
@@ -57,6 +59,8 @@ int nap_peek(struct nap_vm *vm)
         {
             size_t size_to_copy = ((struct variable_entry*)se->value)->data_size * ((struct variable_entry*)se->value)->instantiation->len;
             char* tmp = NAP_MEM_ALLOC(size_to_copy, char);
+            NAP_NN_ASSERT(vm, tmp);
+
             memcpy(tmp, ((struct variable_entry*)se->value)->instantiation->value, size_to_copy);
             ve->instantiation->value = tmp;
             ve->instantiation->len = ((struct variable_entry*)se->value)->instantiation->len;

@@ -88,27 +88,3 @@ int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
         }
     }
 }
-
-void push_variable_instantiation(struct nap_vm* vm, struct variable_entry *ve)
-{
-    if(ve->is_p < vm->config->deepest_recursion - 1)
-    {
-        ve->instantiation_stack[ve->is_p++] = ve->instantiation;
-    }
-}
-
-
-void pop_variable_instantiation(struct nap_vm* vm, struct variable_entry *ve)
-{
-    (void)(vm);
-    if(ve->is_p > 0)
-    {
-        if(ve->instantiation)
-        {
-            NAP_MEM_FREE(ve->instantiation->value);
-            NAP_MEM_FREE(ve->instantiation);
-        }
-        ve->instantiation = NULL;
-        ve->instantiation = ve->instantiation_stack[--ve->is_p];
-    }
-}
