@@ -42,6 +42,7 @@ int nap_call(struct nap_vm *vm)
     else /* calling a method from the parent_vm */
     {
         int64_t parent_sp = vm->parent->cec->stack_pointer;
+        int64_t parent_bp = vm->parent->cec->bp;
         int i = 0;
 
         /* this will be definitely over the max amount allowed,
@@ -74,11 +75,20 @@ int nap_call(struct nap_vm *vm)
          * Kind of hacky, but works.*/
         vm->parent->cec->call_frames[vm->parent->cec->cfsize ++] = fake_call_frame_exit;
 
+        /* fix the BP */
+        vm->parent->cec->bp = vm->parent->cec->stack_pointer;
+
+
+
+        dump_stack(vm->parent, stdout);
+        fflush(stdout);
+
         /* and run the method with the patched stack */
         nap_vm_run(vm->parent);
 
-        /* restore the parent's stack_pointer */
+        /* restore the parent's stack_pointer and base pointer */
         vm->parent->cec->stack_pointer = parent_sp;
+        vm->parent->cec->bp = parent_bp;
 
         /* fetch over the return values, they might be used by the caller later*/
         nap_copy_return_values(vm->parent, vm);

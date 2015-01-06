@@ -66,6 +66,7 @@ void* allocator(size_t count, const char* fn, long line);
     }                                                                          \
     else                                                                       \
     {                                                                          \
+        fprintf(stderr, "%s\n", error);                                        \
         nap_vm_set_error_description(vm, error);                               \
     }                                                                          \
     } while(0);

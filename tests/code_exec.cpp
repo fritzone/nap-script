@@ -65,7 +65,7 @@ TEST(CodeExecution, ExternalCallingOfInternalMethod)
 /* Define a function. Call it via the runtime API
  * Use the function, see that it returns the default return value (0).
  */
-TEST(CodeExecution, DISABLED_ExternalCallingOfInternalMethodWithIntReturnType)
+TEST(CodeExecution, ExternalCallingOfInternalMethodWithIntReturnType)
 {
     nap_runtime* runtime = nap_runtime_create(0);
     int found_indicator = 0;
