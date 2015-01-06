@@ -1739,13 +1739,6 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
 
             /* close the CC after fetching the parameters */
             push_cc_end_marker(_compiler,func_call_hash.c_str());
-
-
-            // and now do some stuff to pop the parameters of the function
-            for(size_t i=0; i<m->parameters.size(); i++)
-            {
-                // code_stream(_compiler) << "poke" << fully_qualified_varname(m->main_cc, m->parameters[i]->name.c_str());
-            }
             break;
         }
 

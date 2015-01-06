@@ -684,6 +684,28 @@ TEST(General, FibonacciAsIntArrayReference)
     SCRIPT_SHUTDOWN
 }
 
+
+/*
+ * Push an int, peek an int variable
+ */
+TEST(PushPeek, Ints)
+{
+    SCRIPT_START
+    "                             \
+            int a;                \
+            asm                   \
+            {                     \
+                 push 23;         \
+                 peek int 0 global.a; \
+            }                     \
+    "
+    SCRIPT_END
+    ASSERT_EQ(23, VAR_INT(a));
+
+    SCRIPT_SHUTDOWN
+}
+
+
 NAP_EXPORTS
 void external_callee(nap_int_t a, nap_int_t b)
 {
