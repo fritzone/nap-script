@@ -400,7 +400,14 @@ static int mov_into_int_register(struct nap_vm* vm)
         {
             NAP_NOT_IMPLEMENTED
         }
-        struct stack_entry* se = vm->cec->stack[peek_base == OPCODE_BP?vm->cec->bp:vm->cec->stack_pointer - peek_index];
+
+
+        dump_stack(vm, stdout);
+        fflush(stdout);
+
+
+        int64_t idx = (peek_base == OPCODE_BP?vm->cec->bp:vm->cec->stack_pointer) - peek_index;
+        struct stack_entry* se = vm->cec->stack[idx];
 
         if(peek_type == OPCODE_INT) /* we are dealing with an INT type peek */
         {   /* peek int: assumes that on the stack there is a nap_int_t in the value of the stack_entry at the given index*/

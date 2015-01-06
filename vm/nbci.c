@@ -108,6 +108,15 @@ void dump_stack(struct nap_vm* vm, FILE *fp)
             }
 
 
+            if(vm->cec->bp == tempst)
+            {
+                fprintf(fp, "*");
+            }
+            else
+            {
+                fprintf(fp, " ");
+            }
+
             fprintf(fp, "[%.5"PRINT_d"]%p", tempst, (vm->cec->stack[tempst]->value?vm->cec->stack[tempst]->value:NULL));
             if(vm->cec->stack[tempst]->stored)
             {
@@ -158,6 +167,17 @@ void dump_stack(struct nap_vm* vm, FILE *fp)
                     fprintf(fp, "=%"PRINT_d, ((nap_int_t*)vm->cec->stack[tempst]->value)[0]);
                 }
                 fprintf(fp, ")");
+            }
+            else /* simple number probably */
+            {
+                if(vm->cec->stack[tempst]->type == OPCODE_INT)
+                {
+                    fprintf(fp, " (%"PRINT_d")", (*(nap_int_t*)vm->cec->stack[tempst]->value));
+                }
+                if(vm->cec->stack[tempst]->type == OPCODE_REAL)
+                {
+                    fprintf(fp, " (%Lf)", (*(nap_real_t*)vm->cec->stack[tempst]->value));
+                }
             }
 
             switch(vm->cec->stack[tempst]->type)
