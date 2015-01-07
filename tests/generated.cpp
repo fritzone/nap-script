@@ -1,6 +1,8 @@
 #include <sstream>
 #include <fstream>
 
+#define URS 5
+
 int main()
 {
     std::stringstream ss;
@@ -13,14 +15,14 @@ int main()
         << "{" << std::endl << "SCRIPT_START" << std::endl
         << "\"  \\" << std::endl;
 
-    for(int i=0; i<=254; i++)
+    for(int i=0; i<=URS; i++)
     {
         ss << "int gv_add_" << i << " = " << i << ";  \\" << std::endl ;
     }
 
     ss << "asm   \\" << std::endl << "{  \\" << std::endl;
 
-    for(int i=0; i<=254; i++)
+    for(int i=0; i<=URS; i++)
     {
         ss << "  mov reg int " << i << " 1;  \\" << std::endl;
     }
