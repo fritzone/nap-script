@@ -106,7 +106,9 @@ static int mov_into_byte_register(struct nap_vm* vm)
         {
             NAP_NOT_IMPLEMENTED
         }
-        struct stack_entry* se = vm->cec->stack[peek_base == OPCODE_BP?vm->cec->bp:vm->cec->stack_pointer - peek_index];
+
+        int64_t idx = (peek_base == OPCODE_BP?vm->cec->bp:vm->cec->stack_pointer) - peek_index;
+        struct stack_entry* se = vm->cec->stack[idx];
 
         if(peek_type == OPCODE_INT) /* we are dealing with an INT type peek */
         {   /* peek int: assumes that on the stack there is a nap_int_t in the value of the stack_entry at the given index*/
@@ -716,7 +718,9 @@ static int mov_into_real_register(struct nap_vm* vm)
         {
             NAP_NOT_IMPLEMENTED
         }
-        struct stack_entry* se = vm->cec->stack[peek_base == OPCODE_BP?vm->cec->bp:vm->cec->stack_pointer - peek_index];
+
+        int64_t idx = (peek_base == OPCODE_BP?vm->cec->bp:vm->cec->stack_pointer) - peek_index;
+        struct stack_entry* se = vm->cec->stack[idx];
 
         if(peek_type == OPCODE_INT) /* we are dealing with an INT type peek */
         {   /* peek int: assumes that on the stack there is a nap_int_t in the value of the stack_entry at the given index*/
@@ -979,6 +983,57 @@ static int mov_into_string_register(struct nap_vm* vm)
 {
     uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
     uint8_t move_source = vm->content[nap_step_ip(vm)]; /* what are we moving in*/
+
+    if(move_source == OPCODE_PEEK)
+    {
+        uint8_t peek_base = vm->content[nap_step_ip(vm)]; /* SP or BP */
+        if(peek_base != OPCODE_SP && peek_base != OPCODE_BP)
+        {
+            return NAP_FAILURE;
+        }
+        uint8_t peek_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+
+        uint8_t peek_index_type = vm->content[nap_step_ip(vm)]; /* what type follows*/
+        nap_index_t peek_index = 0; /* the index that's peeked */
+
+        if(peek_index_type == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) */
+        {
+            int success = 0;
+            peek_index = (nap_index_t)nap_read_immediate_int(vm, &success);
+            if(success == NAP_FAILURE)
+            {
+                return NAP_FAILURE;
+            }
+        }
+        else /* nothing else can be peeked from the stack */
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+        int64_t idx = (peek_base == OPCODE_BP?vm->cec->bp:vm->cec->stack_pointer) - peek_index;
+        struct stack_entry* se = vm->cec->stack[idx];
+
+        if(peek_type == OPCODE_STRING) /* we are dealing with an STRING type peek */
+        {
+            dump_stack(vm, stdout);
+            fflush(stdout);
+
+            char* temp = NULL;
+            size_t len = se->len;
+            temp = NAP_MEM_ALLOC(len * CC_MUL, char);
+            NAP_NN_ASSERT(vm, temp);
+            memcpy(temp, se->value, len * CC_MUL);
+            int res = nap_set_regs(vm, register_index,
+                                 temp,
+                                 len);
+            NAP_MEM_FREE(temp);
+            return res;
+        }
+        else
+        {
+            NAP_NOT_IMPLEMENTED
+        }
+    }
+    else
     if(move_source == OPCODE_STRING) /* usually we move an immediate string intro string register*/
     {
         nap_index_t str_index = nap_fetch_index(vm);
@@ -1005,12 +1060,29 @@ static int mov_into_string_register(struct nap_vm* vm)
     if(move_source == OPCODE_REG)
     {
         uint8_t second_register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+        uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+
         if(second_register_type == OPCODE_STRING)
         {
-            uint8_t second_register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
             return  nap_set_regs(vm, register_index,
                                  nap_regs(vm, second_register_index)->s,
                                  nap_regs(vm, second_register_index)->l);
+        }
+        else
+        if(second_register_type == OPCODE_INT)
+        {
+            size_t len = 0;
+            char* s_nr = nap_int_to_string (nap_regi(vm, second_register_index) , &len);
+            nap_set_regs(vm, register_index, s_nr, len / CC_MUL); /* nap_int_to_string returns the full byte length, not the UTF32 length*/
+            free(s_nr);
+        }
+        else
+        if(second_register_type == OPCODE_BYTE)
+        {
+            size_t len = 0;
+            char* s_nr = nap_int_to_string ((nap_int_t)nap_regb(vm, second_register_index) , &len);
+            nap_set_regs(vm, register_index, s_nr, len / CC_MUL); /* nap_int_to_string returns the full byte length, not the UTF32 length*/
+            free(s_nr);
         }
         else
         {

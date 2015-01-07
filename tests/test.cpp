@@ -712,3 +712,122 @@ void external_callee(nap_int_t a, nap_int_t b)
     printf("%"PRINT_d" %"PRINT_d"\n", a, b);
     if(a != 1 || b != 2) FAIL();
 }
+
+TEST(FeatureTable, RegisterIntToRegisterXAndRegisterXToVariableX)
+{
+    SCRIPT_START
+    "                             \
+            int iv = 1;           \
+            real vrv = 1.0;       \
+            string sv = \"1\";    \
+            byte bv = 1;          \
+            asm                   \
+            {                     \
+                mov reg int 0, 5;                \
+                /* RI->RI */                     \
+                mov reg int 1, reg int 0;        \
+                /* RI->VI */                     \
+                mov global.iv, reg int 1;        \
+                /* RI->RR */                     \
+                mov reg real 0, reg int 0;       \
+                /* RR->VR */                     \
+                mov global.vrv, reg real 0;      \
+                /* RI->RB */                     \
+                mov reg byte 0, reg int 0;       \
+                /* RB->VB */                     \
+                mov global.bv, reg byte 0;       \
+                /* RI-> RS*/                     \
+                mov reg string 0, reg int 0;     \
+                /* RS->VS */                     \
+                mov global.sv, reg string 0;     \
+            }                                    \
+    "
+    SCRIPT_END
+    ASSERT_EQ(5, VAR_INT(iv));
+    ASSERT_EQ(5, VAR_BYTE(bv));
+
+    double vrv = (double)VAR_REAL(vrv);
+    ASSERT_DOUBLE_EQ((double)5.0, vrv);
+
+    SCRIPT_ASSERT_STREQ("5", sv);
+
+
+    SCRIPT_SHUTDOWN
+}
+
+
+TEST(FeatureTable, RegisterByteToRegisterX)
+{
+    SCRIPT_START
+    "                             \
+            int iv = 1;           \
+            real vrv = 1.0;       \
+            string sv = \"1\";    \
+            byte bv = 1;          \
+            asm                   \
+            {                     \
+                mov reg byte 0, 5;                \
+                /* RB->RI */                     \
+                mov reg int 0, reg byte 0;        \
+                mov global.iv, reg int 0;        \
+                /* RB->RR */                     \
+                mov reg real 0, reg byte 0;       \
+                mov global.vrv, reg real 0;      \
+                /* RB->RB */                     \
+                mov reg byte 1, reg byte 0;       \
+                mov global.bv, reg byte 1;       \
+                /* RB-> RS*/                     \
+                mov reg string 0, reg byte 0;     \
+                mov global.sv, reg string 0;     \
+            }                                    \
+    "
+    SCRIPT_END
+    ASSERT_EQ(5, VAR_INT(iv));
+    ASSERT_EQ(5, VAR_BYTE(bv));
+
+    double vrv = (double)VAR_REAL(vrv);
+    ASSERT_DOUBLE_EQ((double)5.0, vrv);
+
+    SCRIPT_ASSERT_STREQ("5", sv);
+
+
+    SCRIPT_SHUTDOWN
+}
+
+TEST(FeatureTable, RegisterRealToRegisterX)
+{
+    SCRIPT_START
+    "                             \
+            int iv = 1;           \
+            real vrv = 1.0;       \
+            string sv = \"1\";    \
+            byte bv = 1;          \
+            asm                   \
+            {                     \
+                mov reg real 0, 5.0;                \
+                /* RR->RI */                     \
+                mov reg int 0, reg real 0;        \
+                mov global.iv, reg int 0;        \
+                /* RR->RR */                     \
+                mov reg real 1, reg real  0;       \
+                mov global.vrv, reg real 1;      \
+                /* RR->RB */                     \
+                mov reg byte 1, reg real  0;       \
+                mov global.bv, reg byte 1;       \
+                /* RR-> RS*/                     \
+                mov reg string 0, reg real  0;     \
+                mov global.sv, reg string 0;     \
+            }                                    \
+    "
+    SCRIPT_END
+    ASSERT_EQ(5, VAR_INT(iv));
+    ASSERT_EQ(5, VAR_BYTE(bv));
+
+    double vrv = (double)VAR_REAL(vrv);
+    ASSERT_DOUBLE_EQ((double)5.0, vrv);
+
+    SCRIPT_ASSERT_STREQ("5", sv);
+
+
+    SCRIPT_SHUTDOWN
+}

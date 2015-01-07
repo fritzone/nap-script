@@ -243,7 +243,6 @@ int nap_operation(struct nap_vm* vm)
                     NAP_NOT_IMPLEMENTED
                 }
             }
-            // TODO: peek target operations
             else
             if(operation_source == OPCODE_PEEK)
             {
@@ -272,9 +271,6 @@ int nap_operation(struct nap_vm* vm)
                 }
                 int64_t idx = (peek_base == OPCODE_BP?vm->cec->bp:vm->cec->stack_pointer) - peek_index;
                 struct stack_entry* se = vm->cec->stack[idx];
-
-                   dump_stack(vm, stdout);
-                   fflush(stdout);
 
                 if(peek_type == OPCODE_INT) /* we are dealing with an INT type peek */
                 {   /* peek int: assumes that on the stack there is a nap_int_t in the value of the stack_entry at the given index*/
@@ -373,6 +369,61 @@ int nap_operation(struct nap_vm* vm)
                 }
             }
             else
+            if(operation_source == OPCODE_PEEK)
+            {
+                uint8_t peek_base = vm->content[nap_step_ip(vm)]; /* SP or BP */
+                if(peek_base != OPCODE_SP && peek_base != OPCODE_BP)
+                {
+                    return NAP_FAILURE;
+                }
+                uint8_t peek_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+
+                uint8_t peek_index_type = vm->content[nap_step_ip(vm)]; /* what type follows*/
+                nap_index_t peek_index = 0; /* the index that's peeked */
+
+                if(peek_index_type == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) */
+                {
+                    int success = 0;
+                    peek_index = (nap_index_t)nap_read_immediate_int(vm, &success);
+                    if(success == NAP_FAILURE)
+                    {
+                        return NAP_FAILURE;
+                    }
+                }
+                else /* nothing else can be peeked from the stack */
+                {
+                    NAP_NOT_IMPLEMENTED
+                }
+                int64_t idx = (peek_base == OPCODE_BP?vm->cec->bp:vm->cec->stack_pointer) - peek_index;
+                struct stack_entry* se = vm->cec->stack[idx];
+
+                if(peek_type == OPCODE_INT) /* we are dealing with an INT type peek */
+                {   /* peek int: assumes that on the stack there is a nap_int_t in the value of the stack_entry at the given index*/
+                    return do_real_operation(vm, &vm->cec->regr[register_index],
+                                            (nap_real_t)*(nap_int_t*)se->value,
+                                            vm->cec->current_opcode);
+                }
+                else
+                if(peek_type == OPCODE_BYTE) /* we are dealing with a BYTE type peek */
+                {   /* peek byte: assumes that on the stack there is a nap_byte_t in the value of the stack_entry at the given index*/
+                    return do_real_operation(vm, &vm->cec->regr[register_index],
+                                            (nap_real_t)*(nap_byte_t*)se->value,
+                                            vm->cec->current_opcode);
+
+                }
+                else
+                if(peek_type == OPCODE_REAL) /* we are dealing with a real type peek */
+                {   /* peek real: assumes that on the stack there is a nap_real_t in the value of the stack_entry at the given index*/
+                    return do_real_operation(vm, &vm->cec->regr[register_index],
+                                            *(nap_real_t*)se->value,
+                                            vm->cec->current_opcode);
+                }
+                else
+                {
+                    NAP_NOT_IMPLEMENTED
+                }
+            }
+            else
             {
                 NAP_NOT_IMPLEMENTED
             }
@@ -426,6 +477,55 @@ int nap_operation(struct nap_vm* vm)
                                         nap_regs(vm, second_register_index)->s,
                                         nap_regs(vm, second_register_index)->l,
                                         vm->cec->current_opcode);
+                }
+                else
+                {
+                    NAP_NOT_IMPLEMENTED
+                }
+            }
+            else
+            if(add_source == OPCODE_PEEK)
+            {
+                uint8_t peek_base = vm->content[nap_step_ip(vm)]; /* SP or BP */
+                if(peek_base != OPCODE_SP && peek_base != OPCODE_BP)
+                {
+                    return NAP_FAILURE;
+                }
+                uint8_t peek_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
+
+                uint8_t peek_index_type = vm->content[nap_step_ip(vm)]; /* what type follows*/
+                nap_index_t peek_index = 0; /* the index that's peeked */
+
+                if(peek_index_type == OPCODE_IMMEDIATE_INT) /* immediate value (1,..) */
+                {
+                    int success = 0;
+                    peek_index = (nap_index_t)nap_read_immediate_int(vm, &success);
+                    if(success == NAP_FAILURE)
+                    {
+                        return NAP_FAILURE;
+                    }
+                }
+                else /* nothing else can be peeked from the stack */
+                {
+                    NAP_NOT_IMPLEMENTED
+                }
+                struct stack_entry* se = vm->cec->stack[peek_base == OPCODE_BP?vm->cec->bp:vm->cec->stack_pointer - peek_index];
+
+                if(peek_type == OPCODE_STRING) /* we are dealing with an STRING type peek */
+                {
+                    char* temp = NULL;
+                    size_t len = se->len;
+                    temp = NAP_MEM_ALLOC(len * CC_MUL, char);
+                    NAP_NN_ASSERT(vm, temp);
+                    memcpy(temp, se->value, len * CC_MUL);
+                    int res = do_string_operation(vm,
+                                        &(nap_regs(vm, register_index)->s),
+                                        &(nap_regs(vm, register_index)->l),
+                                        temp,
+                                        len,
+                                        vm->cec->current_opcode);
+                    NAP_MEM_FREE(temp);
+                    return res;
                 }
                 else
                 {

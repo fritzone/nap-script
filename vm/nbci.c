@@ -164,7 +164,25 @@ void dump_stack(struct nap_vm* vm, FILE *fp)
                 }
                 else
                 {
-                    fprintf(fp, "=%"PRINT_d, ((nap_int_t*)vm->cec->stack[tempst]->value)[0]);
+                    if(vm->cec->stack[tempst]->type == OPCODE_STRING)
+                    {
+                        size_t dest_len = vm->cec->stack[tempst]->len * CC_MUL, real_len = 0;
+                        char* t = convert_string_from_bytecode_file(vm, vm->cec->stack[tempst]->value,
+                                vm->cec->stack[tempst]->len * CC_MUL, dest_len, &real_len);
+                        if(t == NULL)
+                        {
+                            fprintf(fp, "=(null)");
+                        }
+                        else
+                        {
+                            fprintf(fp, "=\"%s\"", t);
+                            free(t);
+                        }
+                    }
+                    else
+                    {
+                        fprintf(fp, "=%"PRINT_d, ((nap_int_t*)vm->cec->stack[tempst]->value)[0]);
+                    }
                 }
                 fprintf(fp, ")");
             }
@@ -178,17 +196,36 @@ void dump_stack(struct nap_vm* vm, FILE *fp)
                 {
                     fprintf(fp, " (%Lf)", (*(nap_real_t*)vm->cec->stack[tempst]->value));
                 }
+                if(vm->cec->stack[tempst]->type == OPCODE_STRING)
+                {
+                    size_t dest_len = vm->cec->stack[tempst]->len * CC_MUL, real_len = 0;
+                    char* t = convert_string_from_bytecode_file(vm, vm->cec->stack[tempst]->value,
+                            vm->cec->stack[tempst]->len * CC_MUL, dest_len, &real_len);
+                    if(t == NULL)
+                    {
+                        fprintf(fp, "=(null)");
+                    }
+                    else
+                    {
+                        fprintf(fp, "=\"%s\"", t);
+                        free(t);
+                    }
+                }
             }
 
             switch(vm->cec->stack[tempst]->type)
             {
             case STACK_ENTRY_MARKER_NAME:
+                {
+                struct stack_entry* se = vm->cec->stack[tempst];
                 fprintf(fp, ":[%.10"PRINT_st"]", vm->cec->stack[tempst]->len);
                 break;
+                }
             default:
                 break;
             }
             fprintf(fp, "\n");
+            fflush(fp);
         }
     }
 }
@@ -226,7 +263,7 @@ char *nap_vm_get_string(struct nap_vm* vm, char* name, int* found)
                             NAP_MEM_FREE(finame);
                         }
                         *found = 1;
-                        dest_len = vm->metatable[i]->instantiation->len;
+                        dest_len = vm->metatable[i]->instantiation->len * CC_MUL;
                         result = convert_string_from_bytecode_file(
                                     vm, (char*)(vm->metatable[i]->instantiation->value),
                                     vm->metatable[i]->instantiation->len * CC_MUL,
