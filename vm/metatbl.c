@@ -82,7 +82,6 @@ int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
             new_var->index = index;
             new_var->name = name;
             new_var->type = type;
-            new_var->is_p = 0;
             new_var->instantiation = 0;
             vm->metatable[index] = new_var;
         }

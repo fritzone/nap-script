@@ -1447,13 +1447,11 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
             return 0;
         }
         method* called_constructor = cd->get_method(constructor_name, this);
-        constructor_call* tmp = (constructor_call*)realloc(called_constructor, sizeof(constructor_call));
-        if(tmp == NULL)
+        if(called_constructor == 0)
         {
-            mcompiler->throw_error("Not enough memory");
-            psuccess = false;
-            return 0;
+            std::cerr << "no constructor defined for " << constructor_name;
         }
+        constructor_call* tmp = new constructor_call(called_constructor->method_name, cc);
         called_constructor = tmp;
         constructor_call* ccf = (constructor_call*)called_constructor;
         ccf->the_class = cd;

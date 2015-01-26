@@ -19,6 +19,7 @@ typedef enum TStackEntryType
     STACK_ENTRY_REAL          = 2,                /* same as OPCODE_FLOAT */
     STACK_ENTRY_STRING        = 3,                /* same as OPCODE_STRING */
     STACK_ENTRY_BYTE          = 4,                /* same as OPCODE_BYTE */
+    STACK_ENTRY_OBJECT        = 6,                /* same as OPCODE_GENERIC */
     STACK_ENTRY_MARKER_NAME   = 8,
 
     STACK_ENTRY_LAST
@@ -94,9 +95,6 @@ struct stack_entry
      * variable and it's not suppsoed to be freed by clrs*/
     char holds_array : 1;
 
-    /* To tell us that this instantiation was already free. In this case it does not get
-     * pushed back on the variable stack*/
-    char already_freed : 1;
 };
 
 /**

@@ -127,9 +127,10 @@ private:
  **/
 struct constructor_call : public method
 {
-    constructor_call(char* name, call_context* cc);
+    constructor_call(const std::string& name, call_context* cc);
 
     class_declaration *the_class;
+    call_context* mcc;
 };
 
 /**

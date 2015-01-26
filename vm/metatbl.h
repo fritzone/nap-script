@@ -14,7 +14,8 @@
 enum VAR_TYPE
 {
     OWN_VAR = 0,
-    EXTERN_VAR = 1
+    EXTERN_VAR = 1,
+    CLASS_VAR
 };
 
 /**
@@ -27,7 +28,8 @@ struct variable_entry
 
     /* the type of the variable:
      * 0 - variable defined in this VM
-     * 1 - variable defiend in a parent VM */
+     * 1 - variable defiend in a parent VM
+     * 2 - a class variable. The name contains the name of the class */
     enum VAR_TYPE type;
 
     /* the name of the variable */
@@ -39,9 +41,6 @@ struct variable_entry
      * The \c var_def member of the stack_entry is pointig to this object.
      */
     struct stack_entry* instantiation;
-
-    /* The instantiation stack pointer */
-    int16_t is_p;
 
     /* the dimensions of this variable. The scanning for dimensions begins at
      * the first element ([0]) and as long as there is a positive value (>0) we
