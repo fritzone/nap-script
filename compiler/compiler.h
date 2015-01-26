@@ -32,7 +32,8 @@ struct bc_variable_entry
     enum VariableType
     {
         VT_INTERNAL = 0,
-        VT_EXTERN = 1
+        VT_EXTERN = 1,
+        VT_CLASS = 2
     };
 
     bc_variable_entry(NUMBER_INTEGER_TYPE ploc, const std::string& pname, VariableType pvt = VT_INTERNAL) :
@@ -250,6 +251,9 @@ public:
     void add_external_method(method*);
 
     bool already_exited;
+
+    std::vector<class_declaration*> classes;
+
 
 private:
 

@@ -1547,14 +1547,9 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
                 ingoing_parameters ++;
                 pc ++;
             }
-            code_stream(_compiler) << push() << ref() << (std::string(cc->name) + STR_DOT + "this") ;
-            code_stream(_compiler) << call() << "@crea"  << m->the_class->name  << (std::string(cc->name) + STR_DOT + "this").c_str() ;
-            code_stream(_compiler) << call()
-
-                          << '$' << (std::string(cc->name) + STR_DOT + "this")
-                          << '@' << (std::string(m->the_class->name) +  STR_DOT + m->method_name).c_str()
-                          ;
-            code_stream(_compiler) << pop() << reg() << 'g'  << level  ;
+            code_stream(_compiler) << mov()
+                                   << reg() << "generic"  << level
+                                   << "@#crea"  << (std::string(m->the_class->name) +  STR_DOT + m->method_name).c_str() ;
 
             break;
         }

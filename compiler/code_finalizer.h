@@ -25,6 +25,7 @@ private:
     void finalize_jumptable();
     void finalize_funtable();
     void finalize_locations();
+    void finalize_classtable();
     bool is_asm_command_word(const std::string& expr);
 
     nap_compiler* mcompiler;
@@ -33,6 +34,7 @@ private:
     uint32_t strtable_location ;
     uint32_t jumptable_location ;
     uint32_t funtable_location ;
+    uint32_t classtable_location;
     file_abstraction* f;
 
     uint32_t jumptable_count;

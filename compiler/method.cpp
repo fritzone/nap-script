@@ -88,7 +88,7 @@ call_frame_entry::~call_frame_entry()
     }
 }
 
-constructor_call::constructor_call(char* name, call_context* cc) : method(cc->compiler, name, 0, cc)
+constructor_call::constructor_call(const std::string &name, call_context* cc) : method(cc->compiler, name, name, cc), mcc(cc)
 {
     the_class = cc->get_class_declaration(name);
 }

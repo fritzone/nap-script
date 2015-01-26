@@ -40,6 +40,18 @@ void code_finalizer::finalize_metatable()
             // starts with extern
             mcompiler->variables()[i].type = bc_variable_entry::VT_EXTERN;
         }
+        uint16_t globlen = (uint16_t)strlen("global") + 1;
+        const char* vname = mcompiler->variables()[i].name.c_str();
+
+        if(strstr(vname, "global") == vname) // plain gloal variable
+        {
+            vname += globlen;
+        }
+        else
+        {
+            globlen = 0;
+            mcompiler->variables()[i].type = bc_variable_entry::VT_CLASS;
+        }
 
         f->write_stuff_to_file_8((uint8_t)mcompiler->variables()[i].type);
 
@@ -51,10 +63,7 @@ void code_finalizer::finalize_metatable()
                               mcompiler->variables()[i].name.end(), '.');
         if(n == 1 || 1) // global/extern variable. Skip the "global." or "extern." // ||1 to write out all time
         {          // WARNING: this code counts on tha both global and extern have 6 characters.
-            uint16_t globlen = (uint16_t)strlen("global") + 1;
             f->write_stuff_to_file_16(var_name_length - globlen);
-            const char* vname = mcompiler->variables()[i].name.c_str();
-            vname += globlen;
             f->write_string_to_file(vname, var_name_length - globlen, 0);
         }
         else
@@ -177,9 +186,29 @@ void code_finalizer::finalize_locations()
     f->write_stuff_to_file_32(strtable_location, 0 + 1 + 4); // the stringtable location
     f->write_stuff_to_file_32(jumptable_location, 0 + 1 + 4 + 4); // the jumptable location
     f->write_stuff_to_file_32(funtable_location, 0 + 1 + 4 + 4 + 4); // the funtable location
-    f->write_stuff_to_file_8(255, 0 + 1 + 4 + 4 + 4 + 4); /* max reg count, always 255*/
-    f->write_stuff_to_file_8(0, 0 + 1 + 4 + 4 + 4 + 4 + 1); /* a dummy flag for now */
+    f->write_stuff_to_file_32(classtable_location, 0 + 1 + 4 + 4 + 4 + 4); // the classtable location
+    f->write_stuff_to_file_8(255, 0 + 1 + 4 + 4 + 4 + 4 + 4); /* max reg count, always 255*/
+    f->write_stuff_to_file_8(0, 0 + 1 + 4 + 4 + 4 + 4  + 4 + 1); /* a dummy flag for now */
+}
 
+void code_finalizer::finalize_classtable()
+{
+    classtable_location = f->ftell();
+
+    call_context* cc = mcompiler->getGlobalCc();
+
+    static const char CLASSTABLE[] = ".class";
+    f->write_string_to_file(CLASSTABLE, 6, 0);
+    uint32_t classtable_count = cc->classes.size();
+    f->write_stuff_to_file_32(classtable_count);
+
+    for(size_t i=0; i<classtable_count; i++)
+    {
+        class_declaration* cd = cc->classes[i];
+        f->write_stuff_to_file_16((uint16_t)cd->name.length());
+        f->write_string_to_file(cd->name.c_str(), cd->name.length(), 0);
+
+    }
 }
 
 bool code_finalizer::is_asm_command_word(const std::string &expr)
@@ -259,6 +288,7 @@ void code_finalizer::finalize(nap_compiler *_compiler)
     finalize_strtable();
     finalize_jumptable();
     finalize_funtable();
+    finalize_classtable();
     finalize_locations();
 
     if(mcompiler->get_print_assembly())
@@ -287,6 +317,10 @@ void code_finalizer::add_assembly_command(const std::string &cmd)
         }
     }
     std::cout << cmd << " " << std::flush;
+    if(cmd == "exit" || cmd == "leave")
+    {
+        std::cout << std::endl;
+    }
 
     assembly_commands.push_back(cmd);
 }

@@ -61,6 +61,8 @@ class_declaration::class_declaration(nap_compiler *_compiler, const string &name
 {
     parent_class = 0;
     pfather->classes.push_back(this);
+    _compiler->classes.push_back(this);
+    this->name = name;
  }
 
 /**
@@ -235,6 +237,8 @@ static int signature_to_number(const std::string& sig)
  */
 void call_context::compile(nap_compiler* _compiler, bool&psuccess)
 {
+
+    // firstly: all the commands that are in the main
     {
         std::vector<expression_tree*>::iterator q = expressions.begin();
         while(q != expressions.end())
@@ -283,7 +287,6 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
                 {
                     // if yes create a proper array out from it
                     peek(_compiler, m->main_cc, v->c_type, v->peek_index, v->name.c_str());
-                    std::cout << std::endl<<"MULTI stuff peeked"<< std::endl;
                 }
                 vlist ++;
             }
@@ -311,7 +314,7 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
             // end marker
             push_cc_end_marker(_compiler, fun_hash.c_str());
         }
-        else
+        else // external function
         {
             // determine the fun ptr number (the index from the nap_int_init_ext_func_array
             std::string type_encoding = get_type_code(m->ret_type);
@@ -357,10 +360,10 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
     {
         class_declaration* cd = classes.at(i);
         std::vector<method*>::iterator ccs_methods = cd->methods.begin();
-        code_stream(_compiler) << '@' << cd->name ;
         while(ccs_methods != cd->methods.end())
         {
-            code_stream(_compiler) <<  fully_qualified_label( (std::string(cd->name) + STR_DOT + (*ccs_methods)->method_name).c_str() ) ;
+            std::string full_meth_name = "@" + fully_qualified_label( (std::string(cd->name) + STR_DOT + (*ccs_methods)->method_name).c_str() );
+            code_stream(_compiler) <<  full_meth_name ;
             // now pop off the variables from the stack
             code_stream(_compiler) << "pushall" ;
 

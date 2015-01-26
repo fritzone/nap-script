@@ -324,6 +324,12 @@ void code_stream::output_bytecode(const char* s)
                         mcompiler->throw_error("@#grow not preceeded by a \"call\" command");
                     }
                 }
+                else
+                if(expr == "@#crea")
+                {
+                    f.write_stuff_to_file_8(OPCODE_CREA);
+                    mcompiler->setLastOpcode(OPCODE_CREA);
+                }
 
             }
         }
@@ -348,6 +354,21 @@ void code_stream::output_bytecode(const char* s)
         }
         else
         {
+            if(mcompiler->getLastOpcode() == OPCODE_CREA) // do we create a new object?
+            {
+                // now expre should be of something like: ClassName[.MethodName], MethodName is the constructor and it's not needed
+                // This will create a new object of the ClassName and will call the specified constructor
+                // Find the entry of the given expr's first part in the class table
+                std::string className = expr.substr(0, expr.find('.'));
+                for(uint32_t cctr = 0; cctr < mcompiler->classes.size(); cctr++)
+                {
+                    if(mcompiler->classes[cctr]->name == className)
+                    {
+                        f.write_stuff_to_file_32(cctr);
+                    }
+                }
+            }
+            else
             if(mcompiler->getLastOpcode() == OPCODE_MARKS_NAME || mcompiler->getLastOpcode() == OPCODE_CLRS_NAME)
             {
                 // this is a named mark

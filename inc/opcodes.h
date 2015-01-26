@@ -47,6 +47,7 @@ static const unsigned char OPCODE_JMP           = (unsigned char)0xBA; /**/
 static const unsigned char OPCODE_PUSH          = (unsigned char)0xBC; /**/
 static const unsigned char OPCODE_PUSHALL       = (unsigned char)0xBD; /**/
 static const unsigned char OPCODE_JLBF          = (unsigned char)0xBF; /**/
+static const unsigned char OPCODE_CREA          = (unsigned char)0xC7; /**/
 static const unsigned char OPCODE_POKE          = (unsigned char)0xC8; /**/
 static const unsigned char OPCODE_SERVE         = (unsigned char)0xC9; /**/
 static const unsigned char OPCODE_CALL          = (unsigned char)0xCA; /**/

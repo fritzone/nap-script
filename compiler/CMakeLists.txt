@@ -2,6 +2,12 @@ set(project nap)
 
 include (GenerateExportHeader)
 
+file(GLOB MyFiles ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+
+set_source_files_properties(    
+    SOURCE ${MyFiles}
+    PROPERTIES COMPILE_FLAGS -std=c++11)
+
 set(${project}_files
     # Source files
     ${CMAKE_CURRENT_SOURCE_DIR}/bt_string.cpp
