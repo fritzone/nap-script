@@ -176,6 +176,8 @@ public: /* Public methods */
 
     void add_child_cc(call_context* child_cc);
 
+    void compile_method(method* m);
+
 public: /* Public members */
 
     /* the methods of this call context */

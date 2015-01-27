@@ -219,6 +219,7 @@ struct nap_vm
     uint32_t  stringtable_location;         /* the location of the stringtable in the file */
     uint32_t  jumptable_location;           /* the location of the jumptable in the file */
     uint32_t  funtable_location;            /* the location of the fun table in the file */
+    uint32_t  classtable_location;          /* the location of the class table in the file */
     uint8_t   file_bitsize;                 /* the bit size: 0x32, 0x64*/
     uint32_t  max_marks;                    /* the number of maximum marks in the bytecode */
 
@@ -239,7 +240,11 @@ struct nap_vm
 
     /* variables for the funtable */
     struct funtable_entry** funtable;       /* the function table */
-    size_t funtable_entries;                /* how many entries in the function table */
+    size_t funtable_size;                   /* how many entries in the function table */
+
+    /* variables for the classtable */
+    struct funtable_entry** classtable;     /* the function table */
+    size_t classtable_size;                 /* how many entries in the function table */
 
     /* other variables */
     enum environments environment;          /* whether this is run as embedded in an app or a standalone application */

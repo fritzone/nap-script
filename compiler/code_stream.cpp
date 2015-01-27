@@ -83,6 +83,7 @@ void code_stream::output_bytecode(const char* s)
         f.write_stuff_to_file_32(temp); // the stringtable location
         f.write_stuff_to_file_32(temp); // the jumptable location
         f.write_stuff_to_file_32(temp); // the funtable location
+        f.write_stuff_to_file_32(temp); // the classtable location
         f.write_stuff_to_file_8(bits);  // extra for the max reg count
         f.write_stuff_to_file_8(0);     // extra for the flags
     }

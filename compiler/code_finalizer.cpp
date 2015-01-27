@@ -35,16 +35,20 @@ void code_finalizer::finalize_metatable()
     {
         f->write_stuff_to_file_32(mcompiler->variables()[i].meta_location);
         std::string ex = "extern";
+        bool skip_6 = false;
         if(mcompiler->variables()[i].name.compare(0, ex.length(), ex ) == 0)
         {
             // starts with extern
             mcompiler->variables()[i].type = bc_variable_entry::VT_EXTERN;
+            skip_6 = true;
         }
         uint16_t globlen = (uint16_t)strlen("global") + 1;
         const char* vname = mcompiler->variables()[i].name.c_str();
 
-        if(strstr(vname, "global") == vname) // plain gloal variable
+        // global/extern variable. Skip the "global." or "extern." // ||1 to write out all time
+        if(strstr(vname, "global") == vname || skip_6) // plain gloal variable
         {
+            // WARNING: this code counts on that both "global" and "extern" have 6 characters.
             vname += globlen;
         }
         else
@@ -61,8 +65,8 @@ void code_finalizer::finalize_metatable()
         // TODO: include a debugging flag option to write out all the variable names
         size_t n = std::count(mcompiler->variables()[i].name.begin(),
                               mcompiler->variables()[i].name.end(), '.');
-        if(n == 1 || 1) // global/extern variable. Skip the "global." or "extern." // ||1 to write out all time
-        {          // WARNING: this code counts on tha both global and extern have 6 characters.
+        if(n == 1 || 1)
+        {
             f->write_stuff_to_file_16(var_name_length - globlen);
             f->write_string_to_file(vname, var_name_length - globlen, 0);
         }
@@ -207,6 +211,17 @@ void code_finalizer::finalize_classtable()
         class_declaration* cd = cc->classes[i];
         f->write_stuff_to_file_16((uint16_t)cd->name.length());
         f->write_string_to_file(cd->name.c_str(), cd->name.length(), 0);
+
+        for(auto vc : mcompiler->variables())
+        {
+            if(vc.type == bc_variable_entry::VT_CLASS)
+            {
+                if(starts_with(vc.name, cd->name))
+                {
+                    std::cout << vc.name;
+                }
+            }
+        }
 
     }
 }

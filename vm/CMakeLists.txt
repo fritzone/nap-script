@@ -41,6 +41,7 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/metatbl.c
     ${CMAKE_CURRENT_SOURCE_DIR}/jmptable.c
     ${CMAKE_CURRENT_SOURCE_DIR}/funtable.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/classes.c
     ${CMAKE_CURRENT_SOURCE_DIR}/jump.c
     ${CMAKE_CURRENT_SOURCE_DIR}/push.c
     ${CMAKE_CURRENT_SOURCE_DIR}/nbci_impl.c
