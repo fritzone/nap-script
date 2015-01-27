@@ -11,9 +11,9 @@ int interpret_funtable(struct nap_vm *vm, uint8_t *start_location, uint32_t len)
 {
     uint8_t* cloc = 0;
     size_t func = 0; /* counts the inserted functions */
-
     
     /* check is this .jmp?*/
+    /* TODO: make sure we actually have 3 more characters */
     if(*(start_location) != '.' 
         || *(start_location + 1) != 'f'
         || *(start_location + 2) != 'u'
@@ -25,14 +25,14 @@ int interpret_funtable(struct nap_vm *vm, uint8_t *start_location, uint32_t len)
     cloc = start_location + 4; /* skip the .fun */
     
     /* number of functions */
-    vm->funtable_entries = htovm_32(*(uint32_t*)(cloc));
+    vm->funtable_size = htovm_32(*(uint32_t*)(cloc));
     
-    if(vm->funtable_entries == 0)
+    if(vm->funtable_size == 0)
     {
         return NAP_SUCCESS;
     }
     
-    vm->funtable = NAP_MEM_ALLOC(vm->funtable_entries + 1, struct funtable_entry*);
+    vm->funtable = NAP_MEM_ALLOC(vm->funtable_size + 1, struct funtable_entry*);
     NAP_NN_ASSERT(vm, vm->funtable);
 
     cloc += 4;
@@ -44,7 +44,7 @@ int interpret_funtable(struct nap_vm *vm, uint8_t *start_location, uint32_t len)
 
         struct funtable_entry* entry = NULL;
 
-        if( (cloc + 4) > (vm->content + len) || func == vm->funtable_entries + 1)
+        if( (cloc + 4) > (vm->content + len) || func == vm->funtable_size + 1)
         {
             return NAP_SUCCESS;
         }

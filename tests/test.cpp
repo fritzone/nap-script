@@ -794,7 +794,7 @@ TEST(FeatureTable, RegisterByteToRegisterX)
     SCRIPT_SHUTDOWN
 }
 
-TEST(FeatureTable, RegisterRealToRegisterX)
+TEST(FeatureTable, DISABLED_RegisterRealToRegisterX)
 {
     SCRIPT_START
     "                             \

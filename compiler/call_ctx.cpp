@@ -274,45 +274,7 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
 
         if(m->def_loc == DEF_INTERN)
         {
-            // now pop off the variables from the stack
-            std::vector<variable*>::const_reverse_iterator vlist = m->variables.rbegin();
-            int pctr = 0;
-            while(vlist != m->variables.rend())
-            {
-                variable* v = *vlist;
-                v->peek_index = pctr++;
-                //
-                // now let's see if this variable is a multi dimensional one or not
-                if(v->mult_dim_def)
-                {
-                    // if yes create a proper array out from it
-                    peek(_compiler, m->main_cc, v->c_type, v->peek_index, v->name.c_str());
-                }
-                vlist ++;
-            }
-
-            // marker
-            std::string fun_hash = (*ccs_methods)->main_cc->hash;
-            push_cc_start_marker(_compiler, fun_hash.c_str());
-
-            // and compile the isntructions
-            std::vector<expression_tree*>::const_iterator q1 = (*ccs_methods)->main_cc->expressions.begin();
-            (*ccs_methods)->main_cc->stop_backward = true;
-            while(q1 != (*ccs_methods)->main_cc->expressions.end())
-            {
-                int unknown_type = -1;
-                variable* target_var = 0;
-                ::compile(&target_var, _compiler, *q1, (*ccs_methods), (*ccs_methods)->main_cc, 0, unknown_type, 0, psuccess);
-                if(!psuccess)
-                {
-                    return;
-                }
-
-                q1 ++;
-            }
-
-            // end marker
-            push_cc_end_marker(_compiler, fun_hash.c_str());
+            compile_method(m);
         }
         else // external function
         {
@@ -346,6 +308,7 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
 
             code_stream(_compiler) << "intr" << 4 ;
         }
+
         code_stream(_compiler) << popall() ;
         code_stream(_compiler) << leave() ;
 
@@ -362,7 +325,7 @@ void call_context::compile(nap_compiler* _compiler, bool&psuccess)
         std::vector<method*>::iterator ccs_methods = cd->methods.begin();
         while(ccs_methods != cd->methods.end())
         {
-            std::string full_meth_name = "@" + fully_qualified_label( (std::string(cd->name) + STR_DOT + (*ccs_methods)->method_name).c_str() );
+            std::string full_meth_name = STR_COLON + std::string(cd->name) + STR_DOT + ((*ccs_methods)->method_name).c_str() + STR_COLON ;
             code_stream(_compiler) <<  full_meth_name ;
             // now pop off the variables from the stack
             code_stream(_compiler) << "pushall" ;
@@ -443,4 +406,49 @@ class_declaration* call_context::get_class_declaration(const std::string& requir
 void call_context::add_child_cc(call_context *child_cc)
 {
     children.push_back(child_cc);
+}
+
+void call_context::compile_method(method *m)
+{
+    // now pop off the variables from the stack
+    std::vector<variable*>::const_reverse_iterator vlist = m->variables.rbegin();
+    int pctr = 0;
+    while(vlist != m->variables.rend())
+    {
+        variable* v = *vlist;
+        v->peek_index = pctr++;
+        //
+        // now let's see if this variable is a multi dimensional one or not
+        if(v->mult_dim_def)
+        {
+            // if yes create a proper array out from it
+            peek(compiler, m->main_cc, v->c_type, v->peek_index, v->name.c_str());
+        }
+        vlist ++;
+    }
+
+    // marker
+    std::string fun_hash = m->main_cc->hash;
+    push_cc_start_marker(compiler, fun_hash.c_str());
+
+    // and compile the isntructions
+    std::vector<expression_tree*>::const_iterator q1 = m->main_cc->expressions.begin();
+    m->main_cc->stop_backward = true;
+    while(q1 != m->main_cc->expressions.end())
+    {
+        int unknown_type = -1;
+        variable* target_var = 0;
+        bool psuccess = true;
+        ::compile(&target_var, compiler, *q1, m, m->main_cc, 0, unknown_type, 0, psuccess);
+        if(!psuccess)
+        {
+            return;
+        }
+
+        q1 ++;
+    }
+
+    // end marker
+    push_cc_end_marker(compiler, fun_hash.c_str());
+
 }

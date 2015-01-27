@@ -9,6 +9,7 @@
 #include "strtable.h"
 #include "funtable.h"
 #include "jmptable.h"
+#include "classes.h"
 #include "opcodes.h"
 #include "stack.h"
 #include "byte_order.h"
@@ -203,7 +204,7 @@ void nap_vm_cleanup(struct nap_vm* vm)
     NAP_MEM_FREE(vm->stringtable);
 
     /* free the funtable */
-    for(i = 0; i<vm->funtable_entries; i++)
+    for(i = 0; i<vm->funtable_size; i++)
     {
         NAP_MEM_FREE(vm->funtable[i]->function_name);
         NAP_MEM_FREE(vm->funtable[i]->parameter_types);
@@ -367,6 +368,10 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     vm->funtable_location = htovm_32(*(uint32_t*)(cloc));
     cloc += 4;
 
+    /* classtable location */
+    vm->classtable_location = htovm_32(*(uint32_t*)(cloc));
+    cloc += 4;
+
     /* registers used */
     vm->mrc = *cloc;
     cloc ++;
@@ -399,13 +404,19 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
         return NULL;
     }
 
+    if(NAP_SUCCESS != interpret_classtable(vm, vm->content + vm->classtable_location, bytecode_len))
+    {
+        nap_vm_cleanup(vm);
+        return NULL;
+    }
+
     /* cc is the instruction pointer:
      * skip the:
      * - startbyte            - 8 bits
-     * - 3 addresses          - 4 * 32 (64) bits
+     * - 5 addresses          - 5 * 32 (64) bits
      * - the register count   - 8 bits
      * - the flags            - 8 bits */
-    nap_set_ip(vm, 1 + 4 * vm->file_bitsize + 1 + 1); /* to point to the first instruction */
+    nap_set_ip(vm, 1 + 5 * vm->file_bitsize + 1 + 1); /* to point to the first instruction */
 
     /* initially the last boolean flag is in an unknow state */
     vm->cec->lbf = UNDECIDED;
@@ -751,7 +762,7 @@ struct funtable_entry* nap_vm_get_method(struct nap_vm* vm, const char* method_n
     /* fist step: fetch the method with the given name */
     size_t i = 0;
     int meth_idx = -1;
-    for(i =0; i<vm->funtable_entries; i++)
+    for(i =0; i<vm->funtable_size; i++)
     {
         if(!strcmp(method_name, vm->funtable[i]->function_name))
         {

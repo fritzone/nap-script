@@ -70,6 +70,12 @@ void parsed_file::remove_comments()
                 b = content[cloc + 1];
                 content[cloc++] = C_SPACE; // overwrites the *
 
+
+                if(a == C_STAR && b == C_SLASH )
+                {
+                    break;
+                }
+
                 // Did we run out of the code? ie: Unfinished comment?
                 if(cloc == content_size - 1)
                 {
@@ -77,10 +83,6 @@ void parsed_file::remove_comments()
                     return;
                 }
 
-                if(a == C_STAR && b == C_SLASH )
-                {
-                    break;
-                }
             }
 
             content[cloc++] = C_SPACE; // overwrites the /
