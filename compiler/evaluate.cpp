@@ -1044,7 +1044,18 @@ void resolve_variable_definition(variable** target_var, nap_compiler* _compiler,
                 /* search if we have a definition for it too, such as: Base t = new Derived()*/
                 if(vd->the_value)
                 {
-                    code_stream(_compiler) << push() << ref() << (std::string(cc->name) + STR_DOT + vd->the_variable->name) ;
+                    std::string fcvarname = std::string(cc->name) + STR_DOT + vd->the_variable->name;
+                    code_stream(_compiler) << push() << ref() << fcvarname ;
+
+                    // Now, this already added it to the compiler, but the compiler has no knowledge of it's type
+
+                    for(size_t cvc=0; cvc<_compiler->variables().size(); cvc ++)
+                    {
+                        if(_compiler->variables()[cvc].name == fcvarname)
+                        {
+                            _compiler->variables()[cvc].classNameOfVar = vd->the_variable->c_type;
+                        }
+                    }
 
                     expression_tree* tempassign = new expression_tree(node->expwloc);
 

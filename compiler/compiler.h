@@ -37,12 +37,13 @@ struct bc_variable_entry
     };
 
     bc_variable_entry(NUMBER_INTEGER_TYPE ploc, const std::string& pname, VariableType pvt = VT_INTERNAL) :
-        meta_location(ploc), name(pname), type(pvt)
+        meta_location(ploc), name(pname), type(pvt), classNameOfVar("")
     {}
 
     NUMBER_INTEGER_TYPE meta_location;
     std::string name;
     VariableType type; // 0 - internal, 1 - external (from the parent VM)
+    std::string classNameOfVar; // "" (empty) if not a class type var, otherwise the name of the class
 };
 
 

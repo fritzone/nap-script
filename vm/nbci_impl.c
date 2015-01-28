@@ -33,6 +33,7 @@
 #include "mov.h"
 #include "jump.h"
 #include "marks.h"
+#include "crea.h"
 #include "clrs.h"
 #include "call.h"
 #include "peek.h"
@@ -63,7 +64,7 @@
 #include <iconv.h>
 #include <stddef.h>
 
-#define ERROR_COUNT 26
+#define ERROR_COUNT 27
 
 /* section for defining the constants */
 static char* error_table[ERROR_COUNT + 1] =
@@ -94,6 +95,7 @@ static char* error_table[ERROR_COUNT + 1] =
     "[VM-0024] Cannot store/restore a value",
     "[VM-0025] Only indexed variables can be served",
     "[VM-0026] Cannot poke a non variable",
+    "[VM-0027] Cannot create an object from the class template",
 
     "LAST_ENTRY_FOR_FUNNY_COMPILERS_WHO_DONT_LIKE_COMMAS_AT_LAST_POSITON"
 };
@@ -482,6 +484,7 @@ struct nap_vm* nap_vm_inject(uint8_t* bytecode, int bytecode_len, enum environme
     vm->opcode_handlers[OPCODE_RESTORE] = nap_restore; vm->opcode_error_codes[OPCODE_STORE] = ERR_VM_0024;
     vm->opcode_handlers[OPCODE_SERVE] = nap_serve; vm->opcode_error_codes[OPCODE_SERVE] = ERR_VM_0025;
     vm->opcode_handlers[OPCODE_POKE] = nap_poke; vm->opcode_error_codes[OPCODE_POKE] = ERR_VM_0026;
+    vm->opcode_handlers[OPCODE_CREA] = nap_crea; vm->opcode_error_codes[OPCODE_CREA] = ERR_VM_0027;
 
     /* setting the mov handlers */
     vm->mov_handlers[OPCODE_REG] = mov_into_register;

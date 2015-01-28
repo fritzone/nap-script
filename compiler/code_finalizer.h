@@ -8,6 +8,10 @@
 class nap_compiler;
 class file_abstraction;
 
+/**
+ * Helper class: its destructor is executed on the application exit and this
+ * finalizes the bytecode file
+ **/
 class code_finalizer
 {
 public:

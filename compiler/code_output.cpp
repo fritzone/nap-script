@@ -6,6 +6,7 @@
 #include "code_stream.h"
 #include "utils.h"
 #include "expression_tree.h"
+#include "compiler.h"
 
 #include <stdio.h>
 #include <string>
@@ -405,6 +406,15 @@ void mov_target_variable_source_register(nap_compiler* _compiler,call_context* c
     {
         std::string s = fully_qualified_varname(dest->cc ? dest->cc : cc, dest);
         code_stream(_compiler)  << s ;
+
+        for(size_t cvc=0; cvc<_compiler->variables().size(); cvc ++)
+        {
+            if(_compiler->variables()[cvc].name == s)
+            {
+                _compiler->variables()[cvc].classNameOfVar =dest->c_type;
+            }
+        }
+
     }
     else
     {
@@ -432,6 +442,16 @@ void push_variable(nap_compiler* _compiler,call_context* cc, variable* var)
             << var->c_type
             << fully_qualified_varname(cc, var)
             ;
+
+    // Now, this already added it to the compiler, but the compiler has no knowledge of it's type
+
+    for(size_t cvc=0; cvc<_compiler->variables().size(); cvc ++)
+    {
+        if(_compiler->variables()[cvc].name == fully_qualified_varname(cc, var))
+        {
+            _compiler->variables()[cvc].classNameOfVar =var->c_type;
+        }
+    }
 }
 
 void push_usertype_variable(nap_compiler* _compiler,call_context* cc, variable* var)

@@ -243,8 +243,8 @@ struct nap_vm
     size_t funtable_size;                   /* how many entries in the function table */
 
     /* variables for the classtable */
-    struct funtable_entry** classtable;     /* the function table */
-    size_t classtable_size;                 /* how many entries in the function table */
+    struct class_descriptor** classtable;   /* the classes of the application */
+    size_t classtable_size;                 /* how many entries in the class table */
 
     /* other variables */
     enum environments environment;          /* whether this is run as embedded in an app or a standalone application */

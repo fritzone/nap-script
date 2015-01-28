@@ -3,6 +3,7 @@
 #include "charconverter.h"
 #include "parameter.h"
 #include "code_stream.h"
+#include"opcodes.h"
 #include "file_abstraction.h"
 extern "C" {
 #include "byte_order.h"
@@ -17,10 +18,64 @@ extern "C" {
 
 code_finalizer* code_finalizer::minstance = 0;
 
-/**
- * Helper class: its destructor is executed on the application exit and this
- * finalizes the bytecode file
- **/
+
+
+void code_finalizer::finalize_classtable()
+{
+    classtable_location = f->ftell();
+
+    call_context* cc = mcompiler->getGlobalCc();
+
+    static const char CLASSTABLE[] = ".class";
+    f->write_string_to_file(CLASSTABLE, 6, 0);
+    uint32_t classtable_count = cc->classes.size();
+    f->write_stuff_to_file_32(classtable_count);
+
+    for(size_t i=0; i<classtable_count; i++)
+    {
+        class_declaration* cd = cc->classes[i];
+        f->write_stuff_to_file_16((uint16_t)cd->name.length());
+        f->write_string_to_file(cd->name.c_str(), cd->name.length(), 0);
+
+        // Firstly: count how many variables this class has
+        uint32_t class_var_ctr = 0;
+        std::vector<size_t> meta_indexes;
+        for(size_t vctr  =0; vctr < mcompiler->variables().size(); vctr ++)
+        {
+            auto vc = mcompiler->variables()[vctr];
+            if(vc.type == bc_variable_entry::VT_CLASS)
+            {
+                if(starts_with(vc.name, cd->name))
+                {
+                    class_var_ctr ++;
+                    meta_indexes.push_back(vctr);
+                }
+            }
+        }
+
+        // then write the number of class's variables to the file
+        f->write_stuff_to_file_32(class_var_ctr);
+
+        // and now put out the indexes of the variables in the metatable
+        for(auto idx:meta_indexes)
+        {
+            f->write_stuff_to_file_32(idx);
+        }
+    }
+}
+
+uint32_t var_type_code( const std::string& expr)
+{
+    uint32_t opcode = (uint32_t)-1;
+    if(expr == "int")  opcode = (uint32_t)OPCODE_INT;
+    if(expr == "byte")  opcode = (uint32_t)OPCODE_BYTE;
+    if(expr == "bool")  opcode = (uint32_t)OPCODE_INT; /*bool treated as int in the bytecode*/
+    if(expr == "char")  opcode = (uint32_t)OPCODE_STRING;
+    if(expr == "real") opcode = (uint32_t)OPCODE_REAL;
+    if(expr == "string")  opcode = (uint32_t)OPCODE_STRING;
+    return opcode;
+}
+
 void code_finalizer::finalize_metatable()
 {
 
@@ -74,6 +129,27 @@ void code_finalizer::finalize_metatable()
         {
             f->write_stuff_to_file_16(0); // write 0 to indicate name is not important
         }
+
+        // and now write the datatype of the variable
+        uint32_t cindex = var_type_code(mcompiler->variables()[i].classNameOfVar);
+
+        if(cindex == (uint32_t)-1)
+        {
+            // find the class to which this belongs if any
+                // there is a classname in the variable, since it has a "."
+            uint32_t classtable_count = mcompiler->classes.size();
+
+            for(size_t cctr=0; cctr<classtable_count; cctr++)
+            {
+                auto centry = mcompiler->classes[cctr];
+                if(mcompiler->variables()[i].classNameOfVar == centry->name)
+                {
+                    cindex = 10 + cctr; // 10 is CLASS_TYPES_START from stack.h
+                    break;
+                }
+            }
+        }
+        f->write_stuff_to_file_32(cindex);
     }
 }
 
@@ -193,37 +269,6 @@ void code_finalizer::finalize_locations()
     f->write_stuff_to_file_32(classtable_location, 0 + 1 + 4 + 4 + 4 + 4); // the classtable location
     f->write_stuff_to_file_8(255, 0 + 1 + 4 + 4 + 4 + 4 + 4); /* max reg count, always 255*/
     f->write_stuff_to_file_8(0, 0 + 1 + 4 + 4 + 4 + 4  + 4 + 1); /* a dummy flag for now */
-}
-
-void code_finalizer::finalize_classtable()
-{
-    classtable_location = f->ftell();
-
-    call_context* cc = mcompiler->getGlobalCc();
-
-    static const char CLASSTABLE[] = ".class";
-    f->write_string_to_file(CLASSTABLE, 6, 0);
-    uint32_t classtable_count = cc->classes.size();
-    f->write_stuff_to_file_32(classtable_count);
-
-    for(size_t i=0; i<classtable_count; i++)
-    {
-        class_declaration* cd = cc->classes[i];
-        f->write_stuff_to_file_16((uint16_t)cd->name.length());
-        f->write_string_to_file(cd->name.c_str(), cd->name.length(), 0);
-
-        for(auto vc : mcompiler->variables())
-        {
-            if(vc.type == bc_variable_entry::VT_CLASS)
-            {
-                if(starts_with(vc.name, cd->name))
-                {
-                    std::cout << vc.name;
-                }
-            }
-        }
-
-    }
 }
 
 bool code_finalizer::is_asm_command_word(const std::string &expr)

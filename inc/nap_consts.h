@@ -71,6 +71,7 @@ static const int ERR_VM_0023 = 0x17; /* division by zero */
 static const int ERR_VM_0024 = 0x18; /* cannot store/restore this value */
 static const int ERR_VM_0025 = 0x19; /* cannot serve this value */
 static const int ERR_VM_0026 = 0x26; /* cannot poke a non variable */
+static const int ERR_VM_0027 = 0x27; /* cannot create an object from the class */
 
 /* the character conversion multiplier when converting to UTF-32BE*/
 static const int CC_MUL = 4;

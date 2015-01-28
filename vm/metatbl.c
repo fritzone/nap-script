@@ -40,6 +40,7 @@ int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
     for(;;)
     {
         uint32_t index = htovm_32(*(uint32_t*)(cloc));
+        uint32_t classindex_of_variable = (uint32_t)-1;
         cloc += 4;
 
         if(index == htovm_32(1920234286) || cloc > start_location + len) /* ".str" */
@@ -76,13 +77,17 @@ int interpret_metatable(struct nap_vm* vm, uint8_t* start_location, uint32_t len
 
                 vm->metatable = tmp;
             }
+
             new_var = NAP_MEM_ALLOC(1, struct variable_entry);
             NAP_NN_ASSERT(vm, new_var);
+            classindex_of_variable = htovm_32(*(uint32_t*)(cloc));
+            cloc += 4;
 
             new_var->index = index;
             new_var->name = name;
             new_var->type = type;
             new_var->instantiation = 0;
+            new_var->datatype = classindex_of_variable;
             vm->metatable[index] = new_var;
         }
     }
