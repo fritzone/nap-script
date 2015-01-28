@@ -23,7 +23,7 @@ enum VAR_TYPE
  **/
 struct variable_entry
 {
-    /* the index of the variable */
+    /* The index of the variable. Referenced also by the class table's variables, mtbl_indexes */
     uint32_t index;
 
     /* the type of the variable:
@@ -56,6 +56,10 @@ struct variable_entry
     /* the size of the data for which we have allocated memory in the
      * instantiation, ie: the size of an uint8_t, uint16_t, etc... */
     uint8_t data_size;
+
+    /* If this is a class type variable, this is the index of it in the classtable + CLASS_TYPES_START.
+     * Otherwise it is the expected type */
+    uint32_t datatype;
 };
 
 /*

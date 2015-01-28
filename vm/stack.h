@@ -25,6 +25,8 @@ typedef enum TStackEntryType
     STACK_ENTRY_LAST
 } StackEntryType;
 
+#define CLASS_TYPES_START 10
+
 struct variable_entry;
 struct nap_vm;
 
@@ -52,7 +54,7 @@ struct stack_entry
      *    resulted from: push 23, push "abc", push reg int(2), push global.a ...
      *
      * 2. for pushing an object on the stack:
-     *     - an object descriptor (TODO)
+     *     - a class_instantiation object (classes.h)
      *
      * 3. for pushing a full indexed value (array)
      *     - a structure with a member being a contiguos memory area

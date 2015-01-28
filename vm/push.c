@@ -4,6 +4,7 @@
 #include "metatbl.h"
 #include "nbci_impl.h"
 #include "nap_consts.h"
+#include "classes.h"
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -11,7 +12,7 @@
 
 int nap_push(struct nap_vm *vm)
 {
-    struct stack_entry* se = NAP_MEM_ALLOC(1, struct stack_entry);
+    struct stack_entry* se = NAP_MEM_ALLOC(1, struct stack_entry); /* TODO: in case of error this is not freed */
     NAP_NN_ASSERT(vm, se);
 
     se->type = (StackEntryType)vm->content[nap_step_ip(vm)]; /* whether we push
@@ -217,13 +218,13 @@ int nap_push(struct nap_vm *vm)
         {
             if(se->type == STACK_ENTRY_INT) /* pushing an int variable */
             {                               /* STACK_ENTRY_INT = OPCODE_INT */
-                    nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
-                    NAP_NN_ASSERT(vm, temp);
+                nap_int_t* temp = NAP_MEM_ALLOC(1, nap_int_t);
+                NAP_NN_ASSERT(vm, temp);
 
-                    *temp = *(nap_int_t*)ve->instantiation->value;
+                *temp = *(nap_int_t*)ve->instantiation->value;
 
-                    /* setting the value of the stack entry */
-                    se->value = temp;
+                /* setting the value of the stack entry */
+                se->value = temp;
             }
             else
             if(se->type == STACK_ENTRY_REAL) /* pushing a real variable */
@@ -264,6 +265,31 @@ int nap_push(struct nap_vm *vm)
             {
                 NAP_NOT_IMPLEMENTED
             }
+        }
+    }
+    else
+    if(se->type == OPCODE_REF)
+    {
+        uint8_t ref_typ = vm->content[nap_step_ip(vm)];
+        if(ref_typ != OPCODE_VAR)
+        {
+            return NAP_FAILURE;
+        }
+        nap_index_t var_index = nap_fetch_index(vm);
+        struct variable_entry* ve = nap_fetch_variable(vm, var_index);
+        ASSERT_NOT_NULL_VAR(ve)
+
+        if(ve->datatype != (uint32_t)-1)
+        {
+            struct class_descriptor* cd = vm->classtable[ve->datatype - CLASS_TYPES_START];
+
+            ve->instantiation = NAP_MEM_ALLOC(1, struct stack_entry);
+            NAP_NN_ASSERT(vm, ve->instantiation);
+
+            ve->instantiation->type = se->type; /* must match the stack entry */
+
+            ve->instantiation->value = instantiate(vm, cd);
+            NAP_NN_ASSERT(vm, ve->instantiation->value);
         }
     }
     else
