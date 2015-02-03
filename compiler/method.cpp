@@ -4,7 +4,6 @@
 #include "interpreter.h"
 #include "number.h"
 #include "consts.h"
-#include "bt_string.h"
 #include "parameter.h"
 #include "type.h"
 #include "sys_brkp.h"

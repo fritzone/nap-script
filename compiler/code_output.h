@@ -30,7 +30,7 @@ void move_start_register_atomic_with_type(nap_compiler *_compiler, int reqd_type
 void move_register_level_register_next_level(nap_compiler* _compiler, int reqd_type, int level );
 void cmp_register_with_zero(nap_compiler *_compiler, int reqd_type, int level );
 void push_variable(nap_compiler *_compiler, call_context* cc, variable* var);
-void push_usertype_variable(nap_compiler *_compiler, call_context* cc, variable* var);
+void push_usertype_variable(nap_compiler *_compiler, call_context* cc, variable* var, const std::string &utype);
 void mov_target_register_source_var(variable** target_var, nap_compiler *_compiler, expression_tree* var_node, int reqd_type, int level, const method* the_method, call_context* cc, int forced_mov, bool &psuccess);
 void unary_operation_variable(nap_compiler* _compiler,call_context* cc, int opr, variable* var );
 void operation_on_indexed(nap_compiler *_compiler, call_context* cc, int opr, const variable* var, int idxc );

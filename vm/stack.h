@@ -21,6 +21,7 @@ typedef enum TStackEntryType
     STACK_ENTRY_BYTE          = 4,                /* same as OPCODE_BYTE */
     STACK_ENTRY_OBJECT        = 6,                /* same as OPCODE_GENERIC */
     STACK_ENTRY_MARKER_NAME   = 8,
+    STACK_ENTRY_OBJECT_TO_BE_CONSTRUCTED = 9,
 
     STACK_ENTRY_LAST
 } StackEntryType;

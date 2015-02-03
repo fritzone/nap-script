@@ -270,6 +270,11 @@ int nap_push(struct nap_vm *vm)
     else
     if(se->type == OPCODE_REF)
     {
+        nap_index_t class_index = nap_fetch_index(vm);
+        if(class_index > vm->classtable_size)
+        {
+            return NAP_FAILURE;
+        }
         uint8_t ref_typ = vm->content[nap_step_ip(vm)];
         if(ref_typ != OPCODE_VAR)
         {
@@ -279,17 +284,27 @@ int nap_push(struct nap_vm *vm)
         struct variable_entry* ve = nap_fetch_variable(vm, var_index);
         ASSERT_NOT_NULL_VAR(ve)
 
-        if(ve->datatype != (uint32_t)-1)
-        {
-            struct class_descriptor* cd = vm->classtable[ve->datatype - CLASS_TYPES_START];
+        ve->instantiation = NAP_MEM_ALLOC(1, struct stack_entry);
+        NAP_NN_ASSERT(vm, ve->instantiation);
 
-            ve->instantiation = NAP_MEM_ALLOC(1, struct stack_entry);
-            NAP_NN_ASSERT(vm, ve->instantiation);
+        /* Do we have a user defiend datatype for this? */
+        if(ve->datatype != (uint32_t)-1 && ve->datatype >= CLASS_TYPES_START)
+        {
+            if(ve->datatype - CLASS_TYPES_START != class_index)
+            {
+                return NAP_FAILURE;
+            }
+
+            struct class_descriptor* cd = vm->classtable[ve->datatype - CLASS_TYPES_START];
 
             ve->instantiation->type = se->type; /* must match the stack entry */
 
             ve->instantiation->value = instantiate(vm, cd);
             NAP_NN_ASSERT(vm, ve->instantiation->value);
+        }
+        else
+        {
+            return NAP_FAILURE;
         }
     }
     else

@@ -10,7 +10,6 @@ set_source_files_properties(
 
 set(${project}_files
     # Source files
-    ${CMAKE_CURRENT_SOURCE_DIR}/bt_string.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/call_ctx.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/compiler.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/consts.cpp
@@ -30,7 +29,6 @@ set(${project}_files
     ${CMAKE_CURRENT_SOURCE_DIR}/variable_holder.cpp
 
     # Header files
-    ${CMAKE_CURRENT_SOURCE_DIR}/bt_string.h
     ${CMAKE_CURRENT_SOURCE_DIR}/call_ctx.h
     ${CMAKE_CURRENT_SOURCE_DIR}/charconverter.h
     ${CMAKE_CURRENT_SOURCE_DIR}/code_finalizer.h
