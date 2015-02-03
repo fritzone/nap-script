@@ -3,7 +3,6 @@
 #include "variable.h"
 #include "type.h"
 #include "utils.h"
-#include "bt_string.h"
 #include "garbage_bin.h"
 #include "sys_brkp.h"
 #include "compiler.h"

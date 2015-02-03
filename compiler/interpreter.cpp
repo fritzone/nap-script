@@ -4,7 +4,6 @@
 #include "consts.h"
 #include "number.h"
 #include "envelope.h"
-#include "bt_string.h"
 #include "type.h"
 #include "opr_hndl.h"
 #include "variable.h"
@@ -1385,13 +1384,13 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
     {
         expr_trim[expr_len-1] = 0;    // removing the double quotes
         expr_trim = expr_trim.substr(1);
-        bt_string* the_str = new bt_string(expr_trim.c_str());
-        garbage_bin<bt_string*>::instance(cc->compiler).place(the_str, cc->compiler);
+        std::string* the_str = new std::string(expr_trim.c_str());
+        garbage_bin<std::string*>::instance(cc->compiler).place(the_str, cc->compiler);
         node->reference = new_envelope(the_str, BASIC_TYPE_STRING, cc->compiler);
-        node->info = the_str->m_the_string;
+        node->info = *the_str;
         *result = RESULT_STRING;
         node->op_type = BASIC_TYPE_STRING;
-        return (void*)the_str->m_the_string.c_str();
+        return (void*)the_str->c_str();
     }
 
     /* this is a 'statement' string, a string which is executed and the result is interpreted by the interpreter backticks: `` */
@@ -1399,11 +1398,11 @@ void* interpreter::build_expr_tree(const std::string& expr, expression_tree* nod
     {
         expr_trim[expr_len-1] = 0;    /* removing the double quotes */
         expr_trim = expr_trim.substr(1);
-        bt_string* the_str = new bt_string(expr_trim.c_str());
+        std::string* the_str = new std::string(expr_trim.c_str());
         node->reference = new_envelope(the_str, BASIC_TYPE_STRING, cc->compiler);
         node->info = expr_trim;
         *result = BACKQUOTE_STRING;
-        return (void*)the_str->m_the_string.c_str();
+        return (void*)the_str->c_str();
     }
 
     /* check if this is a function definition */

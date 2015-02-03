@@ -454,10 +454,9 @@ void push_variable(nap_compiler* _compiler,call_context* cc, variable* var)
     }
 }
 
-void push_usertype_variable(nap_compiler* _compiler,call_context* cc, variable* var)
+void push_usertype_variable(nap_compiler* _compiler,call_context* cc, variable* var, const std::string& utype)
 {
-    code_stream(_compiler) << call() << "@crea"  << var->c_type  << fully_qualified_varname(cc, var) ;
-    code_stream(_compiler) << push() << "ref" << fully_qualified_varname(cc, var) ;
+    code_stream(_compiler) << push() << "ref" << utype << fully_qualified_varname(cc, var) ;
 }
 
 void exit_app(nap_compiler* _compiler)

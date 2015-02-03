@@ -1504,6 +1504,27 @@ int mov_into_peek_target(struct nap_vm* vm)
     return NAP_SUCCESS;
 }
 
+int mov_into_generic_register(struct nap_vm* vm)
+{
+    uint8_t register_index = vm->content[nap_step_ip(vm)]; /* 0, 1, 2 ...*/
+    uint8_t move_source = vm->content[nap_step_ip(vm)]; /* what are we moving in*/
+
+    if(move_source == OPCODE_CREA)
+    {
+        nap_index_t class_idx = nap_fetch_index(vm); /* the index of the class */
+        uint8_t constructor_call_follows = vm->content[vm->cec->cc];
+        nap_addr_t ccall_idx = (nap_addr_t)-1;
+        if(constructor_call_follows == 0)
+        {
+            vm->cec->cc ++;
+            ccall_idx = nap_fetch_address(vm);
+        }
+        return NAP_SUCCESS;
+    }
+
+    return NAP_SUCCESS;
+}
+
 int mov_into_register(struct nap_vm* vm)
 {
     uint8_t register_type = vm->content[nap_step_ip(vm)]; /* int/string/float...*/
@@ -1532,6 +1553,11 @@ int mov_into_register(struct nap_vm* vm)
     if(register_type == OPCODE_REAL)
     {
         return mov_into_real_register(vm);
+    }
+    else
+    if(register_type == OPCODE_GENERIC)
+    {
+        return mov_into_generic_register(vm);
     }
     else
     {

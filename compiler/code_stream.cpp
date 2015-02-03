@@ -366,6 +366,41 @@ void code_stream::output_bytecode(const char* s)
                     if(mcompiler->classes[cctr]->name == className)
                     {
                         f.write_stuff_to_file_32(cctr);
+
+                        // and now the label for it, since it is a method call
+                        int idx = -1;
+                        for(unsigned int i=0; i<mcompiler->jumptable().size(); i++)
+                        {
+                            if(mcompiler->jumptable()[i].name == expr)
+                            {
+                                idx = i;
+                            }
+                        }
+                        if(idx > -1) // found a label
+                        {
+                            // tell the VM there is a method call coming
+                            f.write_stuff_to_file_8(0);
+
+                            // and the method index
+                            NUMBER_INTEGER_TYPE index = idx;
+                            f.write_stuff_to_file_32(index);
+                        }
+                        else // let's create a label
+                        {
+                            f.write_stuff_to_file_8(0);
+
+                            label_entry le;
+
+                            le.bytecode_location = 0;
+                            le.name = expr;
+                            le.type = label_entry::LE_CALL;
+
+                            mcompiler->add_jumptable_entry(le);
+                            NUMBER_INTEGER_TYPE index = mcompiler->jumptable().size() - 1; // the real idx
+                            f.write_stuff_to_file_32(index);
+                        }
+
+
                     }
                 }
             }
@@ -400,6 +435,20 @@ void code_stream::output_bytecode(const char* s)
                     // std::cout << " ;" << index; // To put the number of the mark to the screen
                 }
 
+            }
+            else
+            if(mcompiler->getLastOpcode() == OPCODE_REF)
+            {
+                // now it is mandatory to have a class name here
+                for(uint32_t cctr = 0; cctr < mcompiler->classes.size(); cctr++)
+                {
+                    if(mcompiler->classes[cctr]->name == expr)
+                    {
+                        f.write_stuff_to_file_32(cctr);
+                        break;
+                    }
+                }
+                mcompiler->setLastOpcode(0);
             }
             else
             if(mcompiler->getLastOpcode() != OPCODE_JLBF && mcompiler->getLastOpcode() != OPCODE_JMP && mcompiler->getLastOpcode() != OPCODE_CALL)

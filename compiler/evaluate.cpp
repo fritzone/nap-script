@@ -1,5 +1,4 @@
 #include "evaluate.h"
-#include "bt_string.h"
 #include "type.h"
 #include "number.h"
 #include "consts.h"
@@ -1044,8 +1043,10 @@ void resolve_variable_definition(variable** target_var, nap_compiler* _compiler,
                 /* search if we have a definition for it too, such as: Base t = new Derived()*/
                 if(vd->the_value)
                 {
+
+                    push_usertype_variable(_compiler, cc, vd->the_variable, vd->the_variable->c_type);
                     std::string fcvarname = std::string(cc->name) + STR_DOT + vd->the_variable->name;
-                    code_stream(_compiler) << push() << ref() << fcvarname ;
+//                    code_stream(_compiler) << push() << ref() << fcvarname ;
 
                     // Now, this already added it to the compiler, but the compiler has no knowledge of it's type
 
@@ -1075,7 +1076,7 @@ void resolve_variable_definition(variable** target_var, nap_compiler* _compiler,
                 }
                 else
                 {
-                    push_usertype_variable(_compiler,cc, vd->the_variable);
+                    push_usertype_variable(_compiler,cc, vd->the_variable, vd->the_variable->c_type);
                 }
             }
             else
@@ -1213,8 +1214,8 @@ void compile(variable** target_var, nap_compiler* _compiler, const expression_tr
         case BASIC_TYPE_STRING:
             if(node->reference)
             {
-                bt_string* bts = (bt_string*)node->reference->to_interpret;
-                code_stream(_compiler) <<std::string("\"") + bts->m_the_string + "\"" ;
+                std::string* bts = (std::string*)node->reference->to_interpret;
+                code_stream(_compiler) <<std::string("\"") + *bts + "\"" ;
             }
             break;
         case BASIC_TYPE_INT:
