@@ -20,14 +20,24 @@ if(WIN32)
     add_definitions("/D_VARIADIC_MAX=10")
 endif()
 
+if(WIN32)
+  add_custom_command(
+    MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/generated.cpp
+    OUTPUT ${NAP_ROOT}/build/tests/gen_test.cpp
+    COMMAND testgen
+    COMMENT "Running TESTGEN"
+    VERBATIM
+  )
+else()
+  add_custom_command(
+    MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/generated.cpp
+    OUTPUT ${NAP_ROOT}/build/tests/gen_test.cpp
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../ext_gen/testgen
+    COMMENT "Running TESTGEN"
+    VERBATIM
+  )
+endif()
 
-add_custom_command(
-  MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/generated.cpp
-  OUTPUT ${NAP_ROOT}/build/tests/gen_test.cpp
-  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../ext_gen/testgen
-  COMMENT "Running TESTGEN"
-  VERBATIM
-)
 
 include_directories(${CMAKE_BINARY_DIR}/compiler 					
 					${CMAKE_BINARY_DIR}/runtime
