@@ -87,6 +87,10 @@ struct stack_entry
      * */
     size_t len;
 
+#ifdef _MSC_VER
+#pragma warning(disable:4214)
+#endif
+
     /* This tells us if this stack entry was stored or not. If it was stored it
      * will stay on the stack in case of a stack rollback (clrsn) till the moment
      * a "restore" call will be executed, which will take over the instantiation

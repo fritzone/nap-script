@@ -80,8 +80,14 @@ uint16_t intr_1(struct nap_vm *vm)
                         fprintf(dest, "%s", last_format_specifier);
                         free(last_format_specifier);
                     }
-                    last_format_specifier = strdup(t);
-                }
+					
+                    last_format_specifier = 
+						#ifdef _MSC_VER 
+							_strdup(t);
+						#else
+							strdup(t);
+						#endif
+				}
                 else
                 {
                     if(last_format_specifier != NULL)
